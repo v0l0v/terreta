@@ -167,9 +167,24 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
                   altitude: null,
                   altitudeAccuracy: null,
                   heading: null,
-                  speed: null
+                  speed: null,
+                  toJSON: () => ({
+                    latitude: ipLocation.lat,
+                    longitude: ipLocation.lng,
+                    accuracy: ipLocation.accuracy,
+                    altitude: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    speed: null,
+                  })
                 },
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                toJSON: function() {
+                  return {
+                    coords: this.coords.toJSON(),
+                    timestamp: this.timestamp
+                  };
+                }
               };
               
               locationFound = true;

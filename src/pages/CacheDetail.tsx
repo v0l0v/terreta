@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { MapPin, Navigation, Calendar, User, MessageSquare, Trophy, Edit, Trash2 } from "lucide-react";
+import { MapPin, Navigation, Calendar, User, MessageSquare, Trophy, Edit, Trash2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,16 +24,19 @@ export default function CacheDetail() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { data: geocache, isLoading } = useGeocache(id!);
-  const { data: logs } = useGeocacheLogs(id!);
+  const { data: logs, refetch: refetchLogs } = useGeocacheLogs(id!);
   const { mutate: createLog, isPending: isCreatingLog } = useCreateLog();
   const { mutate: deleteGeocache } = useDeleteGeocache();
   
   const author = useAuthor(geocache?.pubkey || "");
   const [logText, setLogText] = useState("");
   const [logType, setLogType] = useState<"found" | "dnf" | "note">("found");
+  const [postingStatus, setPostingStatus] = useState<string>("");
 
   const handleCreateLog = () => {
     if (!logText.trim() || !id) return;
+    
+    setPostingStatus("Signing event...");
     
     createLog({
       geocacheId: id,
@@ -41,7 +44,16 @@ export default function CacheDetail() {
       text: logText,
     }, {
       onSuccess: () => {
+        setPostingStatus("Posted! Refreshing...");
         setLogText("");
+        // Force refresh logs after a short delay
+        setTimeout(() => {
+          refetchLogs();
+          setPostingStatus("");
+        }, 2000);
+      },
+      onError: () => {
+        setPostingStatus("");
       }
     });
   };
@@ -229,6 +241,18 @@ export default function CacheDetail() {
               </TabsList>
               
               <TabsContent value="logs" className="space-y-4">
+                <div className="flex justify-end mb-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => refetchLogs()}
+                    title="Refresh logs"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Refresh
+                  </Button>
+                </div>
+                
                 {user && (
                   <Card>
                     <CardHeader>
@@ -274,6 +298,11 @@ export default function CacheDetail() {
                       >
                         {isCreatingLog ? "Posting..." : "Post Log"}
                       </Button>
+                      {postingStatus && (
+                        <p className="text-sm text-gray-600 text-center mt-2">
+                          {postingStatus}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 )}

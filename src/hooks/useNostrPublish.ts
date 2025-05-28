@@ -39,8 +39,21 @@ export function useNostrPublish() {
           created_at: t.created_at ?? Math.floor(Date.now() / 1000),
         });
 
-        await nostr.event(event, { signal: AbortSignal.timeout(10000) }); // Increased timeout
+        // Send to relays and wait for confirmation
+        const result = await nostr.event(event, { signal: AbortSignal.timeout(10000) });
         
+        console.log('Event publish result:', result);
+        
+        // Verify the event was actually sent by querying for it
+        const verifySignal = AbortSignal.timeout(5000);
+        const verification = await nostr.query([{ ids: [event.id] }], { signal: verifySignal });
+        
+        if (verification.length === 0) {
+          console.error('Event verification failed - event not found on relays');
+          throw new Error('Event was signed but not found on relays. Please try again.');
+        }
+        
+        console.log('Event verified on relays:', event.id);
         return event; // Return the signed event
       } catch (error: any) {
         console.error("Failed to publish event:", error);

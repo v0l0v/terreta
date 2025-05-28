@@ -13,6 +13,9 @@ import './styles/leaflet-overrides.css';
 // DO NOT MODIFY THIS RELAY LIST UNLESS EXPLICITLY REQUESTED
 const defaultRelays = [
   'wss://ditto.pub/relay',
+  'wss://relay.damus.io',
+  'wss://nos.lol',
+  'wss://relay.snort.social',
   // DO NOT ADD ANY RELAY WITHOUT FIRST USING A TOOL TO VERIFY IT IS ONLINE AND FUNCTIONAL
   // IF YOU CANNOT VERIFY A RELAY IS ONLINE AND FUNCTIONAL, DO NOT ADD IT HERE
 ];

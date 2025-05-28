@@ -10,10 +10,20 @@ export function useCreateLog() {
 
   return useMutation({
     mutationFn: async (data: CreateLogData) => {
+      console.log('Creating log for geocache:', data.geocacheId);
+      
+      // Validate data
+      if (!data.geocacheId) {
+        throw new Error('Geocache ID is required');
+      }
+      if (!data.text?.trim()) {
+        throw new Error('Log text is required');
+      }
+      
       // Create the log event
       const content = JSON.stringify({
         type: data.type,
-        text: data.text,
+        text: data.text.trim(),
         images: data.images || [],
       });
 
@@ -21,12 +31,14 @@ export function useCreateLog() {
         kind: 30078, // Application-specific data
         content,
         tags: [
-          ['d', 'geocache-log'], // Identifier for log data
+          ['d', `geocache-log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`], // Unique identifier for each log
+          ['t', 'geocache-log'], // Type tag for filtering
           ['geocache', data.geocacheId], // Reference to the geocache
           ['type', data.type], // Log type for filtering
         ],
       });
 
+      console.log('Log event created:', event.id);
       return event;
     },
     onSuccess: (event, variables) => {
@@ -35,16 +47,54 @@ export function useCreateLog() {
         description: "Your log has been added to the geocache.",
       });
       
-      // Invalidate queries to refresh the logs
-      queryClient.invalidateQueries({ queryKey: ['geocache-logs', variables.geocacheId] });
-      queryClient.invalidateQueries({ queryKey: ['geocache', variables.geocacheId] });
-      queryClient.invalidateQueries({ queryKey: ['geocaches'] });
+      // Optimistically update the cache immediately
+      queryClient.setQueryData(['geocache-logs', variables.geocacheId], (oldData: any) => {
+        if (!oldData) return oldData;
+        
+        // Create a new log entry from our event
+        const newLog = {
+          id: event.id,
+          pubkey: event.pubkey,
+          created_at: event.created_at,
+          geocacheId: variables.geocacheId,
+          type: variables.type,
+          text: variables.text.trim(),
+          images: variables.images || [],
+        };
+        
+        // Add to the beginning of the list (newest first) and remove duplicates
+        const existingLogs = oldData || [];
+        const updatedLogs = [newLog, ...existingLogs.filter((log: any) => log.id !== event.id)];
+        
+        console.log('Optimistically updated cache with new log:', newLog.id);
+        return updatedLogs;
+      });
+      
+      // Wait longer for the event to propagate, then do a background refresh
+      setTimeout(() => {
+        // Invalidate to trigger a background refresh (users won't see loading state)
+        queryClient.invalidateQueries({ 
+          queryKey: ['geocache-logs', variables.geocacheId],
+          refetchType: 'all' // Refetch both active and inactive queries
+        });
+        queryClient.invalidateQueries({ queryKey: ['geocache', variables.geocacheId] });
+        queryClient.invalidateQueries({ queryKey: ['geocaches'] });
+      }, 5000); // Increased from 2000ms to 5000ms
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Failed to create log:', error);
+      
+      let errorMessage = "Please try again later.";
+      
+      if (error.message?.includes('not found on relays')) {
+        errorMessage = "Log was created but couldn't be verified. It may appear after a delay.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Failed to post log",
-        description: "Please try again later.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
