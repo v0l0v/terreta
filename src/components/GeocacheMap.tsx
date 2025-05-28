@@ -15,19 +15,29 @@ import "leaflet/dist/leaflet.css";
 const createCacheIcon = (type: string) => {
   const emoji = getCacheEmoji(type);
   
+  // Different colors for different cache types
+  const colors = {
+    traditional: '#10b981', // Emerald
+    multi: '#f59e0b',      // Amber
+    mystery: '#8b5cf6',    // Purple
+    earth: '#3b82f6',      // Blue
+  };
+  
+  const color = colors[type as keyof typeof colors] || '#10b981';
+  
   return L.divIcon({
     html: `
       <div style="
-        background: white;
-        border: 2px solid #16a34a;
+        background: ${color};
+        border: 3px solid white;
         border-radius: 50%;
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        font-size: 22px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
         position: relative;
       ">
         ${emoji}
@@ -41,14 +51,14 @@ const createCacheIcon = (type: string) => {
         height: 0;
         border-left: 8px solid transparent;
         border-right: 8px solid transparent;
-        border-top: 8px solid white;
-        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+        border-top: 8px solid ${color};
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
       "></div>
     `,
     className: "custom-cache-icon",
-    iconSize: [36, 44],
-    iconAnchor: [18, 44],
-    popupAnchor: [0, -44],
+    iconSize: [40, 48],
+    iconAnchor: [20, 48],
+    popupAnchor: [0, -48],
   });
 };
 
@@ -61,26 +71,27 @@ const userLocationIcon = L.divIcon({
         height: 24px;
         background: rgba(59, 130, 246, 0.3);
         border-radius: 50%;
+        animation: pulse 2s ease-out infinite;
       "></div>
       <div style="
         position: absolute;
-        top: 4px;
-        left: 4px;
-        width: 16px;
-        height: 16px;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
         background: #3b82f6;
+        border: 2px solid white;
         border-radius: 50%;
-      "></div>
-      <div style="
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        width: 8px;
-        height: 8px;
-        background: white;
-        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       "></div>
     </div>
+    <style>
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 0.5; }
+        100% { transform: scale(2); opacity: 0; }
+      }
+    </style>
   `,
   className: "user-location-icon",
   iconSize: [24, 24],
@@ -151,6 +162,30 @@ function MapController({
   return null;
 }
 
+// Map style options
+const MAP_STYLES = {
+  light: {
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  },
+  voyager: {
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  },
+  positron: {
+    url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  },
+  watercolor: {
+    url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg",
+    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://stamen.com">Stamen Design</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  },
+  toner: {
+    url: "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://stamen.com">Stamen Design</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }
+};
+
 export function GeocacheMap({ 
   geocaches, 
   center,
@@ -161,6 +196,7 @@ export function GeocacheMap({
   onMarkerClick 
 }: GeocacheMapProps) {
   const navigate = useNavigate();
+  const mapStyle = MAP_STYLES.voyager; // Using voyager for vibrant, adventure-ready look
 
   // Calculate center if not provided
   const mapCenter: LatLngExpression = center 
@@ -190,8 +226,9 @@ export function GeocacheMap({
       className="rounded-lg"
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution={mapStyle.attribution}
+        url={mapStyle.url}
+        maxZoom={19}
       />
       
       <MapController 
@@ -207,11 +244,11 @@ export function GeocacheMap({
           center={[searchLocation.lat, searchLocation.lng]}
           radius={searchRadius * 1000} // Convert km to meters
           pathOptions={{
-            color: '#16a34a',
-            fillColor: '#16a34a',
-            fillOpacity: 0.1,
-            weight: 2,
-            dashArray: '5, 10'
+            color: '#10b981', // Emerald green
+            fillColor: '#10b981',
+            fillOpacity: 0.15,
+            weight: 3,
+            dashArray: '10, 5'
           }}
         />
       )}
