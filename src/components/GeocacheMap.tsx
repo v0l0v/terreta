@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import L from "leaflet";
 import { MapPin, Navigation, Trophy, MessageSquare } from "lucide-react";
@@ -107,16 +107,46 @@ interface GeocacheMapProps {
   center?: { lat: number; lng: number };
   zoom?: number;
   userLocation?: { lat: number; lng: number } | null;
+  searchLocation?: { lat: number; lng: number } | null;
+  searchRadius?: number; // in km
   onMarkerClick?: (geocache: Geocache) => void;
 }
 
 // Component to handle map centering
-function MapController({ center, zoom }: { center: LatLngExpression; zoom: number }) {
+function MapController({ 
+  center, 
+  zoom,
+  searchLocation,
+  searchRadius 
+}: { 
+  center: LatLngExpression; 
+  zoom: number;
+  searchLocation?: { lat: number; lng: number } | null;
+  searchRadius?: number;
+}) {
   const map = useMap();
   
   useEffect(() => {
-    map.setView(center, zoom);
-  }, [map, center, zoom]);
+    if (center) {
+      console.log('Setting map view to:', center, 'zoom:', zoom);
+      
+      // If we have a search location with radius, fit bounds to show the full circle
+      if (searchLocation && searchRadius) {
+        const bounds = L.latLng(searchLocation.lat, searchLocation.lng).toBounds(searchRadius * 1000);
+        map.fitBounds(bounds, {
+          padding: [50, 50],
+          animate: true,
+          duration: 0.5
+        });
+      } else {
+        // Otherwise just set the view
+        map.setView(center, zoom, {
+          animate: true,
+          duration: 0.5
+        });
+      }
+    }
+  }, [map, center, zoom, searchLocation, searchRadius]);
   
   return null;
 }
@@ -126,6 +156,8 @@ export function GeocacheMap({
   center,
   zoom = 10,
   userLocation,
+  searchLocation,
+  searchRadius,
   onMarkerClick 
 }: GeocacheMapProps) {
   const navigate = useNavigate();
@@ -133,12 +165,14 @@ export function GeocacheMap({
   // Calculate center if not provided
   const mapCenter: LatLngExpression = center 
     ? [center.lat, center.lng]
-    : geocaches.length > 0 
-      ? [
-          geocaches.reduce((sum, g) => sum + g.location.lat, 0) / geocaches.length,
-          geocaches.reduce((sum, g) => sum + g.location.lng, 0) / geocaches.length,
-        ]
-      : [40.7128, -74.0060]; // Default to NYC
+    : searchLocation
+      ? [searchLocation.lat, searchLocation.lng]
+      : geocaches.length > 0 
+        ? [
+            geocaches.reduce((sum, g) => sum + g.location.lat, 0) / geocaches.length,
+            geocaches.reduce((sum, g) => sum + g.location.lng, 0) / geocaches.length,
+          ]
+        : [40.7128, -74.0060]; // Default to NYC
 
   const handleMarkerClick = (geocache: Geocache) => {
     if (onMarkerClick) {
@@ -160,7 +194,27 @@ export function GeocacheMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      <MapController center={mapCenter} zoom={zoom} />
+      <MapController 
+        center={mapCenter} 
+        zoom={zoom} 
+        searchLocation={searchLocation}
+        searchRadius={searchRadius}
+      />
+      
+      {/* Search radius circle */}
+      {searchLocation && searchRadius && (
+        <Circle
+          center={[searchLocation.lat, searchLocation.lng]}
+          radius={searchRadius * 1000} // Convert km to meters
+          pathOptions={{
+            color: '#16a34a',
+            fillColor: '#16a34a',
+            fillOpacity: 0.1,
+            weight: 2,
+            dashArray: '5, 10'
+          }}
+        />
+      )}
       
       {/* User location marker */}
       {userLocation && (

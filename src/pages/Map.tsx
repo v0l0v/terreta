@@ -13,9 +13,9 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { GeocacheList } from "@/components/GeocacheList";
 import { LocationSearch } from "@/components/LocationSearch";
-import { GeolocationDebug } from "@/components/GeolocationDebug";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { sortByDistance, formatDistance } from "@/lib/geo";
+import { sortByDistance, formatDistance, filterByRadius } from "@/lib/geo";
 import { Badge } from "@/components/ui/badge";
 
 export default function Map() {
@@ -26,6 +26,9 @@ export default function Map() {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [mapZoom, setMapZoom] = useState(10);
   const [showNearMe, setShowNearMe] = useState(false);
+  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [searchRadius, setSearchRadius] = useState(50); // km
+  const [mapUpdateKey, setMapUpdateKey] = useState(0);
   const mapRef = useRef<any>(null);
   
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
@@ -63,26 +66,38 @@ export default function Map() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Sort geocaches by distance if user location is available and "Near Me" is active
+  // Filter and sort geocaches based on location
   const filteredGeocaches = (() => {
-    const caches = geocaches || [];
+    let caches = geocaches || [];
     
-    if (showNearMe && userLocation) {
-      const cachesWithDistance = sortByDistance(caches, userLocation.lat, userLocation.lng);
-      return cachesWithDistance;
+    // Filter by search location if set
+    if (searchLocation) {
+      caches = filterByRadius(caches, searchLocation.lat, searchLocation.lng, searchRadius);
+      caches = sortByDistance(caches, searchLocation.lat, searchLocation.lng);
+    }
+    // Or filter by user location if "Near Me" is active
+    else if (showNearMe && userLocation) {
+      caches = filterByRadius(caches, userLocation.lat, userLocation.lng, searchRadius);
+      caches = sortByDistance(caches, userLocation.lat, userLocation.lng);
     }
     
     return caches;
   })();
 
   const handleLocationSelect = (location: { lat: number; lng: number; name: string }) => {
-    setMapCenter({ lat: location.lat, lng: location.lng });
-    setMapZoom(13);
+    console.log('Location selected:', location);
+    // Update all location-related state
+    const newCenter = { lat: location.lat, lng: location.lng };
+    setMapCenter(newCenter);
+    setMapZoom(12); // Slightly more zoomed in for city searches
     setShowNearMe(false);
+    setSearchLocation(newCenter);
+    setMapUpdateKey(prev => prev + 1); // Force map update
   };
 
   const handleNearMe = () => {
     setShowNearMe(true);
+    setSearchLocation(null); // Clear search location
     getLocation();
   };
 
@@ -97,12 +112,6 @@ export default function Map() {
               <h1 className="text-2xl font-bold text-gray-900">NostrCache</h1>
             </Link>
             <div className="flex items-center gap-4">
-              <div className="hidden md:block w-96">
-                <LocationSearch 
-                  onLocationSelect={handleLocationSelect}
-                  placeholder="Search location: city, zip code, or coordinates..."
-                />
-              </div>
               <LoginArea />
             </div>
           </div>
@@ -115,15 +124,6 @@ export default function Map() {
           {/* Search and Filters */}
           <div className="p-4 border-b">
             <div className="space-y-4">
-              {/* Location Search for mobile */}
-              <div className="md:hidden">
-                <Label>Search Location</Label>
-                <LocationSearch 
-                  onLocationSelect={handleLocationSelect}
-                  placeholder="City, zip, or coordinates..."
-                />
-              </div>
-              
               <div>
                 <Label htmlFor="search">Search Caches</Label>
                 <Input
@@ -170,32 +170,59 @@ export default function Map() {
                 </div>
               </div>
 
-              <Button 
-                variant={showNearMe ? "default" : "outline"} 
-                className="w-full"
-                onClick={handleNearMe}
-                disabled={isGettingLocation}
-              >
-                <Locate className="h-4 w-4 mr-2" />
-                {isGettingLocation ? "Getting location..." : showNearMe ? "Showing Near You" : "Find Near Me"}
-              </Button>
-              
-              {showNearMe && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="w-full"
-                  onClick={() => setShowNearMe(false)}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Clear location filter
-                </Button>
-              )}
-              
-              {/* Debug tool - remove in production */}
-              <div className="pt-2 border-t">
-                <GeolocationDebug />
+              {/* Location Controls */}
+              <div className="space-y-3">
+                <div className="relative">
+                  <LocationSearch 
+                    onLocationSelect={handleLocationSelect}
+                    placeholder="Search city or zip..."
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    variant={showNearMe ? "default" : "outline"} 
+                    className="flex-1 h-8"
+                    size="sm"
+                    onClick={handleNearMe}
+                    disabled={isGettingLocation}
+                  >
+                    <Locate className="h-4 w-4 mr-1" />
+                    {isGettingLocation ? "Finding..." : "Near Me"}
+                  </Button>
+                  
+                  {(showNearMe || searchLocation) && (
+                    <>
+                      <Select value={searchRadius.toString()} onValueChange={(v) => setSearchRadius(parseInt(v))}>
+                        <SelectTrigger className="w-24 h-8" size="sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10 km</SelectItem>
+                          <SelectItem value="25">25 km</SelectItem>
+                          <SelectItem value="50">50 km</SelectItem>
+                          <SelectItem value="100">100 km</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          setShowNearMe(false);
+                          setSearchLocation(null);
+                        }}
+                        title="Clear location filter"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
+              
+
             </div>
           </div>
 
@@ -208,7 +235,8 @@ export default function Map() {
             ) : filteredGeocaches.length > 0 ? (
               <div className="p-4">
                 <p className="text-sm text-gray-600 mb-4">
-                  Found {filteredGeocaches.length} geocache{filteredGeocaches.length !== 1 ? 's' : ''}
+                  {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
+                  {(searchLocation || (showNearMe && userLocation)) && ` • ${searchRadius}km radius`}
                 </p>
                 <GeocacheList geocaches={filteredGeocaches} compact />
               </div>
@@ -216,7 +244,9 @@ export default function Map() {
               <div className="p-4 text-center text-gray-500">
                 <MapPin className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p>No geocaches found</p>
-                <p className="text-sm mt-2">Try adjusting your filters</p>
+                <p className="text-sm mt-2">
+                  {searchLocation ? 'Try increasing the search radius or searching a different area' : 'Try adjusting your filters'}
+                </p>
               </div>
             )}
           </div>
@@ -227,6 +257,8 @@ export default function Map() {
           <GeocacheMap 
             geocaches={filteredGeocaches} 
             userLocation={userLocation}
+            searchLocation={searchLocation || (showNearMe ? userLocation : null)}
+            searchRadius={searchRadius}
             center={mapCenter || undefined}
             zoom={mapZoom}
           />

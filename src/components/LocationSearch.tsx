@@ -1,11 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Search, MapPin, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import L from "leaflet";
-import "leaflet-control-geocoder";
 
 interface LocationSearchProps {
   onLocationSelect: (location: { lat: number; lng: number; name: string }) => void;
@@ -27,17 +25,7 @@ export function LocationSearch({ onLocationSelect, placeholder = "Search by city
   const [results, setResults] = useState<SearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const searchTimeout = useRef<NodeJS.Timeout>();
-  const geocoder = useRef<any>(null);
-
-  useEffect(() => {
-    // Initialize the geocoder
-    geocoder.current = (L.Control as any).Geocoder.nominatim({
-      geocodingQueryParams: {
-        countrycodes: '', // Search worldwide
-        limit: 5,
-      }
-    });
-  }, []);
+  const abortController = useRef<AbortController>();
 
   const parseCoordinates = (input: string): { lat: number; lng: number } | null => {
     // Try to parse various coordinate formats
@@ -110,24 +98,54 @@ export function LocationSearch({ onLocationSelect, placeholder = "Search by city
       return;
     }
 
-    // Otherwise, use geocoding service
+    // Cancel previous request if any
+    if (abortController.current) {
+      abortController.current.abort();
+    }
+    
+    // Create new abort controller
+    abortController.current = new AbortController();
+    
+    // Use Nominatim API directly
     try {
-      geocoder.current.geocode(searchQuery, (results: any[]) => {
-        const searchResults: SearchResult[] = results.map(r => ({
-          name: r.name,
-          lat: r.center.lat,
-          lng: r.center.lng,
-          display_name: r.properties?.display_name || r.name,
-          importance: r.properties?.importance || 0,
-          type: r.properties?.type || 'place'
-        }));
-        
-        setResults(searchResults);
-        setIsSearching(false);
-      });
-    } catch (error) {
-      console.error('Geocoding error:', error);
-      setResults([]);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?` + 
+        new URLSearchParams({
+          q: searchQuery,
+          format: 'json',
+          limit: '5',
+          addressdetails: '1'
+        }),
+        {
+          signal: abortController.current.signal,
+          headers: {
+            'Accept': 'application/json',
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Geocoding request failed');
+      }
+
+      const data = await response.json();
+      
+      const searchResults: SearchResult[] = data.map((item: any) => ({
+        name: item.display_name.split(',')[0],
+        lat: parseFloat(item.lat),
+        lng: parseFloat(item.lon),
+        display_name: item.display_name,
+        importance: item.importance,
+        type: item.type || item.class || 'place'
+      }));
+      
+      setResults(searchResults);
+      setIsSearching(false);
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error('Geocoding error:', error);
+        setResults([]);
+      }
       setIsSearching(false);
     }
   };
@@ -145,6 +163,25 @@ export function LocationSearch({ onLocationSelect, placeholder = "Search by city
     searchTimeout.current = setTimeout(() => {
       handleSearch(value);
     }, 500);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // Clear timeout to prevent double search
+      if (searchTimeout.current) {
+        clearTimeout(searchTimeout.current);
+      }
+      
+      // If we have results, select the first one
+      if (results.length > 0 && !isSearching) {
+        handleResultClick(results[0]);
+      } else if (query.trim()) {
+        // Otherwise trigger immediate search
+        handleSearch(query);
+      }
+    }
   };
 
   const handleResultClick = (result: SearchResult) => {
@@ -191,12 +228,15 @@ export function LocationSearch({ onLocationSelect, placeholder = "Search by city
           type="text"
           value={query}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="pl-10 pr-10"
           onFocus={() => query && handleSearch(query)}
         />
         {isSearching && (
-          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+          </div>
         )}
         {query && !isSearching && (
           <Button
