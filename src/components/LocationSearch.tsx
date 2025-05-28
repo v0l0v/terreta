@@ -28,30 +28,51 @@ export function LocationSearch({ onLocationSelect, placeholder = "Search by city
   const abortController = useRef<AbortController>();
 
   const parseCoordinates = (input: string): { lat: number; lng: number } | null => {
+    // Clean input: remove extra spaces, normalize separators
+    const cleaned = input.trim()
+      .replace(/[,;]/g, ' ')  // Replace commas and semicolons with spaces
+      .replace(/\s+/g, ' ')   // Multiple spaces to single space
+      .replace(/['′]/g, "'")  // Normalize apostrophes
+      .replace(/["″]/g, '"')  // Normalize quotes
+      .replace(/[°º]/g, '°'); // Normalize degree symbols
+
     // Try to parse various coordinate formats
     const patterns = [
-      // Decimal degrees: 40.7128, -74.0060
-      /^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/,
+      // Decimal degrees: 40.7128, -74.0060 or 40.7128 -74.0060
+      /^(-?\d+\.?\d*)\s+(-?\d+\.?\d*)$/,
       // Degrees with N/S E/W: 40.7128N 74.0060W
       /^(\d+\.?\d*)\s*([NS])\s+(\d+\.?\d*)\s*([EW])$/i,
       // Degrees minutes seconds: 40°42'46"N 74°00'22"W
       /^(\d+)°(\d+)'(\d+\.?\d*)"?\s*([NS])\s+(\d+)°(\d+)'(\d+\.?\d*)"?\s*([EW])$/i,
+      // Swapped lat/lng: -74.0060, 40.7128 (common mistake)
+      /^(-?\d+\.?\d*)\s+(-?\d+\.?\d*)$/,
     ];
 
     for (const pattern of patterns) {
-      const match = input.trim().match(pattern);
+      const match = cleaned.match(pattern);
       if (match) {
-        if (pattern === patterns[0]) {
+        let lat: number, lng: number;
+        
+        if (pattern === patterns[0] || pattern === patterns[3]) {
           // Simple decimal format
-          return {
-            lat: parseFloat(match[1]),
-            lng: parseFloat(match[2])
-          };
+          lat = parseFloat(match[1]);
+          lng = parseFloat(match[2]);
+          
+          // Auto-detect if coordinates are swapped
+          // If "latitude" is > 90 or < -90, they're probably swapped
+          if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) {
+            [lat, lng] = [lng, lat];
+          }
+          
+          // Common mistake: positive longitude for western hemisphere
+          // If user enters US coordinates with positive longitude, fix it
+          if (lat > 20 && lat < 50 && lng > 0 && lng < 130) {
+            lng = -lng;
+          }
         } else if (pattern === patterns[1]) {
           // N/S E/W format
-          const lat = parseFloat(match[1]) * (match[2].toUpperCase() === 'S' ? -1 : 1);
-          const lng = parseFloat(match[3]) * (match[4].toUpperCase() === 'W' ? -1 : 1);
-          return { lat, lng };
+          lat = parseFloat(match[1]) * (match[2].toUpperCase() === 'S' ? -1 : 1);
+          lng = parseFloat(match[3]) * (match[4].toUpperCase() === 'W' ? -1 : 1);
         } else if (pattern === patterns[2]) {
           // DMS format
           const latDeg = parseInt(match[1]);
@@ -64,8 +85,21 @@ export function LocationSearch({ onLocationSelect, placeholder = "Search by city
           const lngSec = parseFloat(match[7]);
           const lngDir = match[8].toUpperCase() === 'W' ? -1 : 1;
           
-          const lat = (latDeg + latMin / 60 + latSec / 3600) * latDir;
-          const lng = (lngDeg + lngMin / 60 + lngSec / 3600) * lngDir;
+          lat = (latDeg + latMin / 60 + latSec / 3600) * latDir;
+          lng = (lngDeg + lngMin / 60 + lngSec / 3600) * lngDir;
+        } else {
+          continue;
+        }
+        
+        // Validate and autocorrect coordinates
+        if (!isNaN(lat) && !isNaN(lng)) {
+          // Clamp latitude to valid range
+          if (lat > 90) lat = 90;
+          if (lat < -90) lat = -90;
+          
+          // Wrap longitude to valid range
+          while (lng > 180) lng -= 360;
+          while (lng < -180) lng += 360;
           
           return { lat, lng };
         }

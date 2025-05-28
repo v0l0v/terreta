@@ -27,7 +27,7 @@ export default function Map() {
   const [mapZoom, setMapZoom] = useState(10);
   const [showNearMe, setShowNearMe] = useState(false);
   const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [searchRadius, setSearchRadius] = useState(50); // km
+  const [searchRadius, setSearchRadius] = useState(25); // km
   const [mapUpdateKey, setMapUpdateKey] = useState(0);
   const mapRef = useRef<any>(null);
   
@@ -198,6 +198,7 @@ export default function Map() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="5">5 km</SelectItem>
                           <SelectItem value="10">10 km</SelectItem>
                           <SelectItem value="25">25 km</SelectItem>
                           <SelectItem value="50">50 km</SelectItem>

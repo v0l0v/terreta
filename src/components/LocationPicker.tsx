@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { LocationSearch } from "@/components/LocationSearch";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { autocorrectCoordinates } from "@/lib/coordinates";
 
 import "leaflet/dist/leaflet.css";
 
@@ -75,8 +76,8 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
   useEffect(() => {
     if (value) {
       setManualCoords({
-        lat: value.lat.toString(),
-        lng: value.lng.toString(),
+        lat: value.lat.toFixed(6),
+        lng: value.lng.toFixed(6),
       });
       setMapCenter([value.lat, value.lng]);
     }
@@ -84,12 +85,16 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
 
   useEffect(() => {
     if (coords) {
-      const location = {
-        lat: coords.latitude,
-        lng: coords.longitude,
-      };
+      // Apply autocorrection even to GPS coordinates (in case of device errors)
+      const { lat, lng } = autocorrectCoordinates(coords.latitude, coords.longitude);
+      const location = { lat, lng };
+      
       onChange(location);
-      setMapCenter([location.lat, location.lng]);
+      setMapCenter([lat, lng]);
+      setManualCoords({ 
+        lat: lat.toFixed(6), 
+        lng: lng.toFixed(6) 
+      });
     }
   }, [coords, onChange]);
 
@@ -98,22 +103,23 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
   };
 
   const handleManualInput = () => {
-    const lat = parseFloat(manualCoords.lat);
-    const lng = parseFloat(manualCoords.lng);
+    const inputLat = parseFloat(manualCoords.lat);
+    const inputLng = parseFloat(manualCoords.lng);
 
-    if (isNaN(lat) || isNaN(lng)) {
+    if (isNaN(inputLat) || isNaN(inputLng)) {
       alert("Please enter valid coordinates");
       return;
     }
 
-    if (lat < -90 || lat > 90) {
-      alert("Latitude must be between -90 and 90");
-      return;
-    }
-
-    if (lng < -180 || lng > 180) {
-      alert("Longitude must be between -180 and 180");
-      return;
+    // Apply autocorrection
+    const { lat, lng, corrected } = autocorrectCoordinates(inputLat, inputLng);
+    
+    // Update input fields to show corrected values
+    if (corrected) {
+      setManualCoords({ 
+        lat: lat.toFixed(6), 
+        lng: lng.toFixed(6) 
+      });
     }
 
     const location = { lat, lng };
@@ -122,9 +128,17 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
   };
 
   const handleLocationSearch = (location: { lat: number; lng: number; name: string }) => {
-    const newLocation = { lat: location.lat, lng: location.lng };
+    // Apply autocorrection to search results
+    const { lat, lng } = autocorrectCoordinates(location.lat, location.lng);
+    
+    const newLocation = { lat, lng };
     onChange(newLocation);
-    setMapCenter([location.lat, location.lng]);
+    setMapCenter([lat, lng]);
+    // Update manual coords to show corrected values
+    setManualCoords({ 
+      lat: lat.toFixed(6), 
+      lng: lng.toFixed(6) 
+    });
   };
 
   return (
