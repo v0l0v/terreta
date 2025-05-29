@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { MapPin, Navigation, Calendar, User, MessageSquare, Trophy, Edit, Trash2, RefreshCw, Upload, X, Save, RotateCcw } from "lucide-react";
+import { MapPin, Navigation, Calendar, User, MessageSquare, Trophy, Edit, Trash2, RefreshCw, Upload, X, Save, RotateCcw, Compass as CompassIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ import { formatDistanceToNow } from "@/lib/date";
 import { EventSourceInfo } from "@/components/EventSourceInfo";
 import { LocationWarnings } from "@/components/LocationWarnings";
 import { verifyLocation, type LocationVerification } from "@/lib/osmVerification";
+import { Compass } from "@/components/Compass";
 
 export default function CacheDetail() {
   const { dtag } = useParams<{ dtag: string }>();
@@ -597,6 +598,10 @@ export default function CacheDetail() {
                   <MapPin className="h-4 w-4 mr-2" />
                   Map
                 </TabsTrigger>
+                <TabsTrigger value="compass">
+                  <CompassIcon className="h-4 w-4 mr-2" />
+                  Compass
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="logs" className="space-y-4">
@@ -705,6 +710,15 @@ export default function CacheDetail() {
                     geocaches={[geocache]} 
                     center={geocache.location}
                     zoom={15}
+                  />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="compass">
+                <div className="h-96 flex items-center justify-center">
+                  <Compass 
+                    targetLat={geocache.location.lat}
+                    targetLng={geocache.location.lng}
                   />
                 </div>
               </TabsContent>
