@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MapPin, Home, Map, Plus, Menu, X } from 'lucide-react';
+import { MapPin, Home, Map, Plus, Menu, X, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { LoginArea } from '@/components/auth/LoginArea';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user } = useCurrentUser();
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
@@ -51,6 +53,20 @@ export function MobileNav() {
                     </Link>
                   );
                 })}
+                {user && (
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+                      location.pathname === '/settings'
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </Link>
+                )}
               </nav>
               <div className="mt-auto p-6">
                 <LoginArea />

@@ -13,10 +13,11 @@ export interface Geocache {
   difficulty: number; // 1-5
   terrain: number; // 1-5
   size: "micro" | "small" | "regular" | "large";
-  type: "traditional" | "multi" | "mystery" | "earth";
+  type: "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event";
   images?: string[];
   foundCount?: number;
   logCount?: number;
+  relays?: string[]; // Preferred relays from the geocache event
 }
 
 export interface GeocacheLog {
@@ -24,7 +25,7 @@ export interface GeocacheLog {
   pubkey: string;
   created_at: number;
   geocacheId: string;
-  type: "found" | "dnf" | "note";
+  type: "found" | "dnf" | "note" | "maintenance" | "disabled" | "enabled" | "archived";
   text: string;
   images?: string[];
 }

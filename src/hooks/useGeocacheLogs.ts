@@ -134,7 +134,7 @@ function parseLogEvent(event: NostrEvent): GeocacheLog | null {
       pubkey: event.pubkey,
       created_at: event.created_at,
       geocacheId,
-      type: logType as any,
+      type: logType as "found" | "dnf" | "note" | "maintenance" | "disabled" | "enabled" | "archived",
       text: event.content, // Text is in content field
       images: images,
     };

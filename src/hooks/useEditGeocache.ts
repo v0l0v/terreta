@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import type { Geocache } from '@/types/geocache';
+import { encodeHint } from '@/lib/rot13';
 
 interface EditGeocacheData {
   name: string;
@@ -72,7 +73,8 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
 
       // Add optional tags
       if (data.hint?.trim()) {
-        tags.push(['hint', data.hint.trim()]);
+        // ROT13 encode the hint as per NIP-GC convention
+        tags.push(['hint', encodeHint(data.hint.trim())]);
       }
 
       if (data.images && data.images.length > 0) {
@@ -112,8 +114,8 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
           const name = event.tags.find(t => t[0] === 'name')?.[1];
           const difficulty = parseInt(event.tags.find(t => t[0] === 'difficulty')?.[1] || '1');
           const terrain = parseInt(event.tags.find(t => t[0] === 'terrain')?.[1] || '1');
-          const size = event.tags.find(t => t[0] === 'size')?.[1] as any;
-          const type = event.tags.find(t => t[0] === 'cache-type')?.[1] as any;
+          const size = event.tags.find(t => t[0] === 'size')?.[1] as "micro" | "small" | "regular" | "large";
+          const type = event.tags.find(t => t[0] === 'cache-type')?.[1] as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event";
           const hint = event.tags.find(t => t[0] === 'hint')?.[1];
           const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
           
@@ -142,8 +144,8 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
           const name = event.tags.find(t => t[0] === 'name')?.[1];
           const difficulty = parseInt(event.tags.find(t => t[0] === 'difficulty')?.[1] || '1');
           const terrain = parseInt(event.tags.find(t => t[0] === 'terrain')?.[1] || '1');
-          const size = event.tags.find(t => t[0] === 'size')?.[1] as any;
-          const type = event.tags.find(t => t[0] === 'cache-type')?.[1] as any;
+          const size = event.tags.find(t => t[0] === 'size')?.[1] as "micro" | "small" | "regular" | "large";
+          const type = event.tags.find(t => t[0] === 'cache-type')?.[1] as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event";
           const hint = event.tags.find(t => t[0] === 'hint')?.[1];
           const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
           

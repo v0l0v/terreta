@@ -43,7 +43,7 @@ export default function CacheDetail() {
   
   const author = useAuthor(geocache?.pubkey || "");
   const [logText, setLogText] = useState("");
-  const [logType, setLogType] = useState<"found" | "dnf" | "note">("found");
+  const [logType, setLogType] = useState<"found" | "dnf" | "note" | "maintenance" | "disabled" | "enabled" | "archived">("found");
   const [postingStatus, setPostingStatus] = useState<string>("");
   
   // Edit mode state
@@ -80,10 +80,14 @@ export default function CacheDetail() {
     
     setPostingStatus("Signing event...");
     
+    // Get the primary relay from the geocache's relay list
+    const primaryRelay = geocache.relays?.[0] || '';
+    
     createLog({
       geocacheId: geocache.id,
       geocacheDTag: geocache.dTag, // Pass the stable d-tag for new logs
       geocachePubkey: geocache.pubkey, // Pass the cache owner's pubkey
+      relayUrl: primaryRelay, // Pass the primary relay from the cache
       type: logType,
       text: logText,
     }, {
@@ -603,6 +607,39 @@ export default function CacheDetail() {
                           Write Note
                         </Button>
                       </div>
+                      
+                      {isOwner && (
+                        <div className="flex gap-2 pt-2 border-t">
+                          <Button
+                            variant={logType === "maintenance" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setLogType("maintenance")}
+                          >
+                            Maintenance
+                          </Button>
+                          <Button
+                            variant={logType === "disabled" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setLogType("disabled")}
+                          >
+                            Disable
+                          </Button>
+                          <Button
+                            variant={logType === "enabled" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setLogType("enabled")}
+                          >
+                            Enable
+                          </Button>
+                          <Button
+                            variant={logType === "archived" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setLogType("archived")}
+                          >
+                            Archive
+                          </Button>
+                        </div>
+                      )}
                       
                       <Textarea
                         placeholder="Share your experience..."

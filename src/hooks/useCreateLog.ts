@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
-import type { CreateLogData } from '@/types/geocache';
+import type { CreateLogData, GeocacheLog } from '@/types/geocache';
 
 // Simple geohash implementation for location-based queries
 function getGeohash(lat: number, lng: number, precision: number = 6): string {
@@ -74,7 +74,7 @@ export function useCreateLog() {
       // Build tags array
       const tags: string[][] = [
         ['d', uniqueDTag], // Unique identifier for this log
-        ['a', `37515:${data.geocachePubkey}:${data.geocacheDTag}`, data.relayUrl || ''], // Reference to the geocache
+        ['a', `37515:${data.geocachePubkey}:${data.geocacheDTag}`, data.relayUrl || ''], // Reference to the geocache with relay hint
         ['log-type', data.type], // Type of log
         ['published_at', Math.floor(timestamp / 1000).toString()], // When the log was created
       ];
@@ -138,7 +138,7 @@ export function useCreateLog() {
         
         // Instead of invalidating, manually refetch and merge results
         const queryKey = ['geocache-logs', variables.geocacheDTag, variables.geocachePubkey];
-        const currentData = queryClient.getQueryData(queryKey) as any[] | undefined;
+        const currentData = queryClient.getQueryData(queryKey) as GeocacheLog[] | undefined;
         
         // Refetch the data
         try {
@@ -148,7 +148,7 @@ export function useCreateLog() {
           });
           
           // After refetch, merge the data to ensure we don't lose any logs
-          const newData = queryClient.getQueryData(queryKey) as any[] | undefined;
+          const newData = queryClient.getQueryData(queryKey) as GeocacheLog[] | undefined;
           if (currentData && newData) {
             // Create a map of all logs by ID to deduplicate
             const logMap = new Map();

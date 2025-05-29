@@ -2,6 +2,7 @@ import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
+import { decodeHint } from '@/lib/rot13';
 
 export function useGeocacheByDTag(dTag: string) {
   const { nostr } = useNostr();
@@ -106,6 +107,7 @@ function parseGeocacheEvent(event: NostrEvent): Geocache | null {
     const hint = event.tags.find(t => t[0] === 'hint')?.[1];
     const locationTag = event.tags.find(t => t[0] === 'location')?.[1];
     const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
+    const relays = event.tags.filter(t => t[0] === 'relay').map(t => t[1]);
 
     // Validate required fields
     if (!name || !locationTag || !difficulty || !terrain || !size || !cacheType) {
@@ -135,13 +137,14 @@ function parseGeocacheEvent(event: NostrEvent): Geocache | null {
       dTag: dTag,
       name: name,
       description: event.content, // Description is in content field
-      hint: hint,
+      hint: hint ? decodeHint(hint) : undefined,
       location: location,
       difficulty: parseInt(difficulty) || 1,
       terrain: parseInt(terrain) || 1,
-      size: size as any,
-      type: cacheType as any,
+      size: size as "micro" | "small" | "regular" | "large",
+      type: cacheType as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event",
       images: images,
+      relays: relays,
     };
   } catch (error) {
     console.error('Failed to parse geocache event:', error);

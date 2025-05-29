@@ -159,8 +159,8 @@ function parseGeocacheEvent(event: NostrEvent): Geocache | null {
       location: location,
       difficulty: parseInt(difficulty) || 1,
       terrain: parseInt(terrain) || 1,
-      size: size as any,
-      type: cacheType as any,
+      size: size as "micro" | "small" | "regular" | "large",
+      type: cacheType as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event",
       images: images,
     };
   } catch (error) {

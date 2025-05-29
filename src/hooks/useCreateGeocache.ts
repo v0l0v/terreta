@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import type { CreateGeocacheData } from '@/types/geocache';
+import { encodeHint } from '@/lib/rot13';
 
 export function useCreateGeocache() {
   const navigate = useNavigate();
@@ -56,7 +57,8 @@ export function useCreateGeocache() {
 
       // Add optional tags
       if (data.hint?.trim()) {
-        tags.push(['hint', data.hint.trim()]);
+        // ROT13 encode the hint as per NIP-GC convention
+        tags.push(['hint', encodeHint(data.hint.trim())]);
       }
 
       if (data.images && data.images.length > 0) {
@@ -69,6 +71,26 @@ export function useCreateGeocache() {
       if (data.type === 'mystery') tags.push(['t', 'mystery']);
       if (data.type === 'multi') tags.push(['t', 'multi']);
       if (data.type === 'earth') tags.push(['t', 'earth']);
+
+      // Add relay preferences from user settings
+      const savedRelays = localStorage.getItem('geocaching-relays');
+      let relayPreferences: string[] = [];
+      if (savedRelays) {
+        try {
+          relayPreferences = JSON.parse(savedRelays);
+        } catch {
+          // Use defaults if parsing fails
+          relayPreferences = ['wss://ditto.pub/relay', 'wss://relay.damus.io', 'wss://nos.lol'];
+        }
+      } else {
+        // Use defaults if no saved preferences
+        relayPreferences = ['wss://ditto.pub/relay', 'wss://relay.damus.io', 'wss://nos.lol'];
+      }
+
+      // Add relay tags in order of preference
+      relayPreferences.forEach(relay => {
+        tags.push(['relay', relay]);
+      });
 
       const event = await publishEvent({
         kind: 37515, // Geocache listing event
@@ -90,8 +112,8 @@ export function useCreateGeocache() {
         const name = event.tags.find(t => t[0] === 'name')?.[1];
         const difficulty = parseInt(event.tags.find(t => t[0] === 'difficulty')?.[1] || '1');
         const terrain = parseInt(event.tags.find(t => t[0] === 'terrain')?.[1] || '1');
-        const size = event.tags.find(t => t[0] === 'size')?.[1] as any;
-        const type = event.tags.find(t => t[0] === 'cache-type')?.[1] as any;
+        const size = event.tags.find(t => t[0] === 'size')?.[1] as "micro" | "small" | "regular" | "large";
+        const type = event.tags.find(t => t[0] === 'cache-type')?.[1] as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event";
         const hint = event.tags.find(t => t[0] === 'hint')?.[1];
         const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
         const locationTag = event.tags.find(t => t[0] === 'location')?.[1];
