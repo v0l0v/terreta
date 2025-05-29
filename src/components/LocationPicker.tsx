@@ -13,8 +13,8 @@ import { autocorrectCoordinates } from "@/lib/coordinates";
 
 import "leaflet/dist/leaflet.css";
 
-// Custom marker icon
-const locationIcon = L.divIcon({
+// Custom marker icon for dropped pin
+const droppedPinIcon = L.divIcon({
   html: `
     <div style="position: relative;">
       <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -28,6 +28,43 @@ const locationIcon = L.divIcon({
   iconAnchor: [16, 40],
 });
 
+// Blue beacon icon for current/searched location
+const blueBeaconIcon = L.divIcon({
+  html: `
+    <div style="position: relative; width: 24px; height: 24px;">
+      <div style="
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background: rgba(59, 130, 246, 0.3);
+        border-radius: 50%;
+        animation: pulse 2s ease-out infinite;
+      "></div>
+      <div style="
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        background: #3b82f6;
+        border: 2px solid white;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      "></div>
+    </div>
+    <style>
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 0.5; }
+        100% { transform: scale(2); opacity: 0; }
+      }
+    </style>
+  `,
+  className: "blue-beacon-icon",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+
 interface LocationPickerProps {
   value: { lat: number; lng: number } | null;
   onChange: (location: { lat: number; lng: number }) => void;
@@ -37,11 +74,13 @@ interface LocationPickerProps {
 function LocationSelector({ 
   value, 
   onChange,
-  center
+  center,
+  beaconLocation
 }: { 
   value: { lat: number; lng: number } | null;
   onChange: (location: { lat: number; lng: number }) => void;
   center?: LatLngExpression;
+  beaconLocation?: { lat: number; lng: number } | null;
 }) {
   const map = useMap();
   
@@ -60,9 +99,23 @@ function LocationSelector({
     }
   }, [center, map]);
 
-  return value ? (
-    <Marker position={[value.lat, value.lng]} icon={locationIcon} />
-  ) : null;
+  return (
+    <>
+      {/* Blue beacon for current/searched location */}
+      {beaconLocation && (
+        <Marker 
+          position={[beaconLocation.lat, beaconLocation.lng]} 
+          icon={blueBeaconIcon}
+          interactive={false}
+        />
+      )}
+      
+      {/* Red pin for selected cache location */}
+      {value && (
+        <Marker position={[value.lat, value.lng]} icon={droppedPinIcon} />
+      )}
+    </>
+  );
 }
 
 export function LocationPicker({ value, onChange }: LocationPickerProps) {
@@ -71,6 +124,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     lng: value?.lng?.toString() || "",
   });
   const [mapCenter, setMapCenter] = useState<LatLngExpression>([40.7128, -74.0060]); // Default to NYC
+  const [beaconLocation, setBeaconLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
 
   useEffect(() => {
@@ -90,14 +144,17 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
       const { lat, lng } = autocorrectCoordinates(coords.latitude, coords.longitude);
       const location = { lat, lng };
       
-      onChange(location);
+      // Set beacon location for current location
+      setBeaconLocation(location);
       setMapCenter([lat, lng]);
       setManualCoords({ 
         lat: lat.toFixed(6), 
         lng: lng.toFixed(6) 
       });
+      
+      // Don't automatically set the cache location - user must click on map
     }
-  }, [coords, onChange]);
+  }, [coords]);
 
   const handleGetCurrentLocation = () => {
     getLocation();
@@ -133,13 +190,16 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     const { lat, lng } = autocorrectCoordinates(location.lat, location.lng);
     
     const newLocation = { lat, lng };
-    onChange(newLocation);
+    // Set beacon location for searched location
+    setBeaconLocation(newLocation);
     setMapCenter([lat, lng]);
     // Update manual coords to show corrected values
     setManualCoords({ 
       lat: lat.toFixed(6), 
       lng: lng.toFixed(6) 
     });
+    
+    // Don't automatically set the cache location - user must click on map
   };
 
   return (
@@ -159,12 +219,22 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
                   url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                   maxZoom={19}
                 />
-                <LocationSelector value={value} onChange={onChange} center={mapCenter} />
+                <LocationSelector 
+                  value={value} 
+                  onChange={onChange} 
+                  center={mapCenter} 
+                  beaconLocation={beaconLocation}
+                />
               </MapContainer>
             </div>
 
             <p className="text-sm text-gray-600 text-center">
-              Click on the map to set the geocache location
+              {beaconLocation ? (
+                <>Click on the map to set the geocache location<br />
+                <span className="text-blue-600">Blue beacon shows your current/searched location</span></>
+              ) : (
+                "Click on the map to set the geocache location"
+              )}
             </p>
 
             {/* Location Options */}

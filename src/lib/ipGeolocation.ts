@@ -22,16 +22,6 @@ const IP_SERVICES = [
     })
   },
   {
-    name: 'ip-api.com',
-    url: 'http://ip-api.com/json/',
-    parser: (data: Record<string, unknown>): IPLocation => ({
-      lat: data.lat as number,
-      lng: data.lon as number,
-      accuracy: 50000,
-      source: 'ip-api.com'
-    })
-  },
-  {
     name: 'ipinfo.io',
     url: 'https://ipinfo.io/json',
     parser: (data: Record<string, unknown>): IPLocation => {
@@ -43,6 +33,16 @@ const IP_SERVICES = [
         source: 'ipinfo.io'
       };
     }
+  },
+  {
+    name: 'geolocation-db.com',
+    url: 'https://geolocation-db.com/json/',
+    parser: (data: Record<string, unknown>): IPLocation => ({
+      lat: data.latitude as number,
+      lng: data.longitude as number,
+      accuracy: 50000,
+      source: 'geolocation-db.com'
+    })
   }
 ];
 

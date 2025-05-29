@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { MapPin, Upload, X } from "lucide-react";
+import { MapPin, Upload, X, AlertTriangle } from "lucide-react";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import L from "leaflet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,12 +10,39 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { LoginArea } from "@/components/auth/LoginArea";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCreateGeocache } from "@/hooks/useCreateGeocache";
 import { LocationPicker } from "@/components/LocationPicker";
 import { useUploadFile } from "@/hooks/useUploadFile";
 import { useToast } from "@/hooks/useToast";
+
+import "leaflet/dist/leaflet.css";
+
+// Custom marker icon for the confirmation map
+const confirmLocationIcon = L.divIcon({
+  html: `
+    <div style="position: relative;">
+      <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 0C9.373 0 4 5.373 4 12c0 9 12 24 12 24s12-15 12-24c0-6.627-5.373-12-12-12z" fill="#ef4444"/>
+        <circle cx="16" cy="12" r="4" fill="white"/>
+      </svg>
+    </div>
+  `,
+  className: "location-picker-icon",
+  iconSize: [32, 40],
+  iconAnchor: [16, 40],
+});
 
 export default function CreateCache() {
   const navigate = useNavigate();
@@ -35,6 +64,7 @@ export default function CreateCache() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,6 +106,13 @@ export default function CreateCache() {
       return;
     }
 
+    // Show confirmation dialog
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    setShowConfirmDialog(false);
+    
     createGeocache({
       ...formData,
       location,
@@ -314,6 +351,88 @@ export default function CreateCache() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Location Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              Confirm Cache Location
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Please review the exact location where your cache will be placed:
+                </p>
+                
+                {location && (
+                  <>
+                    {/* Map Preview */}
+                    <div className="w-full h-64 rounded-lg overflow-hidden border">
+                      <MapContainer
+                        center={[location.lat, location.lng]}
+                        zoom={17}
+                        style={{ height: "100%", width: "100%" }}
+                        scrollWheelZoom={false}
+                        dragging={false}
+                        zoomControl={false}
+                        doubleClickZoom={false}
+                      >
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                          maxZoom={19}
+                        />
+                        <Marker 
+                          position={[location.lat, location.lng]} 
+                          icon={confirmLocationIcon}
+                        />
+                      </MapContainer>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-md font-mono text-sm text-center">
+                      Coordinates: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+                    </div>
+                  </>
+                )}
+                
+                <div className="border-t pt-3">
+                  <p className="font-medium mb-2">Please confirm:</p>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-500 mt-0.5">•</span>
+                      <span>The location is NOT on private property without permission</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-500 mt-0.5">•</span>
+                      <span>The location is NOT near sensitive areas (schools, government buildings, etc.)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-500 mt-0.5">•</span>
+                      <span>The location is accessible to the public</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-500 mt-0.5">•</span>
+                      <span>You have verified the coordinates are accurate</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <p className="text-sm text-gray-600 italic">
+                  Remember: You are responsible for ensuring your geocache placement follows all local laws and regulations.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Review Location</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSubmit}>
+              Confirm & Create Cache
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
