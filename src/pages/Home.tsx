@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Plus, Search, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginArea } from "@/components/auth/LoginArea";
+import LoginDialog from "@/components/auth/LoginDialog";
+import SignupDialog from "@/components/auth/SignupDialog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useGeocaches } from "@/hooks/useGeocaches";
 import { GeocacheList } from "@/components/GeocacheList";
@@ -10,6 +13,31 @@ import { GeocacheList } from "@/components/GeocacheList";
 export default function Home() {
   const { user } = useCurrentUser();
   const { data: geocaches, isLoading } = useGeocaches({ limit: 6 });
+  
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [signupDialogOpen, setSignupDialogOpen] = useState(false);
+
+  const handleLoginSuccess = () => {
+    setLoginDialogOpen(false);
+    // Small delay to let the dialog close gracefully before showing the new button
+    setTimeout(() => {
+      // The user state will automatically update and show "Hide a Cache" button
+      // with the animate-fade-in class for a smooth transition
+    }, 100);
+  };
+
+  const handleLoginClick = () => {
+    setLoginDialogOpen(true);
+  };
+
+  const handleSignupClick = () => {
+    setLoginDialogOpen(false);
+    setSignupDialogOpen(true);
+  };
+
+  const handleSignupClose = () => {
+    setSignupDialogOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40">
@@ -143,14 +171,19 @@ export default function Home() {
             </Link>
             {user ? (
               <Link to="/create" className="flex-1 sm:flex-initial group">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-green-200 hover:border-green-300 hover:bg-green-50 transform transition-all duration-200 hover:scale-105">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto border-green-200 hover:border-green-300 hover:bg-green-50 transform transition-all duration-200 hover:scale-105 animate-fade-in">
                   <Plus className="h-5 w-5 mr-2 transition-transform group-hover:rotate-90" />
                   Hide a Cache
                 </Button>
               </Link>
             ) : (
-              <Button size="lg" variant="outline" disabled className="w-full sm:w-auto opacity-60">
-                <Plus className="h-5 w-5 mr-2" />
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full sm:w-auto border-green-200 hover:border-green-300 hover:bg-green-50 transform transition-all duration-200 hover:scale-105 group"
+                onClick={handleLoginClick}
+              >
+                <Plus className="h-5 w-5 mr-2 transition-transform group-hover:rotate-12" />
                 Login to Hide Caches
               </Button>
             )}
@@ -233,6 +266,18 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Login and Signup Dialogs */}
+      <LoginDialog 
+        isOpen={loginDialogOpen}
+        onClose={() => setLoginDialogOpen(false)}
+        onLogin={handleLoginSuccess}
+        onSignup={handleSignupClick}
+      />
+      <SignupDialog 
+        isOpen={signupDialogOpen}
+        onClose={handleSignupClose}
+      />
     </div>
   );
 }
