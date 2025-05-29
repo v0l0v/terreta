@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { MapPin, Upload, X, AlertTriangle } from "lucide-react";
+import { MapPin, Upload, X, AlertTriangle, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import { useCreateGeocache } from "@/hooks/useCreateGeocache";
 import { LocationPicker } from "@/components/LocationPicker";
 import { useUploadFile } from "@/hooks/useUploadFile";
 import { useToast } from "@/hooks/useToast";
+import { verifyLocation, getVerificationSummary, type LocationVerification } from "@/lib/osmVerification";
 
 import "leaflet/dist/leaflet.css";
 
@@ -65,6 +66,8 @@ export default function CreateCache() {
   const [images, setImages] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [locationVerification, setLocationVerification] = useState<LocationVerification | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -94,7 +97,7 @@ export default function CreateCache() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!location) {
@@ -106,8 +109,38 @@ export default function CreateCache() {
       return;
     }
 
-    // Show confirmation dialog
-    setShowConfirmDialog(true);
+    // Verify location before showing dialog
+    setIsVerifying(true);
+    try {
+      const verification = await verifyLocation(location.lat, location.lng);
+      setLocationVerification(verification);
+      
+      // Check if location is severely restricted
+      const summary = getVerificationSummary(verification);
+      if (summary.status === 'restricted') {
+        toast({
+          title: "Restricted Location",
+          description: summary.message,
+          variant: "destructive",
+        });
+        setIsVerifying(false);
+        return;
+      }
+      
+      // Show confirmation dialog
+      setShowConfirmDialog(true);
+    } catch (error) {
+      console.error('Error verifying location:', error);
+      // Still show dialog but with a warning
+      setLocationVerification({
+        isRestricted: false,
+        warnings: ['Unable to verify location restrictions. Please manually verify the location is appropriate.'],
+        nearbyFeatures: [],
+      });
+      setShowConfirmDialog(true);
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleConfirmSubmit = () => {
@@ -340,8 +373,17 @@ export default function CreateCache() {
               </Alert>
 
               <div className="flex gap-4">
-                <Button type="submit" disabled={isPending} className="flex-1">
-                  {isPending ? "Creating..." : "Create Geocache"}
+                <Button type="submit" disabled={isPending || isVerifying} className="flex-1">
+                  {isVerifying ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Verifying Location...
+                    </>
+                  ) : isPending ? (
+                    "Creating..."
+                  ) : (
+                    "Create Geocache"
+                  )}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => navigate("/")}>
                   Cancel
@@ -397,6 +439,60 @@ export default function CreateCache() {
                   </>
                 )}
                 
+                {/* OSM Verification Results */}
+                {locationVerification && (
+                  <div className="border rounded-lg p-3 space-y-2">
+                    {(() => {
+                      const summary = getVerificationSummary(locationVerification);
+                      return (
+                        <>
+                          <div className={`flex items-start gap-2 font-medium ${
+                            summary.status === 'safe' ? 'text-green-700' :
+                            summary.status === 'warning' ? 'text-yellow-700' :
+                            'text-red-700'
+                          }`}>
+                            {summary.status === 'safe' ? (
+                              <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                            ) : summary.status === 'warning' ? (
+                              <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                            ) : (
+                              <XCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                            )}
+                            <span>{summary.message}</span>
+                          </div>
+                          
+                          {locationVerification.warnings.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              <p className="text-sm font-medium text-gray-700">Detected issues:</p>
+                              <ul className="text-sm text-gray-600 space-y-1">
+                                {locationVerification.warnings.map((warning, idx) => (
+                                  <li key={idx} className="flex items-start gap-2">
+                                    <span className="text-yellow-600 mt-0.5">⚠</span>
+                                    <span>{warning}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {locationVerification.nearbyFeatures.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              <p className="text-sm font-medium text-gray-700">Nearby features:</p>
+                              <ul className="text-sm text-gray-600 space-y-1">
+                                {locationVerification.nearbyFeatures.map((feature, idx) => (
+                                  <li key={idx}>
+                                    • {feature.name ? `${feature.name} (${feature.type})` : feature.type}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+                
                 <div className="border-t pt-3">
                   <p className="font-medium mb-2">Please confirm:</p>
                   <ul className="space-y-2 text-sm">
@@ -427,7 +523,10 @@ export default function CreateCache() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Review Location</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmSubmit}>
+            <AlertDialogAction 
+              onClick={handleConfirmSubmit}
+              disabled={locationVerification && getVerificationSummary(locationVerification).status === 'restricted'}
+            >
               Confirm & Create Cache
             </AlertDialogAction>
           </AlertDialogFooter>

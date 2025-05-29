@@ -35,13 +35,13 @@ const IP_SERVICES = [
     }
   },
   {
-    name: 'geolocation-db.com',
-    url: 'https://geolocation-db.com/json/',
+    name: 'ipwhois.app',
+    url: 'https://ipwhois.app/json/',
     parser: (data: Record<string, unknown>): IPLocation => ({
-      lat: data.latitude as number,
-      lng: data.longitude as number,
+      lat: parseFloat(data.latitude as string),
+      lng: parseFloat(data.longitude as string),
       accuracy: 50000,
-      source: 'geolocation-db.com'
+      source: 'ipwhois.app'
     })
   }
 ];
@@ -51,7 +51,11 @@ export async function getIPLocation(): Promise<IPLocation | null> {
   const promises = IP_SERVICES.map(async (service) => {
     try {
       const response = await fetch(service.url, {
-        signal: AbortSignal.timeout(3000) // Shorter timeout for faster fallback
+        signal: AbortSignal.timeout(3000), // Shorter timeout for faster fallback
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json',
+        }
       });
       
       if (!response.ok) return null;
@@ -72,7 +76,12 @@ export async function getIPLocation(): Promise<IPLocation | null> {
         return location;
       }
     } catch (error) {
-      console.error(`IP geolocation failed for ${service.name}:`, error);
+      // Only log non-CORS errors to reduce console noise
+      if (error instanceof TypeError && error.message.includes('CORS')) {
+        console.debug(`CORS issue with ${service.name}, trying next service...`);
+      } else {
+        console.error(`IP geolocation failed for ${service.name}:`, error);
+      }
     }
     return null;
   });
@@ -86,5 +95,6 @@ export async function getIPLocation(): Promise<IPLocation | null> {
     }
   }
   
+  console.warn('All IP geolocation services failed. User location will need to be set manually.');
   return null;
 }
