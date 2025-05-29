@@ -12,7 +12,7 @@ export default function Home() {
   const { data: geocaches, isLoading } = useGeocaches({ limit: 6 });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       {/* Desktop Header - Hidden on Mobile */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 hidden md:block">
         <div className="container mx-auto px-4 py-4">
@@ -43,31 +43,64 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 px-4 md:py-20">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
-            Discover Hidden Treasures
+      <section className="relative py-12 px-4 md:py-20 overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 -z-10">
+          {/* Floating compass */}
+          <div className="absolute top-20 right-10 text-green-200/30 animate-spin-slow hidden md:block">
+            <svg className="w-16 h-16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2zm0 2.83L17.1 18.07 12 15.9l-5.1 2.17L12 4.83z"/>
+            </svg>
+          </div>
+          
+          {/* Floating map pins */}
+          <div className="absolute top-16 left-10 text-green-300/20 animate-bounce-slow hidden md:block">
+            <MapPin className="w-8 h-8" />
+          </div>
+          
+          <div className="absolute bottom-20 right-20 text-green-400/25 animate-pulse hidden md:block">
+            <MapPin className="w-6 h-6" />
+          </div>
+          
+          {/* Subtle grid lines */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        </div>
+        
+        <div className="container mx-auto text-center relative">
+          <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-6 animate-fade-in">
+            <Trophy className="w-4 h-4" />
+            <span>Join the Quest</span>
+          </div>
+          
+          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 md:mb-6 animate-slide-up">
+            Discover Hidden 
+            <span className="relative inline-block mx-2">
+              <span className="text-green-600">Treasures</span>
+              <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-600 transform scale-x-0 animate-expand-line"></span>
+            </span>
           </h2>
-          <p className="text-lg md:text-xl text-gray-600 mb-6 md:mb-8 max-w-2xl mx-auto">
+          
+          <p className="text-lg md:text-xl text-gray-600 mb-6 md:mb-8 max-w-2xl mx-auto animate-slide-up-delay">
             Join the decentralized geocaching adventure powered by Nostr. 
             Hide caches, find treasures, and connect with explorers worldwide.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
-            <Link to="/map" className="flex-1 sm:flex-initial">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
-                <Search className="h-5 w-5 mr-2" />
+          
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center animate-slide-up-delay-2">
+            <Link to="/map" className="flex-1 sm:flex-initial group">
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto transform transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                <Search className="h-5 w-5 mr-2 transition-transform group-hover:scale-110" />
                 Start Exploring
               </Button>
             </Link>
             {user ? (
-              <Link to="/create" className="flex-1 sm:flex-initial">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  <Plus className="h-5 w-5 mr-2" />
+              <Link to="/create" className="flex-1 sm:flex-initial group">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto border-green-200 hover:border-green-300 hover:bg-green-50 transform transition-all duration-200 hover:scale-105">
+                  <Plus className="h-5 w-5 mr-2 transition-transform group-hover:rotate-90" />
                   Hide a Cache
                 </Button>
               </Link>
             ) : (
-              <Button size="lg" variant="outline" disabled className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" disabled className="w-full sm:w-auto opacity-60">
                 <Plus className="h-5 w-5 mr-2" />
                 Login to Hide Caches
               </Button>
