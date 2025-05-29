@@ -104,8 +104,8 @@ export default function Map() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="border-b bg-white sticky top-0 z-50">
+      {/* Desktop Header */}
+      <header className="hidden lg:block border-b bg-white sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2">
@@ -267,109 +267,111 @@ export default function Map() {
         </div>
       </div>
 
-      {/* Mobile View */}
-      <div className="lg:hidden">
-        {/* Mobile Header with Filters */}
-        <div className="p-4 bg-white border-b">
-          <div className="space-y-3">
-            <div>
-              <Input
-                placeholder="Search caches..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="1">D1</SelectItem>
-                  <SelectItem value="2">D2</SelectItem>
-                  <SelectItem value="3">D3</SelectItem>
-                  <SelectItem value="4">D4</SelectItem>
-                  <SelectItem value="5">D5</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={terrain} onValueChange={setTerrain}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Terrain" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="1">T1</SelectItem>
-                  <SelectItem value="2">T2</SelectItem>
-                  <SelectItem value="3">T3</SelectItem>
-                  <SelectItem value="4">T4</SelectItem>
-                  <SelectItem value="5">T5</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <LocationSearch 
-                onLocationSelect={handleLocationSelect}
-                placeholder="Search city or zip..."
-              />
+      {/* Mobile View - Account for top header (56px) + bottom nav (65px) */}
+      <div className="block lg:hidden h-[calc(100vh-121px)]">
+        {/* Mobile Filters Header - Fixed */}
+        <div className="bg-white border-b shadow-sm">
+          <div className="p-3">
+            <div className="space-y-3">
+              <div>
+                <Input
+                  placeholder="Search caches..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full"
+                />
+              </div>
               
               <div className="flex gap-2">
-                <Button 
-                  variant={showNearMe ? "default" : "outline"} 
-                  className="flex-1 h-9"
-                  size="sm"
-                  onClick={handleNearMe}
-                  disabled={isGettingLocation}
-                >
-                  <Locate className="h-4 w-4 mr-1" />
-                  {isGettingLocation ? "Finding..." : "Near Me"}
-                </Button>
+                <Select value={difficulty} onValueChange={setDifficulty}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="1">D1</SelectItem>
+                    <SelectItem value="2">D2</SelectItem>
+                    <SelectItem value="3">D3</SelectItem>
+                    <SelectItem value="4">D4</SelectItem>
+                    <SelectItem value="5">D5</SelectItem>
+                  </SelectContent>
+                </Select>
                 
-                {(showNearMe || searchLocation) && (
-                  <>
-                    <Select value={searchRadius.toString()} onValueChange={(v) => setSearchRadius(parseInt(v))}>
-                      <SelectTrigger className="w-20 h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="5">5km</SelectItem>
-                        <SelectItem value="10">10km</SelectItem>
-                        <SelectItem value="25">25km</SelectItem>
-                        <SelectItem value="50">50km</SelectItem>
-                        <SelectItem value="100">100km</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 w-9 p-0"
-                      onClick={() => {
-                        setShowNearMe(false);
-                        setSearchLocation(null);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
+                <Select value={terrain} onValueChange={setTerrain}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Terrain" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="1">T1</SelectItem>
+                    <SelectItem value="2">T2</SelectItem>
+                    <SelectItem value="3">T3</SelectItem>
+                    <SelectItem value="4">T4</SelectItem>
+                    <SelectItem value="5">T5</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <LocationSearch 
+                  onLocationSelect={handleLocationSelect}
+                  placeholder="Search city or zip..."
+                />
+                
+                <div className="flex gap-2">
+                  <Button 
+                    variant={showNearMe ? "default" : "outline"} 
+                    className="flex-1 h-9"
+                    size="sm"
+                    onClick={handleNearMe}
+                    disabled={isGettingLocation}
+                  >
+                    <Locate className="h-4 w-4 mr-1" />
+                    {isGettingLocation ? "Finding..." : "Near Me"}
+                  </Button>
+                  
+                  {(showNearMe || searchLocation) && (
+                    <>
+                      <Select value={searchRadius.toString()} onValueChange={(v) => setSearchRadius(parseInt(v))}>
+                        <SelectTrigger className="w-20 h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5km</SelectItem>
+                          <SelectItem value="10">10km</SelectItem>
+                          <SelectItem value="25">25km</SelectItem>
+                          <SelectItem value="50">50km</SelectItem>
+                          <SelectItem value="100">100km</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 p-0"
+                        onClick={() => {
+                          setShowNearMe(false);
+                          setSearchLocation(null);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
         
-        {/* Mobile Tabs */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
-          <Tabs defaultValue="list" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+        {/* Mobile Content Area - Fills remaining space below filters, above bottom nav */}
+        <div className="h-[calc(100%-140px)] overflow-hidden">
+          <Tabs defaultValue="list" className="h-full flex flex-col">
+            <TabsList className="grid w-full grid-cols-2 rounded-none border-b">
               <TabsTrigger value="list">List</TabsTrigger>
               <TabsTrigger value="map">Map</TabsTrigger>
             </TabsList>
-            <TabsContent value="list" className="h-[calc(50vh-2rem)] overflow-y-auto p-4">
+            <TabsContent value="list" className="flex-1 overflow-y-auto p-4 mt-0">
               {isLoading ? (
                 <div className="text-center text-gray-500 py-8">
                   Loading geocaches...
@@ -392,7 +394,7 @@ export default function Map() {
                 </div>
               )}
             </TabsContent>
-            <TabsContent value="map" className="h-[calc(50vh-2rem)]">
+            <TabsContent value="map" className="flex-1 mt-0">
               <GeocacheMap 
                 geocaches={filteredGeocaches} 
                 userLocation={userLocation}

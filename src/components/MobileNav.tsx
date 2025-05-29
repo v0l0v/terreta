@@ -93,9 +93,6 @@ export function MobileNav() {
           })}
         </div>
       </nav>
-
-      {/* Spacer for bottom navigation */}
-      <div className="h-16 md:hidden" />
     </>
   );
 }

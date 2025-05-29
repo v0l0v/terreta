@@ -10,6 +10,7 @@ import { MobileNav } from "@/components/MobileNav";
 export function AppRouter() {
   return (
     <BrowserRouter>
+      {/* Show MobileNav on all pages */}
       <MobileNav />
       <Routes>
         <Route path="/" element={<Home />} />
