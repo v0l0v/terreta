@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { LoginArea } from "@/components/auth/LoginArea";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useGeocache } from "@/hooks/useGeocache";
+import { useGeocacheByDTag } from "@/hooks/useGeocacheByDTag";
 import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
 import { useCreateLog } from "@/hooks/useCreateLog";
 import { useDeleteGeocache } from "@/hooks/useDeleteGeocache";
@@ -26,11 +26,11 @@ import { useToast } from "@/hooks/useToast";
 import { formatDistanceToNow } from "@/lib/date";
 
 export default function CacheDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { dtag } = useParams<{ dtag: string }>();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
-  const { data: geocache, isLoading, error, isError, refetch } = useGeocache(id!);
-  const { data: logs, refetch: refetchLogs } = useGeocacheLogs(id!, geocache?.dTag);
+  const { data: geocache, isLoading, error, isError, refetch } = useGeocacheByDTag(dtag!);
+  const { data: logs, refetch: refetchLogs } = useGeocacheLogs(geocache?.id || '', geocache?.dTag);
   const { mutate: createLog, isPending: isCreatingLog } = useCreateLog();
   const { mutate: deleteGeocache } = useDeleteGeocache();
   const { mutate: editGeocache, isPending: isEditingGeocache } = useEditGeocache(geocache || null);
@@ -72,13 +72,13 @@ export default function CacheDetail() {
   }, [geocache]);
 
   const handleCreateLog = () => {
-    if (!logText.trim() || !id) return;
+    if (!logText.trim() || !geocache) return;
     
     setPostingStatus("Signing event...");
     
     createLog({
-      geocacheId: id,
-      geocacheDTag: geocache?.dTag, // Pass the stable d-tag for new logs
+      geocacheId: geocache.id,
+      geocacheDTag: geocache.dTag, // Pass the stable d-tag for new logs
       type: logType,
       text: logText,
     }, {
@@ -98,8 +98,8 @@ export default function CacheDetail() {
   };
 
   const handleDelete = () => {
-    if (!id) return;
-    deleteGeocache(id, {
+    if (!geocache) return;
+    deleteGeocache(geocache.id, {
       onSuccess: () => {
         navigate("/");
       }

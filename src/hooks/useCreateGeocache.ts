@@ -99,11 +99,15 @@ export function useCreateGeocache() {
       // Also update the geocaches list
       queryClient.invalidateQueries({ queryKey: ['geocaches'] });
       
-      // Navigate to the new geocache immediately (uses optimistic data)
-      navigate(`/cache/${event.id}`);
+      // Navigate to the new geocache using d-tag (stable URL)
+      const dTag = event.tags.find(t => t[0] === 'd')?.[1];
+      if (dTag) {
+        navigate(`/cache/${dTag}`);
+      }
       
       // Background refresh after navigation to ensure data consistency
       setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['geocache-by-dtag', dTag] });
         queryClient.invalidateQueries({ queryKey: ['geocache', event.id] });
       }, 2000);
     },

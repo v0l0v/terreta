@@ -13,7 +13,7 @@ export function AppRouter() {
         <Route path="/" element={<Home />} />
         <Route path="/map" element={<Map />} />
         <Route path="/create" element={<CreateCache />} />
-        <Route path="/cache/:id" element={<CacheDetail />} />
+        <Route path="/cache/:dtag" element={<CacheDetail />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

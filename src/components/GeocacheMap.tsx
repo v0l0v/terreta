@@ -214,7 +214,7 @@ export function GeocacheMap({
     if (onMarkerClick) {
       onMarkerClick(geocache);
     } else {
-      navigate(`/cache/${geocache.id}`);
+      navigate(`/cache/${geocache.dTag}`);
     }
   };
 
@@ -270,7 +270,7 @@ export function GeocacheMap({
       {/* Geocache markers */}
       {geocaches.map((geocache) => (
         <Marker
-          key={geocache.id}
+          key={geocache.dTag}
           position={[geocache.location.lat, geocache.location.lng]}
           icon={createCacheIcon(geocache.type)}
           eventHandlers={{
@@ -309,7 +309,7 @@ export function GeocacheMap({
                 <Button
                   size="sm"
                   className="flex-1"
-                  onClick={() => navigate(`/cache/${geocache.id}`)}
+                  onClick={() => navigate(`/cache/${geocache.dTag}`)}
                 >
                   View Details
                 </Button>

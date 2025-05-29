@@ -53,7 +53,7 @@ function GeocacheCard({ geocache, compact }: GeocacheCardProps) {
 
   if (compact) {
     return (
-      <Link to={`/cache/${geocache.id}`}>
+      <Link to={`/cache/${geocache.dTag}`}>
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
@@ -84,7 +84,7 @@ function GeocacheCard({ geocache, compact }: GeocacheCardProps) {
   }
 
   return (
-    <Link to={`/cache/${geocache.id}`}>
+    <Link to={`/cache/${geocache.dTag}`}>
       <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
         <CardHeader>
           <div className="flex items-start justify-between">

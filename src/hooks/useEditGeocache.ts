@@ -87,36 +87,77 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
         description: "Your geocache has been successfully updated.",
       });
       
-      // Update the specific geocache in cache
-      queryClient.setQueryData(['geocache', originalGeocache?.id], (oldData: unknown) => {
-        if (!oldData || !originalGeocache) return oldData;
-        
-        try {
-          const content = JSON.parse(event.content);
-          return {
-            ...oldData,
-            // Update with new content but keep original ID, dTag and metadata
-            name: content.name,
-            description: content.description,
-            hint: content.hint,
-            difficulty: content.difficulty,
-            terrain: content.terrain,
-            size: content.size,
-            type: content.type,
-            images: content.images,
-          };
-        } catch (error) {
-          console.error('Failed to parse updated geocache content:', error);
-          return oldData;
-        }
-      });
+      // Update the specific geocache in cache using both old and new keys
+      const eventId = originalGeocache?.id;
+      const dTag = originalGeocache?.dTag;
+      
+      if (eventId) {
+        queryClient.setQueryData(['geocache', eventId], (oldData: unknown) => {
+          if (!oldData || !originalGeocache) return oldData;
+          
+          try {
+            const content = JSON.parse(event.content);
+            return {
+              ...oldData,
+              // Update event ID since replaceable events get new IDs
+              id: event.id,
+              // Update with new content but keep dTag stable
+              name: content.name,
+              description: content.description,
+              hint: content.hint,
+              difficulty: content.difficulty,
+              terrain: content.terrain,
+              size: content.size,
+              type: content.type,
+              images: content.images,
+            };
+          } catch (error) {
+            console.error('Failed to parse updated geocache content:', error);
+            return oldData;
+          }
+        });
+      }
+
+      if (dTag) {
+        queryClient.setQueryData(['geocache-by-dtag', dTag], (oldData: unknown) => {
+          if (!oldData || !originalGeocache) return oldData;
+          
+          try {
+            const content = JSON.parse(event.content);
+            return {
+              ...oldData,
+              // Update event ID since replaceable events get new IDs
+              id: event.id,
+              // Update with new content but keep dTag stable
+              name: content.name,
+              description: content.description,
+              hint: content.hint,
+              difficulty: content.difficulty,
+              terrain: content.terrain,
+              size: content.size,
+              type: content.type,
+              images: content.images,
+            };
+          } catch (error) {
+            console.error('Failed to parse updated geocache content:', error);
+            return oldData;
+          }
+        });
+      }
       
       // Also update the geocaches list
       queryClient.invalidateQueries({ queryKey: ['geocaches'] });
       
-      // Background refresh after a short delay
+      // Background refresh after a short delay for both cache keys
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['geocache', originalGeocache?.id] });
+        if (eventId) {
+          queryClient.invalidateQueries({ queryKey: ['geocache', eventId] });
+          // Also refresh with new event ID
+          queryClient.invalidateQueries({ queryKey: ['geocache', event.id] });
+        }
+        if (dTag) {
+          queryClient.invalidateQueries({ queryKey: ['geocache-by-dtag', dTag] });
+        }
       }, 2000);
     },
     onError: (error: unknown) => {
