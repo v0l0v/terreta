@@ -378,8 +378,8 @@ export function Post(/* ...props */) {
 This project is configured for deployment to surge.sh:
 
 - **Quick deploy**: `npm run deploy` - Builds and deploys automatically
-- **Manual deploy**: `cd dist && npx -y surge@latest . nostrcache.surge.sh`
-- **Live URL**: https://nostrcache.surge.sh
+- **Manual deploy**: `cd dist && npx -y surge@latest . treasures.surge.sh`
+- **Live URL**: https://treasures.surge.sh
 
 #### Deployment Configuration
 - Uses `404.html` copy of `index.html` for SPA routing support

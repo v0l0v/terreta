@@ -47,7 +47,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2">
               <MapPin className="h-8 w-8 text-green-600" />
-              <h1 className="text-2xl font-bold text-gray-900">NostrCache</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Treasures</h1>
             </Link>
             <nav className="flex items-center gap-4">
               <Link to="/map">
@@ -194,7 +194,7 @@ export default function Home() {
       {/* Features */}
       <section className="py-12 md:py-16 px-4 bg-white">
         <div className="container mx-auto">
-          <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12">Why NostrCache?</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12">Why Treasures?</h3>
           <div className="grid gap-6 md:grid-cols-3 md:gap-8">
             <Card>
               <CardHeader className="text-center md:text-left">

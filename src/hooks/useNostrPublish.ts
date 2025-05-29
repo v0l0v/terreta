@@ -29,7 +29,7 @@ export function useNostrPublish() {
 
         // Add the client tag if it doesn't exist
         if (!tags.some((tag) => tag[0] === "client")) {
-          tags.push(["client", "nostrcache"]);
+          tags.push(["client", "treasures"]);
         }
 
         const event = await user.signer.signEvent({

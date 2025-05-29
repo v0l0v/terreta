@@ -77,7 +77,7 @@ export function PWAUpdatePrompt() {
         <Download className="h-4 w-4" />
         <AlertDescription>
           <div className="flex items-center justify-between">
-            <span>Install NostrCache app?</span>
+            <span>Install Treasures app?</span>
             <Button 
               size="sm" 
               onClick={handleInstall}

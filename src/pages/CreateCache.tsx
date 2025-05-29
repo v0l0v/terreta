@@ -93,7 +93,7 @@ export default function CreateCache() {
             <div className="flex items-center justify-between">
               <Link to="/" className="flex items-center gap-2">
                 <MapPin className="h-8 w-8 text-green-600" />
-                <h1 className="text-2xl font-bold text-gray-900">NostrCache</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Treasures</h1>
               </Link>
               <LoginArea />
             </div>
@@ -123,7 +123,7 @@ export default function CreateCache() {
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2">
               <MapPin className="h-8 w-8 text-green-600" />
-              <h1 className="text-2xl font-bold text-gray-900">NostrCache</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Treasures</h1>
             </Link>
             <LoginArea />
           </div>

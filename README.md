@@ -1,8 +1,8 @@
-# 🗺️ NostrCache
+# 🗺️ Treasures
 
 A decentralized geocaching platform built on the Nostr protocol. Discover hidden treasures, share locations, and connect with explorers worldwide through a censorship-resistant, open network.
 
-![NostrCache Demo](./public/og-image.png)
+![Treasures Demo](./public/og-image.png)
 
 ## ✨ Features
 
@@ -37,8 +37,8 @@ A decentralized geocaching platform built on the Nostr protocol. Discover hidden
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/nostrcache.git
-   cd nostrcache
+   git clone https://github.com/yourusername/treasures.git
+   cd treasures
    ```
 
 2. **Install dependencies**
@@ -112,7 +112,7 @@ src/
 ## 🎮 How to Use
 
 ### Getting Started
-1. **Open NostrCache** in your web browser
+1. **Open Treasures** in your web browser
 2. **Connect your Nostr account** using any NIP-07 compatible browser extension (like Alby, nos2x, or Flamingo)
 3. **Explore the map** to find geocaches near you or search by location
 
@@ -138,10 +138,11 @@ src/
 
 ## 🔗 Nostr Integration
 
-NostrCache leverages the Nostr protocol for decentralized data storage:
+Treasures leverages the Nostr protocol for decentralized data storage:
 
 ### Event Types
-- **Kind 1**: Geocache creation and log entries
+- **Kind 37515**: Geocache listings (addressable events per NIP-GC)
+- **Kind 37516**: Geocache log entries (per NIP-GC)
 - **Kind 0**: User profile metadata
 - **Kind 3**: Following relationships (for social features)
 
@@ -175,7 +176,7 @@ npm run type-check  # TypeScript type checking
 
 ## 📱 Progressive Web App
 
-NostrCache works as a Progressive Web App (PWA):
+Treasures works as a Progressive Web App (PWA):
 
 - **Offline Support**: Cache data for offline viewing
 - **Install Prompt**: Add to home screen on mobile devices
@@ -218,10 +219,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/nostrcache/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/nostrcache/discussions)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/treasures/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/treasures/discussions)
 - **Nostr**: Follow updates at `npub1...` (coming soon)
 
 ---
 
-**Start your adventure today!** 🗺️✨ Hide caches, find treasures, and explore the world through NostrCache.
+**Start your adventure today!** 🗺️✨ Hide caches, find treasures, and explore the world through Treasures.

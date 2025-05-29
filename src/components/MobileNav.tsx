@@ -30,7 +30,7 @@ export function MobileNav() {
             <SheetContent side="left" className="pr-0">
               <div className="flex items-center gap-2 px-6 py-4">
                 <MapPin className="h-6 w-6 text-green-600" />
-                <span className="font-bold">NostrCache</span>
+                <span className="font-bold">Treasures</span>
               </div>
               <nav className="flex flex-col gap-2 px-6">
                 {navigation.map((item) => {
@@ -60,7 +60,7 @@ export function MobileNav() {
           
           <Link to="/" className="flex items-center gap-2">
             <MapPin className="h-6 w-6 text-green-600" />
-            <span className="font-bold">NostrCache</span>
+            <span className="font-bold">Treasures</span>
           </Link>
           
           <div className="ml-auto">
