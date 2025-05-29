@@ -33,7 +33,8 @@ export function useCreateLog() {
         tags: [
           ['d', `geocache-log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`], // Unique identifier for each log
           ['t', 'geocache-log'], // Type tag for filtering
-          ['geocache', data.geocacheId], // Reference to the geocache
+          ['geocache-id', data.geocacheId], // KEEP for backward compatibility
+          ['geocache-dtag', data.geocacheDTag || data.geocacheId], // NEW: Reference the stable d-tag
           ['type', data.type], // Log type for filtering
         ],
       });

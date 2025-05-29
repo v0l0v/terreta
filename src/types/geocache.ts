@@ -46,6 +46,7 @@ export interface CreateGeocacheData {
 
 export interface CreateLogData {
   geocacheId: string;
+  geocacheDTag?: string; // NEW: For linking to stable d-tag
   type: "found" | "dnf" | "note";
   text: string;
   images?: string[];

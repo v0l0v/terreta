@@ -59,30 +59,48 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
       // Sort by creation date (newest first)
       geocaches.sort((a, b) => b.created_at - a.created_at);
 
-      // Get log counts for each geocache
-      const geocacheIds = geocaches.map(g => g.id);
-      if (geocacheIds.length > 0) {
+      // Get log counts for each geocache using both old and new linking methods
+      if (geocaches.length > 0) {
         const logFilter: NostrFilter = {
           kinds: [30078],
-          '#d': ['geocache-log'],
-          '#geocache': geocacheIds,
+          '#t': ['geocache-log'], // Get all logs and filter locally
+          limit: 500, // Reasonable limit for all logs
         };
 
         const logEvents = await nostr.query([logFilter], { signal });
         
-        // Count logs per geocache
+        // Count logs per geocache - support both old and new linking
         const logCounts = new Map<string, { total: number; found: number }>();
+        
         logEvents.forEach(event => {
-          const geocacheId = event.tags.find(t => t[0] === 'geocache')?.[1];
-          if (!geocacheId) return;
-
-          const data = parseLogData(event);
-          if (!data) return;
-
-          const current = logCounts.get(geocacheId) || { total: 0, found: 0 };
-          current.total++;
-          if (data.type === 'found') current.found++;
-          logCounts.set(geocacheId, current);
+          geocaches.forEach(geocache => {
+            // Check if this log relates to this geocache
+            let isRelated = false;
+            
+            // NEW method: d-tag based linking
+            const hasNewLink = event.tags.some(tag => 
+              tag[0] === 'geocache-dtag' && tag[1] === geocache.dTag
+            );
+            if (hasNewLink) isRelated = true;
+            
+            // OLD method: event ID based linking (for backward compatibility)
+            if (!isRelated) {
+              const hasOldLink = event.tags.some(tag => 
+                (tag[0] === 'geocache' || tag[0] === 'geocache-id') && tag[1] === geocache.id
+              );
+              if (hasOldLink) isRelated = true;
+            }
+            
+            if (isRelated) {
+              const data = parseLogData(event);
+              if (data) {
+                const current = logCounts.get(geocache.id) || { total: 0, found: 0 };
+                current.total++;
+                if (data.type === 'found') current.found++;
+                logCounts.set(geocache.id, current);
+              }
+            }
+          });
         });
 
         // Add counts to geocaches

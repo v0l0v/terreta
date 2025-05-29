@@ -38,29 +38,32 @@ export function useGeocache(id: string) {
 
         console.log('✅ [GEOCACHE] Successfully loaded geocache:', geocache.name);
 
-        // Quick log count fetch (also let fastest relay win)
+        // Quick log count fetch - support both old and new linking methods
         console.log('📊 [GEOCACHE] Fetching log counts...');
         
-        // Try new log format first
-        let logFilter: NostrFilter = {
+        // Get all geocache logs and filter locally
+        const logFilter: NostrFilter = {
           kinds: [30078],
           '#t': ['geocache-log'],
-          '#geocache': [id],
-          limit: 100,
+          limit: 200, // Reasonable limit
         };
 
         let logEvents = await nostr.query([logFilter], { signal });
         
-        // If new format returns nothing, try old format for backward compatibility
-        if (logEvents.length === 0) {
-          logFilter = {
-            kinds: [30078],
-            '#d': ['geocache-log'],
-            '#geocache': [id],
-            limit: 100,
-          };
-          logEvents = await nostr.query([logFilter], { signal });
-        }
+        // Filter logs that reference this geocache either by d-tag or event ID
+        logEvents = logEvents.filter(event => {
+          // NEW method: link via stable d-tag
+          const hasNewLink = event.tags.some(tag => 
+            tag[0] === 'geocache-dtag' && tag[1] === geocache.dTag
+          );
+          if (hasNewLink) return true;
+          
+          // OLD method: link via event ID (for backward compatibility) 
+          const hasOldLink = event.tags.some(tag => 
+            (tag[0] === 'geocache' || tag[0] === 'geocache-id') && tag[1] === id
+          );
+          return hasOldLink;
+        });
       
         let foundCount = 0;
         const logCount = logEvents.length;

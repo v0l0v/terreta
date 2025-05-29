@@ -3,13 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { GeocacheLog } from '@/types/geocache';
 
-export function useGeocacheLogs(geocacheId: string) {
+export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['geocache-logs', geocacheId],
+    queryKey: ['geocache-logs', geocacheId, geocacheDTag],
     queryFn: async (c) => {
-      console.log('🔄 [GEOCACHE LOGS] Starting query for geocache:', geocacheId);
+      console.log('🔄 [GEOCACHE LOGS] Starting query for geocache:', geocacheId, 'dTag:', geocacheDTag);
       
       try {
         const signal = AbortSignal.any([c.signal, AbortSignal.timeout(3000)]); // Fast 3 second timeout
@@ -25,10 +25,21 @@ export function useGeocacheLogs(geocacheId: string) {
       let events = await nostr.query([workingFilter], { signal });
       console.log('Query returned:', events.length, 'events');
       
-      // Filter by geocache tag locally (this was working well)
-      events = events.filter(event => 
-        event.tags.some(tag => tag[0] === 'geocache' && tag[1] === geocacheId)
-      );
+      // Filter by geocache tag locally - support both old and new linking
+      events = events.filter(event => {
+        // NEW method: link via stable d-tag
+        if (geocacheDTag) {
+          const hasNewLink = event.tags.some(tag => tag[0] === 'geocache-dtag' && tag[1] === geocacheDTag);
+          if (hasNewLink) return true;
+        }
+        
+        // OLD method: link via event ID (for backward compatibility)
+        const hasOldLink = event.tags.some(tag => 
+          (tag[0] === 'geocache' || tag[0] === 'geocache-id') && tag[1] === geocacheId
+        );
+        return hasOldLink;
+      });
+      
       console.log('After local geocache filtering:', events.length, 'events');
       console.log('Raw log events received:', events.length);
       
@@ -60,6 +71,7 @@ export function useGeocacheLogs(geocacheId: string) {
 
       console.log('✅ [GEOCACHE LOGS] Final result:', {
         geocacheId,
+        geocacheDTag,
         logsFound: logs.length,
         logIds: logs.map(l => l.id.slice(0, 8))
       });
@@ -94,9 +106,17 @@ function parseLogEvent(event: NostrEvent): GeocacheLog | null {
       return null;
     }
 
-    const geocacheId = event.tags.find(t => t[0] === 'geocache')?.[1];
+    // Support both old and new linking methods
+    let geocacheId = event.tags.find(t => t[0] === 'geocache-dtag')?.[1]; // NEW: d-tag based
     if (!geocacheId) {
-      console.log('Log event missing geocache tag:', event);
+      geocacheId = event.tags.find(t => t[0] === 'geocache')?.[1]; // OLD: event ID based
+    }
+    if (!geocacheId) {
+      geocacheId = event.tags.find(t => t[0] === 'geocache-id')?.[1]; // FALLBACK: explicit event ID
+    }
+    
+    if (!geocacheId) {
+      console.log('Log event missing geocache reference:', event);
       return null;
     }
 

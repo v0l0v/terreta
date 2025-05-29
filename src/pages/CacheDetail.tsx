@@ -30,7 +30,7 @@ export default function CacheDetail() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { data: geocache, isLoading, error, isError, refetch } = useGeocache(id!);
-  const { data: logs, refetch: refetchLogs } = useGeocacheLogs(id!);
+  const { data: logs, refetch: refetchLogs } = useGeocacheLogs(id!, geocache?.dTag);
   const { mutate: createLog, isPending: isCreatingLog } = useCreateLog();
   const { mutate: deleteGeocache } = useDeleteGeocache();
   const { mutate: editGeocache, isPending: isEditingGeocache } = useEditGeocache(geocache || null);
@@ -78,6 +78,7 @@ export default function CacheDetail() {
     
     createLog({
       geocacheId: id,
+      geocacheDTag: geocache?.dTag, // Pass the stable d-tag for new logs
       type: logType,
       text: logText,
     }, {
