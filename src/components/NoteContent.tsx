@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
 import { useAuthor } from '@/hooks/useAuthor';
 import { cn } from '@/lib/utils';
+import { validateUrl } from '@/lib/security';
 
 interface NoteContentProps {
   event: NostrEvent;
@@ -39,17 +40,28 @@ export function NoteContent({
             parts.push(text.substring(lastIndex, index));
           }
           
-          parts.push(
-            <a 
-              key={`url-${index}`}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline"
-            >
-              {url}
-            </a>
-          );
+          // Validate URL before creating link
+          if (validateUrl(url)) {
+            parts.push(
+              <a 
+                key={`url-${index}`}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+                title={`External link: ${url}`}
+              >
+                {url}
+              </a>
+            );
+          } else {
+            // If URL is invalid, render as plain text
+            parts.push(
+              <span key={`invalid-url-${index}`} className="text-gray-400" title="Invalid URL">
+                {url}
+              </span>
+            );
+          }
           
           lastIndex = index + match.length;
           return match;

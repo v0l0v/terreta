@@ -57,15 +57,7 @@ export default function Map() {
     }
   }, [coords, showNearMe]);
 
-  // Automatically get location when component mounts
-  useEffect(() => {
-    // Small delay to avoid immediate location prompt
-    const timer = setTimeout(() => {
-      getLocation();
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [getLocation]);
+  // Remove automatic location request - only get location when user clicks "Near Me"
 
   // Filter and sort geocaches based on location
   const filteredGeocaches = (() => {

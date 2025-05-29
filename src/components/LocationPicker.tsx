@@ -83,6 +83,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     }
   }, [value]);
 
+  // Only update location when user explicitly gets location, not automatically
   useEffect(() => {
     if (coords) {
       // Apply autocorrection even to GPS coordinates (in case of device errors)

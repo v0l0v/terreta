@@ -2,7 +2,7 @@
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
 import React, { useState } from 'react';
-import { Download, Key } from 'lucide-react';
+import { Download, Key, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Dialog,
@@ -11,9 +11,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
+import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { toast } from '@/hooks/useToast.ts';
 import { useLoginActions } from '@/hooks/useLoginActions';
 import { generateSecretKey, nip19 } from 'nostr-tools';
+import { sanitizeFilename } from '@/lib/security';
 
 interface SignupDialogProps {
   isOpen: boolean;
@@ -50,25 +52,38 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
   };
 
   const downloadKey = () => {
-    // Create a blob with the key text
-    const blob = new Blob([nsec], { type: 'text/plain' });
-    const url = globalThis.URL.createObjectURL(blob);
+    try {
+      // Create a blob with the key text
+      const blob = new Blob([nsec], { type: 'text/plain; charset=utf-8' });
+      const url = globalThis.URL.createObjectURL(blob);
 
-    // Create a temporary link element and trigger download
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'nsec.txt';
-    document.body.appendChild(a);
-    a.click();
+      // Sanitize filename
+      const filename = sanitizeFilename('nostr-secret-key.txt');
 
-    // Clean up
-    globalThis.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+      // Create a temporary link element and trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
 
-    toast({
-      title: 'Key downloaded',
-      description: 'Your key has been downloaded. Keep it safe!',
-    });
+      // Clean up immediately
+      globalThis.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'Key downloaded',
+        description: 'Your key has been downloaded securely. Keep it safe!',
+      });
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: 'Download failed',
+        description: 'Could not download the key file. Please copy it manually.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const finishSignup = () => {
@@ -120,6 +135,13 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
 
           {step === 'download' && (
             <div className='space-y-6'>
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Security Warning:</strong> This is your private key. Never share it with anyone or enter it on untrusted websites.
+                </AlertDescription>
+              </Alert>
+
               <div className='p-4 rounded-lg border bg-gray-50 dark:bg-gray-800 overflow-auto'>
                 <code className='text-xs break-all'>{nsec}</code>
               </div>
@@ -128,8 +150,9 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
                 <p className='font-medium text-red-500'>Important:</p>
                 <ul className='list-disc pl-5 space-y-1'>
                   <li>This is your only way to access your account</li>
-                  <li>Store it somewhere safe</li>
+                  <li>Store it somewhere safe (password manager recommended)</li>
                   <li>Never share this key with anyone</li>
+                  <li>We cannot recover this key if you lose it</li>
                 </ul>
               </div>
 
