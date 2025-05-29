@@ -32,7 +32,7 @@ export default function Home() {
                 <Link to="/create">
                   <Button variant="ghost" size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Cache
+                    Hide a Cache
                   </Button>
                 </Link>
               )}
