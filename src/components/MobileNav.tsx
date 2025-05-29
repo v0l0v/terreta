@@ -12,7 +12,7 @@ export function MobileNav() {
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Map', href: '/map', icon: Map },
-    { name: 'Hide Cache', href: '/create', icon: Plus },
+    { name: 'Hide Treasure', href: '/create', icon: Plus },
   ];
 
   return (

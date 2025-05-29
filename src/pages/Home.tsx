@@ -173,7 +173,7 @@ export default function Home() {
               <Link to="/create" className="flex-1 sm:flex-initial group">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto border-green-200 hover:border-green-300 hover:bg-green-50 transform transition-all duration-200 hover:scale-105 animate-fade-in">
                   <Plus className="h-5 w-5 mr-2 transition-transform group-hover:rotate-90" />
-                  Hide a Cache
+                  Hide a Treasure
                 </Button>
               </Link>
             ) : (

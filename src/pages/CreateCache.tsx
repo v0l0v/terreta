@@ -133,7 +133,7 @@ export default function CreateCache() {
       <div className="container mx-auto px-4 py-8 pb-20 md:pb-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>Hide a New Geocache</CardTitle>
+            <CardTitle>Hide a New Treasure</CardTitle>
             <CardDescription>
               Create a new geocache for others to discover. Make sure to provide accurate information
               and follow local regulations.
