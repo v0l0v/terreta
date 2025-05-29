@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Navigation, Filter, X, Locate } from "lucide-react";
+import L from "leaflet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,7 @@ export default function Map() {
   const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [searchRadius, setSearchRadius] = useState(25); // km
   const [mapUpdateKey, setMapUpdateKey] = useState(0);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<L.Map | null>(null);
   
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
   
@@ -64,7 +65,7 @@ export default function Map() {
     }, 500);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [getLocation]);
 
   // Filter and sort geocaches based on location
   const filteredGeocaches = (() => {
@@ -118,7 +119,7 @@ export default function Map() {
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-73px)]">
+      <div className="hidden lg:flex h-[calc(100vh-73px)]">
         {/* Sidebar */}
         <div className="w-96 border-r bg-white overflow-hidden flex flex-col">
           {/* Search and Filters */}
@@ -267,19 +268,142 @@ export default function Map() {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
-        <Tabs defaultValue="list" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="list">List</TabsTrigger>
-            <TabsTrigger value="map">Map</TabsTrigger>
-          </TabsList>
-          <TabsContent value="list" className="h-[50vh] overflow-y-auto">
-            {/* Mobile list view */}
-          </TabsContent>
-          <TabsContent value="map" className="h-[50vh]">
-            {/* Mobile map view */}
-          </TabsContent>
-        </Tabs>
+      <div className="lg:hidden">
+        {/* Mobile Header with Filters */}
+        <div className="p-4 bg-white border-b">
+          <div className="space-y-3">
+            <div>
+              <Input
+                placeholder="Search caches..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <Select value={difficulty} onValueChange={setDifficulty}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Difficulty" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="1">D1</SelectItem>
+                  <SelectItem value="2">D2</SelectItem>
+                  <SelectItem value="3">D3</SelectItem>
+                  <SelectItem value="4">D4</SelectItem>
+                  <SelectItem value="5">D5</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={terrain} onValueChange={setTerrain}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Terrain" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="1">T1</SelectItem>
+                  <SelectItem value="2">T2</SelectItem>
+                  <SelectItem value="3">T3</SelectItem>
+                  <SelectItem value="4">T4</SelectItem>
+                  <SelectItem value="5">T5</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <LocationSearch 
+                onLocationSelect={handleLocationSelect}
+                placeholder="Search city or zip..."
+              />
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant={showNearMe ? "default" : "outline"} 
+                  className="flex-1 h-9"
+                  size="sm"
+                  onClick={handleNearMe}
+                  disabled={isGettingLocation}
+                >
+                  <Locate className="h-4 w-4 mr-1" />
+                  {isGettingLocation ? "Finding..." : "Near Me"}
+                </Button>
+                
+                {(showNearMe || searchLocation) && (
+                  <>
+                    <Select value={searchRadius.toString()} onValueChange={(v) => setSearchRadius(parseInt(v))}>
+                      <SelectTrigger className="w-20 h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5km</SelectItem>
+                        <SelectItem value="10">10km</SelectItem>
+                        <SelectItem value="25">25km</SelectItem>
+                        <SelectItem value="50">50km</SelectItem>
+                        <SelectItem value="100">100km</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 p-0"
+                      onClick={() => {
+                        setShowNearMe(false);
+                        setSearchLocation(null);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Mobile Tabs */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
+          <Tabs defaultValue="list" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="list">List</TabsTrigger>
+              <TabsTrigger value="map">Map</TabsTrigger>
+            </TabsList>
+            <TabsContent value="list" className="h-[calc(50vh-2rem)] overflow-y-auto p-4">
+              {isLoading ? (
+                <div className="text-center text-gray-500 py-8">
+                  Loading geocaches...
+                </div>
+              ) : filteredGeocaches.length > 0 ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
+                    {(searchLocation || (showNearMe && userLocation)) && ` • ${searchRadius}km radius`}
+                  </p>
+                  <GeocacheList geocaches={filteredGeocaches} compact />
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <MapPin className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p>No geocaches found</p>
+                  <p className="text-sm mt-2">
+                    {searchLocation ? 'Try increasing the search radius or searching a different area' : 'Try adjusting your filters'}
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="map" className="h-[calc(50vh-2rem)]">
+              <GeocacheMap 
+                geocaches={filteredGeocaches} 
+                userLocation={userLocation}
+                searchLocation={searchLocation || (showNearMe ? userLocation : null)}
+                searchRadius={searchRadius}
+                center={mapCenter || undefined}
+                zoom={mapZoom}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

@@ -5,10 +5,12 @@ import Map from "./pages/Map";
 import CreateCache from "./pages/CreateCache";
 import CacheDetail from "./pages/CacheDetail";
 import NotFound from "./pages/NotFound";
+import { MobileNav } from "@/components/MobileNav";
 
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <MobileNav />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/map" element={<Map />} />

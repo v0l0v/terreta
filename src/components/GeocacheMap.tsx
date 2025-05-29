@@ -223,7 +223,11 @@ export function GeocacheMap({
       center={mapCenter}
       zoom={zoom}
       style={{ height: "100%", width: "100%" }}
-      className="rounded-lg"
+      className="rounded-lg z-0"
+      zoomControl={true}
+      scrollWheelZoom={true}
+      doubleClickZoom={true}
+      touchZoom={true}
     >
       <TileLayer
         attribution={mapStyle.attribution}

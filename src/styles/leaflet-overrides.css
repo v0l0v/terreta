@@ -3,6 +3,8 @@
   height: 100%;
   width: 100%;
   z-index: 0;
+  /* Improve touch performance on mobile */
+  touch-action: manipulation;
 }
 
 /* Fix marker icon paths */
@@ -47,4 +49,31 @@
 
 .leaflet-control-container .leaflet-right {
   right: 10px;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 1024px) {
+  /* Make zoom controls larger on mobile */
+  .leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 20px !important;
+  }
+  
+  /* Improve popup on mobile */
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 40px);
+  }
+  
+  /* Ensure map fills container properly on mobile */
+  .leaflet-container {
+    height: 100% !important;
+    width: 100% !important;
+  }
+  
+  /* Fix touch interactions */
+  .leaflet-container a {
+    -webkit-tap-highlight-color: transparent;
+  }
 }

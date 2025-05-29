@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NostrLoginProvider } from '@nostrify/react/login';
 import AppRouter from './AppRouter';
+import { PWAUpdatePrompt } from '@/components/PWAUpdatePrompt';
 import './styles/leaflet-overrides.css';
 
 // DO NOT MODIFY THIS RELAY LIST UNLESS EXPLICITLY REQUESTED
@@ -36,9 +37,12 @@ export function App() {
       <NostrProvider relays={defaultRelays}>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
+            <div className="pb-safe-bottom">
+              <AppRouter />
+            </div>
+            <PWAUpdatePrompt />
             <Toaster />
             <Sonner />
-            <AppRouter />
           </TooltipProvider>
         </QueryClientProvider>
       </NostrProvider>
