@@ -124,7 +124,7 @@ src/
 - Click on **map markers** or **list items** to view cache details
 
 ### Hiding Geocaches
-1. Click **"Hide a Cache"** or the **+** icon in navigation
+1. Click **"Hide a Treasure"** or the **+** icon in navigation
 2. Fill out cache details: name, description, difficulty, terrain
 3. **Click on the map** to set GPS coordinates
 4. Add optional **hint** and **images**
