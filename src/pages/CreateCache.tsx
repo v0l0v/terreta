@@ -137,6 +137,32 @@ export default function CreateCache() {
         isRestricted: false,
         warnings: ['Unable to verify location restrictions. Please manually verify the location is appropriate.'],
         nearbyFeatures: [],
+        accessibility: {
+          wheelchair: undefined,
+          parking: undefined,
+          publicTransport: undefined,
+          fee: undefined,
+          openingHours: undefined,
+        },
+        terrain: {
+          surface: undefined,
+          hazards: [],
+          lit: undefined,
+          covered: undefined,
+        },
+        legal: {
+          restrictions: [],
+        },
+        environmental: {
+          nesting: undefined,
+          protected: undefined,
+          leaveNoTrace: undefined,
+        },
+        safety: {
+          surveillance: undefined,
+          cellCoverage: undefined,
+          lighting: undefined,
+        },
       });
       setShowConfirmDialog(true);
     } finally {
@@ -146,6 +172,8 @@ export default function CreateCache() {
 
   const handleConfirmSubmit = () => {
     setShowConfirmDialog(false);
+    
+    if (!location) return;
     
     createGeocache({
       ...formData,
@@ -465,7 +493,7 @@ export default function CreateCache() {
             <AlertDialogCancel>Review Location</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleConfirmSubmit}
-              disabled={locationVerification && getVerificationSummary(locationVerification).status === 'restricted'}
+              disabled={Boolean(locationVerification && getVerificationSummary(locationVerification).status === 'restricted')}
               className="bg-green-600 hover:bg-green-700"
             >
               ✓ Confirm & Create Cache

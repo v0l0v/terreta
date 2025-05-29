@@ -27,8 +27,7 @@ import { formatDistanceToNow } from "@/lib/date";
 import { EventSourceInfo } from "@/components/EventSourceInfo";
 import { LocationWarnings } from "@/components/LocationWarnings";
 import { verifyLocation, type LocationVerification } from "@/lib/osmVerification";
-import { Compass } from "@/components/Compass";
-import { GPSCompass } from "@/components/GPSCompass";
+import { TreasureCompass } from "@/components/TreasureCompass";
 
 export default function CacheDetail() {
   const { dtag } = useParams<{ dtag: string }>();
@@ -601,7 +600,7 @@ export default function CacheDetail() {
                 </TabsTrigger>
                 <TabsTrigger value="compass">
                   <CompassIcon className="h-4 w-4 mr-2" />
-                  Compass
+                  Treasure Compass
                 </TabsTrigger>
               </TabsList>
               
@@ -716,31 +715,19 @@ export default function CacheDetail() {
               </TabsContent>
               
               <TabsContent value="compass">
-                <div className="space-y-6">
+                <div className="h-96 flex items-center justify-center">
                   <div className="text-center">
-                    <h3 className="text-lg font-medium mb-4">GPS Compass</h3>
-                    <div className="flex justify-center">
-                      <GPSCompass 
-                        targetLat={geocache.location.lat}
-                        targetLng={geocache.location.lng}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Uses GPS movement to determine your orientation - works on all devices
-                    </p>
-                  </div>
-                  
-                  <div className="border-t pt-6">
-                    <div className="text-center">
-                      <h3 className="text-lg font-medium mb-4">Device Compass (Experimental)</h3>
-                      <div className="flex justify-center">
-                        <Compass 
-                          targetLat={geocache.location.lat}
-                          targetLng={geocache.location.lng}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Requires device sensors - may not work on all Android devices
+                    <TreasureCompass 
+                      targetLat={geocache.location.lat}
+                      targetLng={geocache.location.lng}
+                    />
+                    <div className="mt-4 max-w-sm mx-auto">
+                      <p className="text-xs text-gray-500">
+                        Smart compass that uses device sensors when available, 
+                        automatically falls back to GPS-based direction finding.
+                      </p>
+                      <p className="text-xs text-gray-400 mt-2">
+                        The arrow always points toward the treasure! 🏴‍☠️
                       </p>
                     </div>
                   </div>

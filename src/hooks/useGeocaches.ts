@@ -2,7 +2,6 @@ import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
-import { isIOS, getIOSCompatibleQueryOptions } from '@/lib/ios';
 
 interface UseGeocachesOptions {
   limit?: number;
@@ -14,25 +13,13 @@ interface UseGeocachesOptions {
 
 export function useGeocaches(options: UseGeocachesOptions = {}) {
   const { nostr } = useNostr();
-  const queryOptions = getIOSCompatibleQueryOptions();
 
   return useQuery({
     queryKey: ['geocaches', options],
-    staleTime: queryOptions.staleTime,
-    gcTime: queryOptions.gcTime,
+    staleTime: 60000, // 1 minute
+    gcTime: 300000, // 5 minutes
     queryFn: async (c) => {
-      // iOS Safari has issues with AbortSignal.any and AbortSignal.timeout
-      // Use a simpler approach for better compatibility
-      let signal = c.signal;
-      let timeoutId: NodeJS.Timeout | null = null;
-      
-      // Create a timeout signal for iOS compatibility
-      if (!signal.aborted) {
-        timeoutId = setTimeout(() => {
-          // Don't abort here, just let the query continue
-          // iOS Safari sometimes has issues with aggressive timeouts
-        }, queryOptions.timeout); // iOS-compatible timeout
-      }
+      console.log('Starting geocache query with filter...');
       
       // Build filter for geocache events
       const filter: NostrFilter = {
@@ -44,17 +31,10 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
         filter.authors = [options.authorPubkey];
       }
 
-      try {
-        console.log('Starting geocache query with filter:', filter);
-        console.log('User agent:', navigator.userAgent);
-        console.log('iOS Safari check:', /iPad|iPhone|iPod/.test(navigator.userAgent));
-        
-        const events = await nostr.query([filter], { signal });
-        
-        // Clear timeout if query succeeds
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
+      console.log('Filter:', filter);
+      
+      // Simple query without complex signal handling
+      const events = await nostr.query([filter]);
       
       console.log('Raw events from query:', events.length, 'events');
       console.log('Event kinds:', events.map(e => e.kind));
@@ -91,59 +71,50 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
 
       // Get log counts for each geocache
       if (geocaches.length > 0) {
-        // Create filters for logs of each geocache
-        const logFilters: NostrFilter[] = geocaches.map(geocache => ({
-          kinds: [37516], // Geocache log events
-          '#a': [`37515:${geocache.pubkey}:${geocache.dTag}`],
-          limit: 100, // Limit per cache
-        }));
+        try {
+          // Create filters for logs of each geocache
+          const logFilters: NostrFilter[] = geocaches.map(geocache => ({
+            kinds: [37516], // Geocache log events
+            '#a': [`37515:${geocache.pubkey}:${geocache.dTag}`],
+            limit: 100, // Limit per cache
+          }));
 
-        const logEvents = await nostr.query(logFilters, { signal });
-        
-        // Count logs per geocache
-        const logCounts = new Map<string, { total: number; found: number }>();
-        
-        logEvents.forEach(event => {
-          // Find which geocache this log belongs to
-          const aTag = event.tags.find(tag => tag[0] === 'a')?.[1];
-          if (!aTag) return;
+          const logEvents = await nostr.query(logFilters);
           
-          const [, pubkey, dTag] = aTag.split(':');
-          const geocache = geocaches.find(g => g.pubkey === pubkey && g.dTag === dTag);
-          if (!geocache) return;
+          // Count logs per geocache
+          const logCounts = new Map<string, { total: number; found: number }>();
           
-          const data = parseLogData(event);
-          if (data) {
-            const current = logCounts.get(geocache.id) || { total: 0, found: 0 };
-            current.total++;
-            if (data.type === 'found') current.found++;
-            logCounts.set(geocache.id, current);
-          }
-        });
+          logEvents.forEach(event => {
+            // Find which geocache this log belongs to
+            const aTag = event.tags.find(tag => tag[0] === 'a')?.[1];
+            if (!aTag) return;
+            
+            const [, pubkey, dTag] = aTag.split(':');
+            const geocache = geocaches.find(g => g.pubkey === pubkey && g.dTag === dTag);
+            if (!geocache) return;
+            
+            const data = parseLogData(event);
+            if (data) {
+              const current = logCounts.get(geocache.id) || { total: 0, found: 0 };
+              current.total++;
+              if (data.type === 'found') current.found++;
+              logCounts.set(geocache.id, current);
+            }
+          });
 
-        // Add counts to geocaches
-        geocaches = geocaches.map(g => ({
-          ...g,
-          logCount: logCounts.get(g.id)?.total || 0,
-          foundCount: logCounts.get(g.id)?.found || 0,
-        }));
-      }
-
-        return geocaches;
-      } catch (error) {
-        // Clear timeout on error
-        if (timeoutId) {
-          clearTimeout(timeoutId);
+          // Add counts to geocaches
+          geocaches = geocaches.map(g => ({
+            ...g,
+            logCount: logCounts.get(g.id)?.total || 0,
+            foundCount: logCounts.get(g.id)?.found || 0,
+          }));
+        } catch (error) {
+          console.error('Error fetching log counts:', error);
+          // Continue without log counts if there's an error
         }
-        console.error('Error fetching geocaches:', error);
-        console.error('Error details:', {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-          isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
-          userAgent: navigator.userAgent
-        });
-        throw error;
       }
+
+      return geocaches;
     },
   });
 }

@@ -256,7 +256,8 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
       
       // Collect accessibility information
       if (element.tags.wheelchair) {
-        accessibility.wheelchair = element.tags.wheelchair === 'yes';
+        accessibility.wheelchair = element.tags.wheelchair === 'yes' ? true : 
+                                   element.tags.wheelchair === 'no' ? false : undefined;
       }
       if (element.tags.parking) {
         accessibility.parking = element.tags.parking === 'yes' || 
@@ -342,10 +343,12 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
       
       // Additional terrain information
       if (element.tags.lit) {
-        terrain.lit = element.tags.lit === 'yes';
+        terrain.lit = element.tags.lit === 'yes' ? true : 
+                     element.tags.lit === 'no' ? false : undefined;
       }
       if (element.tags.covered) {
-        terrain.covered = element.tags.covered === 'yes';
+        terrain.covered = element.tags.covered === 'yes' ? true : 
+                         element.tags.covered === 'no' ? false : undefined;
       }
       if (element.tags.width) {
         terrain.width = element.tags.width;
@@ -378,7 +381,8 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
         safety.emergency = element.tags.emergency;
       }
       if (element.tags['mobile_phone:signal']) {
-        safety.cellCoverage = element.tags['mobile_phone:signal'] !== 'no';
+        safety.cellCoverage = element.tags['mobile_phone:signal'] === 'yes' ? true :
+                             element.tags['mobile_phone:signal'] === 'no' ? false : undefined;
       }
       if (element.tags.lighting) {
         safety.lighting = element.tags.lighting;

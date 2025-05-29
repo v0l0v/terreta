@@ -31,8 +31,8 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
   });
 
   // Create location features (informational, not warnings)
-  const locationFeatures = [];
-  const hindrances = [];
+  const locationFeatures: { label: string; type: string; }[] = [];
+  const hindrances: { label: string; type: string; }[] = [];
   
   // Positive features
   if (verification.accessibility.wheelchair) {
