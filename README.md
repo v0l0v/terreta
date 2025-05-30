@@ -61,6 +61,39 @@ npm run build
 npm run preview
 ```
 
+## 🚀 Deployment
+
+### Docker Deployment (Recommended)
+
+Deploy to your Digital Ocean droplet using Docker:
+
+```bash
+# Test locally first
+./docker/test-docker.sh
+
+# Deploy to droplet (basic)
+./docker/deploy-docker.sh YOUR_DROPLET_IP
+
+# Deploy with SSL (production)
+./docker/deploy-docker.sh YOUR_DROPLET_IP treasures.yourdomain.com --ssl
+```
+
+See the [Docker deployment guide](./docker/README.md) for detailed instructions.
+
+### Static Hosting
+
+Deploy the built app to any static hosting provider:
+
+```bash
+npm run build
+# Upload the dist/ folder to your hosting provider
+```
+
+The app is also configured for Surge.sh deployment:
+```bash
+npm run deploy
+```
+
 ## 🏗️ Technology Stack
 
 ### Frontend Framework
@@ -107,6 +140,13 @@ src/
 │   ├── geo.ts          # Geographic calculations
 │   └── date.ts         # Date formatting
 └── types/              # TypeScript type definitions
+
+docker/                 # Docker deployment files
+├── Dockerfile          # Container build configuration
+├── docker-compose.yml  # Multi-service setup with SSL
+├── deploy-docker.sh    # Automated deployment script
+├── test-docker.sh      # Local testing script
+└── README.md          # Docker deployment guide
 ```
 
 ## 🎮 How to Use

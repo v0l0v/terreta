@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  treasures:
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: treasures-app
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "com.treasures.description=Treasures Nostr Geocaching App"
+      - "com.treasures.version=1.0.0"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: treasures-network

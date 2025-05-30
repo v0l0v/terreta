@@ -217,6 +217,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
                 center={mapCenter}
                 zoom={value ? 15 : 10}
                 style={{ height: "100%", width: "100%" }}
+                attributionControl={false}
               >
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'

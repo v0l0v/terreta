@@ -243,6 +243,7 @@ export function GeocacheMap({
       zoomControl={true}
       doubleClickZoom={true}
       touchZoom={true}
+      attributionControl={false}
       {...mapOptions}
     >
       <TileLayer

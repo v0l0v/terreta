@@ -144,12 +144,24 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
 
       {/* Status Alert (only if there are actual warnings and not hiding creator warnings) */}
       {!hideCreatorWarnings && (summary.status === 'warning' || summary.status === 'restricted') && (
-        <div className={`p-3 rounded-md border border-gray-200 ${
-          summary.status === 'warning' ? 'bg-yellow-50' : 'bg-red-50'
+        <div className={`p-3 rounded-md border-2 ${
+          summary.status === 'warning' 
+            ? 'bg-yellow-50 border-yellow-300' 
+            : 'bg-red-50 border-red-300'
         }`}>
           <div className="flex items-start gap-2">
             <StatusIcon className={`h-4 w-4 mt-0.5 ${statusColor}`} />
-            <div className="font-medium text-sm text-gray-800">{summary.message}</div>
+            <div>
+              <div className="font-medium text-sm text-gray-800 mb-1">
+                {summary.status === 'restricted' ? 'Location Warning' : 'Location Notice'}
+              </div>
+              <div className="text-sm text-gray-700">{summary.message}</div>
+              {summary.status === 'restricted' && (
+                <div className="text-xs text-gray-600 mt-2 italic">
+                  You can still create a cache here, but please ensure you have proper permissions and the location is appropriate.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

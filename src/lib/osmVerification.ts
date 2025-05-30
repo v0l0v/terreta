@@ -528,7 +528,7 @@ export function getVerificationSummary(verification: LocationVerification): {
   )) {
     return {
       status: 'restricted',
-      message: 'This location is inside a restricted area. Please choose a different location.',
+      message: 'This location appears to be inside a restricted area. Please verify you have permission and the location is appropriate for geocaching.',
     };
   }
   
@@ -542,12 +542,12 @@ export function getVerificationSummary(verification: LocationVerification): {
   )) {
     return {
       status: 'warning',
-      message: 'This location is near restricted areas. Please verify it is appropriate for a geocache.',
+      message: 'This location is near restricted areas. Please verify it is appropriate and you have necessary permissions.',
     };
   }
   
   return {
     status: 'warning',
-    message: 'This location may have restrictions. Please verify it is appropriate for a geocache.',
+    message: 'This location may have some considerations. Please review the details and verify it is appropriate for geocaching.',
   };
 }

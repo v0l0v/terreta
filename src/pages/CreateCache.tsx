@@ -116,19 +116,8 @@ export default function CreateCache() {
       const verification = await verifyLocation(location.lat, location.lng);
       setLocationVerification(verification);
       
-      // Check if location is severely restricted
-      const summary = getVerificationSummary(verification);
-      if (summary.status === 'restricted') {
-        toast({
-          title: "Restricted Location",
-          description: summary.message,
-          variant: "destructive",
-        });
-        setIsVerifying(false);
-        return;
-      }
-      
-      // Show confirmation dialog
+      // Always show confirmation dialog, even for restricted locations
+      // The dialog will display appropriate warnings
       setShowConfirmDialog(true);
     } catch (error) {
       console.error('Error verifying location:', error);
@@ -438,6 +427,7 @@ export default function CreateCache() {
                           dragging={false}
                           zoomControl={false}
                           doubleClickZoom={false}
+                          attributionControl={false}
                         >
                           <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -488,10 +478,16 @@ export default function CreateCache() {
             <AlertDialogCancel>Review Location</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleConfirmSubmit}
-              disabled={Boolean(locationVerification && getVerificationSummary(locationVerification).status === 'restricted')}
-              className="bg-green-600 hover:bg-green-700"
+              className={`${
+                locationVerification && getVerificationSummary(locationVerification).status === 'restricted'
+                  ? 'bg-yellow-600 hover:bg-yellow-700'
+                  : 'bg-green-600 hover:bg-green-700'
+              }`}
             >
-              ✓ Confirm & Create Cache
+              {locationVerification && getVerificationSummary(locationVerification).status === 'restricted'
+                ? '⚠️ Create Despite Warnings'
+                : '✓ Confirm & Create Cache'
+              }
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
