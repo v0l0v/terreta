@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { LoginArea } from "@/components/auth/LoginArea";
+import { SaveButton } from "@/components/SaveButton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useGeocacheByDTag } from "@/hooks/useGeocacheByDTag";
 import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
@@ -370,46 +371,49 @@ export default function CacheDetail() {
                       className="mt-1"
                     />
                   </div>
-                  {isOwner && (
-                    <div className="flex gap-2">
-                      {isEditing ? (
-                        <>
-                          <Button size="sm" onClick={handleSaveEdit} disabled={isEditingGeocache}>
-                            <Save className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={isEditingGeocache}>
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button variant="outline" size="sm" onClick={handleEdit} disabled={isEditingGeocache}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Geocache?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete your geocache
-                                  and all associated logs.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </>
-                      )}
-                    </div>
-                  )}
+                  <div className="flex gap-2">
+                    {!isOwner && <SaveButton geocache={geocache} />}
+                    {isOwner && (
+                      <>
+                        {isEditing ? (
+                          <>
+                            <Button size="sm" onClick={handleSaveEdit} disabled={isEditingGeocache}>
+                              <Save className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={isEditingGeocache}>
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="outline" size="sm" onClick={handleEdit} disabled={isEditingGeocache}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Geocache?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete your geocache
+                                    and all associated logs.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

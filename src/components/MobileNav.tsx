@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MapPin, Home, Map, Plus, Menu, X, Settings } from 'lucide-react';
+import { MapPin, Home, Map, Plus, Menu, X, Settings, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { LoginArea } from '@/components/auth/LoginArea';
@@ -14,6 +14,7 @@ export function MobileNav() {
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Map', href: '/map', icon: Map },
+    { name: 'My Caches', href: '/saved', icon: Bookmark },
     { name: 'Hide Treasure', href: '/create', icon: Plus },
   ];
 
