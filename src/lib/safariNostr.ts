@@ -9,7 +9,11 @@ interface SafariNostrOptions {
 class SafariNostrClient {
   private relays: string[];
   private connections: Map<string, WebSocket> = new Map();
-  private subscriptions: Map<string, { resolve: Function; reject: Function; events: NostrEvent[] }> = new Map();
+  private subscriptions: Map<string, { 
+    resolve: (value: NostrEvent[]) => void; 
+    reject: (reason?: unknown) => void; 
+    events: NostrEvent[] 
+  }> = new Map();
 
   constructor(relays: string[]) {
     this.relays = relays;

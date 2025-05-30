@@ -1,6 +1,3 @@
-import { useNostrSavedCaches } from './useNostrSavedCaches';
-
-// Use the Nostr-based implementation
-export function useSavedCaches() {
-  return useNostrSavedCaches();
-}
+// This file exists for backward compatibility.
+// Import useNostrSavedCaches directly instead.
+export { useNostrSavedCaches as useSavedCaches } from './useNostrSavedCaches';

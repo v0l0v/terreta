@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { User } from 'lucide-react';
-import { Button } from '@/components/ui/button.tsx';
+import { Button } from '@/components/ui/button';
 import LoginDialog from './LoginDialog';
 import SignupDialog from './SignupDialog';
 import { useLoggedInAccounts } from '@/hooks/useLoggedInAccounts';

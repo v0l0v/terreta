@@ -8,8 +8,6 @@ import MyCaches from "./pages/MyCaches";
 import Settings from "./pages/Settings";
 import Install from "./pages/Install";
 
-import Debug from "./pages/Debug";
-import { LocationTestPage } from "./pages/LocationTestPage";
 import NotFound from "./pages/NotFound";
 import { MobileNav } from "@/components/MobileNav";
 
@@ -27,8 +25,6 @@ export function AppRouter() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/install" element={<Install />} />
 
-        <Route path="/debug" element={<Debug />} />
-        <Route path="/location-test" element={<LocationTestPage />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

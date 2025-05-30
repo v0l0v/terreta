@@ -3,17 +3,17 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Shield, Upload, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button.tsx';
-import { Input } from '@/components/ui/input.tsx';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog.tsx';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx';
-import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLoginActions } from '@/hooks/useLoginActions';
 import { validateNsec, validateBunkerUri, validateFileContent, sanitizeFilename } from '@/lib/security';
 

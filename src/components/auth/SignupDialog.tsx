@@ -3,15 +3,15 @@
 
 import React, { useState } from 'react';
 import { Download, Key, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button.tsx';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog.tsx';
-import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
+} from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/useToast.ts';
 import { useLoginActions } from '@/hooks/useLoginActions';
 import { generateSecretKey, nip19 } from 'nostr-tools';

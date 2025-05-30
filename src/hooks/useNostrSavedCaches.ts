@@ -126,7 +126,7 @@ export function useNostrSavedCaches() {
         });
         
         // Safari-compatible query with batch processing
-        let events: any[] = [];
+        const events: any[] = [];
         
         // Process filters in smaller batches for Safari
         const batchSize = 5;
