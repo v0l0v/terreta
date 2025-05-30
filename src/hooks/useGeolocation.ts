@@ -38,8 +38,8 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
 
     const geoOptions: PositionOptions = {
       enableHighAccuracy: options.enableHighAccuracy ?? true,
-      timeout: options.timeout ?? 30000, // Increased to 30 seconds
-      maximumAge: options.maximumAge ?? 300000, // Allow 5-minute old positions
+      timeout: options.timeout ?? 30000,
+      maximumAge: options.maximumAge ?? 300000,
     };
 
     const handleSuccess = (position: GeolocationPosition) => {
@@ -59,47 +59,24 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
     };
 
     const handleError = (error: GeolocationPositionError) => {
-      let errorMessage = "Unable to get your location";
-      let description = "Please try again";
-
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          errorMessage = "Location permission denied";
-          description = "Please enable location access in your browser settings and reload the page";
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMessage = "Location unavailable";
-          description = "GPS/WiFi location failed. Using approximate location instead.";
-          break;
-        case error.TIMEOUT:
-          errorMessage = "Location request timed out";
-          description = "Getting your location took too long. Please try again";
-          break;
-      }
-
-      setState({
-        loading: false,
-        error: errorMessage,
-        coords: null,
-      });
-
-      // Only show error toast if we're not going to fall back to IP
-      if (error.code !== error.POSITION_UNAVAILABLE) {
+      console.log('Geolocation failed:', error.code, error.message);
+      
+      // For permission denied, show a helpful message
+      if (error.code === error.PERMISSION_DENIED) {
+        setState({
+          loading: false,
+          error: "Location access denied",
+          coords: null,
+        });
         toast({
-          title: errorMessage,
-          description: description,
+          title: "Location access denied",
+          description: "Please enable location access in your browser settings",
           variant: "destructive",
         });
+        return;
       }
 
-      // Log detailed error for debugging
-      console.error('Geolocation error:', {
-        code: error.code,
-        message: error.message,
-        PERMISSION_DENIED: error.PERMISSION_DENIED,
-        POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
-        TIMEOUT: error.TIMEOUT,
-      });
+      // For other errors, just fall back silently
     };
 
     // Start with a simple getCurrentPosition call
