@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Plus, X, Globe } from "lucide-react";
+import { MapPin, Plus, X, Globe, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -300,6 +300,29 @@ export default function Settings() {
                   Reset to Defaults
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bug className="h-5 w-5" />
+                Debug Tools
+              </CardTitle>
+              <CardDescription>
+                Tools to help diagnose issues with cache loading and connectivity
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/debug">
+                <Button variant="outline" className="w-full">
+                  <Bug className="h-4 w-4 mr-2" />
+                  Open Debug Page
+                </Button>
+              </Link>
+              <p className="text-sm text-gray-500 mt-2">
+                Use this page to test Nostr connectivity and diagnose cache loading issues, especially on Safari/iOS.
+              </p>
             </CardContent>
           </Card>
         </div>

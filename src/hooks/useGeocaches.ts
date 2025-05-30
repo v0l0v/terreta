@@ -18,103 +18,113 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
     queryKey: ['geocaches', options],
     staleTime: 60000, // 1 minute
     gcTime: 300000, // 5 minutes
-    queryFn: async (c) => {
-      console.log('Starting geocache query with filter...');
+    queryFn: async () => {
+      console.log('Starting geocache query...');
       
-      // Build filter for geocache events
-      const filter: NostrFilter = {
-        kinds: [37515], // Geocache listing events
-        limit: options.limit || 50,
-      };
+      try {
+        // Build filter for geocache events
+        const filter: NostrFilter = {
+          kinds: [37515], // Geocache listing events
+          limit: options.limit || 50,
+        };
 
-      if (options.authorPubkey) {
-        filter.authors = [options.authorPubkey];
-      }
-
-      console.log('Filter:', filter);
-      
-      // Simple query without complex signal handling
-      const events = await nostr.query([filter]);
-      
-      console.log('Raw events from query:', events.length, 'events');
-      console.log('Event kinds:', events.map(e => e.kind));
-      if (events.length > 0) {
-        console.log('Sample event:', events[0]);
-      }
-      
-      // Parse and filter geocaches (no need for complex edit handling now)
-      let geocaches: Geocache[] = events
-        .map(parseGeocacheEvent)
-        .filter((g): g is Geocache => g !== null);
-      
-      console.log('Found', geocaches.length, 'geocaches after parsing');
-
-      // Apply client-side filters
-      if (options.search) {
-        const searchLower = options.search.toLowerCase();
-        geocaches = geocaches.filter(g => 
-          g.name.toLowerCase().includes(searchLower) ||
-          g.description.toLowerCase().includes(searchLower)
-        );
-      }
-
-      if (options.difficulty !== undefined) {
-        geocaches = geocaches.filter(g => g.difficulty === options.difficulty);
-      }
-
-      if (options.terrain !== undefined) {
-        geocaches = geocaches.filter(g => g.terrain === options.terrain);
-      }
-
-      // Sort by creation date (newest first)
-      geocaches.sort((a, b) => b.created_at - a.created_at);
-
-      // Get log counts for each geocache
-      if (geocaches.length > 0) {
-        try {
-          // Create filters for logs of each geocache
-          const logFilters: NostrFilter[] = geocaches.map(geocache => ({
-            kinds: [37516], // Geocache log events
-            '#a': [`37515:${geocache.pubkey}:${geocache.dTag}`],
-            limit: 100, // Limit per cache
-          }));
-
-          const logEvents = await nostr.query(logFilters);
-          
-          // Count logs per geocache
-          const logCounts = new Map<string, { total: number; found: number }>();
-          
-          logEvents.forEach(event => {
-            // Find which geocache this log belongs to
-            const aTag = event.tags.find(tag => tag[0] === 'a')?.[1];
-            if (!aTag) return;
-            
-            const [, pubkey, dTag] = aTag.split(':');
-            const geocache = geocaches.find(g => g.pubkey === pubkey && g.dTag === dTag);
-            if (!geocache) return;
-            
-            const data = parseLogData(event);
-            if (data) {
-              const current = logCounts.get(geocache.id) || { total: 0, found: 0 };
-              current.total++;
-              if (data.type === 'found') current.found++;
-              logCounts.set(geocache.id, current);
-            }
-          });
-
-          // Add counts to geocaches
-          geocaches = geocaches.map(g => ({
-            ...g,
-            logCount: logCounts.get(g.id)?.total || 0,
-            foundCount: logCounts.get(g.id)?.found || 0,
-          }));
-        } catch (error) {
-          console.error('Error fetching log counts:', error);
-          // Continue without log counts if there's an error
+        if (options.authorPubkey) {
+          filter.authors = [options.authorPubkey];
         }
-      }
 
-      return geocaches;
+        console.log('Filter:', filter);
+        
+        // Simple query with basic timeout
+        const events = await Promise.race([
+          nostr.query([filter]),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Query timeout')), 15000)
+          )
+        ]);
+        
+        console.log('Raw events from query:', events.length, 'events');
+        
+        // Parse and filter geocaches
+        let geocaches: Geocache[] = events
+          .map(parseGeocacheEvent)
+          .filter((g): g is Geocache => g !== null);
+        
+        console.log('Found', geocaches.length, 'geocaches after parsing');
+
+        // Apply client-side filters
+        if (options.search) {
+          const searchLower = options.search.toLowerCase();
+          geocaches = geocaches.filter(g => 
+            g.name.toLowerCase().includes(searchLower) ||
+            g.description.toLowerCase().includes(searchLower)
+          );
+        }
+
+        if (options.difficulty !== undefined) {
+          geocaches = geocaches.filter(g => g.difficulty === options.difficulty);
+        }
+
+        if (options.terrain !== undefined) {
+          geocaches = geocaches.filter(g => g.terrain === options.terrain);
+        }
+
+        // Sort by creation date (newest first)
+        geocaches.sort((a, b) => b.created_at - a.created_at);
+
+        // Simplified log count fetching
+        if (geocaches.length > 0) {
+          try {
+            // Create a single filter for all logs
+            const logFilter: NostrFilter = {
+              kinds: [37516], // Geocache log events
+              '#a': geocaches.map(g => `37515:${g.pubkey}:${g.dTag}`),
+              limit: 1000,
+            };
+
+            const logEvents = await Promise.race([
+              nostr.query([logFilter]),
+              new Promise<never>((_, reject) => 
+                setTimeout(() => reject(new Error('Log query timeout')), 10000)
+              )
+            ]);
+            
+            // Count logs per geocache
+            const logCounts = new Map<string, { total: number; found: number }>();
+            
+            logEvents.forEach(event => {
+              const aTag = event.tags.find(tag => tag[0] === 'a')?.[1];
+              if (!aTag) return;
+              
+              const data = parseLogData(event);
+              if (data) {
+                const current = logCounts.get(aTag) || { total: 0, found: 0 };
+                current.total++;
+                if (data.type === 'found') current.found++;
+                logCounts.set(aTag, current);
+              }
+            });
+
+            // Add counts to geocaches
+            geocaches = geocaches.map(g => {
+              const coord = `37515:${g.pubkey}:${g.dTag}`;
+              const counts = logCounts.get(coord) || { total: 0, found: 0 };
+              return {
+                ...g,
+                logCount: counts.total,
+                foundCount: counts.found,
+              };
+            });
+          } catch (error) {
+            console.warn('Error fetching log counts:', error);
+            // Continue without log counts if there's an error
+          }
+        }
+
+        return geocaches;
+      } catch (error) {
+        console.error('Error in geocache query:', error);
+        throw error;
+      }
     },
   });
 }

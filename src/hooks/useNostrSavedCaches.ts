@@ -3,7 +3,6 @@ import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNostrQueryRelays } from './useNostrQueryRelays';
 import type { Geocache } from '@/types/geocache';
 import { NostrFilter } from '@nostrify/nostrify';
 
@@ -32,7 +31,6 @@ export function useNostrSavedCaches() {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
   const { mutateAsync: publishEvent } = useNostrPublish();
-  const { queryWithRelays } = useNostrQueryRelays();
   const queryClient = useQueryClient();
 
   // Query user's cache bookmark events
@@ -41,52 +39,35 @@ export function useNostrSavedCaches() {
     queryFn: async () => {
       if (!user?.pubkey || !nostr) return [];
       
-      const signal = AbortSignal.timeout(10000);
-      
-      // Try multiple query approaches to ensure we find the events
-      const queries = [
-        // Query with l tag
-        { 
+      try {
+        // Simple query for bookmark events
+        const query = { 
           kinds: [CACHE_BOOKMARK_KIND], 
           authors: [user.pubkey],
           '#l': ['treasures/cache-bookmark'],
           limit: 1000
-        },
-        // Query with client tag as fallback
-        { 
-          kinds: [CACHE_BOOKMARK_KIND], 
-          authors: [user.pubkey],
-          '#client': ['treasures'],
-          limit: 1000
-        }
-      ];
-      
-      let allEvents: any[] = [];
-      
-      for (const query of queries) {
-        try {
-          const events = await nostr.query([query], { signal });
-          allEvents.push(...events);
-        } catch (error) {
-          console.warn('Failed to fetch bookmark events:', error);
-        }
+        };
+        
+        const events = await Promise.race([
+          nostr.query([query]),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Bookmark query timeout')), 10000)
+          )
+        ]);
+        
+        // Filter to only cache bookmark events
+        const cacheBookmarkEvents = events.filter(event => 
+          event.tags.some(tag => tag[0] === 'a' && tag[1]?.startsWith('37515:'))
+        );
+        
+        return cacheBookmarkEvents.sort((a, b) => b.created_at - a.created_at);
+      } catch (error) {
+        console.warn('Failed to fetch bookmark events:', error);
+        return [];
       }
-      
-      // Remove duplicates by event ID
-      const uniqueEvents = allEvents.filter((event, index, self) => 
-        index === self.findIndex(e => e.id === event.id)
-      );
-      
-      // Filter to only cache bookmark events (those with 'a' tags starting with '37515:')
-      const cacheBookmarkEvents = uniqueEvents.filter(event => 
-        event.tags.some(tag => tag[0] === 'a' && tag[1]?.startsWith('37515:')) ||
-        event.tags.some(tag => tag[0] === 'action')
-      );
-      
-      return cacheBookmarkEvents.sort((a, b) => b.created_at - a.created_at); // Most recent first
     },
     enabled: !!user?.pubkey && !!nostr,
-    staleTime: 10000, // 10 seconds for debugging
+    staleTime: 30000, // 30 seconds
   });
 
   // Extract saved cache coordinates from bookmark events
@@ -131,22 +112,30 @@ export function useNostrSavedCaches() {
     queryFn: async () => {
       if (!nostr || savedCacheCoords.length === 0) return [];
       
-      const signal = AbortSignal.timeout(15000);
-      
-      // Build filters for each saved geocache coordinate
-      const filters = savedCacheCoords.map(coord => {
-        const [kind, pubkey, dTag] = coord.split(':');
-        return {
-          kinds: [parseInt(kind)],
-          authors: [pubkey],
-          '#d': [dTag],
-          limit: 1
-        };
-      });
-      
-      const events = await queryWithRelays(filters, { signal });
-      
-      return events;
+      try {
+        // Build filters for each saved geocache coordinate
+        const filters = savedCacheCoords.map(coord => {
+          const [kind, pubkey, dTag] = coord.split(':');
+          return {
+            kinds: [parseInt(kind)],
+            authors: [pubkey],
+            '#d': [dTag],
+            limit: 1
+          };
+        });
+        
+        const events = await Promise.race([
+          nostr.query(filters),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Saved cache query timeout')), 15000)
+          )
+        ]);
+        
+        return events;
+      } catch (error) {
+        console.warn('Failed to fetch saved geocache events:', error);
+        return [];
+      }
     },
     enabled: savedCacheCoords.length > 0 && !!nostr,
     staleTime: 60000, // 1 minute
@@ -158,39 +147,47 @@ export function useNostrSavedCaches() {
     queryFn: async () => {
       if (!nostr || savedCacheCoords.length === 0) return new Map();
       
-      const signal = AbortSignal.timeout(15000);
-      
-      // Build filters for logs of each saved geocache
-      const logCountFilters: NostrFilter[] = savedCacheCoords.map(coord => ({
-        kinds: [37516], // Log events
-        '#a': [coord],
-        limit: 1000, // Get all logs to count them
-      }));
-      
-      const allLogEvents = await queryWithRelays(logCountFilters, { signal });
-      
-      // Group logs by geocache and count them
-      const logCounts = new Map<string, { total: number; found: number }>();
-      
-      for (const logEvent of allLogEvents) {
-        const aTag = logEvent.tags.find(t => t[0] === 'a')?.[1];
-        if (aTag) {
-          const logType = logEvent.tags.find(t => t[0] === 'log-type')?.[1];
-          
-          if (!logCounts.has(aTag)) {
-            logCounts.set(aTag, { total: 0, found: 0 });
-          }
-          
-          const counts = logCounts.get(aTag)!;
-          counts.total++;
-          
-          if (logType === 'found') {
-            counts.found++;
+      try {
+        // Single filter for all log events
+        const logFilter: NostrFilter = {
+          kinds: [37516], // Log events
+          '#a': savedCacheCoords,
+          limit: 1000,
+        };
+        
+        const allLogEvents = await Promise.race([
+          nostr.query([logFilter]),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Log count query timeout')), 10000)
+          )
+        ]);
+        
+        // Group logs by geocache and count them
+        const logCounts = new Map<string, { total: number; found: number }>();
+        
+        for (const logEvent of allLogEvents) {
+          const aTag = logEvent.tags.find(t => t[0] === 'a')?.[1];
+          if (aTag) {
+            const logType = logEvent.tags.find(t => t[0] === 'log-type')?.[1];
+            
+            if (!logCounts.has(aTag)) {
+              logCounts.set(aTag, { total: 0, found: 0 });
+            }
+            
+            const counts = logCounts.get(aTag)!;
+            counts.total++;
+            
+            if (logType === 'found') {
+              counts.found++;
+            }
           }
         }
+        
+        return logCounts;
+      } catch (error) {
+        console.warn('Failed to fetch log counts:', error);
+        return new Map();
       }
-      
-      return logCounts;
     },
     enabled: savedCacheCoords.length > 0 && !!nostr,
     staleTime: 60000, // 1 minute

@@ -230,13 +230,15 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                 <p className='text-sm text-gray-600 dark:text-gray-300 mb-4'>
                   Login with one click using the browser extension
                 </p>
-                <Button
-                  className='w-full rounded-full py-6'
-                  onClick={handleExtensionLogin}
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Logging in...' : 'Login with Extension'}
-                </Button>
+                <div className="flex justify-center">
+                  <Button
+                    className='w-full rounded-full py-6'
+                    onClick={handleExtensionLogin}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Logging in...' : 'Login with Extension'}
+                  </Button>
+                </div>
               </div>
             </TabsContent>
 
@@ -274,27 +276,31 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                     ref={fileInputRef}
                     onChange={handleFileUpload}
                   />
-                  <Button
-                    variant='outline'
-                    className='w-full dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700'
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isLoading}
-                  >
-                    <Upload className='w-4 h-4 mr-2' />
-                    Upload Nsec File
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      variant='outline'
+                      className='w-full dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700'
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isLoading}
+                    >
+                      <Upload className='w-4 h-4 mr-2' />
+                      Upload Nsec File
+                    </Button>
+                  </div>
                   {errors.file && (
                     <p className="text-sm text-red-500 mt-2">{errors.file}</p>
                   )}
                 </div>
 
-                <Button
-                  className='w-full rounded-full py-6 mt-4'
-                  onClick={handleKeyLogin}
-                  disabled={isLoading || !nsec.trim()}
-                >
-                  {isLoading ? 'Verifying...' : 'Login with Nsec'}
-                </Button>
+                <div className="flex justify-center">
+                  <Button
+                    className='w-full rounded-full py-6 mt-4'
+                    onClick={handleKeyLogin}
+                    disabled={isLoading || !nsec.trim()}
+                  >
+                    {isLoading ? 'Verifying...' : 'Login with Nsec'}
+                  </Button>
+                </div>
               </div>
             </TabsContent>
 
@@ -321,13 +327,15 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                 )}
               </div>
 
-              <Button
-                className='w-full rounded-full py-6'
-                onClick={handleBunkerLogin}
-                disabled={isLoading || !bunkerUri.trim()}
-              >
-                {isLoading ? 'Connecting...' : 'Login with Bunker'}
-              </Button>
+              <div className="flex justify-center">
+                <Button
+                  className='w-full rounded-full py-6'
+                  onClick={handleBunkerLogin}
+                  disabled={isLoading || !bunkerUri.trim()}
+                >
+                  {isLoading ? 'Connecting...' : 'Login with Bunker'}
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
 

@@ -329,7 +329,9 @@ export default function MyCaches() {
               <p className="text-gray-600 mb-6">
                 Please log in with your Nostr account to view your caches.
               </p>
-              <LoginArea />
+              <div className="flex justify-center">
+                <LoginArea />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -464,17 +466,12 @@ export default function MyCaches() {
                   <p className="text-gray-600 mb-6">
                     Start exploring and save interesting caches for later!
                   </p>
-                  <div className="flex gap-4 justify-center">
-                    <Link to="/">
-                      <Button>Browse Caches</Button>
-                    </Link>
-                    <Link to="/map">
-                      <Button variant="outline">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        View Map
-                      </Button>
-                    </Link>
-                  </div>
+                  <Link to="/map">
+                    <Button>
+                      <MapPin className="h-4 w-4 mr-2" />
+                      View Map
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ) : (
@@ -516,17 +513,12 @@ export default function MyCaches() {
                   <p className="text-gray-600 mb-6">
                     Start exploring and log your first find!
                   </p>
-                  <div className="flex gap-4 justify-center">
-                    <Link to="/">
-                      <Button>Browse Caches</Button>
-                    </Link>
-                    <Link to="/map">
-                      <Button variant="outline">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        View Map
-                      </Button>
-                    </Link>
-                  </div>
+                  <Link to="/map">
+                    <Button>
+                      <MapPin className="h-4 w-4 mr-2" />
+                      View Map
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ) : (
@@ -543,14 +535,15 @@ export default function MyCaches() {
           </TabsContent>
 
           <TabsContent value="created" className="mt-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <p className="text-sm text-gray-600">
                 Geocaches you've hidden for others to find
               </p>
-              <Link to="/create">
-                <Button size="sm">
+              <Link to="/create" className="shrink-0">
+                <Button size="sm" className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
-                  Hide New Cache
+                  <span className="hidden sm:inline">Hide New Cache</span>
+                  <span className="sm:hidden">New Cache</span>
                 </Button>
               </Link>
             </div>
@@ -596,7 +589,7 @@ export default function MyCaches() {
         </Tabs>
 
         <div className="mt-8 text-center pb-8 sm:pb-4">
-          <Link to="/">
+          <Link to="/map">
             <Button variant="outline">
               <MapPin className="h-4 w-4 mr-2" />
               Browse More Caches
