@@ -5,6 +5,7 @@ import Map from "./pages/Map";
 import CreateCache from "./pages/CreateCache";
 import CacheDetail from "./pages/CacheDetail";
 import Settings from "./pages/Settings";
+import Install from "./pages/Install";
 import SensorTest from "./pages/SensorTest";
 import BasicSensorTest from "./pages/BasicSensorTest";
 import ModernSensorTest from "./pages/ModernSensorTest";
@@ -22,6 +23,7 @@ export function AppRouter() {
         <Route path="/create" element={<CreateCache />} />
         <Route path="/cache/:dtag" element={<CacheDetail />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/install" element={<Install />} />
         <Route path="/sensor-test" element={<SensorTest />} />
         <Route path="/basic-sensor-test" element={<BasicSensorTest />} />
         <Route path="/modern-sensor-test" element={<ModernSensorTest />} />
