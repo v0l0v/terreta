@@ -325,12 +325,12 @@ export default function Map() {
                     <SelectValue placeholder="Difficulty" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="1">D1</SelectItem>
-                    <SelectItem value="2">D2</SelectItem>
-                    <SelectItem value="3">D3</SelectItem>
-                    <SelectItem value="4">D4</SelectItem>
-                    <SelectItem value="5">D5</SelectItem>
+                    <SelectItem value="all">All Difficulties</SelectItem>
+                    <SelectItem value="1">1 - Easy</SelectItem>
+                    <SelectItem value="2">2 - Moderate</SelectItem>
+                    <SelectItem value="3">3 - Hard</SelectItem>
+                    <SelectItem value="4">4 - Very Hard</SelectItem>
+                    <SelectItem value="5">5 - Expert</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -339,12 +339,12 @@ export default function Map() {
                     <SelectValue placeholder="Terrain" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="1">T1</SelectItem>
-                    <SelectItem value="2">T2</SelectItem>
-                    <SelectItem value="3">T3</SelectItem>
-                    <SelectItem value="4">T4</SelectItem>
-                    <SelectItem value="5">T5</SelectItem>
+                    <SelectItem value="all">All Terrains</SelectItem>
+                    <SelectItem value="1">1 - Easy</SelectItem>
+                    <SelectItem value="2">2 - Moderate</SelectItem>
+                    <SelectItem value="3">3 - Hard</SelectItem>
+                    <SelectItem value="4">4 - Very Hard</SelectItem>
+                    <SelectItem value="5">5 - Expert</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
