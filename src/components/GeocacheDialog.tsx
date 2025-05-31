@@ -168,7 +168,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
                 difficulty={geocache.difficulty}
                 terrain={geocache.terrain}
                 cacheSize={geocache.size}
-                size="small"
+                
               />
               
               <div>
