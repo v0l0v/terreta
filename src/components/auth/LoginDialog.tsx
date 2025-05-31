@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BaseDialog } from '@/components/ui/base-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LoginMethodTabs } from '@/components/ui/mobile-button-patterns';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLoginActions } from '@/hooks/useLoginActions';
 import { validateNsec, validateBunkerUri, validateFileContent, sanitizeFilename } from '@/lib/security';
@@ -204,20 +205,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
       headerClassName='px-6 pt-6 pb-0 relative'
     >
       <div className='px-6 py-8 space-y-6'>
-          <Tabs defaultValue={'nostr' in window ? 'extension' : 'key'} className='w-full'>
-            <TabsList className='grid w-full grid-cols-3 h-auto mb-6'>
-              <TabsTrigger value='extension' className='flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]'>
-                <Shield className="h-4 w-4 flex-shrink-0" />
-                <span className="text-xs sm:text-sm">Extension</span>
-              </TabsTrigger>
-              <TabsTrigger value='key' className='flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]'>
-                <span className="text-xs sm:text-sm">Nsec</span>
-              </TabsTrigger>
-              <TabsTrigger value='bunker' className='flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]'>
-                <span className="text-xs sm:text-sm">Bunker</span>
-              </TabsTrigger>
-            </TabsList>
-
+          <LoginMethodTabs defaultMethod={'nostr' in window ? 'extension' : 'key'}>
             <TabsContent value='extension' className='space-y-4'>
               {errors.extension && (
                 <Alert variant="destructive">
@@ -337,7 +325,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                 </Button>
               </div>
             </TabsContent>
-          </Tabs>
+          </LoginMethodTabs>
 
           <div className='text-center text-sm'>
             <p className='text-gray-600 dark:text-gray-400'>

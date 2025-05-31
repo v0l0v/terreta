@@ -6,6 +6,7 @@ import { BaseDialog } from "@/components/ui/base-dialog";
 import { DetailsCard, StatsCard, EmptyStateCard, InteractiveCard } from "@/components/ui/card-patterns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CacheDetailTabs, LogTypeButtonGroup } from "@/components/ui/mobile-button-patterns";
 import { Textarea } from "@/components/ui/textarea";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
@@ -157,50 +158,16 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
             </div>
 
             {/* Tabs */}
-            <Tabs defaultValue="logs" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 h-auto">
-                <TabsTrigger value="logs" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]">
-                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm">Logs</span>
-                  <span className="text-xs sm:text-sm">({logs?.length || 0})</span>
-                </TabsTrigger>
-                <TabsTrigger value="map" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]">
-                  <MapPin className="h-4 w-4 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm">Map</span>
-                </TabsTrigger>
-              </TabsList>
-              
+            <CacheDetailTabs logCount={logs?.length || 0}>
               <TabsContent value="logs" className="space-y-4 max-h-60 overflow-y-auto">
                 {user && (
                   <Card>
                     <CardContent className="p-4 space-y-3">
-                      <div className="grid grid-cols-3 gap-1">
-                        <Button
-                          variant={logType === "found" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setLogType("found")}
-                          className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                        >
-                          <Trophy className="h-3 w-3 flex-shrink-0" />
-                          <span className="text-xs sm:text-sm">Found</span>
-                        </Button>
-                        <Button
-                          variant={logType === "dnf" ? "default" : "outline"}
-                          size="sm" 
-                          onClick={() => setLogType("dnf")}
-                          className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                        >
-                          <span className="text-xs sm:text-sm">DNF</span>
-                        </Button>
-                        <Button
-                          variant={logType === "note" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setLogType("note")}
-                          className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                        >
-                          <span className="text-xs sm:text-sm">Note</span>
-                        </Button>
-                      </div>
+                      <LogTypeButtonGroup
+                        logType={logType}
+                        onLogTypeChange={(type) => setLogType(type as "found" | "dnf" | "note")}
+                        disabled={isCreatingLog}
+                      />
                       
                       <Textarea
                         placeholder="Share your experience..."
@@ -246,7 +213,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
                   />
                 </div>
               </TabsContent>
-            </Tabs>
+            </CacheDetailTabs>
           </div>
 
           {/* Sidebar */}

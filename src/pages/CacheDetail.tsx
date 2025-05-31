@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CacheDetailTabs, LogTypeButtonGroup } from "@/components/ui/mobile-button-patterns";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -584,19 +585,7 @@ export default function CacheDetail() {
               </CardContent>
             </Card>
 
-            <Tabs defaultValue="logs">
-              <TabsList className="grid w-full grid-cols-2 h-auto">
-                <TabsTrigger value="logs" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]">
-                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm">Logs</span>
-                  <span className="text-xs sm:text-sm">({logs?.length || 0})</span>
-                </TabsTrigger>
-                <TabsTrigger value="map" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]">
-                  <MapPin className="h-4 w-4 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm">Map</span>
-                </TabsTrigger>
-              </TabsList>
-              
+            <CacheDetailTabs logCount={logs?.length || 0}>
               <TabsContent value="logs" className="space-y-4">
                 {user && (
                   <Card>
@@ -604,70 +593,12 @@ export default function CacheDetail() {
                       <CardTitle>Post a Log</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid grid-cols-3 gap-2">
-                        <Button
-                          variant={logType === "found" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setLogType("found")}
-                          className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                        >
-                          <Trophy className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="text-xs sm:text-sm">Found It</span>
-                        </Button>
-                        <Button
-                          variant={logType === "dnf" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setLogType("dnf")}
-                          className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                        >
-                          <span className="text-xs sm:text-sm">Didn't Find</span>
-                        </Button>
-                        <Button
-                          variant={logType === "note" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setLogType("note")}
-                          className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                        >
-                          <span className="text-xs sm:text-sm">Write Note</span>
-                        </Button>
-                      </div>
-                      
-                      {isOwner && (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t">
-                          <Button
-                            variant={logType === "maintenance" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setLogType("maintenance")}
-                            className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                          >
-                            <span className="text-xs sm:text-sm">Maintenance</span>
-                          </Button>
-                          <Button
-                            variant={logType === "disabled" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setLogType("disabled")}
-                            className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                          >
-                            <span className="text-xs sm:text-sm">Disable</span>
-                          </Button>
-                          <Button
-                            variant={logType === "enabled" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setLogType("enabled")}
-                            className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                          >
-                            <span className="text-xs sm:text-sm">Enable</span>
-                          </Button>
-                          <Button
-                            variant={logType === "archived" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setLogType("archived")}
-                            className="flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-2"
-                          >
-                            <span className="text-xs sm:text-sm">Archive</span>
-                          </Button>
-                        </div>
-                      )}
+                      <LogTypeButtonGroup
+                        logType={logType}
+                        onLogTypeChange={(type) => setLogType(type as typeof logType)}
+                        isOwner={isOwner}
+                        disabled={isCreatingLog}
+                      />
                       
                       <Textarea
                         placeholder="Share your experience..."
@@ -713,29 +644,7 @@ export default function CacheDetail() {
                   />
                 </div>
               </TabsContent>
-              
-              {/* Temporarily hidden - experimental feature
-              <TabsContent value="compass">
-                <div className="h-96 flex items-center justify-center">
-                  <div className="text-center">
-                    <Compass 
-                      targetLat={geocache.location.lat}
-                      targetLng={geocache.location.lng}
-                    />
-                    <div className="mt-4 max-w-sm mx-auto">
-                      <p className="text-xs text-gray-500">
-                        Smart compass that uses device sensors when available, 
-                        automatically falls back to GPS-based direction finding.
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        The arrow always points toward the treasure! 🏴‍☠️
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-              */}
-            </Tabs>
+            </CacheDetailTabs>
           </div>
 
           {/* Sidebar */}
