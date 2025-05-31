@@ -33,7 +33,7 @@ describe('osmVerification', () => {
 
       const summary = getVerificationSummary(verification);
       expect(summary.status).toBe('warning');
-      expect(summary.message).toContain('near restricted areas');
+      expect(summary.message).toContain('some restrictions or considerations');
     });
 
     it('should return restricted status for locations inside restricted areas', () => {
@@ -57,7 +57,7 @@ describe('osmVerification', () => {
     it('should return restricted status for locations inside buildings', () => {
       const verification: LocationVerification = {
         isRestricted: true,
-        warnings: ['⚠️ Location appears to be inside a building (likely private)'],
+        warnings: ['⚠️ Location appears to be inside a building (verify permissions)'],
         nearbyFeatures: [],
         accessibility: {},
         terrain: { hazards: [] },
@@ -102,6 +102,24 @@ describe('osmVerification', () => {
       expect(summary.message).not.toContain('Please choose a different location');
       expect(summary.message).toContain('verify you have permission');
       expect(summary.message).toContain('appropriate for geocaching');
+    });
+
+    it('should return restricted status for underwater locations', () => {
+      const verification: LocationVerification = {
+        isRestricted: true,
+        warnings: ['⚠️ Location is UNDERWATER in body of water'],
+        nearbyFeatures: [],
+        accessibility: {},
+        terrain: { hazards: [] },
+        legal: { restrictions: [], permits: [] },
+        environmental: {},
+        safety: {},
+      };
+
+      const summary = getVerificationSummary(verification);
+      expect(summary.status).toBe('restricted');
+      expect(summary.message).toContain('underwater');
+      expect(summary.message).not.toContain('cannot be placed in water bodies');
     });
   });
 });

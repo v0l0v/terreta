@@ -16,7 +16,9 @@ import { GeocacheMap } from "@/components/GeocacheMap";
 import { DetailedGeocacheCard, CompactGeocacheCard } from "@/components/ui/geocache-card";
 import { GeocacheDialog } from "@/components/GeocacheDialog";
 import { LocationSearch } from "@/components/LocationSearch";
+import { MapViewTabs } from "@/components/ui/mobile-button-patterns";
 import { ComparisonFilter, type ComparisonOperator } from "@/components/ui/comparison-filter";
+import { DIFFICULTY_TERRAIN_OPTIONS } from "@/lib/geocache-constants";
 import type { Geocache } from "@/types/geocache";
 
 type GeocacheWithDistance = Geocache & { distance?: number };
@@ -25,15 +27,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { sortByDistance, formatDistance, filterByRadius } from "@/lib/geo";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-
-// Rating options for both difficulty and terrain (shared data)
-const RATING_OPTIONS = [
-  { value: "1", label: "1 - Easy" },
-  { value: "2", label: "2 - Moderate" },
-  { value: "3", label: "3 - Hard" },
-  { value: "4", label: "4 - Very Hard" },
-  { value: "5", label: "5 - Expert" },
-];
 
 export default function Map() {
   const navigate = useNavigate();
@@ -80,7 +73,7 @@ export default function Map() {
         onValueChange={createValueChangeHandler(setDifficulty)}
         operator={difficultyOperator}
         onOperatorChange={setDifficultyOperator}
-        options={RATING_OPTIONS}
+        options={DIFFICULTY_TERRAIN_OPTIONS}
         className="flex-1"
         compact={compact}
       />
@@ -91,7 +84,7 @@ export default function Map() {
         onValueChange={createValueChangeHandler(setTerrain)}
         operator={terrainOperator}
         onOperatorChange={setTerrainOperator}
-        options={RATING_OPTIONS}
+        options={DIFFICULTY_TERRAIN_OPTIONS}
         className="flex-1"
         compact={compact}
       />
@@ -396,11 +389,7 @@ export default function Map() {
         
         {/* Mobile Content Area */}
         <div className="flex-1 overflow-hidden">
-          <Tabs defaultValue="list" className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 rounded-none border-b bg-white h-12 flex-shrink-0">
-              <TabsTrigger value="list" className="h-10">List</TabsTrigger>
-              <TabsTrigger value="map" className="h-10">Map</TabsTrigger>
-            </TabsList>
+          <MapViewTabs className="h-full flex flex-col">
             <TabsContent value="list" className="flex-1 overflow-y-auto p-4 m-0 data-[state=active]:flex data-[state=active]:flex-col">
               {isLoading ? (
                 <div className="flex items-center justify-center flex-1">
@@ -453,7 +442,7 @@ export default function Map() {
                 />
               </div>
             </TabsContent>
-          </Tabs>
+          </MapViewTabs>
         </div>
       </div>
 

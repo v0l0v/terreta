@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { MapPin, Upload, X, AlertTriangle, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { MapPin, Upload, X, AlertTriangle, CheckCircle, XCircle, Loader2, Check } from "lucide-react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { LoginArea } from "@/components/auth/LoginArea";
+import { DesktopHeader } from "@/components/DesktopHeader";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCreateGeocache } from "@/hooks/useCreateGeocache";
 import { LocationPicker } from "@/components/LocationPicker";
@@ -152,17 +152,7 @@ export default function CreateCache() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <header className="hidden md:block border-b bg-white">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <Link to="/" className="flex items-center gap-2">
-                <MapPin className="h-8 w-8 text-green-600" />
-                <h1 className="text-2xl font-bold text-gray-900">Treasures</h1>
-              </Link>
-              <LoginArea />
-            </div>
-          </div>
-        </header>
+        <DesktopHeader />
         
         <div className="container mx-auto px-4 py-16 pb-20 md:pb-16">
           <Card className="max-w-md mx-auto">
@@ -170,9 +160,6 @@ export default function CreateCache() {
               <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-lg font-medium mb-2">Login Required</p>
               <p className="text-gray-600 mb-4">You need to be logged in to create a geocache.</p>
-              <div className="flex justify-center">
-                <LoginArea />
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -182,17 +169,7 @@ export default function CreateCache() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="hidden md:block border-b bg-white">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
-              <MapPin className="h-8 w-8 text-green-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Treasures</h1>
-            </Link>
-            <LoginArea />
-          </div>
-        </div>
-      </header>
+      <DesktopHeader />
 
       <div className="container mx-auto px-4 py-8 pb-20 md:pb-8">
         <Card className="max-w-2xl mx-auto">
@@ -298,10 +275,22 @@ export default function CreateCache() {
                       <div className="text-sm">
                         <div className="font-medium mb-2 text-gray-700">By submitting, you confirm:</div>
                         <div className="space-y-1 text-xs text-gray-600">
-                          <div>✓ You have permission to place this cache</div>
-                          <div>✓ The location is publicly accessible</div>
-                          <div>✓ The location is safe and appropriate</div>
-                          <div>✓ The coordinates are accurate</div>
+                          <div className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <span>You have permission to place this cache</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <span>The location is publicly accessible</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <span>The location is safe and appropriate</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <span>The coordinates are accurate</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -324,16 +313,23 @@ export default function CreateCache() {
             <AlertDialogCancel>Review Location</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleConfirmSubmit}
-              className={`${
+              className={`flex items-center gap-2 ${
                 locationVerification && getVerificationSummary(locationVerification).status === 'restricted'
                   ? 'bg-yellow-600 hover:bg-yellow-700'
                   : 'bg-green-600 hover:bg-green-700'
               }`}
             >
-              {locationVerification && getVerificationSummary(locationVerification).status === 'restricted'
-                ? '⚠️ Create Despite Warnings'
-                : '✓ Confirm & Create Cache'
-              }
+              {locationVerification && getVerificationSummary(locationVerification).status === 'restricted' ? (
+                <>
+                  <AlertTriangle className="h-4 w-4" />
+                  Create Despite Warnings
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4" />
+                  Confirm & Create Cache
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

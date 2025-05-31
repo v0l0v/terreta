@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Search, MapPin, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 interface LocationSearchProps {
   onLocationSelect: (location: { lat: number; lng: number; name: string }) => void;
   placeholder?: string;
+  mobilePlaceholder?: string;
 }
 
 interface SearchResult {
@@ -19,13 +20,36 @@ interface SearchResult {
   display_name?: string;
 }
 
-export function LocationSearch({ onLocationSelect, placeholder = "Search by city, zip code, or coordinates..." }: LocationSearchProps) {
+export function LocationSearch({ 
+  onLocationSelect, 
+  placeholder = "Search by city, zip code, or coordinates...", 
+  mobilePlaceholder 
+}: LocationSearchProps) {
   const [query, setQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [currentPlaceholder, setCurrentPlaceholder] = useState(placeholder);
   const searchTimeout = useRef<NodeJS.Timeout>();
   const abortController = useRef<AbortController>();
+
+  // Update placeholder based on screen size
+  useEffect(() => {
+    const updatePlaceholder = () => {
+      if (window.innerWidth < 640 && mobilePlaceholder) { // sm breakpoint
+        setCurrentPlaceholder(mobilePlaceholder);
+      } else {
+        setCurrentPlaceholder(placeholder);
+      }
+    };
+
+    updatePlaceholder();
+    window.addEventListener('resize', updatePlaceholder);
+
+    return () => {
+      window.removeEventListener('resize', updatePlaceholder);
+    };
+  }, [placeholder, mobilePlaceholder]);
 
   const parseCoordinates = (input: string): { lat: number; lng: number } | null => {
     // Clean input: remove extra spaces, normalize separators
@@ -267,7 +291,7 @@ export function LocationSearch({ onLocationSelect, placeholder = "Search by city
           value={query}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={currentPlaceholder}
           className="pl-10 pr-10"
           onFocus={() => query && handleSearch(query)}
         />

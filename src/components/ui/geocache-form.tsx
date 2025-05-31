@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
+import { DIFFICULTY_TERRAIN_OPTIONS, CACHE_SIZE_OPTIONS, CACHE_TYPE_OPTIONS, getDefaultCacheValues } from '@/lib/geocache-constants';
 
 // === GEOCACHE FORM TYPES ===
 
@@ -134,79 +135,49 @@ function CacheSelectField({ value, onChange, label, fieldId, options }: CacheSel
 }
 
 export function CacheTypeField({ value, onChange, fieldId = "type" }: Omit<CacheSelectFieldProps, 'label' | 'options'>) {
-  const typeOptions = [
-    { value: 'traditional', label: 'Traditional' },
-    { value: 'multi', label: 'Multi-cache' },
-    { value: 'mystery', label: 'Mystery/Puzzle' },
-    { value: 'earth', label: 'EarthCache' },
-  ];
-
   return (
     <CacheSelectField
       value={value}
       onChange={onChange}
       label="Cache Type"
       fieldId={fieldId}
-      options={typeOptions}
+      options={CACHE_TYPE_OPTIONS}
     />
   );
 }
 
 export function CacheSizeField({ value, onChange, fieldId = "size" }: Omit<CacheSelectFieldProps, 'label' | 'options'>) {
-  const sizeOptions = [
-    { value: 'micro', label: 'Micro' },
-    { value: 'small', label: 'Small' },
-    { value: 'regular', label: 'Regular' },
-    { value: 'large', label: 'Large' },
-  ];
-
   return (
     <CacheSelectField
       value={value}
       onChange={onChange}
       label="Cache Size"
       fieldId={fieldId}
-      options={sizeOptions}
+      options={CACHE_SIZE_OPTIONS}
     />
   );
 }
 
 export function CacheDifficultyField({ value, onChange, fieldId = "difficulty" }: Omit<CacheSelectFieldProps, 'label' | 'options'>) {
-  const difficultyOptions = [
-    { value: '1', label: '1 - Easy' },
-    { value: '2', label: '2 - Moderate' },
-    { value: '3', label: '3 - Hard' },
-    { value: '4', label: '4 - Very Hard' },
-    { value: '5', label: '5 - Expert' },
-  ];
-
   return (
     <CacheSelectField
       value={value}
       onChange={onChange}
       label="Difficulty"
       fieldId={fieldId}
-      options={difficultyOptions}
+      options={DIFFICULTY_TERRAIN_OPTIONS}
     />
   );
 }
 
 export function CacheTerrainField({ value, onChange, fieldId = "terrain" }: Omit<CacheSelectFieldProps, 'label' | 'options'>) {
-  const terrainOptions = [
-    { value: '1', label: '1 - Easy' },
-    { value: '2', label: '2 - Moderate' },
-    { value: '3', label: '3 - Hard' },
-    { value: '4', label: '4 - Very Hard' },
-    { value: '5', label: '5 - Expert' },
-  ];
-
   return (
     <CacheSelectField
       value={value}
       onChange={onChange}
       label="Terrain"
       fieldId={fieldId}
-      options={terrainOptions}
+      options={DIFFICULTY_TERRAIN_OPTIONS}
     />
   );
 }
@@ -381,14 +352,15 @@ export function GeocacheForm({
 // === UTILITY FUNCTIONS ===
 
 export function createDefaultGeocacheFormData(): GeocacheFormData {
+  const defaults = getDefaultCacheValues();
   return {
     name: "",
     description: "",
     hint: "",
-    difficulty: "1",
-    terrain: "1",
-    size: "regular",
-    type: "traditional",
+    difficulty: defaults.difficulty,
+    terrain: defaults.terrain,
+    size: defaults.size,
+    type: defaults.type,
   };
 }
 

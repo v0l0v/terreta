@@ -23,7 +23,9 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
 
   verification.warnings.forEach(warning => {
     const lower = warning.toLowerCase();
-    if (lower.includes('inside') && (lower.includes('private') || lower.includes('building') || lower.includes('school') || lower.includes('military'))) {
+    if (lower.includes('underwater')) {
+      categorizedWarnings.critical.push(warning);
+    } else if (lower.includes('inside') && (lower.includes('private') || lower.includes('building') || lower.includes('school') || lower.includes('military'))) {
       categorizedWarnings.critical.push(warning);
     } else {
       categorizedWarnings.other.push(warning);
@@ -106,120 +108,121 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
 
   return (
     <div className={className}>
-      {/* Key Location Features */}
-      <div className="p-3 rounded-md border border-gray-200 bg-gray-50">
-        <div className="flex items-start gap-2">
-          <Info className="h-4 w-4 mt-0.5 text-gray-600" />
-          <div>
-            <div className="font-medium text-sm text-gray-800">Location Features</div>
-            {visibleFeatures.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {visibleFeatures.map((feature, idx) => (
-                  <Badge 
-                    key={idx} 
-                    variant="outline"
-                    className={`text-xs h-5 ${
-                      feature.type === 'positive' ? 'bg-green-50 text-green-700 border-green-200' :
-                      feature.type === 'headsup' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                      feature.type === 'hindrance' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                      'bg-gray-50 text-gray-700 border-gray-200' // neutral
-                    }`}
-                  >
-                    {feature.label}
-                  </Badge>
-                ))}
-                {overflowFeatures.length > 0 && (
-                  <Badge variant="outline" className="text-xs h-5 bg-gray-50 text-gray-600 border-gray-200">
-                    +{overflowFeatures.length} more below
-                  </Badge>
+      <div className="space-y-2">
+        {/* Key Location Features */}
+        <div className="p-3 rounded-md border border-gray-200 bg-gray-50">
+          <div className="flex items-start gap-3">
+            <Info className="h-4 w-4 mt-0.5 text-gray-600 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="font-medium text-sm text-gray-800">Location Features</div>
+              {visibleFeatures.length > 0 ? (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {visibleFeatures.map((feature, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="outline"
+                      className={`text-xs h-5 ${
+                        feature.type === 'positive' ? 'bg-green-50 text-green-700 border-green-200' :
+                        feature.type === 'headsup' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                        feature.type === 'hindrance' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                        'bg-gray-50 text-gray-700 border-gray-200' // neutral
+                      }`}
+                    >
+                      {feature.label}
+                    </Badge>
+                  ))}
+                  {overflowFeatures.length > 0 && (
+                    <Badge variant="outline" className="text-xs h-5 bg-gray-50 text-gray-600 border-gray-200">
+                      +{overflowFeatures.length} more below
+                    </Badge>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-2 text-xs text-gray-600">No specific features detected</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Status Alert (only if there are actual warnings and not hiding creator warnings) */}
+        {!hideCreatorWarnings && (summary.status === 'warning' || summary.status === 'restricted') && (
+          <div className={`p-3 rounded-md border-2 ${
+            summary.status === 'warning' 
+              ? 'bg-yellow-50 border-yellow-300' 
+              : 'bg-red-50 border-red-300'
+          }`}>
+            <div className="flex items-start gap-3">
+              <StatusIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${statusColor}`} />
+              <div className="flex-1">
+                <div className="font-medium text-sm text-gray-800 mb-1">
+                  {summary.status === 'restricted' ? 'Location Warning' : 'Location Notice'}
+                </div>
+                <div className="text-sm text-gray-700">{summary.message}</div>
+                {summary.status === 'restricted' && (
+                  <div className="text-xs text-gray-600 mt-2 italic">
+                    You confirm that you have permission to place a cache at this location and that it complies with all local laws and regulations.
+                  </div>
                 )}
               </div>
-            )}
-            {visibleFeatures.length === 0 && (
-              <div className="text-sm text-gray-600 mt-1">No specific features detected</div>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Status Alert (only if there are actual warnings and not hiding creator warnings) */}
-      {!hideCreatorWarnings && (summary.status === 'warning' || summary.status === 'restricted') && (
-        <div className={`p-3 rounded-md border-2 ${
-          summary.status === 'warning' 
-            ? 'bg-yellow-50 border-yellow-300' 
-            : 'bg-red-50 border-red-300'
-        }`}>
-          <div className="flex items-start gap-2">
-            <StatusIcon className={`h-4 w-4 mt-0.5 ${statusColor}`} />
-            <div>
-              <div className="font-medium text-sm text-gray-800 mb-1">
-                {summary.status === 'restricted' ? 'Location Warning' : 'Location Notice'}
-              </div>
-              <div className="text-sm text-gray-700">{summary.message}</div>
-              {summary.status === 'restricted' && (
-                <div className="text-xs text-gray-600 mt-2 italic">
-                  You can still create a cache here, but please ensure you have proper permissions and the location is appropriate.
+        {/* Critical Issues */}
+        {categorizedWarnings.critical.length > 0 && (
+          <div className="p-3 rounded-md border border-gray-200 bg-red-50">
+            <div className="flex items-start gap-3">
+              <XCircle className="h-4 w-4 mt-0.5 text-red-600 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="font-medium text-sm text-gray-800 mb-1">Critical Issues</div>
+                <div className="space-y-1">
+                  {categorizedWarnings.critical.map((warning, idx) => (
+                    <div key={idx} className="text-xs text-gray-700">
+                      {warning.replace(/⚠️\s*/, '')}
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Critical Issues */}
-      {categorizedWarnings.critical.length > 0 && (
-        <div className="p-3 rounded-md border border-gray-200 bg-red-50">
-          <div className="flex items-start gap-2">
-            <XCircle className="h-4 w-4 mt-0.5 text-red-600" />
-            <div>
-              <div className="font-medium text-sm text-gray-800 mb-1">Critical Issues</div>
-              <div className="space-y-1">
-                {categorizedWarnings.critical.map((warning, idx) => (
-                  <div key={idx} className="text-xs text-gray-700">
-                    {warning.replace(/⚠️\s*/, '')}
-                  </div>
-                ))}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Expandable Other Warnings */}
-      {hasOtherWarnings && (
-        <div className="border rounded-md overflow-hidden">
-          <button
-            className="w-full p-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
-            onClick={() => setShowDetails(!showDetails)}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-gray-700">
-                <Info className="h-4 w-4" />
-                <span className="font-medium text-sm">
-                  All location details ({categorizedWarnings.other.length})
-                </span>
+        {/* Expandable Other Warnings */}
+        {hasOtherWarnings && (
+          <div className="border rounded-md overflow-hidden">
+            <button
+              className="w-full p-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+              onClick={() => setShowDetails(!showDetails)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Info className="h-4 w-4 flex-shrink-0" />
+                  <span className="font-medium text-sm">
+                    All location details ({categorizedWarnings.other.length})
+                  </span>
+                </div>
+                {showDetails ? (
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-gray-500" />
+                )}
               </div>
-              {showDetails ? (
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500" />
-              )}
-            </div>
-          </button>
-          {showDetails && (
-            <div className="p-3 bg-white border-t">
-              <div className="space-y-1">
-                {categorizedWarnings.other.map((warning, idx) => (
-                  <div key={idx} className="text-xs text-gray-600 flex items-start gap-2">
-                    <span className="text-gray-400 mt-0.5">•</span>
-                    <span>{warning.replace(/⚠️\s*/, '').replace(/Area has restricted hours: /, 'Hours: ')}</span>
-                  </div>
-                ))}
+            </button>
+            {showDetails && (
+              <div className="p-3 bg-white border-t">
+                <div className="space-y-1">
+                  {categorizedWarnings.other.map((warning, idx) => (
+                    <div key={idx} className="text-xs text-gray-600 flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5">•</span>
+                      <span>{warning.replace(/⚠️\s*/, '').replace(/Area has restricted hours: /, 'Hours: ')}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

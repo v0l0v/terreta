@@ -1,23 +1,24 @@
 // Utility functions for geocache display and formatting
+import { 
+  getDifficultyLabel as getSharedDifficultyLabel,
+  getCacheSizeLabel,
+  getCacheTypeLabel 
+} from './geocache-constants';
 
 export function getDifficultyLabel(difficulty: number): string {
-  const labels = ["", "Easy", "Moderate", "Hard", "Very Hard", "Expert"];
-  return labels[difficulty] || "";
+  return getSharedDifficultyLabel(difficulty);
 }
 
 export function getTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    traditional: "Traditional",
-    multi: "Multi-cache", 
-    mystery: "Mystery/Puzzle",
-    earth: "EarthCache",
-    earthcache: "EarthCache",
-  };
-  return labels[type.toLowerCase()] || type;
+  // Handle legacy earthcache variant
+  if (type.toLowerCase() === 'earthcache') {
+    return 'EarthCache';
+  }
+  return getCacheTypeLabel(type);
 }
 
 export function getSizeLabel(size: string): string {
-  return size.charAt(0).toUpperCase() + size.slice(1);
+  return getCacheSizeLabel(size);
 }
 
 export function getSizeLevel(size: string): number {

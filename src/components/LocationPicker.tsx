@@ -198,6 +198,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
                 <LocationSearch 
                   onLocationSelect={handleLocationSearch}
                   placeholder="Search city, zip code, or address..."
+                  mobilePlaceholder="Search for a location..."
                 />
               </div>
 

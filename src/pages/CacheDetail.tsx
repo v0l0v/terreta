@@ -28,6 +28,7 @@ import { LocationWarnings } from "@/components/LocationWarnings";
 import { verifyLocation, type LocationVerification } from "@/lib/osmVerification";
 import { Compass } from "@/components/Compass";
 import { getDifficultyLabel, getTypeLabel, getSizeLabel } from "@/lib/geocache-utils";
+import { getDefaultCacheValues } from "@/lib/geocache-constants";
 import { DifficultyTerrainRating } from "@/components/ui/difficulty-terrain-rating";
 import { GeocacheForm, type GeocacheFormData } from "@/components/ui/geocache-form";
 
@@ -57,14 +58,15 @@ export default function CacheDetail() {
   
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
+  const defaults = getDefaultCacheValues();
   const [editFormData, setEditFormData] = useState<GeocacheFormData>({
     name: "",
     description: "",
     hint: "",
-    difficulty: "1",
-    terrain: "1",
-    size: "regular",
-    type: "traditional",
+    difficulty: defaults.difficulty,
+    terrain: defaults.terrain,
+    size: defaults.size,
+    type: defaults.type,
   });
   const [editImages, setEditImages] = useState<string[]>([]);
   const [locationVerification, setLocationVerification] = useState<LocationVerification | null>(null);

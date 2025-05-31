@@ -77,15 +77,11 @@ const RESTRICTED_AREAS = {
   'amenity=hospital': 'Hospital',
   'amenity=clinic': 'Medical clinic',
   
-  // Private property indicators
+  // Private property indicators (only strict restrictions)
   'access=private': 'Private property',
   'access=no': 'No public access',
   'access=customers': 'Customer-only area',
-  'landuse=residential': 'Residential area',
-  'landuse=commercial': 'Commercial property',
-  'landuse=industrial': 'Industrial property',
   'landuse=farmyard': 'Private farm',
-  'landuse=farmland': 'Agricultural land',
   
   // Sensitive infrastructure
   'power=plant': 'Power plant',
@@ -108,21 +104,181 @@ const RESTRICTED_AREAS = {
   'landuse=conservation': 'Conservation area',
   'historic=*': 'Historic site (may be protected)',
   'natural=wetland': 'Wetland (environmentally sensitive)',
+  
+  // Water bodies (caches should not be placed in water)
+  'natural=water': 'Body of water',
+  'water=*': 'Water feature',
+  'waterway=river': 'River', 
+  'waterway=canal': 'Canal',
+  'waterway=stream': 'Stream',
+  'waterway=ditch': 'Drainage ditch',
+  'landuse=reservoir': 'Reservoir',
+  'leisure=swimming_pool': 'Swimming pool',
+  'natural=bay': 'Bay',
+  'place=sea': 'Sea',
+  'place=ocean': 'Ocean',
 };
 
 // Tags that indicate public spaces (generally safe for geocaching)
 const PUBLIC_AREAS = [
   'leisure=park',
   'leisure=garden',
+  'leisure=recreation_ground',
+  'leisure=playground',
   'leisure=nature_reserve',
   'landuse=forest',
+  'landuse=grass',
   'natural=wood',
+  'natural=grassland',
   'tourism=viewpoint',
   'tourism=picnic_site',
   'highway=footway',
   'highway=path',
   'highway=cycleway',
+  'highway=bridleway',
+  'highway=steps',
+  'amenity=parking', // public parking areas
+  'leisure=common',
+  'boundary=national_park',
+  'landuse=recreation_ground',
+  'leisure=dog_park',
 ];
+
+// Function to score warning specificity (higher score = more specific)
+function getWarningSpecificityScore(warning: string): number {
+  let score = 0;
+  
+  // UNDERWATER warnings are the highest priority
+  if (warning.includes('UNDERWATER')) score += 5;
+  
+  // Human-friendly descriptive text is preferred
+  if (warning.includes('Location is inside a') || warning.includes('Location is near a')) {
+    score += 3; // Prefer descriptive text like "Location is inside a Private property"
+  }
+  
+  // Emoji warnings are more urgent but less human-friendly
+  if (warning.includes('⚠️')) score += 2;
+  
+  // "inside" is more specific than "near"
+  if (warning.includes('inside')) score += 1;
+  
+  // Additional context in parentheses adds specificity
+  if (warning.includes('(')) score += 1;
+  
+  return score;
+}
+
+// Helper function to identify water features
+function isWaterFeature(key: string, value: string): boolean {
+  const waterKeys = ['natural', 'water', 'waterway', 'landuse', 'leisure', 'place'];
+  const waterValues = ['water', 'river', 'canal', 'stream', 'ditch', 'reservoir', 'swimming_pool', 'bay', 'sea', 'ocean'];
+  
+  // Check if this is a water-related tag
+  if (waterKeys.includes(key)) {
+    // For waterway, any value indicates water
+    if (key === 'waterway') return true;
+    
+    // For water tag, any value indicates water type
+    if (key === 'water') return true;
+    
+    // For other keys, check specific water-related values
+    return waterValues.includes(value);
+  }
+  
+  return false;
+}
+
+// Check if we're definitively on dry land by analyzing nearby land features
+function isDefinitelyOnLand(elements: any[]): boolean {
+  for (const element of elements) {
+    if (!element.tags) continue;
+    
+    // Strong indicators of being on land
+    if (element.tags.building ||
+        element.tags.highway ||
+        element.tags.railway ||
+        element.tags.amenity ||
+        element.tags.landuse ||
+        element.tags.leisure ||
+        element.tags.shop ||
+        element.tags.tourism ||
+        element.tags.man_made ||
+        element.tags.natural === 'tree' ||
+        element.tags.natural === 'grass' ||
+        element.tags.surface) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Aggressive water detection - only used when we can't confirm we're on land
+function isLikelyInWater(lat: number, lng: number, waterElements: any[]): boolean {
+  // If we have any water features nearby, assume we're in water
+  for (const element of waterElements) {
+    if (!element.tags) continue;
+    
+    const isWater = element.tags.natural === 'water' || 
+                   element.tags.waterway ||
+                   element.tags.landuse === 'reservoir';
+    
+    if (isWater) {
+      return true; // Any water feature = assume underwater
+    }
+  }
+  
+  return false;
+}
+
+// Function to clean up duplicate and similar warnings
+export function cleanupDuplicateWarnings(warnings: string[]): string[] {
+  const cleaned: string[] = [];
+  
+  for (const warning of warnings) {
+    const normalizedWarning = warning.toLowerCase().replace(/⚠️\s*/, '');
+    
+    // Check if we already have a similar warning
+    let foundSimilar = false;
+    
+    for (let i = 0; i < cleaned.length; i++) {
+      const existingWarning = cleaned[i];
+      const normalizedExisting = existingWarning.toLowerCase().replace(/⚠️\s*/, '');
+      
+      // Check for semantic duplicates
+      const bothAboutPrivateProperty = normalizedWarning.includes('private property') && normalizedExisting.includes('private property');
+      const bothAboutNoAccess = normalizedWarning.includes('no-access area') && normalizedExisting.includes('no-access area');
+      const bothAboutBuilding = normalizedWarning.includes('building') && normalizedExisting.includes('building');
+      const bothAboutSchool = normalizedWarning.includes('school') && normalizedExisting.includes('school');
+      const bothAboutMilitary = normalizedWarning.includes('military') && normalizedExisting.includes('military');
+      const bothAboutWater = (normalizedWarning.includes('underwater') || normalizedWarning.includes('water') || 
+                            normalizedWarning.includes('river') || normalizedWarning.includes('swimming pool') ||
+                            normalizedWarning.includes('canal') || normalizedWarning.includes('stream')) && 
+                           (normalizedExisting.includes('underwater') || normalizedExisting.includes('water') || 
+                            normalizedExisting.includes('river') || normalizedExisting.includes('swimming pool') ||
+                            normalizedExisting.includes('canal') || normalizedExisting.includes('stream'));
+      
+      if (bothAboutPrivateProperty || bothAboutNoAccess || bothAboutBuilding || bothAboutSchool || bothAboutMilitary || bothAboutWater) {
+        // Prefer the more specific version based on multiple criteria
+        const warningScore = getWarningSpecificityScore(warning);
+        const existingScore = getWarningSpecificityScore(existingWarning);
+        
+        if (warningScore > existingScore) {
+          // Replace the existing less specific one with the more specific one
+          cleaned[i] = warning;
+        }
+        // If existing is more specific or equal, keep existing and ignore new one
+        foundSimilar = true;
+        break;
+      }
+    }
+    
+    if (!foundSimilar) {
+      cleaned.push(warning);
+    }
+  }
+  
+  return cleaned;
+}
 
 export async function verifyLocation(lat: number, lng: number): Promise<LocationVerification> {
   const warnings: string[] = [];
@@ -135,20 +291,31 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
   
   try {
     // Query Overpass API for features at and near the location
-    const radius = 50; // meters for nearby features
+    // Use a "surrounding water" detection approach - check multiple directions
+    const nearbyRadius = 25; // meters for nearby features
+    const waterRadius = 500;  // aggressive radius - only used when no land features found
     const query = `
       [out:json][timeout:10];
       (
-        // Get ways/areas that contain this point
-        way(around:1,${lat},${lng});
-        relation(around:1,${lat},${lng});
+        // Get ways/areas that might contain this exact point
+        way(around:5,${lat},${lng});
+        relation(around:5,${lat},${lng});
         
-        // Also get nearby features within radius
-        node(around:${radius},${lat},${lng});
-        way(around:${radius},${lat},${lng});
-        relation(around:${radius},${lat},${lng});
+        // Check for water features in a reasonable radius to see if we're surrounded
+        way(around:${waterRadius},${lat},${lng})[natural=water];
+        way(around:${waterRadius},${lat},${lng})[waterway];
+        way(around:${waterRadius},${lat},${lng})[landuse=reservoir];
+        relation(around:${waterRadius},${lat},${lng})[natural=water];
+        relation(around:${waterRadius},${lat},${lng})[waterway];
+        
+        // Also get nearby significant features
+        node(around:${nearbyRadius},${lat},${lng})[amenity];
+        node(around:${nearbyRadius},${lat},${lng})[building];
+        way(around:${nearbyRadius},${lat},${lng})[amenity];
+        way(around:${nearbyRadius},${lat},${lng})[access];
+        way(around:${nearbyRadius},${lat},${lng})[leisure];
       );
-      out tags center;
+      out geom tags center;
     `;
     
     const response = await fetch('https://overpass-api.de/api/interpreter', {
@@ -176,41 +343,84 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
     
     const data: OSMResponse = await response.json();
     
-    // Separate elements by distance (at location vs nearby)
-    const elementsAtLocation: OSMElement[] = [];
-    const elementsNearby: OSMElement[] = [];
+    // Separate water features for analysis
+    const waterElements = data.elements.filter(element => 
+      element.tags && (
+        element.tags.natural === 'water' ||
+        element.tags.waterway ||
+        element.tags.landuse === 'reservoir'
+      )
+    );
     
-    // Check each element for restricted tags
-    for (const element of data.elements) {
+    // Two-stage water detection approach:
+    // 1. Check if we're definitely on land (buildings, roads, etc.)
+    // 2. If not on land, be aggressive about water detection
+    
+    const isOnLand = isDefinitelyOnLand(data.elements);
+    
+    let isSurroundedByWater = false;
+    if (!isOnLand) {
+      // Only do water detection if we can't confirm we're on land
+      isSurroundedByWater = isLikelyInWater(lat, lng, waterElements);
+    }
+    
+    // Process all elements for other warnings
+    const allElements = data.elements;
+    
+    for (const element of allElements) {
       if (!element.tags) continue;
       
-      // Determine if this element is at the exact location or just nearby
-      // Elements with center info that are very close (within 1-2m) are considered "at location"
-      const isAtLocation = element.type === 'way' || element.type === 'relation';
+      // Be much more conservative about what we consider "containing" vs "nearby"
+      const isExplicitlyContaining = (
+        // Only buildings that are clearly problematic
+        (element.tags.building && ['house', 'residential', 'apartments', 'school', 'hospital'].includes(element.tags.building) && element.tags.access !== 'yes') ||
+        // Explicit private access within a small area
+        (element.tags.access === 'private' && element.type === 'way') ||
+        // Specific restricted facility types
+        (element.tags.amenity && ['school', 'hospital', 'prison', 'police'].includes(element.tags.amenity))
+      );
       
-      if (isAtLocation) {
-        elementsAtLocation.push(element);
-      } else {
-        elementsNearby.push(element);
-      }
+      // Use the surrounding water analysis for all water-related warnings
+      const isInWater = isSurroundedByWater;
       
       // Check for restricted areas
       for (const [tagKey, description] of Object.entries(RESTRICTED_AREAS)) {
         const [key, value] = tagKey.split('=');
-        
         if (value === '*') {
           // Wildcard match (e.g., military=*)
           if (key in element.tags) {
-            const prefix = isAtLocation ? 'Location is inside' : 'Location is near';
-            warnings.push(`${prefix} a ${description}`);
+            // Special handling for water bodies
+            if (isWaterFeature(key, element.tags[key])) {
+              if (isInWater) {
+                const waterName = element.tags.name || description.toLowerCase();
+                warnings.push(`⚠️ Location is UNDERWATER in ${waterName}`);
+              } else {
+                warnings.push(`Location is near ${description.toLowerCase()}`);
+              }
+            } else {
+              // Only use "inside" language for explicitly containing elements
+              const prefix = isExplicitlyContaining ? 'Location is inside' : 'Location is near';
+              warnings.push(`${prefix} a ${description}`);
+            }
             nearbyFeatures.push({
               name: element.tags.name,
               type: description,
             });
           }
         } else if (element.tags[key] === value) {
-          const prefix = isAtLocation ? 'Location is inside' : 'Location is near';
-          warnings.push(`${prefix} a ${description}`);
+          // Special handling for water bodies
+          if (isWaterFeature(key, value)) {
+            if (isInWater) {
+              const waterName = element.tags.name || description.toLowerCase();
+              warnings.push(`⚠️ Location is UNDERWATER in ${waterName}`);
+            } else {
+              warnings.push(`Location is near ${description.toLowerCase()}`);
+            }
+          } else {
+            // Only use "inside" language for explicitly containing elements  
+            const prefix = isExplicitlyContaining ? 'Location is inside' : 'Location is near';
+            warnings.push(`${prefix} a ${description}`);
+          }
           nearbyFeatures.push({
             name: element.tags.name,
             type: description,
@@ -218,19 +428,14 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
         }
       }
       
-      // Check for general access restrictions with more detail
-      if (element.tags.access === 'private') {
-        if (isAtLocation) {
-          warnings.push('⚠️ Location is INSIDE private property');
-        } else {
-          warnings.push('Location is near private property');
-        }
-      } else if (element.tags.access === 'no') {
-        if (isAtLocation) {
-          warnings.push('⚠️ Location is INSIDE a no-access area');
-        } else {
-          warnings.push('Location is near a no-access area');
-        }
+      // Check for general access restrictions - only flag as "INSIDE" for explicitly containing elements
+      if (isExplicitlyContaining && element.tags.access === 'private') {
+        warnings.push('⚠️ Location is INSIDE private property');
+      } else if (isExplicitlyContaining && element.tags.access === 'no') {
+        warnings.push('⚠️ Location is INSIDE a no-access area');
+      } else if (element.tags.access === 'private' && element.tags.amenity) {
+        // For non-containing elements, only warn about specific amenities
+        warnings.push(`Location is near private property (${element.tags.amenity})`);
       }
       
       // Also check for other access restrictions
@@ -238,12 +443,9 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
         warnings.push(`Location has restricted access: ${element.tags.access} only`);
       }
       
-      // Check building tags which often indicate private property
-      if (element.tags.building && isAtLocation) {
-        // Most buildings are private unless specifically marked otherwise
-        if (!element.tags.access || element.tags.access !== 'yes') {
-          warnings.push('⚠️ Location appears to be inside a building (likely private)');
-        }
+      // Check building tags - be much more selective
+      if (element.tags.building && isExplicitlyContaining) {
+        warnings.push('⚠️ Location appears to be inside a building (verify permissions)');
       }
       
       // Add notable nearby features for context
@@ -271,7 +473,7 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
       }
       if (element.tags.opening_hours) {
         accessibility.openingHours = element.tags.opening_hours;
-        if (element.tags.opening_hours !== '24/7') {
+        if (element.tags.opening_hours !== '24/7' && !warnings.some(w => w.includes('restricted hours'))) {
           warnings.push(`Area has restricted hours: ${element.tags.opening_hours}`);
         }
       }
@@ -298,7 +500,11 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
         terrain.hazards?.push('Cliff nearby');
       }
       if (element.tags.waterway) {
-        terrain.hazards?.push(`Near ${element.tags.waterway}`);
+        // Only warn about significant water hazards, not every stream
+        const significantWaterways = ['river', 'canal', 'rapids', 'waterfall'];
+        if (significantWaterways.includes(element.tags.waterway)) {
+          terrain.hazards?.push(`Near ${element.tags.waterway}`);
+        }
       }
       
       // Legal/ownership information
@@ -360,15 +566,20 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
         terrain.hazards?.push('Steps/stairs present');
       }
       
-      // Environmental concerns
+      // Environmental concerns - only significant ones
       if (element.tags.nesting_site === 'yes') {
         environmental.nesting = true;
         warnings.push('⚠️ Wildlife nesting area - seasonal restrictions may apply');
       }
       if (element.tags['protected_area:type']) {
         environmental.protected = element.tags['protected_area:type'];
+        // Only warn about strict protected areas
+        if (element.tags['protected_area:type'].includes('strict') || 
+            element.tags.protection_title?.includes('Nature Reserve')) {
+          warnings.push(`Strictly protected area: ${element.tags.protection_title || element.tags['protected_area:type']}`);
+        }
       }
-      if (element.tags.conservation) {
+      if (element.tags.conservation && element.tags.conservation !== 'yes') {
         environmental.leaveNoTrace = true;
         warnings.push('Conservation area - practice Leave No Trace');
       }
@@ -452,19 +663,39 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
       return PUBLIC_AREAS.some(publicTag => {
         const [key, value] = publicTag.split('=');
         return element.tags![key] === value;
-      });
+      }) || 
+      // Also check for explicit public access
+      element.tags.access === 'yes' || element.tags.access === 'public';
     });
     
-    if (isInPublicArea && warnings.length === 0) {
+    if (isInPublicArea) {
       // Location appears to be in a public area - good!
       nearbyFeatures.unshift({
         type: 'Public area - suitable for geocaching',
       });
+      
+      // If it's clearly public and no serious warnings, don't show minor warnings
+      if (warnings.length === 0 || warnings.every(w => 
+        w.includes('restricted hours') || 
+        w.includes('near') || 
+        w.includes('Location feature:')
+      )) {
+        // Keep only significant warnings for public areas
+        const significantWarnings = warnings.filter(w => 
+          w.includes('INSIDE') || 
+          w.includes('Military') || 
+          w.includes('Prison') ||
+          w.includes('private property') ||
+          w.includes('no-access area')
+        );
+        warnings.length = 0;
+        warnings.push(...significantWarnings);
+      }
     }
     
     return {
       isRestricted: warnings.length > 0,
-      warnings: [...new Set(warnings)], // Remove duplicates
+      warnings: cleanupDuplicateWarnings([...new Set(warnings)]), // Remove exact duplicates first, then semantic duplicates
       nearbyFeatures: nearbyFeatures.slice(0, 5), // Limit to 5 most relevant
       accessibility,
       terrain: {
@@ -513,36 +744,40 @@ export function getVerificationSummary(verification: LocationVerification): {
     };
   }
   
-  // Check for severe restrictions (inside private property or sensitive areas)
+  // Check for severe restrictions (inside private property, sensitive areas, or underwater)
   if (verification.warnings.some(w => 
+    w.includes('UNDERWATER') ||
     w.includes('INSIDE private property') ||
     w.includes('INSIDE a no-access area') ||
-    w.includes('inside a building') ||
-    w.includes('is inside') && (
+    w.includes('inside a building (verify permissions)') ||
+    (w.includes('is inside') && (
       w.includes('School') || 
       w.includes('Military') || 
       w.includes('Prison') ||
       w.includes('Hospital') ||
       w.includes('Government')
-    )
+    ))
   )) {
     return {
       status: 'restricted',
-      message: 'This location appears to be inside a restricted area. Please verify you have permission and the location is appropriate for geocaching.',
+      message: verification.warnings.some(w => w.includes('UNDERWATER')) 
+        ? 'This location appears to be underwater.'
+        : 'This location appears to be inside a restricted area. Please verify you have permission and the location is appropriate for geocaching.',
     };
   }
   
-  // Check for moderate restrictions (near but not inside)
+  // Check for moderate restrictions
   if (verification.warnings.some(w => 
-    w.includes('School') || 
-    w.includes('Military') || 
-    w.includes('Prison') ||
-    w.includes('private property') ||
-    w.includes('no-access area')
+    w.toLowerCase().includes('school') || 
+    w.toLowerCase().includes('military') || 
+    w.toLowerCase().includes('prison') ||
+    w.toLowerCase().includes('private property') ||
+    w.toLowerCase().includes('no-access area') ||
+    w.toLowerCase().includes('strictly protected area')
   )) {
     return {
       status: 'warning',
-      message: 'This location is near restricted areas. Please verify it is appropriate and you have necessary permissions.',
+      message: 'This location has some restrictions or considerations. Please review the details and verify it is appropriate for geocaching.',
     };
   }
   
