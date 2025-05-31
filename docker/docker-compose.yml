@@ -6,8 +6,6 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     container_name: treasures-app
-    ports:
-      - "80:80"
     restart: unless-stopped
     environment:
       - NODE_ENV=production
@@ -20,58 +18,29 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
+    networks:
+      - treasures-network
 
-  # Optional: Nginx reverse proxy with SSL
-  nginx-proxy:
-    image: nginxproxy/nginx-proxy:latest
-    container_name: nginx-proxy
+  caddy:
+    image: caddy:latest
+    container_name: caddy
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - nginx-certs:/etc/nginx/certs
-      - nginx-vhost:/etc/nginx/vhost.d
-      - nginx-html:/usr/share/nginx/html
-    environment:
-      - DEFAULT_HOST=treasures.local
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
     restart: unless-stopped
-    profiles:
-      - proxy
+    networks:
+      - treasures-network
     depends_on:
       - treasures
 
-  # Let's Encrypt SSL certificates
-  letsencrypt:
-    image: nginxproxy/acme-companion:latest
-    container_name: letsencrypt
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - nginx-certs:/etc/nginx/certs
-      - nginx-vhost:/etc/nginx/vhost.d
-      - nginx-html:/usr/share/nginx/html
-      - letsencrypt-acme:/etc/acme.sh
-    environment:
-      - DEFAULT_EMAIL=your-email@example.com  # Change this to your email
-      - NGINX_PROXY_CONTAINER=nginx-proxy
-    restart: unless-stopped
-    profiles:
-      - ssl
-    depends_on:
-      - nginx-proxy
-
 volumes:
-  nginx-certs:
-  nginx-vhost:
-  nginx-html:
-  letsencrypt-acme:
+  caddy_data:
+  caddy_config:
 
 networks:
-  default:
-    name: treasures-network
+  treasures-network:
+    driver: bridge
