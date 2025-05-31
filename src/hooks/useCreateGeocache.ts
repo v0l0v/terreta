@@ -91,6 +91,7 @@ export function useCreateGeocache() {
       });
       
       // Optimistically update the cache with the new geocache
+      queryClient.setQueryData(['geocache', event.id], () => {
         // Use consolidated parsing utility
         const parsed = parseGeocacheEvent(event);
         if (!parsed) {

@@ -11,12 +11,6 @@ import {
   createGeocacheCoordinate 
 } from '@/lib/nip-gc';
 
-  } catch (error) {
-    console.error('Failed to parse geocache event:', error, event);
-    return null;
-  }
-}
-
 interface SavedCache {
   id: string;
   dTag: string;

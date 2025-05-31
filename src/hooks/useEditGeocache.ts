@@ -120,12 +120,6 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
             foundCount: (oldData as Geocache).foundCount,
             logCount: (oldData as Geocache).logCount,
           };
-            difficulty,
-            terrain,
-            size: size || 'regular',
-            type: type || 'traditional',
-            images,
-          };
         });
       }
 
@@ -146,12 +140,6 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
             // Preserve original foundCount and logCount
             foundCount: (oldData as Geocache).foundCount,
             logCount: (oldData as Geocache).logCount,
-          };
-            difficulty,
-            terrain,
-            size: size || 'regular',
-            type: type || 'traditional',
-            images,
           };
         });
       }
