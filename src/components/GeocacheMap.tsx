@@ -2,9 +2,12 @@ import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import L from "leaflet";
-import { MapPin, Navigation, Trophy, MessageSquare } from "lucide-react";
+import { MapPin, Navigation, Trophy, MessageSquare, Bookmark, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SaveButton } from "@/components/SaveButton";
+import { useSavedCaches } from "@/hooks/useSavedCaches";
+import { useToast } from "@/hooks/useToast";
 import { useNavigate } from "react-router-dom";
 import type { Geocache } from "@/types/geocache";
 import { getTypeLabel, getSizeLabel } from "@/lib/geocache-utils";
@@ -237,6 +240,8 @@ export function GeocacheMap({
 }: GeocacheMapProps) {
   const navigate = useNavigate();
   const mapStyle = MAP_STYLES.voyager; // Using voyager for vibrant, adventure-ready look
+  const { isCacheSaved, toggleSaveCache, isNostrEnabled } = useSavedCaches();
+  const { toast } = useToast();
 
   // Calculate center if not provided
   const mapCenter: LatLngExpression = center 
@@ -404,6 +409,52 @@ export function GeocacheMap({
                   onClick={() => handleMarkerClick(geocache)}
                 >
                   View Details
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="px-2"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (!isNostrEnabled) {
+                      toast({
+                        title: 'Login required',
+                        description: 'Please log in with your Nostr account to save caches.',
+                        variant: 'destructive',
+                      });
+                      return;
+                    }
+                    
+                    const isSaved = isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey);
+                    
+                    try {
+                      await toggleSaveCache(geocache);
+                      
+                      toast({
+                        title: isSaved ? 'Cache removed from saved list' : 'Cache saved for later',
+                        description: isSaved 
+                          ? `"${geocache.name}" has been removed from your saved caches.`
+                          : `"${geocache.name}" has been saved to your Nostr profile.`,
+                      });
+                    } catch (error) {
+                      console.error('Failed to toggle save cache:', error);
+                      const errorMessage = error instanceof Error ? error.message : 'Failed to save cache. Please try again.';
+                      toast({
+                        title: 'Error saving cache',
+                        description: errorMessage,
+                        variant: 'destructive',
+                      });
+                    }
+                  }}
+                  title={isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey) ? 'Remove from saved' : 'Save for later'}
+                >
+                  {isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey) ? (
+                    <BookmarkCheck className="h-3 w-3" />
+                  ) : (
+                    <Bookmark className="h-3 w-3" />
+                  )}
                 </Button>
                 <Button
                   size="sm"

@@ -188,6 +188,7 @@ export function parseGeocacheEvent(event: NostrEvent): Geocache | null {
     const hint = event.tags.find(t => t[0] === 'hint')?.[1];
     const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
     const relays = event.tags.filter(t => t[0] === 'r').map(t => t[1]);
+    const client = event.tags.find(t => t[0] === 'client')?.[1];
 
     return {
       id: event.id,
@@ -204,6 +205,7 @@ export function parseGeocacheEvent(event: NostrEvent): Geocache | null {
       type: cacheType,
       images,
       relays,
+      client,
     };
   } catch (error) {
     console.error('Failed to parse geocache event:', error, event);
@@ -244,6 +246,7 @@ export function parseLogEvent(event: NostrEvent): GeocacheLog | null {
 
     // Parse optional tags
     const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
+    const client = event.tags.find(t => t[0] === 'client')?.[1];
 
     return {
       id: event.id,
@@ -253,6 +256,7 @@ export function parseLogEvent(event: NostrEvent): GeocacheLog | null {
       type: logType,
       text: event.content, // Log text is in content field per NIP-GC
       images,
+      client,
     };
   } catch (error) {
     console.error('Failed to parse log event:', error, event);
