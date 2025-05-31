@@ -39,6 +39,7 @@ export default function Map() {
   const [mapUpdateKey, setMapUpdateKey] = useState(0);
   const [selectedGeocache, setSelectedGeocache] = useState<Geocache | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [highlightedGeocache, setHighlightedGeocache] = useState<string | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
@@ -114,18 +115,28 @@ export default function Map() {
     setMapZoom(12); // Slightly more zoomed in for city searches
     setShowNearMe(false);
     setSearchLocation(newCenter);
+    setHighlightedGeocache(null); // Clear any highlighted geocache
     setMapUpdateKey(prev => prev + 1); // Force map update
   };
 
   const handleNearMe = () => {
     setShowNearMe(true);
     setSearchLocation(null); // Clear search location
+    setHighlightedGeocache(null); // Clear any highlighted geocache
     getLocation();
   };
 
   const handleMarkerClick = (geocache: Geocache) => {
     setSelectedGeocache(geocache);
     setDialogOpen(true);
+  };
+
+  const handleCardClick = (geocache: Geocache) => {
+    // On desktop, snap to the location on the map and highlight it
+    setMapCenter({ lat: geocache.location.lat, lng: geocache.location.lng });
+    setMapZoom(16); // Zoom in closer for better detail
+    setHighlightedGeocache(geocache.dTag); // Highlight this geocache
+    setMapUpdateKey(prev => prev + 1); // Force map update
   };
 
   return (
@@ -260,7 +271,7 @@ export default function Map() {
                       key={cache.id}
                       cache={cache}
                       distance={cache.distance}
-                      onClick={() => handleMarkerClick(cache)}
+                      onClick={() => handleCardClick(cache)}
                     />
                   ))}
                 </div>
@@ -280,6 +291,7 @@ export default function Map() {
         {/* Map */}
         <div className="flex-1 relative">
           <GeocacheMap 
+            key={mapUpdateKey}
             geocaches={filteredGeocaches} 
             userLocation={userLocation}
             searchLocation={searchLocation || (showNearMe ? userLocation : null)}
@@ -287,6 +299,7 @@ export default function Map() {
             center={mapCenter || undefined}
             zoom={mapZoom}
             onMarkerClick={handleMarkerClick}
+            highlightedGeocache={highlightedGeocache || undefined}
           />
         </div>
       </div>
@@ -436,6 +449,7 @@ export default function Map() {
             <TabsContent value="map" className="flex-1 m-0 p-0 data-[state=active]:block">
               <div className="h-full">
                 <GeocacheMap 
+                  key={mapUpdateKey}
                   geocaches={filteredGeocaches} 
                   userLocation={userLocation}
                   searchLocation={searchLocation || (showNearMe ? userLocation : null)}
@@ -443,6 +457,7 @@ export default function Map() {
                   center={mapCenter || undefined}
                   zoom={mapZoom}
                   onMarkerClick={handleMarkerClick}
+                  highlightedGeocache={highlightedGeocache || undefined}
                 />
               </div>
             </TabsContent>

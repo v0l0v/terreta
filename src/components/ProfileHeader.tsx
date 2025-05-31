@@ -1,0 +1,184 @@
+import { Calendar, MapPin, User, CheckCircle, ShieldCheck, Loader2, Copy, Check, Globe, ExternalLink } from "lucide-react";
+import { formatDistanceToNow } from "@/lib/date";
+import { useNip05Status } from "@/hooks/useNip05Verification";
+import { useState } from "react";
+
+interface ProfileHeaderProps {
+  pubkey: string;
+  metadata?: {
+    name?: string;
+    display_name?: string;
+    picture?: string;
+    banner?: string;
+    nip05?: string;
+    about?: string;
+    website?: string;
+    lud16?: string;
+    lud06?: string;
+  };
+  createdAt?: number;
+  hiddenCount: number;
+  foundCount: number;
+  variant?: "dialog" | "page";
+  className?: string;
+  children?: React.ReactNode; // For additional content like edit buttons
+  onCopy?: (text: string, field: string) => void; // For copy functionality
+  showExtendedDetails?: boolean; // Whether to show bio and additional details
+}
+
+export function ProfileHeader({
+  pubkey,
+  metadata,
+  createdAt,
+  hiddenCount,
+  foundCount,
+  variant = "dialog",
+  className = "",
+  children,
+  onCopy,
+  showExtendedDetails = false
+}: ProfileHeaderProps) {
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  
+  const displayName = metadata?.display_name || metadata?.name || pubkey.slice(0, 8);
+  const profilePicture = metadata?.picture;
+  const nip05 = metadata?.nip05;
+  const website = metadata?.website;
+  
+  const { 
+    isVerified, 
+    isLoading: isLoadingNip05 
+  } = useNip05Status(nip05, pubkey);
+
+  const handleCopy = async (text: string, field: string) => {
+    if (onCopy) {
+      onCopy(text, field);
+    } else {
+      // Fallback copy functionality
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopiedField(field);
+        setTimeout(() => setCopiedField(null), 2000);
+      } catch (error) {
+        console.error('Failed to copy:', error);
+      }
+    }
+  };
+
+  const isPageVariant = variant === "page";
+  const avatarSize = isPageVariant ? "w-20 h-20 sm:w-24 sm:h-24" : "w-20 h-20";
+  const titleSize = isPageVariant ? "text-lg sm:text-xl" : "text-lg";
+  const bannerHeight = isPageVariant ? "h-24 sm:h-32" : "h-24";
+
+  return (
+    <div className={`relative ${className}`}>
+      {/* Banner */}
+      {metadata?.banner ? (
+        <div 
+          className={`${bannerHeight} rounded-lg bg-cover bg-center bg-gray-200 mb-8`}
+          style={{ backgroundImage: `url(${metadata.banner})` }}
+        />
+      ) : isPageVariant ? (
+        <div className={`${bannerHeight} bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg mb-8`} />
+      ) : (
+        <div className={`${bannerHeight} bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg mb-8`} />
+      )}
+      
+      {/* Avatar positioned to overlap banner */}
+      <div className="absolute left-4 -mt-20">
+        {profilePicture ? (
+          <img 
+            src={profilePicture} 
+            alt={displayName}
+            className={`${avatarSize} rounded-full object-cover border-4 border-white shadow-sm`}
+          />
+        ) : (
+          <div className={`${avatarSize} rounded-full bg-gray-200 border-4 border-white shadow-sm flex items-center justify-center`}>
+            <User className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500" />
+          </div>
+        )}
+      </div>
+      
+      {/* Profile info positioned below avatar */}
+      <div className="pt-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div>
+              <h2 className={`${titleSize} font-semibold text-gray-900 truncate leading-none`}>{displayName}</h2>
+              {nip05 && (
+                <button
+                  onClick={() => handleCopy(pubkey, 'npub')}
+                  className="flex items-center gap-1 text-xs text-gray-700 hover:text-gray-900 transition-colors group -mt-1"
+                  title="Click to copy npub"
+                >
+                {isLoadingNip05 ? (
+                  <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+                ) : isVerified ? (
+                  <ShieldCheck className="h-3 w-3 text-green-600" />
+                ) : null}
+                <span>{nip05}</span>
+                {copiedField === 'npub' ? (
+                  <Check className="h-3 w-3 text-green-600" />
+                ) : (
+                  <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                )}
+              </button>
+              )}
+            </div>
+          </div>
+          {children && (
+            <div className="flex-shrink-0">
+              {children}
+            </div>
+          )}
+        </div>
+        
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-4 mt-2 text-xs sm:text-sm text-gray-500">
+          {createdAt && (
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              Joined {formatDistanceToNow(new Date(createdAt * 1000), { addSuffix: true })}
+            </span>
+          )}
+          <span className="flex items-center gap-1">
+            <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+            {hiddenCount} Hidden
+          </span>
+          <span className="flex items-center gap-1">
+            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+            {foundCount} Found
+          </span>
+        </div>
+
+        {/* Extended details section for page variant */}
+        {showExtendedDetails && (
+          <div className="mt-4 space-y-2">
+            {/* Bio */}
+            {metadata?.about && (
+              <p className="text-sm text-gray-700 line-clamp-2">
+                {metadata.about}
+              </p>
+            )}
+
+
+
+            {/* Additional profile details - Lightning address hidden for now */}
+            {/* <div className="flex flex-wrap gap-4 text-xs text-gray-600">
+              {(metadata?.lud16 || metadata?.lud06) && (
+                <button
+                  onClick={() => handleCopy(metadata.lud16 || metadata.lud06 || '', 'Lightning Address')}
+                  className="flex items-center gap-1 hover:text-gray-800 transition-colors"
+                  title="Click to copy Lightning address"
+                >
+                  <span className="text-yellow-500">⚡</span>
+                  <span className="font-mono">{metadata.lud16 || metadata.lud06}</span>
+                </button>
+              )}
+            </div> */}
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}

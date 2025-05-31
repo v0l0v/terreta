@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { LoginArea } from '@/components/auth/LoginArea';
 import { DetailedGeocacheCard } from '@/components/ui/geocache-card';
 import { EditProfileForm } from '@/components/EditProfileForm';
+import { ProfileHeader } from '@/components/ProfileHeader';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useUserGeocaches } from '@/hooks/useUserGeocaches';
@@ -153,170 +154,36 @@ export default function Profile() {
         {/* Profile Header */}
         <Card className="mb-4">
           <CardContent className="p-4">
-            {/* Banner */}
-            {metadata?.banner && (
-              <div className="relative w-full h-24 sm:h-32 mb-4 rounded-lg overflow-hidden bg-gradient-to-r from-green-100 to-emerald-100">
-                <img 
-                  src={metadata.banner} 
-                  alt="Profile banner"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
-            <div className="flex gap-3 items-start">
-              {/* Avatar */}
-              <Avatar className="w-14 h-14 sm:w-16 sm:h-16 border-2 border-white shadow-md flex-shrink-0">
-                <AvatarImage src={metadata?.picture} alt={displayName} />
-                <AvatarFallback className="text-sm">
-                  {metadata?.name?.charAt(0) || <User className="w-5 h-5" />}
-                </AvatarFallback>
-              </Avatar>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                  <div>
-                    <h1 className="text-lg font-bold flex items-center gap-2">
-                      {displayName}
-                      {metadata?.bot && (
-                        <Badge variant="secondary" className="text-xs">
-                          Bot
-                        </Badge>
-                      )}
-                    </h1>
-                    <button
-                      onClick={() => copyToClipboard(targetPubkey, 'Public Key')}
-                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors group"
-                      title="Click to copy full public key"
-                    >
-                      <span className="font-mono">{shortPubkey}</span>
-                      {copiedField === 'Public Key' ? (
-                        <Check className="h-3 w-3 text-green-600" />
-                      ) : (
-                        <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Edit Button - Opens modal */}
-                  {isOwnProfile && (
-                    <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 w-8 sm:w-auto sm:h-auto p-0 sm:px-3 sm:py-2">
-                          <Edit className="h-4 w-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Edit</span>
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Edit Profile</DialogTitle>
-                        </DialogHeader>
-                        <EditProfileForm onSuccess={() => setIsEditModalOpen(false)} />
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </div>
-
-                {/* Bio */}
-                {metadata?.about && (
-                  <p className="text-sm text-gray-700 mb-2 line-clamp-1">
-                    {metadata.about}
-                  </p>
-                )}
-
-                {/* Profile Details - Simple clean layout */}
-                <div className="space-y-1 text-xs">
-                  {metadata?.nip05 && (
-                    <div className="flex items-center gap-1">
-                      {isLoadingNip05 ? (
-                        <Loader2 className="h-3 w-3 animate-spin text-gray-400" title="Verifying NIP-05..." />
-                      ) : isVerified ? (
-                        <ShieldCheck className="h-3 w-3 text-green-600" title="NIP-05 verified" />
-                      ) : (
-                        <ShieldX className="h-3 w-3 text-red-500" title={`NIP-05 verification failed${nip05Error ? `: ${nip05Error}` : ''}`} />
-                      )}
-                      <button
-                        onClick={() => copyToClipboard(metadata.nip05, 'NIP-05')}
-                        className="text-gray-700 hover:text-gray-900 transition-colors"
-                        title="Click to copy NIP-05 identifier"
-                      >
-                        {metadata.nip05}
-                      </button>
-                      {isVerified && (
-                        <span className="text-green-600 ml-1">✓</span>
-                      )}
-                    </div>
-                  )}
-
-                  {metadata?.website && (
-                    <div className="flex items-center gap-1">
-                      <Globe className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                      <a
-                        href={metadata.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 transition-colors truncate"
-                      >
-                        {metadata.website.replace(/^https?:\/\//, '')}
-                      </a>
-                    </div>
-                  )}
-
-                  {(metadata?.lud16 || metadata?.lud06) && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-yellow-500 flex-shrink-0">⚡</span>
-                      <button
-                        onClick={() => copyToClipboard(metadata.lud16 || metadata.lud06 || '', 'Lightning Address')}
-                        className="text-gray-700 hover:text-gray-900 transition-colors font-mono truncate"
-                        title="Click to copy Lightning address"
-                      >
-                        {metadata.lud16 || metadata.lud06}
-                      </button>
-                    </div>
-                  )}
-
-                  {authorData?.event && (
-                    <div className="flex items-center gap-1 text-gray-500">
-                      <Calendar className="h-3 w-3 flex-shrink-0" />
-                      <span>
-                        Joined {formatDistanceToNow(new Date(authorData.event.created_at * 1000), { addSuffix: true })}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <ProfileHeader
+              pubkey={targetPubkey}
+              metadata={metadata}
+              createdAt={authorData?.event?.created_at}
+              hiddenCount={userCaches?.length || 0}
+              foundCount={foundCaches?.length || 0}
+              variant="page"
+              onCopy={copyToClipboard}
+              showExtendedDetails={true}
+            >
+              {/* Edit Button - Opens modal */}
+              {isOwnProfile && (
+                <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 w-8 sm:w-auto sm:h-auto p-0 sm:px-3 sm:py-2">
+                      <Edit className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Edit Profile</DialogTitle>
+                    </DialogHeader>
+                    <EditProfileForm onSuccess={() => setIsEditModalOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+              )}
+            </ProfileHeader>
           </CardContent>
         </Card>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Caches Created</CardTitle>
-              <Trophy className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userCaches?.length || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Hidden for others to find
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Caches Found</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{foundCaches?.length || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Successfully discovered
-              </p>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Cache Tabs */}
         <Tabs defaultValue="created" className="w-full">
@@ -431,7 +298,7 @@ export default function Profile() {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-8 text-center pb-8 sm:pb-4">
+        <div className="mt-8 text-center pb-24 sm:pb-8">
           <Link to="/map">
             <Button variant="outline">
               <MapPin className="h-4 w-4 mr-2" />

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import L from "leaflet";
@@ -123,6 +123,7 @@ interface GeocacheMapProps {
   searchLocation?: { lat: number; lng: number } | null;
   searchRadius?: number; // in km
   onMarkerClick?: (geocache: Geocache) => void;
+  highlightedGeocache?: string; // dTag of geocache to highlight/open popup
 }
 
 // Component to handle map centering
@@ -164,6 +165,43 @@ function MapController({
   return null;
 }
 
+// Component to handle popup opening for highlighted geocache
+function PopupController({ 
+  highlightedGeocache,
+  geocaches,
+  onMarkerClick
+}: { 
+  highlightedGeocache?: string;
+  geocaches: Geocache[];
+  onMarkerClick?: (geocache: Geocache) => void;
+}) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (highlightedGeocache) {
+      // Find the geocache
+      const geocache = geocaches.find(g => g.dTag === highlightedGeocache);
+      if (geocache) {
+        // Small delay to ensure map has centered, then trigger popup on the marker
+        setTimeout(() => {
+          // Find all markers and open the popup for the matching one
+          map.eachLayer((layer: any) => {
+            if (layer instanceof L.Marker && layer.getLatLng) {
+              const markerLatLng = layer.getLatLng();
+              if (Math.abs(markerLatLng.lat - geocache.location.lat) < 0.0001 && 
+                  Math.abs(markerLatLng.lng - geocache.location.lng) < 0.0001) {
+                layer.openPopup();
+              }
+            }
+          });
+        }, 500);
+      }
+    }
+  }, [map, highlightedGeocache, geocaches]);
+  
+  return null;
+}
+
 // Map style options
 const MAP_STYLES = {
   light: {
@@ -195,7 +233,8 @@ export function GeocacheMap({
   userLocation,
   searchLocation,
   searchRadius,
-  onMarkerClick 
+  onMarkerClick,
+  highlightedGeocache
 }: GeocacheMapProps) {
   const navigate = useNavigate();
   const mapStyle = MAP_STYLES.voyager; // Using voyager for vibrant, adventure-ready look
@@ -242,6 +281,22 @@ export function GeocacheMap({
   console.log('GeocacheMap - mapCenter:', mapCenter);
   console.log('GeocacheMap - mapOptions:', mapOptions);
 
+  // Set up event listener for popup view details button
+  useEffect(() => {
+    const handleViewDetails = (event: CustomEvent) => {
+      const dTag = event.detail;
+      const geocache = geocaches.find(g => g.dTag === dTag);
+      if (geocache && onMarkerClick) {
+        onMarkerClick(geocache);
+      }
+    };
+
+    window.addEventListener('geocache-view-details', handleViewDetails as EventListener);
+    return () => {
+      window.removeEventListener('geocache-view-details', handleViewDetails as EventListener);
+    };
+  }, [geocaches, onMarkerClick]);
+
   return (
     <MapContainer
       center={mapCenter}
@@ -265,6 +320,12 @@ export function GeocacheMap({
         zoom={zoom} 
         searchLocation={searchLocation}
         searchRadius={searchRadius}
+      />
+      
+      <PopupController 
+        highlightedGeocache={highlightedGeocache}
+        geocaches={geocaches}
+        onMarkerClick={onMarkerClick}
       />
       
       {/* Search radius circle */}

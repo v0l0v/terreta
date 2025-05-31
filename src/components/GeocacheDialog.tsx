@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { HintDisplay } from "@/components/ui/hint-display";
 import { MapPin, Navigation, Calendar, User, MessageSquare, Trophy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -150,11 +151,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
                 <p className="whitespace-pre-wrap text-sm">{geocache.description}</p>
                 
                 {geocache.hint && (
-                  <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                    <p className="text-sm">
-                      <strong>Hint:</strong> {geocache.hint}
-                    </p>
-                  </div>
+                  <HintDisplay hint={geocache.hint} className="mt-3" />
                 )}
               </div>
 
