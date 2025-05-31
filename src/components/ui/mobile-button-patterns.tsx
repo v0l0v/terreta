@@ -140,8 +140,6 @@ export function LogTypeButtonGroup({
 
   const ownerLogTypes: MobileButtonItem[] = [
     { id: 'maintenance', label: 'Maintenance', disabled },
-    { id: 'disabled', label: 'Disable', disabled },
-    { id: 'enabled', label: 'Enable', disabled },
     { id: 'archived', label: 'Archive', disabled },
   ];
 

@@ -2,6 +2,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import type { Geocache } from '@/types/geocache';
+import { 
+  NIP_GC_KINDS, 
+  buildGeocacheTags, 
+  validateCacheType, 
+  validateCacheSize,
+  encodeGeohash,
+  parseGeocacheEvent,
+  type ValidCacheType,
+  type ValidCacheSize
+} from '@/lib/nip-gc';
 
 interface EditGeocacheData {
   name: string;
@@ -27,7 +37,7 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
       
       console.log('Editing geocache:', originalGeocache.id);
       
-      // Validate data
+      // Validate data according to NIP-GC
       if (!data.name?.trim()) {
         throw new Error("Cache name is required");
       }
@@ -41,6 +51,14 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
         throw new Error("Terrain must be between 1 and 5");
       }
 
+      // Validate inputs according to NIP-GC
+      if (!validateCacheType(data.type)) {
+        throw new Error(`Invalid cache type: ${data.type}`);
+      }
+      if (!validateCacheSize(data.size)) {
+        throw new Error(`Invalid cache size: ${data.size}`);
+      }
+
       // Create the updated geocache event using tag-based format
       console.log('Publishing geocache edit with data:', { 
         name: data.name, 
@@ -52,43 +70,22 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
       // This ensures any edits will replace the original properly
       console.log('Using replacement strategy with original d-tag:', originalGeocache.dTag);
       
-      // Extract geohash from original location
-      const geohash = getGeohash(originalGeocache.location.lat, originalGeocache.location.lng);
-      const locationStr = `${originalGeocache.location.lat.toFixed(6)}, ${originalGeocache.location.lng.toFixed(6)}`;
-
-      // Build tags array
-      const tags: string[][] = [
-        ['d', originalGeocache.dTag], // Use original d-tag - this will replace it!
-        ['name', data.name.trim()],
-        ['g', geohash], // Geohash for location-based queries
-        ['location', locationStr], // Human-readable location
-        ['difficulty', data.difficulty.toString()],
-        ['terrain', data.terrain.toString()],
-        ['size', data.size],
-        ['cache-type', data.type],
-        ['status', 'active'], // Cache status
-        ['published_at', Math.floor(originalGeocache.created_at).toString()], // Keep original publish time
-      ];
-
-      // Add optional tags
-      if (data.hint?.trim()) {
-        // Store hint as plaintext for better user experience
-        tags.push(['hint', data.hint.trim()]);
-      }
-
-      if (data.images && data.images.length > 0) {
-        data.images.forEach(image => {
-          tags.push(['image', image]);
-        });
-      }
-
-      // Add type-specific hashtags
-      if (data.type === 'mystery') tags.push(['t', 'mystery']);
-      if (data.type === 'multi') tags.push(['t', 'multi']);
-      if (data.type === 'earth') tags.push(['t', 'earth']);
+      // Build tags using consolidated utility
+      const tags = buildGeocacheTags({
+        dTag: originalGeocache.dTag, // Use original d-tag - this will replace it!
+        name: data.name.trim(),
+        location: originalGeocache.location,
+        difficulty: data.difficulty,
+        terrain: data.terrain,
+        size: data.size as ValidCacheSize,
+        type: data.type as ValidCacheType,
+        hint: data.hint,
+        images: data.images,
+        relays: originalGeocache.relays,
+      });
 
       const event = await publishEvent({
-        kind: 37515, // Geocache listing event
+        kind: NIP_GC_KINDS.GEOCACHE,
         content: data.description.trim(), // Plain text description in content
         tags,
       });
@@ -109,23 +106,20 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
         queryClient.setQueryData(['geocache', eventId], (oldData: unknown) => {
           if (!oldData || !originalGeocache) return oldData;
           
-          // Parse from tags
-          const name = event.tags.find(t => t[0] === 'name')?.[1];
-          const difficulty = parseInt(event.tags.find(t => t[0] === 'difficulty')?.[1] || '1');
-          const terrain = parseInt(event.tags.find(t => t[0] === 'terrain')?.[1] || '1');
-          const size = event.tags.find(t => t[0] === 'size')?.[1] as "micro" | "small" | "regular" | "large";
-          const type = event.tags.find(t => t[0] === 'cache-type')?.[1] as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event";
-          const hint = event.tags.find(t => t[0] === 'hint')?.[1];
-          const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
+          // Use consolidated parsing utility
+          const parsed = parseGeocacheEvent(event);
+          if (!parsed) {
+            console.warn('Failed to parse edited geocache event');
+            return oldData;
+          }
           
           return {
             ...oldData,
-            // Update event ID since replaceable events get new IDs
-            id: event.id,
-            // Update with new content but keep dTag stable
-            name: name || 'Unnamed Cache',
-            description: event.content, // Description is now in content field
-            hint,
+            ...parsed,
+            // Preserve original foundCount and logCount
+            foundCount: (oldData as Geocache).foundCount,
+            logCount: (oldData as Geocache).logCount,
+          };
             difficulty,
             terrain,
             size: size || 'regular',
@@ -139,23 +133,20 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
         queryClient.setQueryData(['geocache-by-dtag', dTag], (oldData: unknown) => {
           if (!oldData || !originalGeocache) return oldData;
           
-          // Parse from tags
-          const name = event.tags.find(t => t[0] === 'name')?.[1];
-          const difficulty = parseInt(event.tags.find(t => t[0] === 'difficulty')?.[1] || '1');
-          const terrain = parseInt(event.tags.find(t => t[0] === 'terrain')?.[1] || '1');
-          const size = event.tags.find(t => t[0] === 'size')?.[1] as "micro" | "small" | "regular" | "large";
-          const type = event.tags.find(t => t[0] === 'cache-type')?.[1] as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event";
-          const hint = event.tags.find(t => t[0] === 'hint')?.[1];
-          const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
+          // Use consolidated parsing utility
+          const parsed = parseGeocacheEvent(event);
+          if (!parsed) {
+            console.warn('Failed to parse edited geocache event');
+            return oldData;
+          }
           
           return {
             ...oldData,
-            // Update event ID since replaceable events get new IDs
-            id: event.id,
-            // Update with new content but keep dTag stable
-            name: name || 'Unnamed Cache',
-            description: event.content, // Description is now in content field
-            hint,
+            ...parsed,
+            // Preserve original foundCount and logCount
+            foundCount: (oldData as Geocache).foundCount,
+            logCount: (oldData as Geocache).logCount,
+          };
             difficulty,
             terrain,
             size: size || 'regular',
@@ -205,48 +196,5 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
   });
 }
 
-// Simple geohash implementation for location-based queries (same as create)
-function getGeohash(lat: number, lng: number, precision: number = 6): string {
-  const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-  let idx = 0;
-  let bit = 0;
-  let evenBit = true;
-  let geohash = '';
 
-  let latMin = -90, latMax = 90;
-  let lngMin = -180, lngMax = 180;
-
-  while (geohash.length < precision) {
-    if (evenBit) {
-      // longitude
-      const mid = (lngMin + lngMax) / 2;
-      if (lng > mid) {
-        idx |= (1 << (4 - bit));
-        lngMin = mid;
-      } else {
-        lngMax = mid;
-      }
-    } else {
-      // latitude
-      const mid = (latMin + latMax) / 2;
-      if (lat > mid) {
-        idx |= (1 << (4 - bit));
-        latMin = mid;
-      } else {
-        latMax = mid;
-      }
-    }
-
-    evenBit = !evenBit;
-
-    if (bit < 4) {
-      bit++;
-    } else {
-      geohash += base32[idx];
-      bit = 0;
-      idx = 0;
-    }
-  }
-
-  return geohash;
-}
+// Geohash functions are now imported from @/lib/nip-gc

@@ -4,7 +4,18 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Geocache } from '@/types/geocache';
-import { NostrFilter } from '@nostrify/nostrify';
+import { NostrFilter, NostrEvent } from '@nostrify/nostrify';
+import { 
+  NIP_GC_KINDS, 
+  parseGeocacheEvent, 
+  createGeocacheCoordinate 
+} from '@/lib/nip-gc';
+
+  } catch (error) {
+    console.error('Failed to parse geocache event:', error, event);
+    return null;
+  }
+}
 
 interface SavedCache {
   id: string;
@@ -181,7 +192,7 @@ export function useNostrSavedCaches() {
       try {
         // Single filter for all log events
         const logFilter: NostrFilter = {
-          kinds: [37516], // Log events
+          kinds: [NIP_GC_KINDS.LOG],
           '#a': savedCacheCoords,
           limit: 1000,
         };
@@ -230,36 +241,31 @@ export function useNostrSavedCaches() {
     if (!savedGeocacheEvents) return [];
     
     return savedGeocacheEvents.map(event => {
-      const name = event.tags.find(tag => tag[0] === 'name')?.[1] || 'Unknown Cache';
-      const location = {
-        lat: parseFloat(event.tags.find(tag => tag[0] === 'lat')?.[1] || '0'),
-        lng: parseFloat(event.tags.find(tag => tag[0] === 'lng')?.[1] || '0'),
-      };
-      const difficulty = parseInt(event.tags.find(tag => tag[0] === 'difficulty')?.[1] || '1');
-      const terrain = parseInt(event.tags.find(tag => tag[0] === 'terrain')?.[1] || '1');
-      const size = event.tags.find(tag => tag[0] === 'size')?.[1] || 'regular';
-      const type = event.tags.find(tag => tag[0] === 'type')?.[1] || 'traditional';
-      const dTag = event.tags.find(tag => tag[0] === 'd')?.[1] || '';
+      const parsed = parseGeocacheEvent(event);
+      if (!parsed) {
+        return null;
+      }
       
       // Get log counts for this cache
-      const coord = `37515:${event.pubkey}:${dTag}`;
+      const coord = createGeocacheCoordinate(event.pubkey, parsed.dTag);
       const counts = savedCacheLogCounts?.get(coord) || { total: 0, found: 0 };
       
       return {
-        id: event.id,
-        dTag,
-        pubkey: event.pubkey,
-        name,
-        savedAt: event.created_at * 1000, // Convert to milliseconds
-        location,
-        difficulty,
-        terrain,
-        size,
-        type,
+        id: parsed.id,
+        dTag: parsed.dTag,
+        pubkey: parsed.pubkey,
+        name: parsed.name,
+        savedAt: parsed.created_at * 1000, // Convert to milliseconds
+        location: parsed.location,
+        difficulty: parsed.difficulty,
+        terrain: parsed.terrain,
+        size: parsed.size,
+        type: parsed.type,
         foundCount: counts.found,
         logCount: counts.total,
       } as SavedCache;
-    }).sort((a, b) => b.savedAt - a.savedAt); // Sort by most recently saved
+    }).filter((cache): cache is SavedCache => cache !== null)
+      .sort((a, b) => b.savedAt - a.savedAt); // Sort by most recently saved
   }, [savedGeocacheEvents, savedCacheLogCounts]);
 
   // Check if a cache is saved
@@ -384,8 +390,8 @@ export function useNostrSavedCaches() {
         location: cache.location,
         difficulty: cache.difficulty,
         terrain: cache.terrain,
-        size: cache.size as "micro" | "small" | "regular" | "large",
-        type: cache.type as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event",
+        size: cache.size as "micro" | "small" | "regular" | "large" | "other",
+        type: cache.type as "traditional" | "multi" | "mystery",
         created_at: Math.floor(cache.savedAt / 1000), // Convert to seconds
         description: '', // Not stored in saved cache
         foundCount: cache.foundCount || 0,

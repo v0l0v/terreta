@@ -12,8 +12,8 @@ export interface Geocache {
   };
   difficulty: number; // 1-5
   terrain: number; // 1-5
-  size: "micro" | "small" | "regular" | "large";
-  type: "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event";
+  size: "micro" | "small" | "regular" | "large" | "other";
+  type: "traditional" | "multi" | "mystery";
   images?: string[];
   foundCount?: number;
   logCount?: number;
@@ -52,7 +52,7 @@ export interface GeocacheLog {
   pubkey: string;
   created_at: number;
   geocacheId: string;
-  type: "found" | "dnf" | "note" | "maintenance" | "disabled" | "enabled" | "archived";
+  type: "found" | "dnf" | "note" | "maintenance" | "archived";
   text: string;
   images?: string[];
   sourceRelay?: string; // The relay this event was fetched from
@@ -106,7 +106,7 @@ export interface CreateLogData {
   geocachePubkey?: string; // Pubkey of the cache owner
   relayUrl?: string; // Optional relay URL where the cache can be found
   preferredRelays?: string[]; // Preferred relays from the geocache for publishing logs
-  type: "found" | "dnf" | "note" | "maintenance" | "disabled" | "enabled" | "archived";
+  type: "found" | "dnf" | "note" | "maintenance" | "archived";
   text: string;
   images?: string[];
   location?: { lat: number; lng: number }; // Optional user location for the log

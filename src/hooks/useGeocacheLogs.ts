@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { GeocacheLog } from '@/types/geocache';
 import { useNostrQueryRelays } from './useNostrQueryRelays';
+import { NIP_GC_KINDS, parseLogEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
 
 export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geocachePubkey?: string, preferredRelays?: string[]) {
   const { nostr } = useNostr();
@@ -20,15 +21,15 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
       try {
         const signal = AbortSignal.any([c.signal, AbortSignal.timeout(3000)]); // Fast 3 second timeout
       
-      // Query for logs using the new event kind
+      // Query for logs using the correct event kind from NIP-GC
       const filter: NostrFilter = {
-        kinds: [37516], // Geocache log events
+        kinds: [NIP_GC_KINDS.LOG],
         limit: 200, // Reasonable limit
       };
       
       // If we have the cache pubkey and d-tag, use the a-tag filter
       if (geocachePubkey && geocacheDTag) {
-        filter['#a'] = [`37515:${geocachePubkey}:${geocacheDTag}`];
+        filter['#a'] = [createGeocacheCoordinate(geocachePubkey, geocacheDTag)];
       }
       
       console.log('Working filter:', JSON.stringify(filter));
@@ -71,20 +72,21 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
       const deduplicatedEvents = Array.from(uniqueEvents.values());
       console.log(`Removed ${events.length - deduplicatedEvents.length} duplicate events`);
 
-      // Parse log events
-      const parsedLogs = deduplicatedEvents.map(event => {
-        const parsed = parseLogEvent(event);
-        if (parsed && 'sourceRelay' in event) {
-          parsed.sourceRelay = (event as NostrEvent & { sourceRelay?: string }).sourceRelay;
-        }
-        return parsed;
-      });
-      const logs: GeocacheLog[] = parsedLogs.filter((log): log is GeocacheLog => log !== null);
+      // Parse log events using consolidated utility
+      const logs: GeocacheLog[] = deduplicatedEvents
+        .map(event => {
+          const parsed = parseLogEvent(event);
+          if (parsed && 'sourceRelay' in event) {
+            parsed.sourceRelay = (event as NostrEvent & { sourceRelay?: string }).sourceRelay;
+          }
+          return parsed;
+        })
+        .filter((log): log is GeocacheLog => log !== null);
       
       console.log('Parsing results:', {
         totalEvents: deduplicatedEvents.length,
         parsedSuccessfully: logs.length,
-        failedToParse: parsedLogs.filter(l => l === null).length
+        failedToParse: deduplicatedEvents.length - logs.length
       });
 
       // Sort by creation date (newest first)
@@ -113,56 +115,4 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
   });
 }
 
-function parseLogEvent(event: NostrEvent): GeocacheLog | null {
-  try {
-    // Only process kind 37516 events
-    if (event.kind !== 37516) {
-      console.log('Skipping non-log event kind:', event.kind);
-      return null;
-    }
-
-    // Get the geocache reference from the a-tag
-    const aTag = event.tags.find(t => t[0] === 'a')?.[1];
-    if (!aTag) {
-      console.log('Log event missing a-tag reference:', event);
-      return null;
-    }
-
-    // Extract geocache ID from the a-tag
-    const [, pubkey, dTag] = aTag.split(':');
-    const geocacheId = `${pubkey}:${dTag}`; // Use a composite ID
-
-    // Parse from tags
-    const logType = event.tags.find(t => t[0] === 'log-type')?.[1];
-    const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
-    const client = event.tags.find(t => t[0] === 'client')?.[1];
-    const relayTags = event.tags.filter(t => t[0] === 'relay').map(t => t[1]);
-
-    if (!logType) {
-      console.warn('Log event missing log-type tag:', event);
-      return null;
-    }
-
-    console.log('Parsed log data from tags:', { 
-      geocacheId, 
-      type: logType, 
-      text: event.content.substring(0, 50),
-      client: client 
-    });
-    
-    return {
-      id: event.id,
-      pubkey: event.pubkey,
-      created_at: event.created_at,
-      geocacheId,
-      type: logType as "found" | "dnf" | "note" | "maintenance" | "disabled" | "enabled" | "archived",
-      text: event.content, // Text is in content field
-      images: images,
-      client: client,
-      relays: relayTags,
-    };
-  } catch (error) {
-    console.error('Failed to parse log event:', error, event);
-    return null;
-  }
-}
+// parseLogEvent is now imported from @/lib/nip-gc

@@ -12,16 +12,11 @@ import { formatDistance } from '@/lib/geo';
 import type { Geocache } from '@/types/geocache';
 
 function getTypeIcon(type: string): string {
+  // Only NIP-GC supported cache types
   const icons: Record<string, string> = {
     traditional: '📦',
     multi: '🔗',
     mystery: '❓',
-    letterbox: '📮',
-    event: '📅',
-    virtual: '👻',
-    earthcache: '🌍',
-    earth: '🌍',
-    wherigo: '📱',
   };
   return icons[type.toLowerCase()] || '📦';
 }

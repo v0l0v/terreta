@@ -18,12 +18,11 @@ import "leaflet/dist/leaflet.css";
 const createCacheIcon = (type: string) => {
   const emoji = getCacheEmoji(type);
   
-  // Different colors for different cache types
+  // Different colors for different cache types (NIP-GC supported only)
   const colors = {
     traditional: '#10b981', // Emerald
     multi: '#f59e0b',      // Amber
     mystery: '#8b5cf6',    // Purple
-    earth: '#3b82f6',      // Blue
   };
   
   const color = colors[type as keyof typeof colors] || '#10b981';
@@ -102,6 +101,7 @@ const userLocationIcon = L.divIcon({
 });
 
 function getCacheEmoji(type: string) {
+  // Only NIP-GC supported cache types
   switch (type) {
     case "traditional":
       return "📦";
@@ -109,17 +109,6 @@ function getCacheEmoji(type: string) {
       return "🔗";
     case "mystery":
       return "❓";
-    case "earth":
-    case "earthcache":
-      return "🌍";
-    case "letterbox":
-      return "📮";
-    case "event":
-      return "📅";
-    case "virtual":
-      return "👻";
-    case "wherigo":
-      return "📱";
     default:
       return "📦";
   }

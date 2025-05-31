@@ -37,7 +37,7 @@ export function LogsSection({
   const { mutate: createLog, isPending: isCreatingLog } = useCreateLog();
   
   const [logText, setLogText] = useState("");
-  const [logType, setLogType] = useState<"found" | "dnf" | "note" | "maintenance" | "disabled" | "enabled" | "archived">("found");
+  const [logType, setLogType] = useState<"found" | "dnf" | "note" | "maintenance" | "archived">("found");
   const [postingStatus, setPostingStatus] = useState<string>("");
 
   const handleCreateLog = () => {

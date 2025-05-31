@@ -13,13 +13,13 @@ export const CACHE_SIZE_OPTIONS = [
   { value: "small", label: "Small" },
   { value: "regular", label: "Regular" },
   { value: "large", label: "Large" },
+  { value: "other", label: "Other" },
 ];
 
 export const CACHE_TYPE_OPTIONS = [
   { value: "traditional", label: "Traditional" },
   { value: "multi", label: "Multi-cache" },
   { value: "mystery", label: "Mystery/Puzzle" },
-  { value: "earth", label: "EarthCache" },
 ];
 
 // Helper functions to extract labels from options

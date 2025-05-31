@@ -4,6 +4,12 @@ import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
 import { decodeHint } from '@/lib/rot13';
 import { isSafari, createSafariNostr } from '@/lib/safariNostr';
+import { 
+  NIP_GC_KINDS, 
+  parseGeocacheEvent, 
+  parseLogEvent, 
+  createGeocacheCoordinate 
+} from '@/lib/nip-gc';
 
 // Simple heuristic to detect if text is likely ROT13 encoded
 // ROT13 encoded text often has unusual character patterns
@@ -88,8 +94,8 @@ export function useGeocacheByDTag(dTag: string) {
         
         // Get logs for this specific geocache
         const logFilter: NostrFilter = {
-          kinds: [37516], // Geocache log events
-          '#a': [`37515:${geocache.pubkey}:${geocache.dTag}`],
+          kinds: [NIP_GC_KINDS.LOG],
+          '#a': [createGeocacheCoordinate(geocache.pubkey, geocache.dTag)],
           limit: isSafari() ? 50 : 200, // Smaller limit for Safari
         };
 
@@ -151,66 +157,5 @@ export function useGeocacheByDTag(dTag: string) {
   });
 }
 
-function parseGeocacheEvent(event: NostrEvent): Geocache | null {
-  try {
-    // Only process kind 37515 events
-    if (event.kind !== 37515) return null;
-    
-    const dTag = event.tags.find(t => t[0] === 'd')?.[1];
-    if (!dTag) return null;
 
-    // Parse from tags
-    const name = event.tags.find(t => t[0] === 'name')?.[1];
-    const difficulty = event.tags.find(t => t[0] === 'difficulty')?.[1];
-    const terrain = event.tags.find(t => t[0] === 'terrain')?.[1];
-    const size = event.tags.find(t => t[0] === 'size')?.[1];
-    const cacheType = event.tags.find(t => t[0] === 'cache-type')?.[1];
-    const hint = event.tags.find(t => t[0] === 'hint')?.[1];
-    const locationTag = event.tags.find(t => t[0] === 'location')?.[1];
-    const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
-    const relays = event.tags.filter(t => t[0] === 'relay').map(t => t[1]);
-    const client = event.tags.find(t => t[0] === 'client')?.[1];
-
-    // Validate required fields
-    if (!name || !locationTag || !difficulty || !terrain || !size || !cacheType) {
-      console.warn('Geocache event missing required tags:', { name, locationTag, difficulty, terrain, size, cacheType });
-      return null;
-    }
-
-    // Parse location from tag
-    const [latStr, lngStr] = locationTag.split(',').map(s => s.trim());
-    const location = {
-      lat: parseFloat(latStr),
-      lng: parseFloat(lngStr)
-    };
-
-    // Validate coordinates
-    if (isNaN(location.lat) || isNaN(location.lng) ||
-        location.lat < -90 || location.lat > 90 || 
-        location.lng < -180 || location.lng > 180) {
-      console.warn(`Geocache "${name}" has invalid coordinates:`, location);
-      return null;
-    }
-
-    return {
-      id: event.id,
-      pubkey: event.pubkey,
-      created_at: event.created_at,
-      dTag: dTag,
-      name: name,
-      description: event.content, // Description is in content field
-      hint: hint ? (isRot13Encoded(hint) ? decodeHint(hint) : hint) : undefined,
-      location: location,
-      difficulty: parseInt(difficulty) || 1,
-      terrain: parseInt(terrain) || 1,
-      size: size as "micro" | "small" | "regular" | "large",
-      type: cacheType as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event",
-      images: images,
-      relays: relays,
-      client: client,
-    };
-  } catch (error) {
-    console.error('Failed to parse geocache event:', error);
-    return null;
-  }
-}
+// parseGeocacheEvent is now imported from @/lib/nip-gc

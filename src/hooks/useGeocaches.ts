@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
 import { isSafari, createSafariNostr } from '@/lib/safariNostr';
+import { NIP_GC_KINDS, parseGeocacheEvent, parseLogEvent } from '@/lib/nip-gc';
 
 interface UseGeocachesOptions {
   limit?: number;
@@ -25,7 +26,7 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
       try {
         // Build filter for geocache events
         const filter: NostrFilter = {
-          kinds: [37515], // Geocache listing events
+          kinds: [NIP_GC_KINDS.GEOCACHE],
           limit: options.limit || (isSafari() ? 20 : 50), // Smaller limit for Safari
         };
 
@@ -95,8 +96,8 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
             // Limit the number of caches we query logs for
             const limitedCaches = geocaches.slice(0, isSafari() ? 5 : 10);
             const logFilter: NostrFilter = {
-              kinds: [37516], // Geocache log events
-              '#a': limitedCaches.map(g => `37515:${g.pubkey}:${g.dTag}`),
+              kinds: [NIP_GC_KINDS.LOG],
+              '#a': limitedCaches.map(g => `${NIP_GC_KINDS.GEOCACHE}:${g.pubkey}:${g.dTag}`),
               limit: isSafari() ? 100 : 500,
             };
 
@@ -131,18 +132,18 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
               const aTag = event.tags.find(tag => tag[0] === 'a')?.[1];
               if (!aTag) return;
               
-              const data = parseLogData(event);
-              if (data) {
+              const log = parseLogEvent(event);
+              if (log) {
                 const current = logCounts.get(aTag) || { total: 0, found: 0 };
                 current.total++;
-                if (data.type === 'found') current.found++;
+                if (log.type === 'found') current.found++;
                 logCounts.set(aTag, current);
               }
             });
 
             // Add counts to geocaches
             geocaches = geocaches.map(g => {
-              const coord = `37515:${g.pubkey}:${g.dTag}`;
+              const coord = `${NIP_GC_KINDS.GEOCACHE}:${g.pubkey}:${g.dTag}`;
               const counts = logCounts.get(coord) || { total: 0, found: 0 };
               return {
                 ...g,
@@ -165,73 +166,4 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
   });
 }
 
-function parseGeocacheEvent(event: NostrEvent): Geocache | null {
-  try {
-    // Only process kind 37515 events
-    if (event.kind !== 37515) return null;
-    
-    const dTag = event.tags.find(t => t[0] === 'd')?.[1];
-    if (!dTag) return null;
-
-    // Parse from tags
-    const name = event.tags.find(t => t[0] === 'name')?.[1];
-    const difficulty = event.tags.find(t => t[0] === 'difficulty')?.[1];
-    const terrain = event.tags.find(t => t[0] === 'terrain')?.[1];
-    const size = event.tags.find(t => t[0] === 'size')?.[1];
-    const cacheType = event.tags.find(t => t[0] === 'cache-type')?.[1];
-    const hint = event.tags.find(t => t[0] === 'hint')?.[1];
-    const locationTag = event.tags.find(t => t[0] === 'location')?.[1];
-    const images = event.tags.filter(t => t[0] === 'image').map(t => t[1]);
-
-    // Validate required fields
-    if (!name || !locationTag || !difficulty || !terrain || !size || !cacheType) {
-      console.warn('Geocache event missing required tags:', { name, locationTag, difficulty, terrain, size, cacheType });
-      return null;
-    }
-
-    // Parse location from tag
-    const [latStr, lngStr] = locationTag.split(',').map(s => s.trim());
-    const location = {
-      lat: parseFloat(latStr),
-      lng: parseFloat(lngStr)
-    };
-
-    // Validate coordinates
-    if (isNaN(location.lat) || isNaN(location.lng) ||
-        location.lat < -90 || location.lat > 90 || 
-        location.lng < -180 || location.lng > 180) {
-      console.warn(`Geocache "${name}" has invalid coordinates:`, location);
-      return null;
-    }
-
-    return {
-      id: event.id,
-      pubkey: event.pubkey,
-      created_at: event.created_at,
-      dTag: dTag,
-      name: name,
-      description: event.content, // Description is in content field
-      hint: hint,
-      location: location,
-      difficulty: parseInt(difficulty) || 1,
-      terrain: parseInt(terrain) || 1,
-      size: size as "micro" | "small" | "regular" | "large",
-      type: cacheType as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event",
-      images: images,
-    };
-  } catch (error) {
-    console.error('Failed to parse geocache event:', error, event);
-    return null;
-  }
-}
-
-function parseLogData(event: NostrEvent): { type: string } | null {
-  // Get type from tags
-  const logType = event.tags.find(t => t[0] === 'log-type')?.[1];
-  if (logType) {
-    return { type: logType };
-  }
-  
-  console.warn('Log event missing log-type tag');
-  return null;
-}
+// parseGeocacheEvent and parseLogEvent are now imported from @/lib/nip-gc

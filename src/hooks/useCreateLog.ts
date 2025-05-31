@@ -2,52 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublishToRelays } from '@/hooks/useNostrPublishToRelays';
 import { useToast } from '@/hooks/useToast';
 import type { CreateLogData, GeocacheLog } from '@/types/geocache';
-
-// Simple geohash implementation for location-based queries
-function getGeohash(lat: number, lng: number, precision: number = 6): string {
-  const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-  let idx = 0;
-  let bit = 0;
-  let evenBit = true;
-  let geohash = '';
-
-  let latMin = -90, latMax = 90;
-  let lngMin = -180, lngMax = 180;
-
-  while (geohash.length < precision) {
-    if (evenBit) {
-      // longitude
-      const mid = (lngMin + lngMax) / 2;
-      if (lng > mid) {
-        idx |= (1 << (4 - bit));
-        lngMin = mid;
-      } else {
-        lngMax = mid;
-      }
-    } else {
-      // latitude
-      const mid = (latMin + latMax) / 2;
-      if (lat > mid) {
-        idx |= (1 << (4 - bit));
-        latMin = mid;
-      } else {
-        latMax = mid;
-      }
-    }
-
-    evenBit = !evenBit;
-
-    if (bit < 4) {
-      bit++;
-    } else {
-      geohash += base32[idx];
-      bit = 0;
-      idx = 0;
-    }
-  }
-
-  return geohash;
-}
+import { 
+  NIP_GC_KINDS, 
+  buildLogTags, 
+  validateLogType,
+  type ValidLogType
+} from '@/lib/nip-gc';
 
 export function useCreateLog() {
   const queryClient = useQueryClient();
@@ -66,67 +26,22 @@ export function useCreateLog() {
         throw new Error('Log text is required');
       }
       
-      // Create the log event using tag-based format
-      const timestamp = Date.now();
-      const randomId = Math.random().toString(36).substring(2, 9);
-      const uniqueDTag = `${timestamp}-${randomId}`;
-      
-      // Build tags array
-      const tags: string[][] = [
-        ['d', uniqueDTag], // Unique identifier for this log
-        ['a', `37515:${data.geocachePubkey}:${data.geocacheDTag}`, data.relayUrl || ''], // Reference to the geocache with relay hint
-        ['log-type', data.type], // Type of log
-        ['published_at', Math.floor(timestamp / 1000).toString()], // When the log was created
-      ];
-
-      // Add optional tags
-      if (data.images && data.images.length > 0) {
-        data.images.forEach(image => {
-          tags.push(['image', image]);
-        });
-      }
-
-      // Add approximate location (less precise for privacy)
-      if (data.location) {
-        tags.push(['g', getGeohash(data.location.lat, data.location.lng, 4)]); // Less precise geohash
+      // Validate log type according to NIP-GC
+      if (!validateLogType(data.type)) {
+        throw new Error(`Invalid log type: ${data.type}`);
       }
       
-      // Add relay tags
-      // For owner-specific log types (maintenance, disabled, enabled, archived), 
-      // use the user's relay preferences instead of the geocache's
-      const ownerLogTypes = ['maintenance', 'disabled', 'enabled', 'archived'];
-      if (ownerLogTypes.includes(data.type)) {
-        // Use user's relay preferences for owner logs
-        const savedRelays = localStorage.getItem('geocaching-relays');
-        let userRelays: string[] = [];
-        if (savedRelays) {
-          try {
-            userRelays = JSON.parse(savedRelays);
-          } catch {
-            userRelays = [];
-          }
-        }
-        
-        if (userRelays.length > 0) {
-          userRelays.forEach(relay => {
-            tags.push(['relay', relay]);
-          });
-        } else if (data.preferredRelays && data.preferredRelays.length > 0) {
-          // Fallback to geocache's relays if user has no preferences
-          data.preferredRelays.forEach(relay => {
-            tags.push(['relay', relay]);
-          });
-        }
-      } else if (data.preferredRelays && data.preferredRelays.length > 0) {
-        // For regular logs (found, dnf, note), use the geocache's preferred relays
-        data.preferredRelays.forEach(relay => {
-          tags.push(['relay', relay]);
-        });
-      }
+      // Build tags using consolidated utility
+      const tags = buildLogTags({
+        geocachePubkey: data.geocachePubkey!,
+        geocacheDTag: data.geocacheDTag!,
+        logType: data.type as ValidLogType,
+        images: data.images,
+      });
       
       const event = await publishEvent({
         event: {
-          kind: 37516, // Geocache log event
+          kind: NIP_GC_KINDS.LOG,
           content: data.text.trim(), // Plain text log message in content
           tags,
         },

@@ -4,6 +4,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrQueryRelays } from './useNostrQueryRelays';
 import type { Geocache } from '@/types/geocache';
 import { NostrFilter } from '@nostrify/nostrify';
+import { NIP_GC_KINDS, parseGeocacheEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
 
 export function useUserGeocaches(targetPubkey?: string) {
   const { nostr } = useNostr();
@@ -26,7 +27,7 @@ export function useUserGeocaches(targetPubkey?: string) {
         // First, get all geocaches by the user
         const geocacheEvents = await queryWithRelays(
           [{ 
-            kinds: [37515], 
+            kinds: [NIP_GC_KINDS.GEOCACHE], 
             authors: [pubkey],
             limit: 100
           }],
@@ -39,43 +40,25 @@ export function useUserGeocaches(targetPubkey?: string) {
           return [];
         }
         
-        // Parse geocaches first
+        // Parse geocaches according to NIP-GC
         const geocaches = geocacheEvents.map(event => {
-          const name = event.tags.find(tag => tag[0] === 'name')?.[1] || 'Unnamed Cache';
-          const description = event.content || '';
-          const location = {
-            lat: parseFloat(event.tags.find(tag => tag[0] === 'lat')?.[1] || '0'),
-            lng: parseFloat(event.tags.find(tag => tag[0] === 'lng')?.[1] || '0'),
-          };
-          const difficulty = parseInt(event.tags.find(tag => tag[0] === 'difficulty')?.[1] || '1');
-          const terrain = parseInt(event.tags.find(tag => tag[0] === 'terrain')?.[1] || '1');
-          const size = event.tags.find(tag => tag[0] === 'size')?.[1] || 'regular';
-          const type = event.tags.find(tag => tag[0] === 'type')?.[1] || 'traditional';
-          const dTag = event.tags.find(tag => tag[0] === 'd')?.[1] || '';
-          
+          const parsed = parseGeocacheEvent(event);
+          if (!parsed) {
+            return null;
+          }
           return {
-            id: event.id,
-            pubkey: event.pubkey,
-            created_at: event.created_at,
-            dTag,
-            name,
-            description,
-            location,
-            difficulty,
-            terrain,
-            size: size as "micro" | "small" | "regular" | "large",
-            type: type as "traditional" | "multi" | "mystery" | "earth" | "virtual" | "letterbox" | "event",
+            ...parsed,
             foundCount: 0, // Will be calculated below
             logCount: 0, // Will be calculated below
-          } as Geocache;
-        });
+          };
+        }).filter((geocache): geocache is Geocache => geocache !== null);
         
         // Now fetch log counts for each geocache
         console.log('Fetching log counts for user geocaches...');
         
         const logCountFilters: NostrFilter[] = geocaches.map(geocache => ({
-          kinds: [37516], // Log events
-          '#a': [`37515:${geocache.pubkey}:${geocache.dTag}`],
+          kinds: [NIP_GC_KINDS.LOG],
+          '#a': [createGeocacheCoordinate(geocache.pubkey, geocache.dTag)],
           limit: 1000, // Get all logs to count them
         }));
         
