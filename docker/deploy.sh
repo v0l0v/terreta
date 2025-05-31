@@ -286,6 +286,8 @@ else
 
 EOF
 
+fi
+
 # Step 4: Final verification
 log "🔍 Final verification..."
 
