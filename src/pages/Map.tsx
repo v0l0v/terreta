@@ -10,12 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { DesktopHeader } from "@/components/DesktopHeader";
 import { LoginArea } from "@/components/auth/LoginArea";
-import { useGeocaches } from "@/hooks/useGeocaches";
+import { useAdvancedGeocaches } from "@/hooks/useAdvancedGeocaches";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { DetailedGeocacheCard, CompactGeocacheCard } from "@/components/ui/geocache-card";
 import { GeocacheDialog } from "@/components/GeocacheDialog";
 import { LocationSearch } from "@/components/LocationSearch";
+import { ComparisonFilter, type ComparisonOperator } from "@/components/ui/comparison-filter";
 import type { Geocache } from "@/types/geocache";
 
 type GeocacheWithDistance = Geocache & { distance?: number };
@@ -25,11 +26,22 @@ import { sortByDistance, formatDistance, filterByRadius } from "@/lib/geo";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
+// Rating options for both difficulty and terrain (shared data)
+const RATING_OPTIONS = [
+  { value: "1", label: "1 - Easy" },
+  { value: "2", label: "2 - Moderate" },
+  { value: "3", label: "3 - Hard" },
+  { value: "4", label: "4 - Very Hard" },
+  { value: "5", label: "5 - Expert" },
+];
+
 export default function Map() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [difficulty, setDifficulty] = useState<string>("all");
-  const [terrain, setTerrain] = useState<string>("all");
+  const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
+  const [difficultyOperator, setDifficultyOperator] = useState<ComparisonOperator>("all");
+  const [terrain, setTerrain] = useState<number | undefined>(undefined);
+  const [terrainOperator, setTerrainOperator] = useState<ComparisonOperator>("all");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [mapZoom, setMapZoom] = useState(10);
@@ -44,11 +56,47 @@ export default function Map() {
   
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
   
-  const { data: geocaches, isLoading, error } = useGeocaches({
+  const { data: geocaches, isLoading, error } = useAdvancedGeocaches({
     search: searchQuery,
-    difficulty: difficulty === "all" ? undefined : parseInt(difficulty),
-    terrain: terrain === "all" ? undefined : parseInt(terrain),
+    difficulty,
+    difficultyOperator,
+    terrain,
+    terrainOperator,
   });
+
+  // Shared value change handler for consistent logic
+  const createValueChangeHandler = (setter: (value: number | undefined) => void) => 
+    (value: string) => setter(value === "all" ? undefined : parseInt(value));
+
+  // Shared value converter for consistent display
+  const getValueForDisplay = (value: number | undefined) => value?.toString() || "all";
+
+  // Reusable filter pair component
+  const FilterPair = ({ compact = false }: { compact?: boolean }) => (
+    <>
+      <ComparisonFilter
+        label="Difficulty"
+        value={getValueForDisplay(difficulty)}
+        onValueChange={createValueChangeHandler(setDifficulty)}
+        operator={difficultyOperator}
+        onOperatorChange={setDifficultyOperator}
+        options={RATING_OPTIONS}
+        className="flex-1"
+        compact={compact}
+      />
+      
+      <ComparisonFilter
+        label="Terrain"
+        value={getValueForDisplay(terrain)}
+        onValueChange={createValueChangeHandler(setTerrain)}
+        operator={terrainOperator}
+        onOperatorChange={setTerrainOperator}
+        options={RATING_OPTIONS}
+        className="flex-1"
+        compact={compact}
+      />
+    </>
+  );
 
   // Add debugging
   console.log('Map page - isLoading:', isLoading);
@@ -59,8 +107,10 @@ export default function Map() {
   }
   console.log('Map page - search params:', {
     search: searchQuery,
-    difficulty: difficulty === "all" ? undefined : parseInt(difficulty),
-    terrain: terrain === "all" ? undefined : parseInt(terrain),
+    difficulty,
+    difficultyOperator,
+    terrain,
+    terrainOperator,
   });
 
   useEffect(() => {
@@ -160,39 +210,7 @@ export default function Map() {
               </div>
               
               <div className="flex gap-2">
-                <div className="flex-1">
-                  <Label htmlFor="difficulty">Difficulty</Label>
-                  <Select value={difficulty} onValueChange={setDifficulty}>
-                    <SelectTrigger id="difficulty">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="1">1 - Easy</SelectItem>
-                      <SelectItem value="2">2 - Moderate</SelectItem>
-                      <SelectItem value="3">3 - Hard</SelectItem>
-                      <SelectItem value="4">4 - Very Hard</SelectItem>
-                      <SelectItem value="5">5 - Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex-1">
-                  <Label htmlFor="terrain">Terrain</Label>
-                  <Select value={terrain} onValueChange={setTerrain}>
-                    <SelectTrigger id="terrain">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="1">1 - Easy</SelectItem>
-                      <SelectItem value="2">2 - Moderate</SelectItem>
-                      <SelectItem value="3">3 - Hard</SelectItem>
-                      <SelectItem value="4">4 - Very Hard</SelectItem>
-                      <SelectItem value="5">5 - Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FilterPair />
               </div>
 
               {/* Location Controls */}
@@ -320,33 +338,7 @@ export default function Map() {
               </div>
               
               <div className="flex gap-2">
-                <Select value={difficulty} onValueChange={setDifficulty}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Difficulty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Difficulties</SelectItem>
-                    <SelectItem value="1">1 - Easy</SelectItem>
-                    <SelectItem value="2">2 - Moderate</SelectItem>
-                    <SelectItem value="3">3 - Hard</SelectItem>
-                    <SelectItem value="4">4 - Very Hard</SelectItem>
-                    <SelectItem value="5">5 - Expert</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select value={terrain} onValueChange={setTerrain}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Terrain" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Terrains</SelectItem>
-                    <SelectItem value="1">1 - Easy</SelectItem>
-                    <SelectItem value="2">2 - Moderate</SelectItem>
-                    <SelectItem value="3">3 - Hard</SelectItem>
-                    <SelectItem value="4">4 - Very Hard</SelectItem>
-                    <SelectItem value="5">5 - Expert</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FilterPair compact />
               </div>
               
               <div className="space-y-2">
