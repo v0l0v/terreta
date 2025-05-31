@@ -18,6 +18,11 @@ export function DifficultyTerrainRating({
   const textSize = size === 'small' ? 'text-xs' : 'text-sm';
   const sizeLevel = cacheSize ? getSizeLevel(cacheSize) : 0;
   
+  // Debug logging for size blocks
+  if (cacheSize) {
+    console.log('Size display debug:', { cacheSize, sizeLevel, blocksToShow: [1, 2, 3, 4] });
+  }
+  
   return (
     <div className="space-y-2">
       <div>
@@ -69,7 +74,7 @@ export function DifficultyTerrainRating({
                     i === 1 ? (size === 'small' ? 'h-2 w-2' : 'h-3 w-3') :
                     i === 2 ? (size === 'small' ? 'h-2.5 w-2.5' : 'h-3.5 w-3.5') :
                     i === 3 ? (size === 'small' ? 'h-3 w-3' : 'h-4 w-4') :
-                    (size === 'small' ? 'h-3.5 w-3.5' : 'h-4.5 w-4.5')
+                    (size === 'small' ? 'h-3.5 w-3.5' : 'h-5 w-5')
                   }`}
                 />
               ))}
