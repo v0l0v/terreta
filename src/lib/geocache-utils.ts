@@ -10,10 +10,6 @@ export function getDifficultyLabel(difficulty: number): string {
 }
 
 export function getTypeLabel(type: string): string {
-  // Handle legacy earthcache variant
-  if (type.toLowerCase() === 'earthcache') {
-    return 'EarthCache';
-  }
   return getCacheTypeLabel(type);
 }
 
@@ -27,21 +23,17 @@ export function getSizeLevel(size: string): number {
     small: 2,  
     regular: 3,
     large: 4,
+    other: 5, // 'Other' gets its own level
   };
   return sizeMap[size.toLowerCase()] || 2;
 }
 
 export function getTypeIcon(type: string): string {
+  // Only NIP-GC supported cache types
   const icons: Record<string, string> = {
     traditional: '📦',
     multi: '🔗',
     mystery: '❓',
-    letterbox: '📮',
-    event: '📅',
-    virtual: '👻',
-    earthcache: '🌍',
-    earth: '🌍',
-    wherigo: '📱',
   };
   return icons[type.toLowerCase()] || '📦';
 }
