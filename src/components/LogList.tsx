@@ -1,7 +1,27 @@
-import { Trophy, X, FileText, User, Calendar } from "lucide-react";
+import { Trophy, X, FileText, User, Calendar, Trash2, MoreVertical } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
 import { useAuthor } from "@/hooks/useAuthor";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useDeleteLog } from "@/hooks/useDeleteLog";
 import { formatDistanceToNow } from "@/lib/date";
 import { EventSourceInfo } from "@/components/EventSourceInfo";
 import type { GeocacheLog } from "@/types/geocache";
@@ -30,13 +50,22 @@ interface LogCardProps {
 
 function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
   const author = useAuthor(log.pubkey);
+  const { user } = useCurrentUser();
+  const { mutate: deleteLog, isPending: isDeleting } = useDeleteLog();
   const authorName = author.data?.metadata?.name || log.pubkey.slice(0, 8);
   const authorAvatar = author.data?.metadata?.picture;
+  
+  // Check if the current user is the author of this log
+  const isOwnLog = user?.pubkey === log.pubkey;
 
   const handleProfileClick = () => {
     if (onProfileClick) {
       onProfileClick(log.pubkey);
     }
+  };
+
+  const handleDeleteLog = () => {
+    deleteLog(log.id);
   };
 
   const getLogIcon = () => {
@@ -98,7 +127,7 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
           
           <div className="flex-1 space-y-2">
             <div className="flex items-start justify-between">
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center gap-2">
                   {onProfileClick ? (
                     <button
@@ -127,6 +156,50 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
                   />
                 )}
               </div>
+              
+              {isOwnLog && (
+                <AlertDialog>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size={compact ? "sm" : "sm"}
+                        className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+                        disabled={isDeleting}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete log
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete log?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete your log. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDeleteLog}
+                        className="bg-red-600 hover:bg-red-700"
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
             
             <p className={`whitespace-pre-wrap ${compact ? "text-xs" : "text-sm"}`}>{log.text}</p>
