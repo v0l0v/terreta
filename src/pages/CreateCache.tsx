@@ -5,10 +5,7 @@ import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -24,10 +21,10 @@ import { LoginArea } from "@/components/auth/LoginArea";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCreateGeocache } from "@/hooks/useCreateGeocache";
 import { LocationPicker } from "@/components/LocationPicker";
-import { useUploadFile } from "@/hooks/useUploadFile";
 import { useToast } from "@/hooks/useToast";
 import { verifyLocation, getVerificationSummary, type LocationVerification } from "@/lib/osmVerification";
 import { LocationWarnings } from "@/components/LocationWarnings";
+import { GeocacheForm, createDefaultGeocacheFormData, type GeocacheFormData } from "@/components/ui/geocache-form";
 
 import "leaflet/dist/leaflet.css";
 
@@ -50,56 +47,35 @@ export default function CreateCache() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { mutate: createGeocache, isPending } = useCreateGeocache();
-  const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    hint: "",
-    difficulty: "1",
-    terrain: "1",
-    size: "regular",
-    type: "traditional",
-  });
-
+  const [formData, setFormData] = useState<GeocacheFormData>(createDefaultGeocacheFormData());
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [images, setImages] = useState<string[]>([]);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [locationVerification, setLocationVerification] = useState<LocationVerification | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    if (!file.type.startsWith("image/")) {
+    if (!formData.name.trim()) {
       toast({
-        title: "Invalid file type",
-        description: "Please upload an image file",
+        title: "Cache name required",
+        description: "Please enter a name for your geocache",
         variant: "destructive",
       });
       return;
     }
 
-    setUploadingImage(true);
-    try {
-      const [[_, url]] = await uploadFile(file);
-      setImages([...images, url]);
-    } catch (error) {
+    if (!formData.description.trim()) {
       toast({
-        title: "Upload failed",
-        description: "Failed to upload image. Please try again.",
+        title: "Description required", 
+        description: "Please enter a description for your geocache",
         variant: "destructive",
       });
-    } finally {
-      setUploadingImage(false);
+      return;
     }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
 
     if (!location) {
       toast({
@@ -229,106 +205,15 @@ export default function CreateCache() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Cache Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Give your cache a memorable name"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description *</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe your cache, its location, and any special instructions"
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="hint">Hint (Optional)</Label>
-                  <Input
-                    id="hint"
-                    value={formData.hint}
-                    onChange={(e) => setFormData({ ...formData, hint: e.target.value })}
-                    placeholder="Provide a cryptic hint to help seekers"
-                  />
-                </div>
-              </div>
-
-              {/* Cache Details */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="type">Cache Type</Label>
-                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger id="type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="traditional">Traditional</SelectItem>
-                      <SelectItem value="multi">Multi-cache</SelectItem>
-                      <SelectItem value="mystery">Mystery/Puzzle</SelectItem>
-                      <SelectItem value="earth">EarthCache</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="size">Cache Size</Label>
-                  <Select value={formData.size} onValueChange={(value) => setFormData({ ...formData, size: value })}>
-                    <SelectTrigger id="size">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="micro">Micro</SelectItem>
-                      <SelectItem value="small">Small</SelectItem>
-                      <SelectItem value="regular">Regular</SelectItem>
-                      <SelectItem value="large">Large</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="difficulty">Difficulty</Label>
-                  <Select value={formData.difficulty} onValueChange={(value) => setFormData({ ...formData, difficulty: value })}>
-                    <SelectTrigger id="difficulty">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 - Easy</SelectItem>
-                      <SelectItem value="2">2 - Moderate</SelectItem>
-                      <SelectItem value="3">3 - Hard</SelectItem>
-                      <SelectItem value="4">4 - Very Hard</SelectItem>
-                      <SelectItem value="5">5 - Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="terrain">Terrain</Label>
-                  <Select value={formData.terrain} onValueChange={(value) => setFormData({ ...formData, terrain: value })}>
-                    <SelectTrigger id="terrain">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 - Easy</SelectItem>
-                      <SelectItem value="2">2 - Moderate</SelectItem>
-                      <SelectItem value="3">3 - Hard</SelectItem>
-                      <SelectItem value="4">4 - Very Hard</SelectItem>
-                      <SelectItem value="5">5 - Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              {/* Main Form */}
+              <GeocacheForm
+                formData={formData}
+                onFormDataChange={setFormData}
+                images={images}
+                onImagesChange={setImages}
+                showRequiredMarkers={true}
+                isSubmitting={isPending || isVerifying}
+              />
 
               {/* Location */}
               <div>
@@ -337,45 +222,6 @@ export default function CreateCache() {
                   value={location}
                   onChange={setLocation}
                 />
-              </div>
-
-              {/* Images */}
-              <div>
-                <Label>Images</Label>
-                <div className="space-y-2">
-                  {images.map((url, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                      <img src={url} alt="" className="h-16 w-16 object-cover rounded" />
-                      <span className="flex-1 text-sm truncate">{url}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setImages(images.filter((_, i) => i !== index))}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={uploadingImage || isUploading}
-                      className="hidden"
-                      id="image-upload"
-                    />
-                    <Label
-                      htmlFor="image-upload"
-                      className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {uploadingImage ? "Uploading..." : "Upload Image"}
-                    </Label>
-                  </div>
-                </div>
               </div>
 
               <Alert>
