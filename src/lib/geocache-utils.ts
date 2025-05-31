@@ -23,7 +23,7 @@ export function getSizeLevel(size: string): number {
     small: 2,  
     regular: 3,
     large: 4,
-    other: 5, // 'Other' gets its own level
+    other: 0, // 'Other' shows no blocks filled (unknown size)
   };
   return sizeMap[size.toLowerCase()] || 2;
 }
