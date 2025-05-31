@@ -40,9 +40,7 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
         if (isSafari()) {
           console.log('Using Safari-specific Nostr client...');
           const safariClient = createSafariNostr([
-            'wss://relay.damus.io',
-            'wss://nos.lol',
-            'wss://relay.nostr.band'
+            'wss://ditto.pub/relay'
           ]);
           
           try {
@@ -106,8 +104,7 @@ export function useGeocaches(options: UseGeocachesOptions = {}) {
             
             if (isSafari()) {
               const safariClient = createSafariNostr([
-                'wss://relay.damus.io',
-                'wss://nos.lol'
+                'wss://ditto.pub/relay'
               ]);
               
               try {

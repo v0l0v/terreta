@@ -12,8 +12,6 @@ import { useToast } from "@/hooks/useToast";
 
 const DEFAULT_GEOCACHING_RELAYS = [
   'wss://ditto.pub/relay',
-  'wss://relay.damus.io',
-  'wss://nos.lol',
 ];
 
 export default function Settings() {

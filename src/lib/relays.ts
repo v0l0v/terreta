@@ -2,8 +2,6 @@
 
 export const DEFAULT_GEOCACHING_RELAYS = [
   'wss://ditto.pub/relay',
-  'wss://relay.damus.io',
-  'wss://nos.lol',
 ];
 
 export function getGeocachingRelays(): string[] {

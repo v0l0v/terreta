@@ -16,17 +16,20 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Production stage - serve with simple static server
+FROM node:22-alpine
+
+# Install simple http server and wget for healthcheck
+RUN npm install -g serve && apk add --no-cache wget
 
 # Install security updates
 RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
 
 # Copy built files from builder stage
-COPY --from=builder /app/dist/ /usr/share/nginx/html/
+COPY --from=builder /app/dist/ /app/
 
-# Copy nginx configuration
-COPY nginx.docker.conf /etc/nginx/conf.d/default.conf
+# Set working directory
+WORKDIR /app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
@@ -35,5 +38,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Expose port 80
 EXPOSE 80
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start serve with SPA support
+CMD ["serve", "-s", ".", "-l", "80"]

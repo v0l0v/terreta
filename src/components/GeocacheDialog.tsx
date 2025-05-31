@@ -22,7 +22,10 @@ interface GeocacheDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+import { ImageGallery } from "@/components/ImageGallery";
+
 export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialogProps) {
+  // All hooks must be called before any conditional logic
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { data: logs = [], refetch: refetchLogs } = useGeocacheLogs(
@@ -36,7 +39,12 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
   const [logText, setLogText] = useState("");
   const [logType, setLogType] = useState<"found" | "dnf" | "note">("found");
   const [postingStatus, setPostingStatus] = useState<string>("");
+  
+  // Image gallery state
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
+  // Early return after all hooks
   if (!geocache) return null;
 
   const authorName = author.data?.metadata?.name || geocache.pubkey.slice(0, 8);
@@ -89,6 +97,11 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
   const handleViewFullDetails = () => {
     onOpenChange(false);
     navigate(`/cache/${geocache.dTag}`);
+  };
+
+  const handleImageClick = (index: number) => {
+    setGalleryIndex(index);
+    setGalleryOpen(true);
   };
 
   return (
@@ -145,7 +158,8 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
                       key={index}
                       src={url}
                       alt={`Cache image ${index + 1}`}
-                      className="rounded w-full h-24 object-cover"
+                      className="rounded w-full h-24 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => handleImageClick(index)}
                     />
                   ))}
                 </div>
@@ -346,6 +360,16 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
           </div>
         </div>
       </DialogContent>
+      
+      {/* Image Gallery */}
+      {geocache.images && (
+        <ImageGallery
+          images={geocache.images}
+          isOpen={galleryOpen}
+          onClose={() => setGalleryOpen(false)}
+          initialIndex={galleryIndex}
+        />
+      )}
     </Dialog>
   );
 }

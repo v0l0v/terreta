@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
+import { getGeocachingRelays } from '@/lib/relays';
 import type { CreateGeocacheData } from '@/types/geocache';
 import { encodeHint } from '@/lib/rot13';
 
@@ -73,19 +74,7 @@ export function useCreateGeocache() {
       if (data.type === 'earth') tags.push(['t', 'earth']);
 
       // Add relay preferences from user settings
-      const savedRelays = localStorage.getItem('geocaching-relays');
-      let relayPreferences: string[] = [];
-      if (savedRelays) {
-        try {
-          relayPreferences = JSON.parse(savedRelays);
-        } catch {
-          // Use defaults if parsing fails
-          relayPreferences = ['wss://ditto.pub/relay', 'wss://relay.damus.io', 'wss://nos.lol'];
-        }
-      } else {
-        // Use defaults if no saved preferences
-        relayPreferences = ['wss://ditto.pub/relay', 'wss://relay.damus.io', 'wss://nos.lol'];
-      }
+      const relayPreferences = getGeocachingRelays();
 
       // Add relay tags in order of preference
       relayPreferences.forEach(relay => {

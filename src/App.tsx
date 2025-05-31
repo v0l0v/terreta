@@ -11,11 +11,10 @@ import AppRouter from './AppRouter';
 import { PWAUpdatePrompt } from '@/components/PWAUpdatePrompt';
 import './styles/leaflet-overrides.css';
 
-// DO NOT MODIFY THIS RELAY LIST UNLESS EXPLICITLY REQUESTED
+// Default relay configuration - using ditto.pub as primary relay
 const defaultRelays = [
   'wss://ditto.pub/relay',
-  'wss://relay.damus.io',
-  'wss://nos.lol',
+  // Additional relays can be configured by users in Settings
   // DO NOT ADD ANY RELAY WITHOUT FIRST USING A TOOL TO VERIFY IT IS ONLINE AND FUNCTIONAL
   // IF YOU CANNOT VERIFY A RELAY IS ONLINE AND FUNCTIONAL, DO NOT ADD IT HERE
 ];

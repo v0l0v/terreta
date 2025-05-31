@@ -30,6 +30,8 @@ import { LocationWarnings } from "@/components/LocationWarnings";
 import { verifyLocation, type LocationVerification } from "@/lib/osmVerification";
 import { Compass } from "@/components/Compass";
 
+import { ImageGallery } from "@/components/ImageGallery";
+
 export default function CacheDetail() {
   const { dtag } = useParams<{ dtag: string }>();
   const navigate = useNavigate();
@@ -65,6 +67,10 @@ export default function CacheDetail() {
   });
   const [editImages, setEditImages] = useState<string[]>([]);
   const [locationVerification, setLocationVerification] = useState<LocationVerification | null>(null);
+  
+  // Image gallery state
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
   
   // Initialize edit form when geocache loads
   useEffect(() => {
@@ -228,6 +234,11 @@ export default function CacheDetail() {
 
   const getSizeLabel = (size: string) => {
     return size.charAt(0).toUpperCase() + size.slice(1);
+  };
+
+  const handleImageClick = (index: number) => {
+    setGalleryIndex(index);
+    setGalleryOpen(true);
   };
 
   if (isLoading) {
@@ -590,7 +601,8 @@ export default function CacheDetail() {
                             key={index}
                             src={url}
                             alt={`Cache image ${index + 1}`}
-                            className="rounded-lg w-full h-48 object-cover"
+                            className="rounded-lg w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => handleImageClick(index)}
                           />
                         ))}
                       </div>
@@ -860,6 +872,16 @@ export default function CacheDetail() {
           </div>
         </div>
       </div>
+      
+      {/* Image Gallery */}
+      {geocache.images && (
+        <ImageGallery
+          images={geocache.images}
+          isOpen={galleryOpen}
+          onClose={() => setGalleryOpen(false)}
+          initialIndex={galleryIndex}
+        />
+      )}
     </div>
   );
 }

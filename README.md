@@ -65,18 +65,28 @@ npm run preview
 
 ### Docker Deployment (Recommended)
 
-Deploy to your Digital Ocean droplet using Docker:
+Deploy to your server using our zero-downtime deployment system:
 
 ```bash
-# Test locally first
-./docker/test-docker.sh
+# Set your server IP
+export DROPLET_IP=your.server.ip
 
-# Deploy to droplet (basic)
-./docker/deploy-docker.sh YOUR_DROPLET_IP
+# Smart deployment (chooses zero-downtime vs fresh automatically)
+./docker/deploy.sh $DROPLET_IP
 
-# Deploy with SSL (production)
-./docker/deploy-docker.sh YOUR_DROPLET_IP treasures.yourdomain.com --ssl
+# Force fresh deployment if needed
+./docker/deploy.sh $DROPLET_IP --force-fresh
+
+# Debug deployment issues
+./docker/deploy.sh $DROPLET_IP --debug
 ```
+
+The deployment script automatically:
+- Builds locally first to catch errors early
+- Uses zero-downtime deployment when site is running
+- Falls back to fresh deployment when site is down
+- Tests new deployment before switching traffic
+- Rolls back automatically if anything fails
 
 See the [Docker deployment guide](./docker/README.md) for detailed instructions.
 
@@ -176,6 +186,13 @@ docker/                 # Docker deployment files
 - Share your experience in the log text
 - **Post your log** to help other cachers
 
+### Configuring Relays
+- Go to **Settings** to manage relay preferences
+- The app uses **ditto.pub** as the primary relay by default
+- **Add additional relays** for redundancy if desired
+- **Reorder relays** to set priority (first relay is primary)
+- **Reset to defaults** to return to ditto.pub only
+
 ## 🔗 Nostr Integration
 
 Treasures leverages the Nostr protocol for decentralized data storage:
@@ -187,10 +204,10 @@ Treasures leverages the Nostr protocol for decentralized data storage:
 - **Kind 3**: Following relationships (for social features)
 
 ### Relays
-The app connects to multiple Nostr relays for redundancy:
-- `wss://ditto.pub/relay`
-- `wss://relay.damus.io`
-- `wss://nos.lol`
+The app uses ditto.pub as the primary Nostr relay by default:
+- `wss://ditto.pub/relay` (primary relay)
+
+Users can configure additional relays in Settings if desired. The app is designed to work with any standard Nostr relay that supports the required event types.
 
 ### Data Format
 Geocaches are stored as Nostr events with custom tags for location, difficulty, terrain, and other metadata. All data is cryptographically signed and verifiable.

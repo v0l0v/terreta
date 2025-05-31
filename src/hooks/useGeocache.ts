@@ -28,9 +28,7 @@ export function useGeocache(id: string) {
         if (isSafari()) {
           console.log('🍎 [GEOCACHE] Using Safari client for individual cache');
           const safariClient = createSafariNostr([
-            'wss://relay.damus.io',
-            'wss://nos.lol',
-            'wss://relay.nostr.band'
+            'wss://ditto.pub/relay'
           ]);
           
           try {
@@ -72,8 +70,7 @@ export function useGeocache(id: string) {
         
         if (isSafari()) {
           const safariClient = createSafariNostr([
-            'wss://relay.damus.io',
-            'wss://nos.lol'
+            'wss://ditto.pub/relay'
           ]);
           
           try {
