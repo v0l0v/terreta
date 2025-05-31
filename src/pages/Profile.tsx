@@ -24,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
-import { LoginArea } from '@/components/auth/LoginArea';
+import { LoginRequiredCard } from '@/components/LoginRequiredCard';
 import { DetailedGeocacheCard } from '@/components/ui/geocache-card';
 import { EditProfileForm } from '@/components/EditProfileForm';
 import { ProfileHeader } from '@/components/ProfileHeader';
@@ -116,11 +116,9 @@ export default function Profile() {
       <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40">
         <DesktopHeader />
         <div className="container mx-auto px-4 py-8">
-          <InfoCard
+          <LoginRequiredCard
             icon={User}
-            title="Login Required"
             description="Please log in with your Nostr account to view your profile."
-            action={<LoginArea />}
           />
         </div>
       </div>

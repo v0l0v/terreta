@@ -8,7 +8,7 @@ import { DesktopHeader } from "@/components/DesktopHeader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LoginArea } from "@/components/auth/LoginArea";
+import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import { EditProfileForm } from "@/components/EditProfileForm";
@@ -158,11 +158,9 @@ export default function Settings() {
         <DesktopHeader />
         
         <div className="container mx-auto px-4 py-16 pb-20 md:pb-16">
-          <InfoCard
+          <LoginRequiredCard
             icon={MapPin}
-            title="Login Required"
             description="You need to be logged in to access settings."
-            action={<LoginArea />}
             className="max-w-md mx-auto"
           />
         </div>

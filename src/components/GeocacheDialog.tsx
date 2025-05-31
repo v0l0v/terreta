@@ -108,9 +108,10 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
             {/* Cache Details */}
             <div>
               <div className="flex flex-wrap gap-2 mb-3">
-                <Badge variant="secondary">{getTypeLabel(geocache.type)}</Badge>
+                <Badge variant="outline">D{geocache.difficulty}</Badge>
+                <Badge variant="outline">T{geocache.terrain}</Badge>
                 <Badge variant="secondary">{getSizeLabel(geocache.size)}</Badge>
-                <Badge>D{geocache.difficulty} / T{geocache.terrain}</Badge>
+                <Badge variant="secondary">{getTypeLabel(geocache.type)}</Badge>
               </div>
               
               <div className="prose max-w-none">

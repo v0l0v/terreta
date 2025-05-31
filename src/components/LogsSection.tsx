@@ -6,6 +6,7 @@ import { LogTypeButtonGroup } from "@/components/ui/mobile-button-patterns";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyStateCard } from "@/components/ui/card-patterns";
 import { LogList } from "@/components/LogList";
+import { LoginArea } from "@/components/auth/LoginArea";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCreateLog } from "@/hooks/useCreateLog";
 import type { GeocacheLog } from "@/types/geocache";
@@ -118,7 +119,8 @@ export function LogsSection({
         <EmptyStateCard
           icon={MessageSquare}
           title="No logs yet"
-          description={compact ? undefined : "Be the first to log this cache!"}
+          description={compact ? undefined : user ? "Be the first to log this cache!" : "Log in to share your experience with this cache!"}
+          action={!user ? <LoginArea /> : undefined}
         />
       )}
     </div>

@@ -7,7 +7,7 @@ import { DesktopHeader } from '@/components/DesktopHeader';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LoginArea } from '@/components/auth/LoginArea';
+import { LoginRequiredCard } from '@/components/LoginRequiredCard';
 import { useSavedCaches } from '@/hooks/useSavedCaches';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { formatDistanceToNow } from '@/lib/date';
@@ -46,11 +46,9 @@ export default function MyCaches() {
       <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40">
         <DesktopHeader />
         <div className="container mx-auto px-4 py-8">
-          <InfoCard
+          <LoginRequiredCard
             icon={Bookmark}
-            title="Login Required"
             description="Please log in with your Nostr account to view your caches."
-            action={<LoginArea />}
           />
         </div>
       </div>

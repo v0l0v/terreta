@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import type { Geocache } from "@/types/geocache";
+import { getTypeLabel, getSizeLabel } from "@/lib/geocache-utils";
 import { isIOS, logIOSInfo, getIOSCompatibleMapOptions } from "@/lib/ios";
 import { findClosestGeocache } from "@/lib/geo";
 
@@ -105,13 +106,22 @@ function getCacheEmoji(type: string) {
     case "traditional":
       return "📦";
     case "multi":
-      return "🔄";
+      return "🔗";
     case "mystery":
       return "❓";
     case "earth":
+    case "earthcache":
       return "🌍";
+    case "letterbox":
+      return "📮";
+    case "event":
+      return "📅";
+    case "virtual":
+      return "👻";
+    case "wherigo":
+      return "📱";
     default:
-      return "📍";
+      return "📦";
   }
 }
 
@@ -365,37 +375,43 @@ export function GeocacheMap({
           icon={createCacheIcon(geocache.type)}
         >
           <Popup>
-            <div className="p-2 min-w-[200px]">
-              <h3 className="font-semibold text-lg mb-2">{geocache.name}</h3>
+            <div className="p-3 min-w-[200px]">
+              <h3 className="font-semibold text-sm leading-tight mb-3">{geocache.name}</h3>
               
-              <div className="flex gap-2 mb-2">
-                <Badge variant="secondary" className="text-xs">
-                  {geocache.size}
+              <div className="flex flex-wrap gap-1 mb-3">
+                <Badge variant="outline" className="text-xs py-0 px-1.5">
+                  D{geocache.difficulty}
                 </Badge>
-                <Badge variant="outline" className="text-xs">
-                  D{geocache.difficulty}/T{geocache.terrain}
+                <Badge variant="outline" className="text-xs py-0 px-1.5">
+                  T{geocache.terrain}
+                </Badge>
+                <Badge variant="secondary" className="text-xs py-0 px-1.5">
+                  {getSizeLabel(geocache.size)}
+                </Badge>
+                <Badge variant="secondary" className="text-xs py-0 px-1.5">
+                  {getTypeLabel(geocache.type)}
                 </Badge>
               </div>
               
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+              <p className="text-xs text-gray-600 mb-3 line-clamp-2">
                 {geocache.description}
               </p>
               
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+              <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
                 <span className="flex items-center gap-1">
                   <Trophy className="h-3 w-3" />
-                  {geocache.foundCount || 0} finds
+                  {geocache.foundCount || 0}
                 </span>
                 <span className="flex items-center gap-1">
                   <MessageSquare className="h-3 w-3" />
-                  {geocache.logCount || 0} logs
+                  {geocache.logCount || 0}
                 </span>
               </div>
               
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  className="flex-1"
+                  className="flex-1 text-xs"
                   onClick={() => handleMarkerClick(geocache)}
                 >
                   View Details
@@ -403,6 +419,7 @@ export function GeocacheMap({
                 <Button
                   size="sm"
                   variant="outline"
+                  className="px-2"
                   onClick={() => {
                     window.open(
                       `https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}`,

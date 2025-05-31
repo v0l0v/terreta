@@ -27,6 +27,7 @@ import { LocationWarnings } from "@/components/LocationWarnings";
 import { GeocacheForm, createDefaultGeocacheFormData, type GeocacheFormData } from "@/components/ui/geocache-form";
 
 import "leaflet/dist/leaflet.css";
+import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 
 // Custom marker icon for the confirmation map
 const confirmLocationIcon = L.divIcon({
@@ -155,13 +156,11 @@ export default function CreateCache() {
         <DesktopHeader />
         
         <div className="container mx-auto px-4 py-16 pb-20 md:pb-16">
-          <Card className="max-w-md mx-auto">
-            <CardContent className="pt-6 text-center">
-              <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-lg font-medium mb-2">Login Required</p>
-              <p className="text-gray-600 mb-4">You need to be logged in to create a geocache.</p>
-            </CardContent>
-          </Card>
+          <LoginRequiredCard
+            icon={MapPin}
+            description="You need to be logged in to create a geocache."
+            className="max-w-md mx-auto"
+          />
         </div>
       </div>
     );

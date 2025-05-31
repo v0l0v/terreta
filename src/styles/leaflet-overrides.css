@@ -39,6 +39,22 @@
   min-width: 200px;
 }
 
+/* Make close button X bigger and properly centered */
+.leaflet-popup-close-button {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 18px !important;
+  line-height: 32px !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
 /* Fix control positioning */
 .leaflet-control-container .leaflet-top {
   top: 10px;

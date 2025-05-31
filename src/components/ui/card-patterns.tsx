@@ -166,7 +166,9 @@ export function EmptyStateCard({
         {Icon && <Icon className="h-12 w-12 text-gray-400 mx-auto mb-4" />}
         <p className="text-lg font-medium mb-2">{title}</p>
         {description && <p className="text-gray-600 mb-4">{description}</p>}
-        {action}
+        {action && (
+          <div className="flex justify-center">{action}</div>
+        )}
       </CardContent>
     </Card>
   );
