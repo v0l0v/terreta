@@ -72,7 +72,7 @@ Log events use the common log types for Geocaching, namely `found` (success), `d
 
 Caches can be flagged as 'in maintenance' or requiring maintenance via the same 'maintenance' log. Owners of the cache can officially retire caches using an `archived` log, thus allowing the cache's history to be preserved without fully deleting it.
 
-## Log Tags
+## Tags
 
 - `a` (required) - reference to the geocache being logged
 - `log-type` (required) - one of: `found`, `dnf`, `note`, `maintenance`, `archived`  
