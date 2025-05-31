@@ -9,13 +9,14 @@ import type { GeocacheLog } from "@/types/geocache";
 interface LogListProps {
   logs: GeocacheLog[];
   compact?: boolean;
+  onProfileClick?: (pubkey: string) => void;
 }
 
-export function LogList({ logs, compact = false }: LogListProps) {
+export function LogList({ logs, compact = false, onProfileClick }: LogListProps) {
   return (
     <div className="space-y-4">
       {logs.map((log) => (
-        <LogCard key={log.id} log={log} compact={compact} />
+        <LogCard key={log.id} log={log} compact={compact} onProfileClick={onProfileClick} />
       ))}
     </div>
   );
@@ -24,12 +25,19 @@ export function LogList({ logs, compact = false }: LogListProps) {
 interface LogCardProps {
   log: GeocacheLog;
   compact?: boolean;
+  onProfileClick?: (pubkey: string) => void;
 }
 
-function LogCard({ log, compact = false }: LogCardProps) {
+function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
   const author = useAuthor(log.pubkey);
   const authorName = author.data?.metadata?.name || log.pubkey.slice(0, 8);
   const authorAvatar = author.data?.metadata?.picture;
+
+  const handleProfileClick = () => {
+    if (onProfileClick) {
+      onProfileClick(log.pubkey);
+    }
+  };
 
   const getLogIcon = () => {
     switch (log.type) {
@@ -92,7 +100,16 @@ function LogCard({ log, compact = false }: LogCardProps) {
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className={`font-medium ${compact ? "text-sm" : ""}`}>{authorName}</span>
+                  {onProfileClick ? (
+                    <button
+                      onClick={handleProfileClick}
+                      className={`font-medium hover:underline cursor-pointer ${compact ? "text-sm" : ""}`}
+                    >
+                      {authorName}
+                    </button>
+                  ) : (
+                    <span className={`font-medium ${compact ? "text-sm" : ""}`}>{authorName}</span>
+                  )}
                   <Badge variant={getLogTypeBadgeVariant()} className={`gap-1 ${compact ? "text-xs py-0 px-2" : ""}`}>
                     {getLogIcon()}
                     {getLogTypeLabel()}

@@ -56,9 +56,10 @@ export function useNostrSavedCaches() {
           )
         ]);
         
-        // Filter to only cache bookmark events
+        // Filter to only cache bookmark events (including clear-all events)
         const cacheBookmarkEvents = events.filter(event => 
-          event.tags.some(tag => tag[0] === 'a' && tag[1]?.startsWith('37515:'))
+          event.tags.some(tag => tag[0] === 'a' && tag[1]?.startsWith('37515:')) ||
+          event.tags.some(tag => tag[0] === 'action' && tag[1] === 'clear-all')
         );
         
         return cacheBookmarkEvents.sort((a, b) => b.created_at - a.created_at);
@@ -77,8 +78,22 @@ export function useNostrSavedCaches() {
       return [];
     }
     
+    console.log('Processing bookmark events:', bookmarkEvents.length);
+    
     // Track the latest action for each cache
     const cacheActions = new Map<string, { action: string; timestamp: number }>();
+    
+    // First, find if there's a clear-all event and get its timestamp
+    let clearAllTimestamp = 0;
+    bookmarkEvents.forEach((event) => {
+      const actionTag = event.tags.find(tag => tag[0] === 'action');
+      if (actionTag && actionTag[1] === 'clear-all') {
+        clearAllTimestamp = Math.max(clearAllTimestamp, event.created_at);
+        console.log('Found clear-all event at timestamp:', event.created_at, 'new clearAllTimestamp:', clearAllTimestamp);
+      }
+    });
+    
+    console.log('Final clearAllTimestamp:', clearAllTimestamp);
     
     bookmarkEvents.forEach((event) => {
       const aTag = event.tags.find(tag => tag[0] === 'a' && tag[1]?.startsWith('37515:'));
@@ -89,21 +104,32 @@ export function useNostrSavedCaches() {
         const action = actionTag[1];
         const timestamp = event.created_at;
         
-        // Only keep the most recent action for each cache
+        console.log(`Processing action: ${action} for ${coord} at ${timestamp}, clearAllTimestamp: ${clearAllTimestamp}`);
+        
+        // Skip actions that happened before the most recent clear-all
+        if (timestamp <= clearAllTimestamp) {
+          console.log(`Skipping action ${action} for ${coord} - happened before clear-all`);
+          return;
+        }
+        
+        // Only keep the most recent action for each cache after clear-all
         const existing = cacheActions.get(coord);
         if (!existing || timestamp > existing.timestamp) {
           cacheActions.set(coord, { action, timestamp });
+          console.log(`Set action ${action} for ${coord}`);
         }
       }
     });
     
-    // Return only caches that have 'save' as their latest action
+    // Return only caches that have 'save' as their latest action after clear-all
     const savedCoords: string[] = [];
     cacheActions.forEach((actionData, coord) => {
       if (actionData.action === 'save') {
         savedCoords.push(coord);
       }
     });
+    
+    console.log('Final saved coords:', savedCoords);
     return savedCoords;
   }, [bookmarkEvents]);
 
@@ -345,8 +371,13 @@ export function useNostrSavedCaches() {
       ],
     });
     
-    await refetchBookmarks();
+    // Force immediate cache invalidation
+    queryClient.invalidateQueries({ queryKey: ['cache-bookmarks', user.pubkey] });
     queryClient.invalidateQueries({ queryKey: ['saved-geocaches'] });
+    queryClient.invalidateQueries({ queryKey: ['saved-cache-log-counts'] });
+    
+    // Also refetch the bookmarks
+    await refetchBookmarks();
   }, [user, publishEvent, refetchBookmarks, queryClient]);
 
   // Unsave cache by ID (for compatibility with existing components)

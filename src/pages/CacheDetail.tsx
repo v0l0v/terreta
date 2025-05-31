@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { MapPin, Navigation, Calendar, User, MessageSquare, Trophy, Edit, Trash2, RefreshCw, Upload, X, Save, RotateCcw, Compass as CompassIcon, Eye, EyeOff } from "lucide-react";
+import { MapPin, Navigation, Calendar, User, Trophy, Edit, Trash2, RefreshCw, Upload, X, Save, RotateCcw, Compass as CompassIcon, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CacheDetailTabs, LogTypeButtonGroup } from "@/components/ui/mobile-button-patterns";
-import { Textarea } from "@/components/ui/textarea";
+import { CacheDetailTabs } from "@/components/ui/mobile-button-patterns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DesktopHeader } from "@/components/DesktopHeader";
@@ -15,11 +14,10 @@ import { SaveButton } from "@/components/SaveButton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useGeocacheByDTag } from "@/hooks/useGeocacheByDTag";
 import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
-import { useCreateLog } from "@/hooks/useCreateLog";
 import { useDeleteGeocache } from "@/hooks/useDeleteGeocache";
 import { useEditGeocache } from "@/hooks/useEditGeocache";
 import { GeocacheMap } from "@/components/GeocacheMap";
-import { LogList } from "@/components/LogList";
+import { LogsSection } from "@/components/LogsSection";
 import { useAuthor } from "@/hooks/useAuthor";
 import { useToast } from "@/hooks/useToast";
 import { formatDistanceToNow } from "@/lib/date";
@@ -46,15 +44,11 @@ export default function CacheDetail() {
     geocache?.pubkey,
     geocache?.relays
   );
-  const { mutate: createLog, isPending: isCreatingLog } = useCreateLog();
   const { mutate: deleteGeocache } = useDeleteGeocache();
   const { mutate: editGeocache, isPending: isEditingGeocache } = useEditGeocache(geocache || null);
   const { toast } = useToast();
   
   const author = useAuthor(geocache?.pubkey || "");
-  const [logText, setLogText] = useState("");
-  const [logType, setLogType] = useState<"found" | "dnf" | "note" | "maintenance" | "disabled" | "enabled" | "archived">("found");
-  const [postingStatus, setPostingStatus] = useState<string>("");
   
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -110,36 +104,6 @@ export default function CacheDetail() {
     }
   }, [geocache?.location]);
 
-  const handleCreateLog = () => {
-    if (!logText.trim() || !geocache) return;
-    
-    setPostingStatus("Signing event...");
-    
-    // Get the primary relay from the geocache's relay list
-    const primaryRelay = geocache.relays?.[0] || '';
-    
-    createLog({
-      geocacheId: geocache.id,
-      geocacheDTag: geocache.dTag, // Pass the stable d-tag for new logs
-      geocachePubkey: geocache.pubkey, // Pass the cache owner's pubkey
-      relayUrl: primaryRelay, // Pass the primary relay from the cache
-      preferredRelays: geocache.relays, // Pass all preferred relays for publishing
-      type: logType,
-      text: logText,
-    }, {
-      onSuccess: () => {
-        setPostingStatus("Posted! Refreshing...");
-        setLogText("");
-        // Don't force refresh - let the background refresh in useCreateLog handle it
-        setTimeout(() => {
-          setPostingStatus("");
-        }, 2000);
-      },
-      onError: () => {
-        setPostingStatus("");
-      }
-    });
-  };
 
   const handleDelete = () => {
     if (!geocache) return;
@@ -451,52 +415,12 @@ export default function CacheDetail() {
 
             <CacheDetailTabs logCount={logs?.length || 0}>
               <TabsContent value="logs" className="space-y-4">
-                {user && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Post a Log</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <LogTypeButtonGroup
-                        logType={logType}
-                        onLogTypeChange={(type) => setLogType(type as typeof logType)}
-                        isOwner={isOwner}
-                        disabled={isCreatingLog}
-                      />
-                      
-                      <Textarea
-                        placeholder="Share your experience..."
-                        value={logText}
-                        onChange={(e) => setLogText(e.target.value)}
-                        rows={4}
-                      />
-                      
-                      <Button 
-                        onClick={handleCreateLog} 
-                        disabled={!logText.trim() || isCreatingLog}
-                        className="w-full"
-                      >
-                        {isCreatingLog ? "Posting..." : "Post Log"}
-                      </Button>
-                      {postingStatus && (
-                        <p className="text-sm text-gray-600 text-center mt-2">
-                          {postingStatus}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {logs && logs.length > 0 ? (
-                  <LogList logs={logs} />
-                ) : (
-                  <Card>
-                    <CardContent className="text-center py-8">
-                      <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">No logs yet. Be the first to log this cache!</p>
-                    </CardContent>
-                  </Card>
-                )}
+                <LogsSection 
+                  logs={logs}
+                  geocache={geocache}
+                  onProfileClick={handleProfileClick}
+                  isOwner={isOwner}
+                />
               </TabsContent>
               
               <TabsContent value="map">

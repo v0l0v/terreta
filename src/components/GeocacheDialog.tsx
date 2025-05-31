@@ -1,20 +1,18 @@
 import { useState } from "react";
 import { HintDisplay } from "@/components/ui/hint-display";
-import { MapPin, Navigation, Calendar, User, MessageSquare, Trophy, ExternalLink } from "lucide-react";
+import { MapPin, Navigation, Calendar, User, Trophy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BaseDialog } from "@/components/ui/base-dialog";
-import { DetailsCard, StatsCard, EmptyStateCard, InteractiveCard } from "@/components/ui/card-patterns";
+import { DetailsCard, StatsCard, InteractiveCard } from "@/components/ui/card-patterns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CacheDetailTabs, LogTypeButtonGroup } from "@/components/ui/mobile-button-patterns";
-import { Textarea } from "@/components/ui/textarea";
+import { CacheDetailTabs } from "@/components/ui/mobile-button-patterns";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
-import { useCreateLog } from "@/hooks/useCreateLog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useAuthor } from "@/hooks/useAuthor";
-import { LogList } from "@/components/LogList";
+import { LogsSection } from "@/components/LogsSection";
 import { formatDistanceToNow } from "@/lib/date";
 import { useNavigate } from "react-router-dom";
 import { getDifficultyLabel, getTypeLabel, getSizeLabel } from "@/lib/geocache-utils";
@@ -39,12 +37,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
     geocache?.dTag,
     geocache?.pubkey
   );
-  const { mutate: createLog, isPending: isCreatingLog } = useCreateLog();
   const author = useAuthor(geocache?.pubkey || "");
-  
-  const [logText, setLogText] = useState("");
-  const [logType, setLogType] = useState<"found" | "dnf" | "note">("found");
-  const [postingStatus, setPostingStatus] = useState<string>("");
   
   // Image gallery state
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -59,33 +52,6 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
 
   const authorName = author.data?.metadata?.name || geocache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
-
-  const handleCreateLog = () => {
-    if (!logText.trim() || !geocache) return;
-    
-    setPostingStatus("Signing event...");
-    
-    createLog({
-      geocacheId: geocache.id,
-      geocacheDTag: geocache.dTag,
-      geocachePubkey: geocache.pubkey,
-      type: logType,
-      text: logText,
-    }, {
-      onSuccess: () => {
-        setPostingStatus("Posted! Refreshing...");
-        setLogText("");
-        setTimeout(() => {
-          setPostingStatus("");
-        }, 2000);
-      },
-      onError: () => {
-        setPostingStatus("");
-      }
-    });
-  };
-
-
 
   const handleViewFullDetails = () => {
     onOpenChange(false);
@@ -173,48 +139,12 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
             {/* Tabs */}
             <CacheDetailTabs logCount={logs?.length || 0}>
               <TabsContent value="logs" className="space-y-4 max-h-60 overflow-y-auto">
-                {user && (
-                  <Card>
-                    <CardContent className="p-4 space-y-3">
-                      <LogTypeButtonGroup
-                        logType={logType}
-                        onLogTypeChange={(type) => setLogType(type as "found" | "dnf" | "note")}
-                        disabled={isCreatingLog}
-                      />
-                      
-                      <Textarea
-                        placeholder="Share your experience..."
-                        value={logText}
-                        onChange={(e) => setLogText(e.target.value)}
-                        rows={3}
-                        className="text-sm"
-                      />
-                      
-                      <Button 
-                        onClick={handleCreateLog} 
-                        disabled={!logText.trim() || isCreatingLog}
-                        size="sm"
-                        className="w-full"
-                      >
-                        {isCreatingLog ? "Posting..." : "Post Log"}
-                      </Button>
-                      {postingStatus && (
-                        <p className="text-xs text-gray-600 text-center">
-                          {postingStatus}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {logs && logs.length > 0 ? (
-                  <LogList logs={logs} compact />
-                ) : (
-                  <EmptyStateCard
-                    icon={MessageSquare}
-                    title="No logs yet"
-                  />
-                )}
+                <LogsSection 
+                  logs={logs}
+                  geocache={geocache}
+                  onProfileClick={handleProfileClick}
+                  compact
+                />
               </TabsContent>
               
               <TabsContent value="map">
