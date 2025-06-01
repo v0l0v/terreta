@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Search, Plus } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -21,7 +21,7 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <MapPin className="h-8 w-8 text-green-600" />
+            <img src="/icon.png" alt="Treasures" className="h-12 w-12" />
             <h1 className="text-2xl font-bold text-gray-900">Treasures</h1>
           </Link>
           

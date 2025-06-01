@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MapPin, Home, Map, Plus, Menu, X, Settings, Bookmark, LogOut, User, Edit } from 'lucide-react';
+import { Home, Map, Plus, Menu, X, Settings, Bookmark, LogOut, User, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { LoginArea } from '@/components/auth/LoginArea';
@@ -33,7 +33,7 @@ export function MobileHeader() {
           </SheetTrigger>
           <SheetContent side="left" className="pr-0">
             <div className="flex items-center gap-2 px-6 py-4">
-              <MapPin className="h-6 w-6 text-green-600" />
+              <img src="/icon.png" alt="Treasures" className="h-10 w-10" />
               <span className="font-bold">Treasures</span>
             </div>
             <nav className="flex flex-col gap-2 px-6">
@@ -122,7 +122,7 @@ export function MobileHeader() {
         </Sheet>
         
         <Link to="/" className="flex items-center gap-2">
-          <MapPin className="h-6 w-6 text-green-600" />
+          <img src="/icon.png" alt="Treasures" className="h-10 w-10" />
           <span className="font-bold">Treasures</span>
         </Link>
         
