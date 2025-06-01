@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Download, MapPin, Smartphone, Wifi, Zap, CheckCircle, ArrowLeft } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 // Extend Window interface to include deferredPrompt
 declare global {
@@ -19,6 +20,7 @@ export default function Install() {
   const [installing, setInstalling] = useState(false);
   const [installable, setInstallable] = useState(false);
   const [installed, setInstalled] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Check if already installed
@@ -114,19 +116,22 @@ export default function Install() {
             </Alert>
           )}
 
-          {/* Install Button */}
-          {installable && !installed && (
+          {/* Install Button - Show on mobile regardless of installable status */}
+          {isMobile && !installed && (
             <Card className="mb-6 border-green-200">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <Download className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">{installable ? 'Ready to Install' : 'Install App'}</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    {installable ? 'Ready to Install' : 'Install App'}
+                  </h3>
                   <p className="text-gray-600 mb-4">
                     {installable 
                       ? 'Your browser supports app installation. Click below to add Treasures to your device.'
                       : 'Add Treasures to your home screen for the best experience.'
                     }
                   </p>
+                  
                   <Button 
                     size="lg" 
                     onClick={handleInstall}
@@ -136,6 +141,15 @@ export default function Install() {
                     <Download className="h-5 w-5 mr-2" />
                     {installing ? 'Installing...' : 'Install Treasures App'}
                   </Button>
+                  
+                  {/* Show hint when not installable - below the button */}
+                  {!installable && (
+                    <div className="mt-3 text-center">
+                      <p className="text-gray-400 text-sm">
+                        <strong>Tip:</strong> If the install button doesn't work, use the manual installation instructions below.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -150,8 +164,10 @@ export default function Install() {
                   Manual Installation
                 </CardTitle>
                 <CardDescription>
-                  {installable 
+                  {isMobile && installable 
                     ? "If the install button above doesn't work, you can manually add Treasures to your home screen."
+                    : isMobile && !installable
+                    ? "Your browser doesn't support automatic installation, but you can manually add Treasures to your home screen."
                     : "You can manually add Treasures to your home screen for the best experience."
                   }
                 </CardDescription>
