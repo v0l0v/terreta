@@ -16,7 +16,8 @@
     "docker:test": "./docker/test-docker.sh --rebuild",
     "docker:stop": "./docker/test-docker.sh --stop",
     "generate-icons": "node scripts/generate-icons.js",
-    "process-icon": "node scripts/process-icon.js"
+    "process-icon": "node scripts/process-icon.js",
+    "create-og-image": "node scripts/create-og-image.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
