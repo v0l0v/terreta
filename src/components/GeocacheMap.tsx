@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import L from "leaflet";
@@ -348,6 +348,20 @@ function MapStyleControl({
   onStyleChange: (style: string) => void; 
 }) {
   const map = useMap();
+  const rootRef = useRef<any>(null);
+  const controlRef = useRef<L.Control | null>(null);
+  
+  // Create the render function with useCallback to stabilize dependencies
+  const renderSelector = useCallback(() => {
+    if (rootRef.current) {
+      rootRef.current.render(
+        <MapStyleSelector
+          currentStyle={currentStyle}
+          onStyleChange={onStyleChange}
+        />
+      );
+    }
+  }, [currentStyle, onStyleChange]);
   
   useEffect(() => {
     // Create a custom control
@@ -357,32 +371,44 @@ function MapStyleControl({
         div.style.background = 'transparent';
         div.style.border = 'none';
         div.style.margin = '0';
+        div.style.position = 'relative';
+        div.style.zIndex = '1000';
         
         // Prevent map interaction when clicking on the control
         L.DomEvent.disableClickPropagation(div);
         L.DomEvent.disableScrollPropagation(div);
         
         // Create React root and render the MapStyleSelector
-        const root = createRoot(div);
-        root.render(
-          <MapStyleSelector
-            currentStyle={currentStyle}
-            onStyleChange={onStyleChange}
-          />
-        );
+        rootRef.current = createRoot(div);
         
         return div;
       }
     });
     
     const styleControl = new StyleControl({ position: 'topright' });
+    controlRef.current = styleControl;
     map.addControl(styleControl);
+    
+    // Initial render
+    renderSelector();
     
     // Cleanup
     return () => {
-      map.removeControl(styleControl);
+      if (rootRef.current) {
+        rootRef.current.unmount();
+        rootRef.current = null;
+      }
+      if (controlRef.current) {
+        map.removeControl(controlRef.current);
+        controlRef.current = null;
+      }
     };
-  }, [map, currentStyle, onStyleChange]);
+  }, [map, renderSelector]);
+  
+  // Update the rendered component when props change
+  useEffect(() => {
+    renderSelector();
+  }, [renderSelector]);
   
   return null;
 }
@@ -401,10 +427,35 @@ export function GeocacheMap({
   showStyleSelector = true
 }: GeocacheMapProps) {
   const navigate = useNavigate();
-  const [currentMapStyle, setCurrentMapStyle] = useState("original");
+  
+  // Detect system theme preference and set default map style accordingly
+  const getDefaultMapStyle = () => {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return "dark";
+    }
+    return "original";
+  };
+  
+  const [currentMapStyle, setCurrentMapStyle] = useState(getDefaultMapStyle());
   const mapStyle = MAP_STYLES[currentMapStyle] || MAP_STYLES.original;
   const { isCacheSaved, toggleSaveCache, isNostrEnabled } = useSavedCaches();
   const { toast } = useToast();
+
+  // Listen for system theme changes and update map style accordingly
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleThemeChange = (e: MediaQueryListEvent) => {
+      const newDefaultStyle = e.matches ? "dark" : "original";
+      // Only auto-update if user hasn't manually selected a specific style
+      // Check if current style matches a system default (original for light, dark for dark)
+      if (currentMapStyle === "original" || currentMapStyle === "dark") {
+        setCurrentMapStyle(newDefaultStyle);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleThemeChange);
+  }, [currentMapStyle]);
 
   // Calculate center if not provided
   const mapCenter: LatLngExpression = center 

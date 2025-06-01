@@ -650,6 +650,39 @@
   position: relative;
 }
 
+/* Map style selector positioning fixes */
+.map-style-control [data-radix-popper-content-wrapper] {
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+.map-style-control [data-radix-popper-content-wrapper][data-state="open"] {
+  animation: none !important;
+}
+
+.map-style-control .leaflet-control {
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+/* Prevent popover positioning blip */
+.map-style-control [data-radix-popover-content] {
+  transform-origin: top right !important;
+  opacity: 0;
+  animation: fadeInPopover 200ms ease-out forwards;
+}
+
+@keyframes fadeInPopover {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Ensure map style selector stays within bounds */
 .leaflet-container + div {
   pointer-events: none;
@@ -814,30 +847,79 @@
   }
 }
 
-/* Dark mode support for adventure themes */
-@media (prefers-color-scheme: dark) {
-  .leaflet-popup-content-wrapper {
-    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-    color: #f9fafb;
-  }
-  
-  .leaflet-popup-tip {
-    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  }
-  
-  .leaflet-control-zoom a {
-    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
-    color: #f9fafb;
-  }
-  
-  .leaflet-control-zoom a:hover {
-    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-    color: #34d399;
-  }
-  
-  .leaflet-control-attribution {
-    background: rgba(31, 41, 55, 0.9);
-    color: #f9fafb;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
+/* Dark mode support for adventure themes - only apply when dark theme is active, not system dark mode */
+.leaflet-container.dark-theme .leaflet-popup-content-wrapper {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+  color: #f9fafb !important;
+}
+
+.leaflet-container.dark-theme .leaflet-popup-tip {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+}
+
+.leaflet-container.dark-theme .leaflet-control-zoom a {
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+  color: #f9fafb !important;
+}
+
+.leaflet-container.dark-theme .leaflet-control-zoom a:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
+  color: #34d399 !important;
+}
+
+.leaflet-container.dark-theme .leaflet-control-attribution {
+  background: rgba(31, 41, 55, 0.9) !important;
+  color: #f9fafb !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Original theme should always use light popups regardless of system theme */
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content-wrapper {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  color: #1f2937 !important;
+}
+
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-tip {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+}
+
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content {
+  color: #1f2937 !important;
+}
+
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content h3,
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content h4,
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content p {
+  color: #1f2937 !important;
+}
+
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+/* Original theme button styles */
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content button {
+  background: #059669 !important;
+  color: white !important;
+  border: 1px solid #047857 !important;
+}
+
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content button:hover {
+  background: #047857 !important;
+  color: white !important;
+}
+
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content button[class*="outline"] {
+  background: transparent !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.leaflet-container:not(.dark-theme):not(.pirate-theme) .leaflet-popup-content button[class*="outline"]:hover {
+  background: #f9fafb !important;
+  color: #1f2937 !important;
 }

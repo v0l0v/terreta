@@ -152,7 +152,7 @@ export default function CreateCache() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pb-4 md:pb-0">
         <DesktopHeader />
         
         <div className="container mx-auto px-4 py-16">
@@ -167,7 +167,7 @@ export default function CreateCache() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-4 md:pb-0">
       <DesktopHeader />
 
       <div className="container mx-auto px-4 py-8">

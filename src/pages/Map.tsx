@@ -317,7 +317,7 @@ export default function Map() {
       </div>
 
       {/* Mobile View */}
-      <div className="block lg:hidden h-[calc(100vh-65px)] flex flex-col overflow-hidden">
+      <div className="block lg:hidden h-mobile-content flex flex-col overflow-hidden">
         {/* Adventure Mobile Filters Header */}
         <div className="bg-white/95 backdrop-blur-sm border-b flex-shrink-0">
           <div className="p-3">

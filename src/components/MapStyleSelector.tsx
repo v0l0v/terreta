@@ -65,7 +65,15 @@ export function MapStyleSelector({ currentStyle, onStyleChange, className }: Map
           <Map className="h-3 w-3 opacity-50 hidden sm:inline" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-3" align="end">
+      <PopoverContent 
+        className="w-80 p-3" 
+        align="end"
+        side="bottom"
+        sideOffset={8}
+        alignOffset={0}
+        avoidCollisions={true}
+        sticky="always"
+      >
         <div className="space-y-3">
           <div className="flex items-center gap-2 pb-2 border-b">
             <Map className="h-4 w-4 text-emerald-600" />

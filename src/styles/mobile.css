@@ -17,11 +17,32 @@
 
 /* Mobile navigation spacing */
 .pb-nav-safe {
-  padding-bottom: 4rem;
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
 }
 
+/* Mobile header + safe area height */
 .pt-header-safe {
-  padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+  padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+}
+
+/* Mobile content height - accounts for header, bottom nav, and safe areas */
+.h-mobile-content {
+  height: calc(100vh - 4rem - 4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+
+/* Alternative approach for pages that need precise height control */
+.h-mobile-full {
+  height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+
+/* Mobile-only bottom padding with safe area */
+.pb-mobile-safe {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Mobile margin bottom to account for fixed bottom nav */
+.mb-nav-safe {
+  margin-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
 }
 
 /* Prevent overscroll on mobile */
@@ -85,5 +106,25 @@
   
   .mobile-padding {
     padding: 1rem;
+  }
+  
+  /* Ensure content doesn't feel cramped against bottom nav */
+  .mobile-bottom-spacing {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* For scrollable containers that need extra bottom space */
+  .mobile-scroll-padding {
+    padding-bottom: 1.5rem;
+  }
+  
+  /* For last child elements that should have extra space above nav */
+  .last-child-mobile-spacing *:last-child {
+    margin-bottom: 2rem;
+  }
+  
+  /* For buttons and interactive elements near bottom */
+  .mobile-button-spacing {
+    margin-bottom: 1rem;
   }
 }
