@@ -22,11 +22,103 @@ import { getCacheIconSvg, getCacheColor } from "@/lib/cacheIcons";
 import "leaflet/dist/leaflet.css";
 import "@/styles/map.css";
 
-// Create enhanced cache icons using shared icon system for consistency
-const createCacheIcon = (type: string) => {
+// Create cache icons with optional pirate theme styling
+const createCacheIcon = (type: string, isPirateTheme: boolean = false) => {
   const iconSvg = getCacheIconSvg(type);
   const color = getCacheColor(type);
   
+  if (isPirateTheme) {
+    // Fantasy pirate treasure chest style icons with magical glow
+    const pirateColors = {
+      traditional: '#92400e', // Rich brown for treasure chests
+      multi: '#dc2626',      // Ruby red for magical compass
+      mystery: '#7c2d12',    // Dark mystical brown
+    };
+    
+    const glowColors = {
+      traditional: '#fbbf24', // Golden glow
+      multi: '#ef4444',      // Ruby glow  
+      mystery: '#a855f7',    // Purple mystical glow
+    };
+    
+    const pirateColor = pirateColors[type as keyof typeof pirateColors] || pirateColors.traditional;
+    const glowColor = glowColors[type as keyof typeof glowColors] || glowColors.traditional;
+    
+    return L.divIcon({
+      html: `
+        <div style="
+          background: linear-gradient(135deg, ${pirateColor} 0%, ${color} 50%, ${glowColor} 100%);
+          border: 4px solid #fbbf24;
+          border-radius: 12px;
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 
+            0 0 12px ${glowColor}80,
+            0 0 24px ${glowColor}40,
+            0 6px 16px rgba(139, 69, 19, 0.5),
+            inset 0 2px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -2px 0 rgba(146, 64, 14, 0.3);
+          position: relative;
+          transition: all 0.4s ease;
+          cursor: pointer;
+          transform: rotate(-3deg);
+          animation: treasureGlow 3s ease-in-out infinite;
+        ">
+          ${iconSvg}
+        </div>
+        <div style="
+          position: absolute;
+          bottom: -12px;
+          left: 50%;
+          transform: translateX(-50%) rotate(3deg);
+          width: 0;
+          height: 0;
+          border-left: 12px solid transparent;
+          border-right: 12px solid transparent;
+          border-top: 12px solid ${pirateColor};
+          filter: drop-shadow(0 4px 8px ${glowColor}60);
+        "></div>
+        <style>
+          @keyframes treasureGlow {
+            0%, 100% { 
+              box-shadow: 
+                0 0 12px ${glowColor}80,
+                0 0 24px ${glowColor}40,
+                0 6px 16px rgba(139, 69, 19, 0.5),
+                inset 0 2px 0 rgba(255, 255, 255, 0.4),
+                inset 0 -2px 0 rgba(146, 64, 14, 0.3);
+            }
+            50% { 
+              box-shadow: 
+                0 0 20px ${glowColor}90,
+                0 0 40px ${glowColor}60,
+                0 8px 20px rgba(139, 69, 19, 0.6),
+                inset 0 3px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -3px 0 rgba(146, 64, 14, 0.4);
+            }
+          }
+          .custom-cache-icon:hover > div:first-child {
+            transform: scale(1.2) rotate(0deg);
+            box-shadow: 
+              0 0 24px ${glowColor}95,
+              0 0 48px ${glowColor}70,
+              0 10px 24px rgba(139, 69, 19, 0.7),
+              inset 0 4px 0 rgba(255, 255, 255, 0.6),
+              inset 0 -4px 0 rgba(146, 64, 14, 0.5);
+          }
+        </style>
+      `,
+      className: "custom-cache-icon fantasy-pirate-cache-icon",
+      iconSize: [48, 60],
+      iconAnchor: [24, 60],
+      popupAnchor: [0, -60],
+    });
+  }
+  
+  // Standard theme icons
   return L.divIcon({
     html: `
       <div style="
@@ -81,7 +173,7 @@ const userLocationIcon = L.divIcon({
         height: 32px;
         background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.1) 70%, transparent 100%);
         border-radius: 50%;
-        animation: adventurePulse 2.5s ease-out infinite;
+        animation: locationPulse 2.5s ease-out infinite;
       "></div>
       <!-- Middle ring -->
       <div style="
@@ -93,7 +185,7 @@ const userLocationIcon = L.divIcon({
         background: rgba(59, 130, 246, 0.6);
         border: 2px solid rgba(255, 255, 255, 0.9);
         border-radius: 50%;
-        animation: adventurePulse 2.5s ease-out infinite 0.3s;
+        animation: locationPulse 2.5s ease-out infinite 0.3s;
       "></div>
       <!-- Core beacon -->
       <div style="
@@ -109,22 +201,9 @@ const userLocationIcon = L.divIcon({
           0 3px 8px rgba(0,0,0,0.3),
           inset 0 1px 0 rgba(255,255,255,0.4);
       "></div>
-      <!-- Adventure compass needle -->
-      <div style="
-        position: absolute;
-        top: 6px;
-        left: 15px;
-        width: 2px;
-        height: 8px;
-        background: linear-gradient(to bottom, #ef4444 0%, #dc2626 100%);
-        border-radius: 1px;
-        transform-origin: center bottom;
-        animation: compassSpin 4s linear infinite;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-      "></div>
     </div>
     <style>
-      @keyframes adventurePulse {
+      @keyframes locationPulse {
         0% { 
           transform: scale(1); 
           opacity: 0.8; 
@@ -137,13 +216,6 @@ const userLocationIcon = L.divIcon({
           transform: scale(2); 
           opacity: 0; 
         }
-      }
-      @keyframes compassSpin {
-        0% { transform: rotate(0deg); }
-        25% { transform: rotate(90deg); }
-        50% { transform: rotate(180deg); }
-        75% { transform: rotate(270deg); }
-        100% { transform: rotate(360deg); }
       }
     </style>
   `,
@@ -201,6 +273,31 @@ function MapController({
       }
     }
   }, [map, center, zoom, searchLocation, searchRadius]);
+  
+  return null;
+}
+
+// Component to handle theme styling
+function ThemeController({ 
+  currentStyle 
+}: { 
+  currentStyle: string;
+}) {
+  const map = useMap();
+  
+  useEffect(() => {
+    const container = map.getContainer();
+    
+    // Remove all theme classes
+    container.classList.remove('dark-theme', 'pirate-theme');
+    
+    // Add current theme class
+    if (currentStyle === 'dark') {
+      container.classList.add('dark-theme');
+    } else if (currentStyle === 'pirate') {
+      container.classList.add('pirate-theme');
+    }
+  }, [map, currentStyle]);
   
   return null;
 }
@@ -393,6 +490,10 @@ export function GeocacheMap({
         searchRadius={searchRadius}
       />
       
+      <ThemeController 
+        currentStyle={currentMapStyle}
+      />
+      
       <PopupController 
         highlightedGeocache={highlightedGeocache}
         geocaches={geocaches}
@@ -407,19 +508,26 @@ export function GeocacheMap({
         />
       )}
       
-      {/* Adventure-themed search radius circle */}
+      {/* Search radius circle */}
       {searchLocation && searchRadius && (
         <Circle
           center={[searchLocation.lat, searchLocation.lng]}
           radius={searchRadius * 1000} // Convert km to meters
-          pathOptions={{
-            color: '#059669', // Emerald-600 for better contrast
+          pathOptions={currentMapStyle === 'pirate' ? {
+            color: '#fbbf24', // Golden for fantasy pirate theme
+            fillColor: '#f59e0b', // Rich amber fill
+            fillOpacity: 0.2,
+            weight: 4,
+            dashArray: '15, 10',
+            opacity: 0.8,
+            className: 'search-radius-circle'
+          } : {
+            color: '#059669', // Emerald-600
             fillColor: '#10b981', // Emerald-500
             fillOpacity: 0.12,
             weight: 4,
             dashArray: '15, 8',
             opacity: 0.8,
-            // Add a subtle glow effect
             className: 'search-radius-circle'
           }}
         />
@@ -444,7 +552,7 @@ export function GeocacheMap({
         <Marker
           key={geocache.dTag}
           position={[geocache.location.lat, geocache.location.lng]}
-          icon={createCacheIcon(geocache.type)}
+          icon={createCacheIcon(geocache.type, currentMapStyle === 'pirate')}
         >
           <Popup>
             <div className="p-3 min-w-[200px]">

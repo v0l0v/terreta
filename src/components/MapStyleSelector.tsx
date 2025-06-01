@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Map, Satellite, Mountain, Palette, Moon, Compass } from "lucide-react";
+import { Map, Moon, Anchor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
@@ -18,25 +18,23 @@ export const MAP_STYLES: Record<string, MapStyle> = {
   original: {
     key: "original",
     name: "Original",
-    description: "The original map style",
+    description: "Clean, bright cartography",
     icon: <Map className="h-4 w-4" />,
-    // Carto Voyager - free for open source projects with attribution
-    // Alternative: use "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" for pure OSM
     url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   },
-  watercolor: {
-    key: "watercolor",
-    name: "Watercolor",
-    description: "Artistic adventure map",
-    icon: <Palette className="h-4 w-4" />,
-    url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg",
-    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://stamen.com">Stamen Design</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  pirate: {
+    key: "pirate",
+    name: "Treasure Map",
+    description: "Dark mode base with pirate parchment overlays and vintage effects",
+    icon: <Anchor className="h-4 w-4" />,
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   },
   dark: {
     key: "dark",
-    name: "Night Mode",
-    description: "Dark theme for night adventures",
+    name: "Dark Mode", 
+    description: "Dark theme for night use",
     icon: <Moon className="h-4 w-4" />,
     url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
