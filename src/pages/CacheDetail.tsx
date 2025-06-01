@@ -252,7 +252,7 @@ export default function CacheDetail() {
     <div className="min-h-screen bg-muted/30">
       <DesktopHeader />
 
-      <div className="container mx-auto px-2 sm:px-4 py-8 max-w-full overflow-hidden">
+      <div className="container mx-auto px-2 sm:px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-4 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-4 lg:space-y-6 min-w-0">
@@ -351,9 +351,10 @@ export default function CacheDetail() {
                   // View mode
                   <>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="secondary">{getTypeLabel(geocache.type)}</Badge>
+                      <Badge variant="outline">D{geocache.difficulty}</Badge>
+                      <Badge variant="outline">T{geocache.terrain}</Badge>
                       <Badge variant="secondary">{getSizeLabel(geocache.size)}</Badge>
-                      <Badge>D{geocache.difficulty} / T{geocache.terrain}</Badge>
+                      <Badge variant="secondary">{getTypeLabel(geocache.type)}</Badge>
                     </div>
                     
                     <div className="prose max-w-none">

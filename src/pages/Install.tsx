@@ -17,7 +17,7 @@ export default function Install() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40 dark:from-green-950/40 dark:via-emerald-950/30 dark:to-teal-950/20">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <DesktopHeader />
 

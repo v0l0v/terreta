@@ -204,9 +204,9 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
       description={<span className='text-center text-muted-foreground mt-2'>Access your account securely with your preferred method</span>}
       headerClassName='px-6 pt-6 pb-0 relative'
     >
-      <div className='px-6 py-8 space-y-6'>
+      <div className='px-6 py-6 pt-0 space-y-4'>
           <LoginMethodTabs defaultMethod={'nostr' in window ? 'extension' : 'key'}>
-            <TabsContent value='extension' className='space-y-4'>
+            <TabsContent value='extension' className='space-y-3'>
               {errors.extension && (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
@@ -220,7 +220,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                 </p>
                 <div className="flex justify-center">
                   <Button
-                    className='w-full rounded-full py-6'
+                    className='w-full rounded-full py-4'
                     onClick={handleExtensionLogin}
                     disabled={isLoading}
                   >
@@ -230,8 +230,8 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
               </div>
             </TabsContent>
 
-            <TabsContent value='key' className='space-y-4'>
-              <div className='space-y-4'>
+            <TabsContent value='key' className='space-y-3'>
+              <div className='space-y-3'>
                 <div className='space-y-2'>
                   <label htmlFor='nsec' className='text-sm font-medium text-gray-700 dark:text-gray-400'>
                     Enter your nsec
@@ -282,7 +282,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
 
                 <div className="flex justify-center">
                   <Button
-                    className='w-full rounded-full py-6 mt-4'
+                    className='w-full rounded-full py-4'
                     onClick={handleKeyLogin}
                     disabled={isLoading || !nsec.trim()}
                   >
@@ -292,7 +292,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
               </div>
             </TabsContent>
 
-            <TabsContent value='bunker' className='space-y-4'>
+            <TabsContent value='bunker' className='space-y-3'>
               <div className='space-y-2'>
                 <label htmlFor='bunkerUri' className='text-sm font-medium text-gray-700 dark:text-gray-400'>
                   Bunker URI
@@ -317,7 +317,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
 
               <div className="flex justify-center">
                 <Button
-                  className='w-full rounded-full py-6'
+                  className='w-full rounded-full py-4'
                   onClick={handleBunkerLogin}
                   disabled={isLoading || !bunkerUri.trim()}
                 >

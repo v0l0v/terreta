@@ -23,19 +23,19 @@ export const MAP_STYLES: Record<string, MapStyle> = {
     url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   },
-  pirate: {
-    key: "pirate",
-    name: "Treasure Map",
-    description: "Dark mode base with pirate parchment overlays and vintage effects",
-    icon: <Anchor className="h-4 w-4" />,
-    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-  },
   dark: {
     key: "dark",
     name: "Dark Mode", 
     description: "Dark theme for night use",
     icon: <Moon className="h-4 w-4" />,
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  },
+  pirate: {
+    key: "pirate",
+    name: "Treasure Map",
+    description: "For true adventurers",
+    icon: <Anchor className="h-4 w-4" />,
     url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   }
@@ -123,7 +123,7 @@ export function MapStyleSelector({ currentStyle, onStyleChange, className }: Map
           
           <div className="pt-2 border-t">
             <p className="text-xs text-muted-foreground">
-              Choose between classic, artistic, or night-friendly map styles for your geocaching adventures.
+              Choose between clean, dark, or adventure-themed styles for your adventure.
             </p>
           </div>
         </div>
