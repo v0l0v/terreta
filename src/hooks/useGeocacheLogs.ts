@@ -4,13 +4,14 @@ import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { GeocacheLog } from '@/types/geocache';
 import { useNostrQueryRelays } from './useNostrQueryRelays';
 import { NIP_GC_KINDS, parseLogEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
+import { verifyLogSignature } from '@/lib/verification';
 
-export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geocachePubkey?: string, preferredRelays?: string[]) {
+export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geocachePubkey?: string, preferredRelays?: string[], verificationPubkey?: string) {
   const { nostr } = useNostr();
   const { queryWithRelays } = useNostrQueryRelays();
 
   return useQuery({
-    queryKey: ['geocache-logs', geocacheDTag, geocachePubkey, preferredRelays],
+    queryKey: ['geocache-logs', geocacheDTag, geocachePubkey, preferredRelays, verificationPubkey],
     queryFn: async (c) => {
       console.log('🔄 [GEOCACHE LOGS] Starting query for geocache:', {
         geocacheId,
@@ -79,6 +80,19 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
           if (parsed && 'sourceRelay' in event) {
             parsed.sourceRelay = (event as NostrEvent & { sourceRelay?: string }).sourceRelay;
           }
+          
+          // Check if this log is verified (signed by the verification key)
+          if (parsed && verificationPubkey) {
+            const isVerified = verifyLogSignature(event, verificationPubkey);
+            console.log('Verification check:', {
+              logId: event.id.slice(0, 8),
+              eventPubkey: event.pubkey,
+              verificationPubkey,
+              isVerified
+            });
+            parsed.isVerified = isVerified;
+          }
+          
           return parsed;
         })
         .filter((log): log is GeocacheLog => log !== null);

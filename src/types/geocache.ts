@@ -20,6 +20,7 @@ export interface Geocache {
   relays?: string[]; // Preferred relays from the geocache event
   sourceRelay?: string; // The relay this event was fetched from
   client?: string; // The client that created this event
+  verificationPubkey?: string; // Public key for verification
   // Additional metadata from OSM verification
   accessibility?: {
     wheelchair?: boolean;
@@ -58,6 +59,8 @@ export interface GeocacheLog {
   sourceRelay?: string; // The relay this event was fetched from
   client?: string; // The client that created this event
   relays?: string[]; // Relay tags from the event
+  isVerified?: boolean; // Whether this log was signed with the verification key
+  authorPubkey?: string; // The actual user who submitted the log (for verified logs)
 }
 
 export interface CreateGeocacheData {

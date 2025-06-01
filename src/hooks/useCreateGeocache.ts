@@ -16,9 +16,11 @@ import {
   type ValidCacheType,
   type ValidCacheSize
 } from '@/lib/nip-gc';
+import { generateVerificationKeyPair } from '@/lib/verification';
 
-export function useCreateGeocache() {
-  const navigate = useNavigate();
+import type { VerificationKeyPair } from '@/lib/verification';
+
+export function useCreateGeocache(onCacheCreated?: (result: { event: any; verificationKeyPair: VerificationKeyPair; naddr: string }) => void) {
   const queryClient = useQueryClient();
   const { mutateAsync: publishEvent } = useNostrPublish();
   const { toast } = useToast();
@@ -57,10 +59,14 @@ export function useCreateGeocache() {
       const dTag = `${data.name.trim().toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
       const relayPreferences = getGeocachingRelays();
 
+      // Generate verification key pair
+      const verificationKeyPair = generateVerificationKeyPair();
+
       console.log('Creating geocache with data:', { 
         name: data.name, 
         location: data.location,
-        dTag 
+        dTag,
+        verificationPubkey: verificationKeyPair.publicKey
       });
 
       // Build tags using consolidated utility
@@ -75,6 +81,7 @@ export function useCreateGeocache() {
         hint: data.hint,
         images: data.images,
         relays: relayPreferences,
+        verificationPubkey: verificationKeyPair.publicKey,
       });
 
       const event = await publishEvent({
@@ -83,9 +90,9 @@ export function useCreateGeocache() {
         tags,
       });
 
-      return event;
+      return { event, verificationKeyPair };
     },
-    onSuccess: (event) => {
+    onSuccess: ({ event, verificationKeyPair }) => {
       toast({
         title: "Geocache created!",
         description: "Your geocache has been successfully hidden.",
@@ -110,15 +117,19 @@ export function useCreateGeocache() {
       // Also update the geocaches list
       queryClient.invalidateQueries({ queryKey: ['geocaches'] });
       
-      // Navigate to the new geocache using naddr (stable URL)
+      // Generate naddr for the created cache
       const dTag = event.tags.find(t => t[0] === 'd')?.[1];
       if (dTag) {
         const relays = event.tags.filter(t => t[0] === 'relay').map(t => t[1]);
         const naddr = geocacheToNaddr(event.pubkey, dTag, relays);
-        navigate(`/${naddr}`);
+        
+        // Call the callback if provided (for showing QR dialog)
+        if (onCacheCreated) {
+          onCacheCreated({ event, verificationKeyPair, naddr });
+        }
       }
       
-      // Background refresh after navigation to ensure data consistency
+      // Background refresh after a delay to ensure data consistency
       setTimeout(() => {
         const dTag = event.tags.find(t => t[0] === 'd')?.[1];
         if (dTag) {

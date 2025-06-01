@@ -28,6 +28,9 @@ import { GeocacheForm, createDefaultGeocacheFormData, type GeocacheFormData } fr
 
 import "leaflet/dist/leaflet.css";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
+import { VerificationQRDialog } from "@/components/VerificationQRDialog";
+import { geocacheToNaddr } from "@/lib/naddr-utils";
+import type { VerificationKeyPair } from "@/lib/verification";
 
 // Custom marker icon for the confirmation map
 const confirmLocationIcon = L.divIcon({
@@ -47,7 +50,12 @@ const confirmLocationIcon = L.divIcon({
 export default function CreateCache() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
-  const { mutate: createGeocache, isPending } = useCreateGeocache();
+  const { mutate: createGeocache, isPending } = useCreateGeocache(({ event, verificationKeyPair, naddr }) => {
+    // Show the QR dialog when cache is created
+    setCreatedNaddr(naddr);
+    setVerificationKeyPair(verificationKeyPair);
+    setShowQRDialog(true);
+  });
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<GeocacheFormData>(createDefaultGeocacheFormData());
@@ -56,6 +64,9 @@ export default function CreateCache() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [locationVerification, setLocationVerification] = useState<LocationVerification | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [showQRDialog, setShowQRDialog] = useState(false);
+  const [createdNaddr, setCreatedNaddr] = useState<string>('');
+  const [verificationKeyPair, setVerificationKeyPair] = useState<VerificationKeyPair | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -333,6 +344,26 @@ export default function CreateCache() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Verification QR Dialog */}
+      {verificationKeyPair && (
+        <VerificationQRDialog
+          isOpen={showQRDialog}
+          onOpenChange={(open) => {
+            setShowQRDialog(open);
+            if (!open) {
+              // Navigate to the cache after closing the QR dialog
+              if (createdNaddr) {
+                navigate(`/${createdNaddr}`);
+              }
+            }
+          }}
+          naddr={createdNaddr}
+          verificationKeyPair={verificationKeyPair}
+          cacheName={formData.name}
+        />
+      )}
+
     </div>
   );
 }

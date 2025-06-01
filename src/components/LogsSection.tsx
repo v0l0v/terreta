@@ -9,6 +9,7 @@ import { LogList } from "@/components/LogList";
 import { LoginArea } from "@/components/auth/LoginArea";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCreateLog } from "@/hooks/useCreateLog";
+import { VerifiedLogForm } from "@/components/VerifiedLogForm";
 import type { GeocacheLog } from "@/types/geocache";
 
 interface LogsSectionProps {
@@ -23,6 +24,8 @@ interface LogsSectionProps {
   compact?: boolean;
   isOwner?: boolean;
   className?: string;
+  verificationKey?: string;
+  isVerificationValid?: boolean;
 }
 
 export function LogsSection({ 
@@ -31,7 +34,9 @@ export function LogsSection({
   onProfileClick, 
   compact = false,
   isOwner = false,
-  className 
+  className,
+  verificationKey,
+  isVerificationValid = false
 }: LogsSectionProps) {
   const { user } = useCurrentUser();
   const { mutate: createLog, isPending: isCreatingLog } = useCreateLog();
@@ -72,7 +77,17 @@ export function LogsSection({
 
   return (
     <div className={`space-y-4 ${className || ''}`}>
-      {user && (
+      {/* Show verified form if verification key is valid */}
+      {verificationKey && isVerificationValid && (
+        <VerifiedLogForm
+          geocache={geocache}
+          verificationKey={verificationKey}
+          compact={compact}
+        />
+      )}
+      
+      {/* Show regular form for logged-in users (unless they have verification) */}
+      {user && !(verificationKey && isVerificationValid) && (
         <Card>
           {!compact && (
             <CardHeader>

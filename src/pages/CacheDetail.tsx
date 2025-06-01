@@ -33,6 +33,7 @@ import { GeocacheForm, type GeocacheFormData } from "@/components/ui/geocache-fo
 
 import { ImageGallery } from "@/components/ImageGallery";
 import { ProfileDialog } from "@/components/ProfileDialog";
+import { parseVerificationFromHash, verifyKeyPair } from "@/lib/verification";
 
 export default function CacheDetail() {
   const { naddr } = useParams<{ naddr: string }>();
@@ -43,7 +44,8 @@ export default function CacheDetail() {
     geocache ? `${geocache.pubkey}:${geocache.dTag}` : '', 
     geocache?.dTag, 
     geocache?.pubkey,
-    geocache?.relays
+    geocache?.relays,
+    geocache?.verificationPubkey
   );
   const { mutate: deleteGeocache } = useDeleteGeocache();
   const { mutate: editGeocache, isPending: isEditingGeocache } = useEditGeocache(geocache || null);
@@ -77,6 +79,10 @@ export default function CacheDetail() {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedProfilePubkey, setSelectedProfilePubkey] = useState<string | null>(null);
   
+  // Verification state
+  const [verificationKey, setVerificationKey] = useState<string | null>(null);
+  const [isVerificationValid, setIsVerificationValid] = useState(false);
+  
   // Initialize edit form when geocache loads
   useEffect(() => {
     if (geocache) {
@@ -104,6 +110,39 @@ export default function CacheDetail() {
         });
     }
   }, [geocache?.location]);
+
+  // Check for verification key in URL hash
+  useEffect(() => {
+    const hash = window.location.hash;
+    const nsec = parseVerificationFromHash(hash);
+    
+    if (nsec && geocache?.verificationPubkey) {
+      const isValid = verifyKeyPair(nsec, geocache.verificationPubkey);
+      setVerificationKey(nsec);
+      setIsVerificationValid(isValid);
+      
+      if (isValid) {
+        toast({
+          title: "Verification Key Detected",
+          description: "You can now submit verified logs for this cache! Scroll down to the logs section.",
+        });
+        
+        // Scroll to logs section after a short delay
+        setTimeout(() => {
+          const logsSection = document.querySelector('[data-logs-section]');
+          if (logsSection) {
+            logsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 1000);
+      } else {
+        toast({
+          title: "Invalid Verification Key",
+          description: "The verification key doesn't match this cache.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [geocache?.verificationPubkey, toast]);
 
 
   const handleDelete = () => {
@@ -411,12 +450,14 @@ export default function CacheDetail() {
             </Card>
 
             <CacheDetailTabs logCount={logs?.length || 0}>
-              <TabsContent value="logs" className="space-y-4">
+              <TabsContent value="logs" className="space-y-4" data-logs-section>
                 <LogsSection 
                   logs={logs}
                   geocache={geocache}
                   onProfileClick={handleProfileClick}
                   isOwner={isOwner}
+                  verificationKey={verificationKey}
+                  isVerificationValid={isVerificationValid}
                 />
               </TabsContent>
               

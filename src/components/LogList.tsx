@@ -1,4 +1,4 @@
-import { Trophy, X, FileText, User, Calendar, Trash2, MoreVertical, Copy } from "lucide-react";
+import { Trophy, X, FileText, User, Calendar, Trash2, MoreVertical, Copy, ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,19 +50,26 @@ interface LogCardProps {
 }
 
 function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
-  const author = useAuthor(log.pubkey);
+  // For verified logs, use the authorPubkey (actual user), otherwise use the signing pubkey
+  const displayPubkey = log.isVerified && log.authorPubkey ? log.authorPubkey : log.pubkey;
+  const author = useAuthor(displayPubkey);
   const { user } = useCurrentUser();
   const { mutate: deleteLog, isPending: isDeleting } = useDeleteLog();
   const { toast } = useToast();
-  const authorName = author.data?.metadata?.name || log.pubkey.slice(0, 8);
+  const authorName = author.data?.metadata?.name || displayPubkey.slice(0, 8);
   const authorAvatar = author.data?.metadata?.picture;
   
   // Check if the current user is the author of this log
-  const isOwnLog = user?.pubkey === log.pubkey;
+  // For verified logs, check against authorPubkey; for regular logs, check against pubkey
+  const isOwnLog = log.isVerified && log.authorPubkey 
+    ? user?.pubkey === log.authorPubkey 
+    : user?.pubkey === log.pubkey;
+  
+  // Log card rendering
 
   const handleProfileClick = () => {
     if (onProfileClick) {
-      onProfileClick(log.pubkey);
+      onProfileClick(displayPubkey);
     }
   };
 
@@ -188,6 +195,12 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
                     {getLogIcon()}
                     {getLogTypeLabel()}
                   </Badge>
+                  {log.isVerified && (
+                    <Badge variant="outline" className={`gap-1 border-green-500 text-green-700 ${compact ? "text-xs py-0 px-2" : ""}`}>
+                      <ShieldCheck className="h-3 w-3" />
+                      Verified
+                    </Badge>
+                  )}
                 </div>
                 <div className={`flex items-center gap-2 text-gray-600 mt-1 ${compact ? "text-xs" : "text-sm"}`}>
                   <Calendar className={compact ? "h-3 w-3" : "h-3 w-3"} />
