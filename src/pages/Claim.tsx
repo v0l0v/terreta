@@ -251,10 +251,10 @@ export default function Claim() {
     }
   };
 
-  // Simple, reliable QR detection using jsQR library
+  // Use jsQR for static images (simple & reliable), ZXing for camera
   const readQRFromFile = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      console.log('📸 Using jsQR library (should be instant)...');
+      console.log('📸 Using jsQR for static image (instant)...');
       
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -277,10 +277,9 @@ export default function Claim() {
           
           // Get image data for jsQR
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          
           console.log('📸 Scanning with jsQR...', canvas.width, 'x', canvas.height);
           
-          // Scan for QR code - this should be instant
+          // jsQR is synchronous and reliable for static images
           const code = jsQR(imageData.data, imageData.width, imageData.height);
           
           if (code) {
@@ -407,7 +406,7 @@ export default function Claim() {
               Alternatively, upload a photo of the QR code
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <input
               ref={fileInputRef}
               type="file"
