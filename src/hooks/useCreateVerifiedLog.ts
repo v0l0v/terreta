@@ -10,9 +10,7 @@ import {
   validateLogType,
   type ValidLogType
 } from '@/lib/nip-gc';
-import { createAttestation } from '@/lib/verification';
-import { geocacheToNaddr } from '@/lib/naddr-utils';
-import { nip19 } from 'nostr-tools';
+import { createVerificationEvent } from '@/lib/verification';
 
 interface CreateVerifiedLogData extends CreateLogData {
   verificationKey: string; // nsec for signing
@@ -50,21 +48,20 @@ export function useCreateVerifiedLog() {
         throw new Error(`Invalid log type: ${data.type}`);
       }
       
-      console.log('Step 1: Creating attestation for embedding in log');
+      console.log('Step 1: Creating verification event for embedding in log');
       
-      // Step 1: Create attestation signed by the cache's verification key
-      const finderNpub = nip19.npubEncode(user.pubkey);
-      const naddr = geocacheToNaddr(data.geocachePubkey!, data.geocacheDTag!, data.preferredRelays);
-      
-      const attestation = createAttestation(
+      // Step 1: Create verification event signed by the cache's verification key
+      const verificationEvent = createVerificationEvent(
         data.verificationKey,
-        finderNpub,
-        naddr
+        user.pubkey,
+        data.geocachePubkey!,
+        data.geocacheDTag!
       );
       
-      console.log('Created attestation (will be embedded in log):', {
-        message: attestation.message,
-        signature: attestation.signature.slice(0, 16) + '...'
+      console.log('Created verification event (will be embedded, not published):', {
+        id: verificationEvent.id,
+        pubkey: verificationEvent.pubkey,
+        finderPubkey: user.pubkey
       });
       
       console.log('Step 2: Creating log event with embedded verification');
@@ -77,13 +74,13 @@ export function useCreateVerifiedLog() {
         images: data.images,
       });
       
-      // Create log event template with embedded attestation
+      // Create log event template with embedded verification event
       const logEventTemplate = {
         kind: NIP_GC_KINDS.LOG,
         content: data.text.trim(),
         tags: [
           ...tags,
-          ['attestation', attestation.signature]
+          ['verification', JSON.stringify(verificationEvent)]
         ],
       };
 
@@ -93,10 +90,10 @@ export function useCreateVerifiedLog() {
         created_at: Math.floor(Date.now() / 1000)
       });
       
-      console.log('Signed log event with embedded attestation:', {
+      console.log('Signed log event with embedded verification:', {
         id: signedLogEvent.id,
         pubkey: signedLogEvent.pubkey,
-        hasEmbeddedAttestation: signedLogEvent.tags.some((t: string[]) => t[0] === 'attestation')
+        hasEmbeddedVerification: signedLogEvent.tags.some((t: string[]) => t[0] === 'verification')
       });
       
       // Step 3: Publish the log event (with embedded verification)
@@ -160,18 +157,18 @@ export function useCreateVerifiedLog() {
         console.warn('Could not verify log event on relays immediately, but this is normal:', error);
       }
       
-      console.log('Verified log process completed (embedded attestation):', {
+      console.log('Verified log process completed (embedded verification):', {
         logEventId: signedLogEvent.id,
-        attestationEmbedded: true
+        verificationEmbedded: true
       });
       
       return { 
         logEvent: signedLogEvent, 
-        attestation: attestation 
+        verificationEvent: verificationEvent 
       };
     },
     onSuccess: (result, variables) => {
-      const { logEvent, attestation } = result;
+      const { logEvent, verificationEvent } = result;
       
       toast({
         title: "Verified log posted!",
@@ -195,7 +192,7 @@ export function useCreateVerifiedLog() {
           images: variables.images || [],
           client: clientTag, // Include the client info
           relays: relayTags, // Include relay tags
-          isVerified: true, // Mark as verified (has embedded attestation)
+          isVerified: true, // Mark as verified (has embedded verification)
         };
         
         // Handle the case where oldData might be undefined or an empty array
