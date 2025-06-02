@@ -56,7 +56,8 @@ export function useCreateGeocache(onCacheCreated?: (result: { event: any; verifi
       }
 
       // Create the geocache event according to NIP-GC
-      const dTag = `${data.name.trim().toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+      // Use a stable identifier that doesn't depend on the cache name
+      const dTag = `cache-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
       const relayPreferences = getGeocachingRelays();
 
       // Generate verification key pair

@@ -75,6 +75,7 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
         hint: data.hint,
         images: data.images,
         relays: originalGeocache.relays,
+        verificationPubkey: originalGeocache.verificationPubkey, // Preserve verification key!
       });
 
       const event = await publishEvent({
