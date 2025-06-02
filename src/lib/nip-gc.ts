@@ -356,6 +356,201 @@ export function buildLogTags(data: {
   return tags;
 }
 
+// ===== GEOHASH PROXIMITY UTILITIES =====
+
+/**
+ * Calculate geohash precision needed for a given distance
+ * @param distanceKm Desired precision radius in kilometers
+ * @returns Optimal geohash precision level
+ */
+export function getOptimalPrecision(distanceKm: number): number {
+  // More aggressive precision mapping for better coverage
+  if (distanceKm >= 100) return 2;
+  if (distanceKm >= 50) return 3;
+  if (distanceKm >= 25) return 3;
+  if (distanceKm >= 10) return 4;
+  if (distanceKm >= 5) return 4;
+  if (distanceKm >= 2) return 5;
+  if (distanceKm >= 1) return 5;
+  if (distanceKm >= 0.5) return 6;
+  return 6; // Stay at 6 for smaller distances
+}
+
+/**
+ * Get all geohash neighbors for a given geohash
+ * @param geohash Base geohash
+ * @returns Array of neighboring geohashes (including the center)
+ */
+export function getGeohashNeighbors(geohash: string): string[] {
+  const neighbors: string[] = [geohash]; // Include center
+  
+  try {
+    // Get direct neighbors (8 directions)
+    const north = getNeighbor(geohash, 'north');
+    const south = getNeighbor(geohash, 'south');
+    const east = getNeighbor(geohash, 'east');
+    const west = getNeighbor(geohash, 'west');
+    
+    neighbors.push(north, south, east, west);
+    
+    // Get diagonal neighbors
+    neighbors.push(
+      getNeighbor(north, 'east'),  // northeast
+      getNeighbor(north, 'west'),  // northwest
+      getNeighbor(south, 'east'),  // southeast
+      getNeighbor(south, 'west')   // southwest
+    );
+    
+    return [...new Set(neighbors)]; // Remove duplicates
+  } catch (error) {
+    console.warn('Failed to calculate neighbors for geohash:', geohash, error);
+    return [geohash];
+  }
+}
+
+/**
+ * Get geohashes within a radius from a center point
+ * @param centerLat Center latitude
+ * @param centerLng Center longitude
+ * @param radiusKm Radius in kilometers
+ * @param maxPrecision Maximum geohash precision to use
+ * @returns Array of geohashes covering the area
+ */
+export function getGeohashesInRadius(
+  centerLat: number, 
+  centerLng: number, 
+  radiusKm: number,
+  maxPrecision: number = 5
+): string[] {
+  const precision = Math.min(getOptimalPrecision(radiusKm), maxPrecision);
+  const centerGeohash = encodeGeohash(centerLat, centerLng, precision);
+  
+  // Start with immediate neighbors
+  let candidates = getGeohashNeighbors(centerGeohash);
+  
+  // Always expand for better coverage, especially for larger radiuses
+  const expandedCandidates = new Set(candidates);
+  
+  // Add neighbors of neighbors
+  candidates.forEach(hash => {
+    const neighbors = getGeohashNeighbors(hash);
+    neighbors.forEach(n => expandedCandidates.add(n));
+  });
+  
+  // For larger radiuses, expand one more level
+  if (radiusKm > 5) {
+    const level2Candidates = Array.from(expandedCandidates);
+    level2Candidates.forEach(hash => {
+      const neighbors = getGeohashNeighbors(hash);
+      neighbors.forEach(n => expandedCandidates.add(n));
+    });
+  }
+  
+  candidates = Array.from(expandedCandidates);
+  
+  // Use more lenient distance filtering - add 50% buffer
+  const searchBuffer = radiusKm * 1.5;
+  return candidates.filter(hash => {
+    try {
+      const { lat, lng } = decodeGeohash(hash);
+      const distance = calculateHaversineDistance(centerLat, centerLng, lat, lng);
+      return distance <= searchBuffer;
+    } catch {
+      return false;
+    }
+  });
+}
+
+/**
+ * Create geohash prefixes for broader proximity search
+ * @param centerLat Center latitude
+ * @param centerLng Center longitude
+ * @param radiusKm Radius in kilometers
+ * @returns Array of geohash prefixes to search
+ */
+export function getGeohashPrefixes(centerLat: number, centerLng: number, radiusKm: number): string[] {
+  const basePrecision = getOptimalPrecision(radiusKm);
+  const centerGeohash = encodeGeohash(centerLat, centerLng, basePrecision);
+  
+  const prefixes = new Set<string>();
+  
+  // Add prefixes at multiple precision levels for comprehensive coverage
+  for (let p = Math.max(1, basePrecision - 2); p <= Math.min(basePrecision + 1, 6); p++) {
+    const hash = centerGeohash.substring(0, p);
+    prefixes.add(hash);
+    
+    // Add neighbors at this precision level for wider coverage
+    try {
+      const neighbors = getGeohashNeighbors(hash);
+      neighbors.forEach(n => prefixes.add(n));
+    } catch {
+      // Continue if neighbor calculation fails
+    }
+  }
+  
+  return Array.from(prefixes).filter(p => p.length > 0).sort();
+}
+
+// Helper function to get a neighbor in a specific direction
+function getNeighbor(geohash: string, direction: 'north' | 'south' | 'east' | 'west'): string {
+  const { lat, lng } = decodeGeohash(geohash);
+  const precision = geohash.length;
+  
+  // Calculate approximate offset based on geohash precision
+  const latOffset = getLatitudeOffset(precision);
+  const lngOffset = getLongitudeOffset(precision, lat);
+  
+  let newLat = lat;
+  let newLng = lng;
+  
+  switch (direction) {
+    case 'north':
+      newLat += latOffset;
+      break;
+    case 'south':
+      newLat -= latOffset;
+      break;
+    case 'east':
+      newLng += lngOffset;
+      break;
+    case 'west':
+      newLng -= lngOffset;
+      break;
+  }
+  
+  // Handle edge cases
+  if (newLat > 90) newLat = 90;
+  if (newLat < -90) newLat = -90;
+  if (newLng > 180) newLng -= 360;
+  if (newLng < -180) newLng += 360;
+  
+  return encodeGeohash(newLat, newLng, precision);
+}
+
+function getLatitudeOffset(precision: number): number {
+  // Approximate latitude degrees per geohash cell at different precisions
+  const offsets = [20, 2.5, 0.6, 0.08, 0.02, 0.002, 0.0005, 0.0001, 0.00002];
+  return offsets[precision - 1] || 0.00002;
+}
+
+function getLongitudeOffset(precision: number, latitude: number): number {
+  // Longitude offset varies by latitude due to earth's curvature
+  const baseOffset = getLatitudeOffset(precision);
+  return baseOffset / Math.cos(latitude * Math.PI / 180);
+}
+
+function calculateHaversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 // ===== UTILITIES =====
 
 export function createGeocacheCoordinate(pubkey: string, dTag: string): string {

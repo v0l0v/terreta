@@ -210,7 +210,7 @@ export default function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-3 flex-wrap">
+              <div className="flex gap-3 flex-wrap justify-center">
                 <Button
                   onClick={checkForUpdate}
                   disabled={isChecking}

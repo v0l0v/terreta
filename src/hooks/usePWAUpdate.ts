@@ -95,23 +95,50 @@ export function usePWAUpdate(): PWAUpdateHook {
     try {
       const registration = await navigator.serviceWorker.getRegistration();
       if (registration) {
+        // Force check for updates
         await registration.update();
         
-        // Check if there's a waiting worker after the update
-        if (registration.waiting) {
-          setWaitingWorker(registration.waiting);
-          setIsUpdateAvailable(true);
-          toast({
-            title: "Update available",
-            description: "A new version is ready to install.",
-          });
-        } else {
-          toast({
-            title: "No updates",
-            description: "You're running the latest version.",
-          });
+        // Check multiple times to catch updates that might be detected slightly later
+        const checkWaitingWorker = () => {
+          if (registration.waiting && registration.waiting !== waitingWorker) {
+            setWaitingWorker(registration.waiting);
+            setIsUpdateAvailable(true);
+            toast({
+              title: "Update available",
+              description: "A new version is ready to install.",
+            });
+            return true;
+          }
+          return false;
+        };
+
+        // Check immediately
+        if (checkWaitingWorker()) {
+          setIsChecking(false);
+          return;
         }
+
+        // Check after a short delay for updates that need time to process
+        setTimeout(() => {
+          if (checkWaitingWorker()) {
+            setIsChecking(false);
+            return;
+          }
+        }, 1000);
+
+        // Final check after a longer delay
+        setTimeout(() => {
+          if (!checkWaitingWorker()) {
+            toast({
+              title: "No updates",
+              description: "You're running the latest version.",
+            });
+          }
+          setIsChecking(false);
+        }, 3000);
+
       } else {
+        setIsChecking(false);
         toast({
           title: "Service worker not found",
           description: "Unable to check for updates.",
@@ -120,13 +147,12 @@ export function usePWAUpdate(): PWAUpdateHook {
       }
     } catch (error) {
       console.error('Error checking for updates:', error);
+      setIsChecking(false);
       toast({
         title: "Update check failed",
         description: "Failed to check for updates. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsChecking(false);
     }
   };
 

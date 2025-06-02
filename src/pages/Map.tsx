@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Navigation, Filter, X, Locate, Compass, RefreshCw } from "lucide-react";
+import { MapPin, Navigation, Filter, X, Locate, Compass, RefreshCw, Sparkles } from "lucide-react";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { DesktopHeader } from "@/components/DesktopHeader";
 import { LoginArea } from "@/components/auth/LoginArea";
-import { useAdvancedGeocaches } from "@/hooks/useAdvancedGeocaches";
+import { useAdaptiveGeocaches, type GeocacheWithDistance } from "@/hooks/useProximityGeocaches";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { DetailedGeocacheCard, CompactGeocacheCard } from "@/components/ui/geocache-card";
@@ -21,10 +21,8 @@ import { ComparisonFilter, type ComparisonOperator } from "@/components/ui/compa
 import { DIFFICULTY_TERRAIN_OPTIONS } from "@/lib/geocache-constants";
 import type { Geocache } from "@/types/geocache";
 
-type GeocacheWithDistance = Geocache & { distance?: number };
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { sortByDistance, formatDistance, filterByRadius } from "@/lib/geo";
+import { formatDistance } from "@/lib/geo";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
@@ -49,12 +47,16 @@ export default function Map() {
   
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
   
-  const { data: geocaches, isLoading, error, refetch } = useAdvancedGeocaches({
+  const { data: geocaches, isLoading, error, refetch } = useAdaptiveGeocaches({
     search: searchQuery,
     difficulty,
     difficultyOperator,
     terrain,
     terrainOperator,
+    userLocation,
+    searchLocation,
+    searchRadius,
+    showNearMe,
   });
 
   // Shared value change handler for consistent logic
@@ -126,29 +128,12 @@ export default function Map() {
   // Remove automatic location request - only get location when user clicks "Near Me"
 
   // Filter and sort geocaches based on location
-  const filteredGeocaches: GeocacheWithDistance[] = (() => {
-    let caches = geocaches || [];
-    
-    // Filter by search location if set
-    if (searchLocation) {
-      caches = filterByRadius(caches, searchLocation.lat, searchLocation.lng, searchRadius);
-      const sorted = sortByDistance(caches, searchLocation.lat, searchLocation.lng);
-      return sorted;
-    }
-    // Or filter by user location if "Near Me" is active
-    else if (showNearMe && userLocation) {
-      caches = filterByRadius(caches, userLocation.lat, userLocation.lng, searchRadius);
-      const sorted = sortByDistance(caches, userLocation.lat, userLocation.lng);
-      return sorted;
-    }
-    // If user location is available but no active filtering, preserve distances
-    else if (userLocation) {
-      const sorted = sortByDistance(caches, userLocation.lat, userLocation.lng);
-      return sorted;
-    }
-    
-    return caches;
-  })();
+  // Note: Proximity filtering and distance calculation is now handled by useAdaptiveGeocaches
+  const filteredGeocaches: GeocacheWithDistance[] = geocaches || [];
+
+  // Check if proximity search is active
+  const isProximitySearchActive = !!(searchLocation || (showNearMe && userLocation));
+  const proximityCenter = searchLocation || (showNearMe ? userLocation : null);
 
   const handleLocationSelect = (location: { lat: number; lng: number; name: string }) => {
     console.log('Location selected:', location);
@@ -294,10 +279,18 @@ export default function Map() {
               </div>
             ) : filteredGeocaches.length > 0 ? (
               <div className="p-4">
-                <p className="text-sm text-muted-foreground mb-4">
-                  {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
-                  {(searchLocation || (showNearMe && userLocation)) && ` • ${searchRadius}km radius`}
-                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
+                    {isProximitySearchActive && ` • ${searchRadius}km radius`}
+                  </p>
+                  {isProximitySearchActive && (
+                    <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      Smart Search
+                    </Badge>
+                  )}
+                </div>
                 <div className="space-y-3">
                   {filteredGeocaches.map((cache) => (
                     <CompactGeocacheCard
@@ -442,10 +435,18 @@ export default function Map() {
                 </div>
               ) : filteredGeocaches.length > 0 ? (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
-                    {(searchLocation || (showNearMe && userLocation)) && ` • ${searchRadius}km radius`}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
+                      {isProximitySearchActive && ` • ${searchRadius}km radius`}
+                    </p>
+                    {isProximitySearchActive && (
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        Smart Search
+                      </Badge>
+                    )}
+                  </div>
                   <div className="space-y-3">
                     {filteredGeocaches.map((cache) => (
                       <CompactGeocacheCard
