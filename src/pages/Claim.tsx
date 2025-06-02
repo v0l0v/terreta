@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/useToast';
 import { parseVerificationFromHash } from '@/lib/verification';
+import jsQR from 'jsqr';
 import { BrowserQRCodeReader } from '@zxing/library';
 
 export default function Claim() {
@@ -207,154 +208,96 @@ export default function Claim() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Reset file input to allow selecting the same file again
+    // Reset file input
     event.target.value = '';
 
-    console.log('File upload started:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    });
-
-    // Create preview
-    const previewUrl = URL.createObjectURL(file);
-    setSelectedImagePreview(previewUrl);
-
+    console.log('📸 File selected:', file.name, file.type, file.size);
     setIsProcessing(true);
     setError(null);
 
     try {
-      // Validate file type
+      // Basic validation
       if (!file.type.startsWith('image/')) {
-        throw new Error('Please select an image file (JPG, PNG, GIF, etc.)');
+        throw new Error('Please select an image file');
       }
 
-      // Check file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        throw new Error('Image file is too large. Please use an image smaller than 10MB.');
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('File too large (max 10MB)');
       }
 
-      // Initialize QR reader
-      if (!codeReader.current) {
-        codeReader.current = new BrowserQRCodeReader();
-      }
+      // Create preview using data URL
+      const previewDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
+      
+      setSelectedImagePreview(previewDataUrl);
+      console.log('📸 Preview created');
 
-      // Try multiple approaches for better compatibility
-      let qrResult: string | null = null;
-
-      // Approach 1: Direct file reading with FileReader (better for large files)
-      try {
-        qrResult = await readQRFromFileReader(file);
-        console.log('QR code read via FileReader approach');
-      } catch (fileReaderError) {
-        console.log('FileReader approach failed:', fileReaderError);
-      }
-
-      // Approach 2: Object URL approach (fallback)
-      if (!qrResult) {
-        try {
-          qrResult = await readQRFromObjectURL(file);
-          console.log('QR code read via Object URL approach');
-        } catch (objectUrlError) {
-          console.log('Object URL approach also failed:', objectUrlError);
-          throw new Error('Unable to read QR code from this image. Please try a different image with a clear, well-lit QR code.');
-        }
-      }
-
-      if (qrResult) {
-        console.log('QR code successfully detected from uploaded file:', qrResult);
-        handleQRCodeDetected(qrResult);
-      } else {
-        throw new Error('No QR code found in the image. Please try a different image.');
-      }
+      // Try to read QR code
+      const qrData = await readQRFromFile(file);
+      console.log('📸 QR found:', qrData.substring(0, 50) + '...');
+      
+      // Process the QR code
+      handleQRCodeDetected(qrData);
 
     } catch (error) {
-      console.error('File upload error:', error);
-      const errorObj = error as { message?: string };
-      setError(errorObj.message || 'Failed to process image. Please try again.');
+      console.error('📸 Upload failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      setError(errorMessage);
       setIsProcessing(false);
-    } finally {
-      // Clean up preview after processing
-      if (previewUrl) {
-        setTimeout(() => {
-          URL.revokeObjectURL(previewUrl);
-          setSelectedImagePreview(null);
-        }, 2000);
-      }
     }
   };
 
-  // Helper function to read QR code using FileReader approach
-  const readQRFromFileReader = (file: File): Promise<string> => {
+  // Simple, reliable QR detection using jsQR library
+  const readQRFromFile = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
+      console.log('📸 Using jsQR library (should be instant)...');
+      
       const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        const result = e.target?.result;
-        if (typeof result === 'string') {
-          const img = new Image();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        const img = new Image();
+        
+        img.onload = () => {
+          // Create canvas and get image data
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
           
-          img.onload = () => {
-            codeReader.current!.decodeFromImageElement(img)
-              .then((qrResult) => {
-                resolve(qrResult.getText());
-              })
-              .catch(reject);
-          };
+          if (!ctx) {
+            reject(new Error('Canvas not supported'));
+            return;
+          }
           
-          img.onerror = () => {
-            reject(new Error('Failed to load image from FileReader data'));
-          };
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
           
-          img.src = result;
-        } else {
-          reject(new Error('Invalid FileReader result'));
-        }
+          // Get image data for jsQR
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          
+          console.log('📸 Scanning with jsQR...', canvas.width, 'x', canvas.height);
+          
+          // Scan for QR code - this should be instant
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          
+          if (code) {
+            console.log('📸 jsQR SUCCESS:', code.data.substring(0, 50) + '...');
+            resolve(code.data);
+          } else {
+            console.log('📸 jsQR found no QR code');
+            reject(new Error('No QR code found in image'));
+          }
+        };
+        
+        img.onerror = () => reject(new Error('Image load failed'));
+        img.src = dataUrl;
       };
       
-      reader.onerror = () => {
-        reject(new Error('Failed to read file'));
-      };
-      
+      reader.onerror = () => reject(new Error('File read failed'));
       reader.readAsDataURL(file);
-    });
-  };
-
-  // Helper function to read QR code using Object URL approach
-  const readQRFromObjectURL = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const objectUrl = URL.createObjectURL(file);
-      const img = new Image();
-      
-      // Set up cleanup function
-      const cleanup = () => {
-        URL.revokeObjectURL(objectUrl);
-      };
-      
-      img.onload = () => {
-        // Add small delay to ensure image is fully rendered
-        setTimeout(() => {
-          codeReader.current!.decodeFromImageElement(img)
-            .then((result) => {
-              cleanup();
-              resolve(result.getText());
-            })
-            .catch((error) => {
-              cleanup();
-              reject(error);
-            });
-        }, 100);
-      };
-      
-      img.onerror = () => {
-        cleanup();
-        reject(new Error('Failed to load image from object URL'));
-      };
-      
-      // Set crossOrigin to handle potential CORS issues
-      img.crossOrigin = 'anonymous';
-      img.src = objectUrl;
     });
   };
 
