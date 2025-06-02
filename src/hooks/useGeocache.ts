@@ -100,12 +100,6 @@ export function useGeocache(id: string) {
           logCount,
         };
 
-          id: result.id.slice(0, 8),
-          name: result.name,
-          logCount: result.logCount,
-          foundCount: result.foundCount
-        });
-
         return result;
       } catch (error) {
         throw error;

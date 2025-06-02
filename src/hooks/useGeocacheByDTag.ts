@@ -127,12 +127,6 @@ export function useGeocacheByDTag(dTag: string) {
           logCount,
         };
 
-          dTag: result.dTag,
-          name: result.name,
-          logCount: result.logCount,
-          foundCount: result.foundCount
-        });
-
         return result;
       } catch (error) {
         throw error;

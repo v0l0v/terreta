@@ -4,7 +4,15 @@
 
 import { generateSecretKey, getPublicKey, finalizeEvent, verifyEvent } from 'nostr-tools';
 import { nip19 } from 'nostr-tools';
-import QRCode from 'qrcode';
+import * as QRCode from 'qrcode';
+import { geocacheToNaddr, parseNaddr } from './naddr-utils';
+import type { NostrEvent } from '@nostrify/nostrify';
+
+// Verification constants
+const VERIFICATION_KIND = 1985; // NIP-32 label event kind
+const VERIFICATION_LABEL_NAMESPACE = 'geocache-verification';
+const VERIFICATION_LABEL_TYPE = 'verified-find';
+const VERIFICATION_HASH_PREFIX = '#verify=';
 
 export interface VerificationKeyPair {
   privateKey: Uint8Array;
@@ -34,8 +42,6 @@ export function generateVerificationKeyPair(): VerificationKeyPair {
 export async function generateVerificationQR(naddr: string, nsec: string): Promise<string> {
   const verificationUrl = `https://treasures.to/${naddr}#verify=${nsec}`;
   
-  // QR code generation for verification
-  
   try {
     const qrDataUrl = await QRCode.toDataURL(verificationUrl, {
       width: 512,
@@ -57,11 +63,11 @@ export async function generateVerificationQR(naddr: string, nsec: string): Promi
  * Parse verification key from URL hash
  */
 export function parseVerificationFromHash(hash: string): string | null {
-  if (!hash.startsWith('#verify=')) {
+  if (!hash.startsWith(VERIFICATION_HASH_PREFIX)) {
     return null;
   }
   
-  const nsec = hash.substring(8); // Remove '#verify='
+  const nsec = hash.substring(VERIFICATION_HASH_PREFIX.length);
   
   // Validate that it's a proper nsec
   try {
@@ -103,7 +109,7 @@ export function createVerificationEvent(
   finderPubkey: string,
   geocachePubkey: string,
   geocacheDTag: string
-): any {
+): NostrEvent {
   try {
     const decoded = nip19.decode(nsec);
     if (decoded.type !== 'nsec') {
@@ -112,14 +118,17 @@ export function createVerificationEvent(
     
     const privateKey = decoded.data;
     
+    // Generate naddr for the geocache
+    const geocacheNaddr = geocacheToNaddr(geocachePubkey, geocacheDTag);
+    
     const event = {
-      kind: 1985, // NIP-32 label event kind
+      kind: VERIFICATION_KIND,
       content: `Verified find by ${finderPubkey}`,
       tags: [
-        ['L', 'geocache-verification'],
-        ['l', 'verified-find', 'geocache-verification'],
+        ['L', VERIFICATION_LABEL_NAMESPACE],
+        ['l', VERIFICATION_LABEL_TYPE, VERIFICATION_LABEL_NAMESPACE],
         ['p', finderPubkey, '', 'finder'],
-        ['a', `30001:${geocachePubkey}:${geocacheDTag}`, '', 'geocache']
+        ['a', `${finderPubkey}:${geocacheNaddr}`, '', 'geocache']
       ],
       created_at: Math.floor(Date.now() / 1000),
       pubkey: getPublicKey(privateKey),
@@ -134,7 +143,7 @@ export function createVerificationEvent(
 /**
  * Check if a log has embedded verification
  */
-export function hasEmbeddedVerification(event: any): boolean {
+export function hasEmbeddedVerification(event: NostrEvent): boolean {
   try {
     const embeddedVerification = getEmbeddedVerification(event);
     return embeddedVerification !== null;
@@ -146,7 +155,7 @@ export function hasEmbeddedVerification(event: any): boolean {
 /**
  * Check if a log has embedded verification event
  */
-export function getEmbeddedVerification(event: any): any | null {
+export function getEmbeddedVerification(event: NostrEvent): NostrEvent | null {
   try {
     // Look for embedded verification event
     const verificationTag = event.tags.find((tag: string[]) => 
@@ -167,7 +176,7 @@ export function getEmbeddedVerification(event: any): any | null {
 /**
  * Check if a log has embedded verification and return its ID
  */
-export function hasVerificationReference(event: any): string | null {
+export function hasVerificationReference(event: NostrEvent): string | null {
   try {
     const embeddedVerification = getEmbeddedVerification(event);
     return embeddedVerification ? embeddedVerification.id : null;
@@ -180,7 +189,7 @@ export function hasVerificationReference(event: any): string | null {
  * Verify that an embedded verification event is valid for a specific log
  */
 export function verifyEmbeddedVerification(
-  logEvent: any, 
+  logEvent: NostrEvent, 
   expectedVerificationPubkey: string
 ): boolean {
   try {
@@ -196,11 +205,37 @@ export function verifyEmbeddedVerification(
 }
 
 /**
+ * Parse geocache reference from verification event's 'a' tag
+ * Expected format: ${finderPubkey}:${naddr}
+ */
+export function parseGeocacheReference(aTagValue: string): { finderPubkey: string; naddr: string } | null {
+  try {
+    const parts = aTagValue.split(':');
+    if (parts.length < 2) {
+      return null;
+    }
+    
+    const finderPubkey = parts[0];
+    const naddr = parts.slice(1).join(':'); // Rejoin in case naddr contains colons
+    
+    // Validate that the naddr is properly formatted
+    const parsed = parseNaddr(naddr);
+    if (!parsed) {
+      return null;
+    }
+    
+    return { finderPubkey, naddr };
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
  * Verify that a verification event is valid for a specific log
  */
 export function verifyVerificationEvent(
-  verificationEvent: any, 
-  logEvent: any, 
+  verificationEvent: NostrEvent, 
+  logEvent: NostrEvent, 
   expectedVerificationPubkey: string
 ): boolean {
   try {
@@ -210,15 +245,15 @@ export function verifyVerificationEvent(
     }
     
     // Check if it's the right kind of event (NIP-32 label)
-    if (verificationEvent.kind !== 1985) {
+    if (verificationEvent.kind !== VERIFICATION_KIND) {
       return false;
     }
     
     // Check if it has the right labels
     const hasCorrectLabel = verificationEvent.tags.some((tag: string[]) =>
-      tag[0] === 'L' && tag[1] === 'geocache-verification'
+      tag[0] === 'L' && tag[1] === VERIFICATION_LABEL_NAMESPACE
     ) && verificationEvent.tags.some((tag: string[]) =>
-      tag[0] === 'l' && tag[1] === 'verified-find'
+      tag[0] === 'l' && tag[1] === VERIFICATION_LABEL_TYPE
     );
     
     if (!hasCorrectLabel) {
@@ -231,6 +266,25 @@ export function verifyVerificationEvent(
     );
     
     if (!finderTag || finderTag[1] !== logEvent.pubkey) {
+      return false;
+    }
+    
+    // Validate the geocache reference in 'a' tag and verify finder pubkey matches
+    const geocacheTag = verificationEvent.tags.find((tag: string[]) =>
+      tag[0] === 'a' && tag[3] === 'geocache'
+    );
+    
+    if (!geocacheTag) {
+      return false;
+    }
+    
+    const parsedReference = parseGeocacheReference(geocacheTag[1]);
+    if (!parsedReference) {
+      return false;
+    }
+    
+    // Verify that the finder pubkey in the 'a' tag matches the log submitter
+    if (parsedReference.finderPubkey !== logEvent.pubkey) {
       return false;
     }
     
