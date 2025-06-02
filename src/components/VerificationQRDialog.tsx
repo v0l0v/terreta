@@ -79,52 +79,51 @@ export function VerificationQRDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto [&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <QrCode className="h-5 w-5" />
             Verification QR Code
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             Print this QR code and place it with your geocache. Finders can scan it to access the verified logging form.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* QR Code Display */}
-          <div className="flex justify-center p-4 bg-white rounded-lg border">
+          <div className="flex justify-center p-3 sm:p-4 bg-white rounded-lg border">
             {isGenerating ? (
-              <div className="w-64 h-64 flex items-center justify-center bg-muted rounded">
+              <div className="w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center bg-muted rounded">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                  <p className="text-sm text-muted-foreground">Generating QR code...</p>
+                  <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Generating QR code...</p>
                 </div>
               </div>
             ) : qrDataUrl ? (
               <img 
                 src={qrDataUrl} 
                 alt="Verification QR Code" 
-                className="w-64 h-64 rounded"
+                className="w-48 h-48 sm:w-64 sm:h-64 rounded max-w-full object-contain"
               />
             ) : (
-              <div className="w-64 h-64 flex items-center justify-center bg-muted rounded">
-                <p className="text-sm text-muted-foreground">Failed to generate QR code</p>
+              <div className="w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center bg-muted rounded">
+                <p className="text-xs sm:text-sm text-muted-foreground text-center px-2">Failed to generate QR code</p>
               </div>
             )}
           </div>
 
-          {/* Instructions */}
-          <Alert>
-            <AlertDescription>
-              <strong>Instructions:</strong>
-              <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
-                <li>Download and print this QR code</li>
-                <li>Place it inside your geocache container</li>
-                <li>Finders can scan it to access the verified logging form</li>
-                <li>Keep the verification key safe - you'll need it to verify logs</li>
-              </ol>
-            </AlertDescription>
-          </Alert>
+          {/* Download QR Code Button - directly below QR code */}
+          <div className="flex justify-center">
+            <Button
+              onClick={handleDownload}
+              disabled={!qrDataUrl}
+              className="text-sm"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download QR Code
+            </Button>
+          </div>
 
           {/* Verification Key */}
           <div className="space-y-2">
@@ -134,13 +133,13 @@ export function VerificationQRDialog({
                 type="text"
                 value={verificationKeyPair.nsec}
                 readOnly
-                className="flex-1 px-3 py-2 text-xs font-mono bg-muted border rounded-md"
+                className="flex-1 px-2 sm:px-3 py-2 text-xs font-mono bg-muted border rounded-md min-w-0 break-all"
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleCopyKey}
-                className="flex-shrink-0"
+                className="flex-shrink-0 px-2"
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
@@ -150,34 +149,54 @@ export function VerificationQRDialog({
             </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-2">
+          {/* Verification URL */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Verification URL</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={verificationUrl}
+                readOnly
+                className="flex-1 px-2 sm:px-3 py-2 text-xs font-mono bg-muted border rounded-md min-w-0 break-all"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(verificationUrl);
+                    toast({
+                      title: 'URL Copied',
+                      description: 'The verification URL has been copied to your clipboard.',
+                    });
+                  } catch (error) {
+                    toast({
+                      title: 'Copy Failed',
+                      description: 'Unable to copy to clipboard. Please copy manually.',
+                      variant: 'destructive',
+                    });
+                  }
+                }}
+                className="flex-shrink-0 px-2"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Direct link to the verification form for this cache.
+            </p>
+          </div>
+
+          {/* Done Button */}
+          <div className="pt-2">
             <Button
-              onClick={handleDownload}
-              disabled={!qrDataUrl}
-              className="flex-1"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download QR Code
-            </Button>
-            <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="w-full bg-white text-black hover:bg-gray-100 border"
             >
               Done
             </Button>
           </div>
-
-          {/* URL for reference */}
-          <details className="text-xs">
-            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-              Show verification URL
-            </summary>
-            <div className="mt-2 p-2 bg-muted rounded font-mono break-all">
-              {verificationUrl}
-            </div>
-          </details>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { MapPin, Upload, X, AlertTriangle, CheckCircle, XCircle, Loader2, Check } from "lucide-react";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,8 +44,26 @@ const confirmLocationIcon = L.divIcon({
   `,
   className: "location-picker-icon",
   iconSize: [32, 40],
-  iconAnchor: [16, 40],
+  iconAnchor: [16, 12], // Anchor at the center of the pin's head (where the white circle is)
 });
+
+// Component to ensure map centers properly on the location
+function ConfirmMapController({ location }: { location: { lat: number; lng: number } }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (location) {
+      // Force the map to center on the location with a slight delay to ensure proper rendering
+      setTimeout(() => {
+        map.setView([location.lat, location.lng], 17, {
+          animate: false
+        });
+      }, 100);
+    }
+  }, [map, location]);
+  
+  return null;
+}
 
 export default function CreateCache() {
   const navigate = useNavigate();
@@ -267,6 +285,7 @@ export default function CreateCache() {
                             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                             maxZoom={19}
                           />
+                          <ConfirmMapController location={location} />
                           <Marker 
                             position={[location.lat, location.lng]} 
                             icon={confirmLocationIcon}
