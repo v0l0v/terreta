@@ -10,8 +10,8 @@ import type { NostrEvent } from '@nostrify/nostrify';
 
 // Verification constants
 const VERIFICATION_KIND = 1985; // NIP-32 label event kind
-const VERIFICATION_LABEL_NAMESPACE = 'geocache-verification';
-const VERIFICATION_LABEL_TYPE = 'verified-find';
+const VERIFICATION_LABEL_NAMESPACE = 'to.treasures';
+const VERIFICATION_LABEL_TYPE = 'found';
 const VERIFICATION_HASH_PREFIX = '#verify=';
 
 export interface VerificationKeyPair {
@@ -125,8 +125,8 @@ export function createVerificationEvent(
       kind: VERIFICATION_KIND,
       content: `Verified find by ${finderPubkey}`,
       tags: [
-        ['L', VERIFICATION_LABEL_NAMESPACE],
-        ['l', VERIFICATION_LABEL_TYPE, VERIFICATION_LABEL_NAMESPACE],
+        ['L', 'to.treasures'],
+        ['l', 'found', 'to.treasures'],
         ['p', finderPubkey, '', 'finder'],
         ['a', `${finderPubkey}:${geocacheNaddr}`, '', 'geocache']
       ],
@@ -251,9 +251,9 @@ export function verifyVerificationEvent(
     
     // Check if it has the right labels
     const hasCorrectLabel = verificationEvent.tags.some((tag: string[]) =>
-      tag[0] === 'L' && tag[1] === VERIFICATION_LABEL_NAMESPACE
+      tag[0] === 'L' && tag[1] === 'to.treasures'
     ) && verificationEvent.tags.some((tag: string[]) =>
-      tag[0] === 'l' && tag[1] === VERIFICATION_LABEL_TYPE
+      tag[0] === 'l' && tag[1] === 'found' && tag[2] === 'to.treasures'
     );
     
     if (!hasCorrectLabel) {

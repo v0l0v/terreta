@@ -103,8 +103,8 @@ The verification event is a NIP-32 label event with the following structure:
   "kind": 1985,
   "content": "Verified find by <finder-pubkey>",
   "tags": [
-    ["L", "geocache-verification"],
-    ["l", "verified-find", "geocache-verification"],
+    ["L", "to.treasures"],
+    ["l", "found", "to.treasures"],
     ["p", "<finder-pubkey>", "", "finder"],
     ["a", "<finder-pubkey>:<geocache-naddr>", "", "geocache"]
   ]
@@ -194,7 +194,7 @@ For the best Geocaching experience, clients implementing geocaching support shou
   "tags": [
     ["a", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:first-treasure-1748619568668"],
     ["log-type", "found"],
-    ["verification", "{\"kind\":1985,\"content\":\"Verified find by 0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd\",\"tags\":[[\"L\",\"geocache-verification\"],[\"l\",\"verified-find\",\"geocache-verification\"],[\"p\",\"0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd\",\"\",\"finder\"],[\"a\",\"0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:naddr1qqxnzd3e8q6n2dfk8qcnjve48qmnsw3jsqgswaehxw309aex2mrp0yhx6tpdsek6w309aex2mrp0yh56tnwdus8vatjvs6kzdrz956k7tjzw6qzypzgd2dmgxhxf34hnlw2y03nckr8f4g6mw9flxqq65v94zkp77rqfgrf8\",\"\",\"geocache\"]],\"pubkey\":\"6805d4e5c0df48b4f76e2fdcb67a2acb1d97567b01c6fe17a236dc32f34f1c07\",\"created_at\":1672531200,\"sig\":\"a1b2c3d4e5f6...signature...\"}"]
+    ["verification", "{\"kind\":1985,\"content\":\"Verified find by 0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd\",\"tags\":[[\"L\",\"to.treasures\"],[\"l\",\"found\",\"to.treasures\"],[\"p\",\"0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd\",\"\",\"finder\"],[\"a\",\"0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:naddr1qqxnzd3e8q6n2dfk8qcnjve48qmnsw3jsqgswaehxw309aex2mrp0yhx6tpdsek6w309aex2mrp0yh56tnwdus8vatjvs6kzdrz956k7tjzw6qzypzgd2dmgxhxf34hnlw2y03nckr8f4g6mw9flxqq65v94zkp77rqfgrf8\",\"\",\"geocache\"]],\"pubkey\":\"6805d4e5c0df48b4f76e2fdcb67a2acb1d97567b01c6fe17a236dc32f34f1c07\",\"created_at\":1672531200,\"sig\":\"3045022100f8ab7ce6c8b6f7d2e1a4b5c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9022059b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8\"}"]
   ]
 }
 ```
