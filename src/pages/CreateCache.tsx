@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/useToast";
 import { verifyLocation, getVerificationSummary, type LocationVerification } from "@/lib/osmVerification";
 import { LocationWarnings } from "@/components/LocationWarnings";
 import { GeocacheForm, createDefaultGeocacheFormData, type GeocacheFormData } from "@/components/ui/geocache-form";
+import { mapIcons } from "@/lib/mapIcons";
 
 import "leaflet/dist/leaflet.css";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
@@ -32,35 +33,17 @@ import { VerificationQRDialog } from "@/components/VerificationQRDialog";
 import { geocacheToNaddr } from "@/lib/naddr-utils";
 import type { VerificationKeyPair } from "@/lib/verification";
 
-// Custom marker icon for the confirmation map
-const confirmLocationIcon = L.divIcon({
-  html: `
-    <div style="position: relative;">
-      <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 0C9.373 0 4 5.373 4 12c0 9 12 24 12 24s12-15 12-24c0-6.627-5.373-12-12-12z" fill="#ef4444"/>
-        <circle cx="16" cy="12" r="4" fill="white"/>
-      </svg>
-    </div>
-  `,
-  className: "location-picker-icon",
-  iconSize: [32, 40],
-  iconAnchor: [16, 12], // Anchor at the center of the pin's head (where the white circle is)
-});
-
-// Component to ensure map centers properly on the location
-function ConfirmMapController({ location }: { location: { lat: number; lng: number } }) {
+// Component to ensure map recognizes its actual size
+function MapResizer() {
   const map = useMap();
   
   useEffect(() => {
-    if (location) {
-      // Force the map to center on the location with a slight delay to ensure proper rendering
-      setTimeout(() => {
-        map.setView([location.lat, location.lng], 17, {
-          animate: false
-        });
-      }, 100);
-    }
-  }, [map, location]);
+    // Force map to recognize its actual container size immediately
+    map.invalidateSize(true);
+    // Re-center after size calculation
+    const center = map.getCenter();
+    map.setView(center, map.getZoom(), { animate: false });
+  }, [map]);
   
   return null;
 }
@@ -269,31 +252,30 @@ export default function CreateCache() {
                   <div className="grid grid-cols-2 gap-3">
                     {/* Map Preview & Coordinates */}
                     <div className="space-y-2">
-                      <div className="h-32 rounded-md overflow-hidden border">
+                      <div className="h-32 w-full rounded-md overflow-hidden border">
                         <MapContainer
                           center={[location.lat, location.lng]}
-                          zoom={17}
-                          style={{ height: "100%", width: "100%" }}
+                          zoom={16}
+                          style={{ height: "128px", width: "100%", minHeight: "128px" }}
                           scrollWheelZoom={false}
                           dragging={false}
                           zoomControl={false}
                           doubleClickZoom={false}
                           attributionControl={false}
+                          touchZoom={false}
                         >
                           <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                            maxZoom={19}
                           />
-                          <ConfirmMapController location={location} />
+                          <MapResizer />
                           <Marker 
                             position={[location.lat, location.lng]} 
-                            icon={confirmLocationIcon}
+                            icon={mapIcons.droppedPin}
                           />
                         </MapContainer>
                       </div>
                       <div className="bg-muted/50 p-2 rounded text-center">
-                        <div className="font-mono text-xs text-foreground">
+                        <div className="font-mono text-xs">
                           {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
                         </div>
                       </div>
