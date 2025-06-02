@@ -280,9 +280,13 @@ function MapController({
 
 // Component to handle theme styling
 function ThemeController({ 
-  currentStyle 
+  currentStyle,
+  appTheme,
+  systemTheme
 }: { 
   currentStyle: string;
+  appTheme?: string;
+  systemTheme?: string;
 }) {
   const map = useMap();
   
@@ -290,15 +294,21 @@ function ThemeController({
     const container = map.getContainer();
     
     // Remove all theme classes
-    container.classList.remove('dark-theme', 'pirate-theme');
+    container.classList.remove('dark-theme', 'pirate-theme', 'system-dark-theme');
     
     // Add current theme class
     if (currentStyle === 'dark') {
       container.classList.add('dark-theme');
     } else if (currentStyle === 'pirate') {
       container.classList.add('pirate-theme');
+    } else if (currentStyle === 'original') {
+      // For original style, check if we should apply system dark theme
+      if (appTheme === 'system' && systemTheme === 'dark') {
+        container.classList.add('system-dark-theme');
+      }
+      // If app theme is explicitly light, don't add any dark theme classes
     }
-  }, [map, currentStyle]);
+  }, [map, currentStyle, appTheme, systemTheme]);
   
   return null;
 }
@@ -593,6 +603,8 @@ export function GeocacheMap({
       
       <ThemeController 
         currentStyle={currentMapStyle}
+        appTheme={theme}
+        systemTheme={systemTheme}
       />
       
       <PopupController 
