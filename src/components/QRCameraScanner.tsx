@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { Camera, Square, AlertCircle, CheckCircle } from 'lucide-react';
+import { CompassSpinner } from '@/components/ui/loading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -138,7 +139,7 @@ export function QRCameraScanner({
                   className="gap-2"
                 >
                   {isScanning ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    <CompassSpinner size={16} variant="component" />
                   ) : (
                     <Square className="w-4 h-4" />
                   )}

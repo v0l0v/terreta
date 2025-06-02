@@ -1,4 +1,4 @@
-import { Trophy, X, FileText, User, Calendar, Trash2, MoreVertical, Copy, ShieldCheck, Loader2 } from "lucide-react";
+import { Trophy, X, FileText, User, Calendar, Trash2, MoreVertical, Copy, ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

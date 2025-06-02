@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Bookmark, BookmarkCheck, Loader2 } from 'lucide-react';
+import { Bookmark, BookmarkCheck } from 'lucide-react';
+import { CompassSpinner } from '@/components/ui/loading';
 import { Button } from '@/components/ui/button';
 import { useSavedCaches } from '@/hooks/useSavedCaches';
 import { useToast } from '@/hooks/useToast';
@@ -71,7 +72,7 @@ export function SaveButton({
       title={isSaved ? 'Remove from saved caches' : 'Save for later'}
     >
       {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <CompassSpinner size={16} variant="component" />
       ) : isSaved ? (
         <BookmarkCheck className="h-4 w-4" />
       ) : (

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
-import { Loader2, LucideIcon } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
+import { CompassSpinner } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
 
 interface LoadingButtonProps extends Omit<ButtonProps, 'children'> {
@@ -31,9 +32,10 @@ export function LoadingButton({
       {...props}
     >
       {isLoading && (
-        <Loader2 
+        <CompassSpinner 
+          size={16}
+          variant="component"
           className={cn(
-            "h-4 w-4 animate-spin",
             showLoadingText || (hasIcon && iconPosition === 'left') ? "mr-2" : "",
             hasIcon && iconPosition === 'right' ? "ml-2" : ""
           )}

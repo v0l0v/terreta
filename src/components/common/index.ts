@@ -2,4 +2,4 @@
  * Centralized exports for common components
  */
 
-export * from './LoadingState';
+export * from './LoadPage';

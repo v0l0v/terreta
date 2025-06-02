@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Download, Copy, Check, QrCode } from 'lucide-react';
+import { ComponentLoading } from '@/components/ui/loading';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -94,10 +95,10 @@ export function VerificationQRDialog({
           <div className="flex justify-center p-3 sm:p-4 bg-white rounded-lg border">
             {isGenerating ? (
               <div className="w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center bg-muted rounded">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Generating QR code...</p>
-                </div>
+                <ComponentLoading 
+                  size="sm" 
+                  title="Generating QR code..." 
+                />
               </div>
             ) : qrDataUrl ? (
               <img 

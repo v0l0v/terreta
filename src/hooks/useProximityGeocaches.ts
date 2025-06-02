@@ -8,7 +8,9 @@ import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
-import { isSafari, createSafariNostr } from '@/lib/safariNostr';
+import { queryNostr, batchQueryNostr } from '@/lib/nostrQuery';
+import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
+import { isSafari } from '@/lib/safariNostr';
 import type { ComparisonOperator } from '@/components/ui/comparison-filter';
 import { 
   NIP_GC_KINDS, 
@@ -146,92 +148,64 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
     // Build standard filter
     const filter: NostrFilter = {
       kinds: [NIP_GC_KINDS.GEOCACHE],
-      limit: options.limit || (isSafari() ? 30 : 100),
+      limit: options.limit || (isSafari() ? QUERY_LIMITS.SAFARI_GEOCACHES : QUERY_LIMITS.STANDARD_GEOCACHES),
     };
 
     if (options.authorPubkey) {
       filter.authors = [options.authorPubkey];
     }
 
-    if (isSafari()) {
-      const safariClient = createSafariNostr(['wss://ditto.pub/relay']);
-      try {
-        const events = await safariClient.query([filter], { timeout: 6000, maxRetries: 2 });
-        safariClient.close();
-        return events;
-      } catch (error) {
-        safariClient.close();
-        throw error;
-      }
-    } else {
-      return await Promise.race([
-        nostr.query([filter]),
-        new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Query timeout')), 15000)
-        )
-      ]);
-    }
+    // Use unified query utility
+    return await queryNostr(nostr, [filter], {
+      timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY_RETRY : TIMEOUTS.STANDARD_QUERY,
+      maxRetries: isSafari() ? 2 : 3,
+    });
   }
 
   async function safariProximityQuery(targetHashes: string[]): Promise<NostrEvent[]> {
-    const safariClient = createSafariNostr(['wss://ditto.pub/relay']);
+    // Query in batches for better efficiency
+    const batchSize = isSafari() ? 8 : 12;
+    const filterGroups: NostrFilter[][] = [];
     
-    try {
-      const allEvents: NostrEvent[] = [];
+    for (let i = 0; i < targetHashes.length; i += batchSize) {
+      const batch = targetHashes.slice(i, i + batchSize);
       
-      // Query in larger batches for better efficiency
-      const batchSize = 8;
-      for (let i = 0; i < targetHashes.length; i += batchSize) {
-        const batch = targetHashes.slice(i, i + batchSize);
-        
-        try {
-          const filter: NostrFilter = {
-            kinds: [NIP_GC_KINDS.GEOCACHE],
-            '#g': batch,
-            limit: 50
-          };
-          
-          if (options.authorPubkey) {
-            filter.authors = [options.authorPubkey];
-          }
-          
-          const events = await safariClient.query([filter], { timeout: 5000 });
-          allEvents.push(...events);
-          
-          // Shorter delay between batches
-          if (i + batchSize < targetHashes.length) {
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
-        } catch (error) {
-          // Continue with next batch
-        }
+      const filter: NostrFilter = {
+        kinds: [NIP_GC_KINDS.GEOCACHE],
+        '#g': batch,
+        limit: 50
+      };
+      
+      if (options.authorPubkey) {
+        filter.authors = [options.authorPubkey];
       }
       
-      safariClient.close();
-      return allEvents;
-    } catch (error) {
-      safariClient.close();
-      throw error;
+      filterGroups.push([filter]);
     }
+    
+    // Use batch query utility
+    return await batchQueryNostr(nostr, filterGroups, {
+      timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY,
+      maxRetries: 1,
+    });
   }
 
   async function standardProximityQuery(targetHashes: string[]): Promise<NostrEvent[]> {
     const filter: NostrFilter = {
       kinds: [NIP_GC_KINDS.GEOCACHE],
       '#g': targetHashes,
-      limit: options.limit || 150
+      limit: options.limit || QUERY_LIMITS.PROXIMITY_RESULTS
     };
 
     if (options.authorPubkey) {
       filter.authors = [options.authorPubkey];
     }
 
-    return await Promise.race([
-      nostr.query([filter]),
-      new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Proximity query timeout')), 15000)
-      )
-    ]);
+    // Use unified query utility
+    return await queryNostr(nostr, [filter], {
+      timeout: TIMEOUTS.STANDARD_QUERY,
+      maxRetries: 2,
+    });
   }
 
   function applyClientSideFilters(geocaches: GeocacheWithDistance[]): GeocacheWithDistance[] {
@@ -284,25 +258,15 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
         limit: isSafari() ? 200 : 500,
       };
 
+      // Use unified query utility with error handling
       let logEvents: NostrEvent[];
-      
-      if (isSafari()) {
-        const safariClient = createSafariNostr(['wss://ditto.pub/relay']);
-        
-        try {
-          logEvents = await safariClient.query([logFilter], { timeout: 4000, maxRetries: 1 });
-          safariClient.close();
-        } catch (error) {
-          safariClient.close();
-          return geocaches; // Return without log counts
-        }
-      } else {
-        logEvents = await Promise.race([
-          nostr.query([logFilter]),
-          new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('Log query timeout')), 10000)
-          )
-        ]);
+      try {
+        logEvents = await queryNostr(nostr, [logFilter], {
+          timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY,
+          maxRetries: 1,
+        });
+      } catch (error) {
+        return geocaches; // Return without log counts
       }
       
       // Count logs per geocache

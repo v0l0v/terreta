@@ -1,4 +1,5 @@
-import { Calendar, MapPin, User, CheckCircle, ShieldCheck, Loader2, Copy, Check, Globe, ExternalLink, AlertCircle, Clock } from "lucide-react";
+import { Calendar, MapPin, User, CheckCircle, ShieldCheck, Copy, Check, Globe, ExternalLink, AlertCircle, Clock } from "lucide-react";
+import { CompassSpinner } from "@/components/ui/loading";
 import { formatDistanceToNow } from "@/lib/date";
 import { useNip05Status } from "@/hooks/useNip05Verification";
 import { useState } from "react";
@@ -115,7 +116,7 @@ export function ProfileHeader({
                   title="Click to copy npub"
                 >
                 {isLoadingNip05 ? (
-                  <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                  <CompassSpinner size={12} variant="component" />
                 ) : isVerified ? (
                   <ShieldCheck className="h-3 w-3 text-green-600" />
                 ) : nip05Error ? (

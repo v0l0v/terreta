@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
 import { decodeHint } from '@/lib/rot13';
-import { isSafari, createSafariNostr } from '@/lib/safariNostr';
+import { queryNostr } from '@/lib/nostrQuery';
+import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
+import { isSafari } from '@/lib/safariNostr';
 import { 
   NIP_GC_KINDS, 
   parseGeocacheEvent, 
@@ -45,9 +47,6 @@ export function useGeocacheByDTag(dTag: string) {
     queryFn: async (c) => {
       
       try {
-        // Create signal for non-Safari queries
-        const signal = AbortSignal.any([c.signal, AbortSignal.timeout(8000)]);
-        
         // Query by d-tag - this is the stable identifier
         const filter: NostrFilter = {
           kinds: [37515], // Geocache listing events
@@ -55,23 +54,12 @@ export function useGeocacheByDTag(dTag: string) {
           limit: 1,
         };
 
-        let events: NostrEvent[];
-        
-        if (isSafari()) {
-          const safariClient = createSafariNostr([
-            'wss://ditto.pub/relay'
-          ]);
-          
-          try {
-            events = await safariClient.query([filter], { timeout: 5000, maxRetries: 2 });
-            safariClient.close();
-          } catch (error) {
-            safariClient.close();
-            throw error;
-          }
-        } else {
-          events = await nostr.query([filter], { signal });
-        }
+        // Use unified query utility
+        const events = await queryNostr(nostr, [filter], {
+          timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY,
+          maxRetries: isSafari() ? 2 : 3,
+          signal: c.signal,
+        });
 
         if (events.length === 0) {
           return null;
@@ -89,25 +77,19 @@ export function useGeocacheByDTag(dTag: string) {
         const logFilter: NostrFilter = {
           kinds: [NIP_GC_KINDS.LOG],
           '#a': [createGeocacheCoordinate(geocache.pubkey, geocache.dTag)],
-          limit: isSafari() ? 50 : 200, // Smaller limit for Safari
+          limit: isSafari() ? QUERY_LIMITS.SAFARI_LOGS : QUERY_LIMITS.STANDARD_LOGS,
         };
 
+        // Use unified query utility with error handling
         let logEvents: NostrEvent[];
-        
-        if (isSafari()) {
-          const safariClient = createSafariNostr([
-            'wss://ditto.pub/relay'
-          ]);
-          
-          try {
-            logEvents = await safariClient.query([logFilter], { timeout: 4000, maxRetries: 1 });
-            safariClient.close();
-          } catch (error) {
-            safariClient.close();
-            logEvents = [];
-          }
-        } else {
-          logEvents = await nostr.query([logFilter], { signal });
+        try {
+          logEvents = await queryNostr(nostr, [logFilter], {
+            timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY,
+            maxRetries: 1,
+            signal: c.signal,
+          });
+        } catch (error) {
+          logEvents = []; // Continue without log counts
         }
       
         let foundCount = 0;

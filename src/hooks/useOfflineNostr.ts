@@ -9,7 +9,9 @@ import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from './useCurrentUser';
 import { useOfflineSync, useOfflineMode } from './useOfflineStorage';
 import { offlineStorage } from '@/lib/offlineStorage';
-import { isSafari, createSafariNostr } from '@/lib/safariNostr';
+import { queryNostr } from '@/lib/nostrQuery';
+import { TIMEOUTS } from '@/lib/constants';
+import { isSafari } from '@/lib/safariNostr';
 
 // Enhanced useNostr hook with offline support
 export function useOfflineNostr() {
@@ -27,21 +29,12 @@ export function useOfflineNostr() {
       try {
         let events: NostrEvent[];
         
-        if (isSafari()) {
-          // Use Safari-optimized client
-          const safariClient = createSafariNostr(['wss://relay.damus.io', 'wss://nos.lol']);
-          try {
-            events = await safariClient.query(filters, { 
-              timeout: options.timeout || 5000
-            });
-            safariClient.close();
-          } catch (error) {
-            safariClient.close();
-            throw error;
-          }
-        } else {
-          events = await nostr.query(filters, options);
-        }
+        // Use unified query utility
+        const events = await queryNostr(nostr, filters, {
+          timeout: options.timeout || (isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY),
+          maxRetries: isSafari() ? 2 : 3,
+          signal: options.signal,
+        });
 
         // Store events offline for future use
         for (const event of events) {

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Upload, Camera, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { CompassSpinner } from '@/components/ui/loading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -114,7 +115,7 @@ export function QRUploadScanner({
           >
             <div className="mx-auto w-12 h-12 text-muted-foreground">
               {isScanning ? (
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+                <CompassSpinner size={48} variant="component" />
               ) : (
                 <Upload className="w-12 h-12" />
               )}

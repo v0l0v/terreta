@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, MapPin, Loader2, X } from "lucide-react";
+import { Search, MapPin, X } from "lucide-react";
+import { CompassSpinner } from "@/components/ui/loading";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -296,7 +297,7 @@ export function LocationSearch({
         />
         {isSearching && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            <CompassSpinner size={16} variant="component" />
           </div>
         )}
         {query && !isSearching && (

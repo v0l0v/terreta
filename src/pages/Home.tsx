@@ -10,6 +10,7 @@ import SignupDialog from "@/components/auth/SignupDialog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOfflineGeocaches } from "@/hooks/useOfflineGeocaches";
 import { GeocacheList } from "@/components/GeocacheList";
+import { ComponentLoading } from "@/components/ui/loading";
 
 export default function Home() {
   const { user } = useCurrentUser();
@@ -215,7 +216,13 @@ export default function Home() {
             </Link>
           </div>
           {isLoading ? (
-            <div className="text-center py-8">Loading geocaches...</div>
+            <div className="flex items-center justify-center py-12">
+              <ComponentLoading 
+                size="sm" 
+                title="Loading geocaches..." 
+                description="Discovering nearby treasures" 
+              />
+            </div>
           ) : geocaches && geocaches.length > 0 ? (
             <>
               <GeocacheList geocaches={geocaches} />

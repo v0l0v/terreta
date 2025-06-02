@@ -12,6 +12,7 @@ import { useSavedCaches } from '@/hooks/useSavedCaches';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { formatDistanceToNow } from '@/lib/date';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { ComponentLoading } from '@/components/ui/loading';
 
 export default function MyCaches() {
   const { user } = useCurrentUser();
@@ -121,11 +122,11 @@ export default function MyCaches() {
 
         {isLoadingSaved ? (
           <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <Compass className="h-6 w-6 animate-spin text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm font-medium">Loading saved caches...</p>
-              <p className="text-xs text-muted-foreground">Fetching your bookmarks from Nostr relays</p>
-            </div>
+            <ComponentLoading 
+              size="sm" 
+              title="Loading saved caches..." 
+              description="Fetching your bookmarks from Nostr relays" 
+            />
           </div>
         ) : savedCaches.length === 0 ? (
           <EmptyStateCard

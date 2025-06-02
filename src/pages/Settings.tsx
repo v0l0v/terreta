@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoCard, DetailsCard } from "@/components/ui/card-patterns";
-import { DesktopHeader } from "@/components/DesktopHeader";
+import { PageLayout } from "@/components/layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -173,26 +173,19 @@ export default function Settings() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <DesktopHeader />
-        
-        <div className="container mx-auto px-4 py-16">
-          <LoginRequiredCard
-            icon={MapPin}
-            description="You need to be logged in to access settings."
-            className="max-w-md mx-auto"
-          />
-        </div>
-      </div>
+      <PageLayout maxWidth="md" className="py-16">
+        <LoginRequiredCard
+          icon={MapPin}
+          description="You need to be logged in to access settings."
+          className="max-w-md mx-auto"
+        />
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <DesktopHeader />
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto space-y-6">
+    <PageLayout maxWidth="2xl" background="muted">
+      <div className="max-w-2xl mx-auto space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Settings</CardTitle>
@@ -474,7 +467,6 @@ export default function Settings() {
               </div>
             </DetailsCard>
         </div>
-      </div>
-    </div>
+    </PageLayout>
   );
 }

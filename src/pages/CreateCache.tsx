@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { MapPin, Upload, X, AlertTriangle, CheckCircle, XCircle, Loader2, Check } from "lucide-react";
+import { MapPin, Upload, X, AlertTriangle, CheckCircle, XCircle, Check } from "lucide-react";
+import { CompassSpinner } from "@/components/ui/loading";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DesktopHeader } from "@/components/DesktopHeader";
+import { PageLayout } from "@/components/layout";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCreateGeocache } from "@/hooks/useCreateGeocache";
 import { LocationPicker } from "@/components/LocationPicker";
@@ -178,26 +179,19 @@ export default function CreateCache() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-muted/30 pb-4 md:pb-0">
-        <DesktopHeader />
-        
-        <div className="container mx-auto px-4 py-16">
-          <LoginRequiredCard
-            icon={MapPin}
-            description="You need to be logged in to create a geocache."
-            className="max-w-md mx-auto"
-          />
-        </div>
-      </div>
+      <PageLayout maxWidth="md" className="py-16">
+        <LoginRequiredCard
+          icon={MapPin}
+          description="You need to be logged in to create a geocache."
+          className="max-w-md mx-auto"
+        />
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-4 md:pb-0">
-      <DesktopHeader />
-
-      <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-2xl mx-auto">
+    <PageLayout maxWidth="2xl" background="muted" className="pb-4 md:pb-0">
+      <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle>Hide a New Treasure</CardTitle>
             <CardDescription>
@@ -237,7 +231,7 @@ export default function CreateCache() {
                 <Button type="submit" disabled={isPending || isVerifying} className="flex-1">
                   {isVerifying ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <CompassSpinner size={16} variant="component" className="mr-2" />
                       Verifying Location...
                     </>
                   ) : isPending ? (
@@ -253,7 +247,6 @@ export default function CreateCache() {
             </form>
           </CardContent>
         </Card>
-      </div>
 
       {/* Location Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
@@ -382,6 +375,6 @@ export default function CreateCache() {
         />
       )}
 
-    </div>
+    </PageLayout>
   );
 }

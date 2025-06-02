@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { Download, Key, AlertTriangle } from 'lucide-react';
+import { ComponentLoading } from '@/components/ui/loading';
 import { Button } from '@/components/ui/button';
 import { BaseDialog } from '@/components/ui/base-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -175,7 +176,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
 
           {step === 'done' && (
             <div className='flex justify-center items-center py-8'>
-              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
+              <ComponentLoading size="lg" title="Setting up your account..." />
             </div>
           )}
         </div>

@@ -9,8 +9,7 @@ import { CacheDetailTabs } from "@/components/ui/mobile-button-patterns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DesktopHeader } from "@/components/DesktopHeader";
-import { LoadingState, ErrorState } from "@/components/ui/loading-states";
-import { CompassLoading } from "@/components/ui/compass-loading";
+import { FullPageLoading, ErrorState } from "@/components/ui/loading";
 import { SaveButton } from "@/components/SaveButton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useGeocacheByNaddr } from "@/hooks/useGeocacheByNaddr";
@@ -218,8 +217,7 @@ export default function CacheDetail() {
 
   if (isLoading) {
     return (
-      <CompassLoading 
-        fullPage 
+      <FullPageLoading 
         title="Loading geocache..."
         description="Checking multiple relays for the best connection..."
       />

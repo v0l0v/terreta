@@ -24,6 +24,7 @@ import type { Geocache } from "@/types/geocache";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDistance } from "@/lib/geo";
 import { Badge } from "@/components/ui/badge";
+import { ComponentLoading } from "@/components/ui/loading";
 import { useNavigate } from "react-router-dom";
 
 export default function Map() {
@@ -240,11 +241,11 @@ export default function Map() {
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Compass className="h-6 w-6 animate-spin text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm font-medium">Loading geocaches...</p>
-                  <p className="text-xs text-muted-foreground">Searching the network</p>
-                </div>
+                <ComponentLoading 
+                  size="sm" 
+                  title="Loading geocaches..." 
+                  description="Searching the network" 
+                />
               </div>
             ) : error ? (
               <div className="flex items-center justify-center py-12">
@@ -396,11 +397,11 @@ export default function Map() {
             <TabsContent value="list" className="flex-1 overflow-y-auto p-4 m-0 data-[state=active]:flex data-[state=active]:flex-col bg-background">
               {isLoading ? (
                 <div className="flex items-center justify-center flex-1">
-                  <div className="text-center">
-                    <Compass className="h-6 w-6 animate-spin text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm font-medium">Loading geocaches...</p>
-                    <p className="text-xs text-muted-foreground">Searching the network</p>
-                  </div>
+                  <ComponentLoading 
+                    size="sm" 
+                    title="Loading geocaches..." 
+                    description="Searching the network" 
+                  />
                 </div>
               ) : error ? (
                 <div className="flex items-center justify-center flex-1">

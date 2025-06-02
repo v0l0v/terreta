@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CompassLoading } from '@/components/ui/compass-loading';
+import { FullPageLoading, ComponentLoading } from '@/components/ui/loading';
 
 import { LoginRequiredCard } from '@/components/LoginRequiredCard';
 import { DetailedGeocacheCard } from '@/components/ui/geocache-card';
@@ -127,8 +127,7 @@ export default function Profile() {
 
   if (isLoadingAuthor) {
     return (
-      <CompassLoading
-        fullPage
+      <FullPageLoading
         title="Loading profile..."
         description="Fetching user information from Nostr relays"
       />
@@ -201,11 +200,7 @@ export default function Profile() {
 
             {isLoadingUserCaches ? (
               <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Compass className="h-6 w-6 animate-spin text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm font-medium">Loading caches...</p>
-                  <p className="text-xs text-muted-foreground">Fetching created caches</p>
-                </div>
+                <ComponentLoading size="sm" title="Loading caches..." description="Fetching created caches" />
               </div>
             ) : !userCaches || userCaches.length === 0 ? (
               <EmptyStateCard
@@ -253,11 +248,7 @@ export default function Profile() {
 
             {isLoadingFoundCaches ? (
               <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Compass className="h-6 w-6 animate-spin text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm font-medium">Loading found caches...</p>
-                  <p className="text-xs text-muted-foreground">Fetching geocaching achievements</p>
-                </div>
+                <ComponentLoading size="sm" title="Loading found caches..." description="Fetching geocaching achievements" />
               </div>
             ) : !foundCaches || foundCaches.length === 0 ? (
               <EmptyStateCard

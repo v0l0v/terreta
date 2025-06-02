@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Upload, AlertCircle, CheckCircle, Loader2, QrCode } from 'lucide-react';
+import { Camera, Upload, AlertCircle, CheckCircle, QrCode } from 'lucide-react';
+import { CompassSpinner } from '@/components/ui/loading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -396,7 +397,7 @@ export default function Claim() {
                 >
                   {isProcessing ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <CompassSpinner size={16} variant="component" className="mr-2" />
                       Processing...
                     </>
                   ) : (
@@ -483,7 +484,7 @@ export default function Claim() {
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <CompassSpinner size={16} variant="component" className="mr-2" />
                   Processing image...
                 </>
               ) : (
