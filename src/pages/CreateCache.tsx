@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { MapPin, Upload, X, AlertTriangle, CheckCircle, XCircle, Check } from "lucide-react";
+import { MapPin, Upload, X, AlertTriangle, CheckCircle, XCircle, Check, WifiOff } from "lucide-react";
 import { CompassSpinner } from "@/components/ui/loading";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -33,6 +33,7 @@ import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { VerificationQRDialog } from "@/components/VerificationQRDialog";
 import { geocacheToNaddr } from "@/lib/naddr-utils";
 import type { VerificationKeyPair } from "@/lib/verification";
+import { useOfflineMode } from "@/hooks/useOfflineStorage";
 
 // CSS override for confirmation map
 const confirmMapStyles = `
@@ -67,6 +68,7 @@ function MapResizer({ location }: { location: { lat: number; lng: number } }) {
 export default function CreateCache() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
+  const { isOfflineMode } = useOfflineMode();
   const { mutate: createGeocache, isPending } = useCreateGeocache(({ event, verificationKeyPair, naddr }) => {
     // Show the QR dialog when cache is created
     setCreatedNaddr(naddr);
@@ -185,6 +187,31 @@ export default function CreateCache() {
           description="You need to be logged in to create a geocache."
           className="max-w-md mx-auto"
         />
+      </PageLayout>
+    );
+  }
+
+  if (isOfflineMode) {
+    return (
+      <PageLayout maxWidth="md" className="py-16">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                <WifiOff className="h-6 w-6 text-gray-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Offline Mode</h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Creating geocaches requires an internet connection. Please check your connection and try again.
+                </p>
+              </div>
+              <Button onClick={() => navigate("/")} variant="outline" className="w-full">
+                Go Back
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </PageLayout>
     );
   }

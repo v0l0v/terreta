@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bookmark, MapPin, Trash2, Cloud, Compass, MoreVertical } from 'lucide-react';
+import { Bookmark, MapPin, Trash2, Cloud, Compass, MoreVertical, WifiOff } from 'lucide-react';
 import { DetailedGeocacheCard } from '@/components/ui/geocache-card';
 import { InfoCard, EmptyStateCard } from '@/components/ui/card-patterns';
 import { DesktopHeader } from '@/components/DesktopHeader';
@@ -13,11 +13,13 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { formatDistanceToNow } from '@/lib/date';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { ComponentLoading } from '@/components/ui/loading';
+import { useOfflineMode } from '@/hooks/useOfflineStorage';
 
 export default function MyCaches() {
   const { user } = useCurrentUser();
   const { savedCaches, unsaveCache, clearAllSaved, isNostrEnabled, isLoading: isLoadingSaved } = useSavedCaches();
   const { coords } = useGeolocation();
+  const { isOnline, isOfflineMode } = useOfflineMode();
   const [showClearDialog, setShowClearDialog] = useState(false);
 
   // Calculate distances if location is available
@@ -72,14 +74,32 @@ export default function MyCaches() {
             
             {/* Nostr sync status */}
             {isNostrEnabled && (
-              <div className="flex items-center gap-2 text-sm text-green-600">
-                <Cloud className="h-4 w-4" />
-                <span>Synced</span>
+              <div className={`flex items-center gap-2 text-sm ${
+                isOfflineMode || !isOnline || !navigator.onLine 
+                  ? 'text-orange-600 dark:text-orange-400' 
+                  : 'text-green-600'
+              }`}>
+                {isOfflineMode || !isOnline || !navigator.onLine ? (
+                  <>
+                    <WifiOff className="h-4 w-4" />
+                    <span>Offline</span>
+                  </>
+                ) : (
+                  <>
+                    <Cloud className="h-4 w-4" />
+                    <span>Synced</span>
+                  </>
+                )}
               </div>
             )}
           </div>
           <p className="text-sm text-muted-foreground">
             Your saved caches are synced to your Nostr profile and available across all your devices.
+            {isOfflineMode && (
+              <span className="block mt-1 text-orange-600 dark:text-orange-400">
+                ⚠️ Offline mode: Showing cached data. Changes will sync when online.
+              </span>
+            )}
           </p>
         </div>
 

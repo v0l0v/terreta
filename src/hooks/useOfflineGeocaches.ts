@@ -42,92 +42,114 @@ export type GeocacheWithDistance = Geocache & { distance?: number };
 
 export function useOfflineGeocaches(options: UseOfflineGeocachesOptions = {}) {
   const { nostr } = useNostr();
-  const { isOnline } = useOfflineMode();
-  // Remove this line since we're using offlineStorage directly
+  const { isOnline, isConnected, connectionQuality } = useOfflineMode();
 
   return useQuery({
-    queryKey: ['geocaches', 'offline-aware', options, isOnline, isSafari()],
-    staleTime: isOnline ? 60000 : Infinity, // 1 minute online, never stale offline
+    queryKey: ['geocaches', 'offline-aware', options, isOnline && isConnected && navigator.onLine, isSafari()],
+    staleTime: (isOnline && isConnected && navigator.onLine) ? 60000 : Infinity, // 1 minute online, never stale offline
     gcTime: 300000, // 5 minutes
+    retry: false, // Disable retries to prevent cache invalidation
+    refetchOnReconnect: true, // Refetch when connection is restored
+    networkMode: 'always', // Always run queries regardless of network status
     queryFn: async (): Promise<GeocacheWithDistance[]> => {
-      if (isOnline) {
-        try {
-          // Online query with proximity optimization
-          let events: NostrEvent[];
+      console.log('useOfflineGeocaches query starting...', {
+        isOnline,
+        isConnected,
+        connectionQuality,
+        hasOptions: Object.keys(options).length > 0,
+        navigatorOnline: navigator.onLine
+      });
+      
+      // Always try to get offline data first as a fallback
+      const offlineData = await getOfflineGeocaches(options);
+      console.log(`Offline data available: ${offlineData.length} geocaches`);
+      
+      // If we're truly offline or not connected, return offline data immediately
+      if (!navigator.onLine || !isOnline || !isConnected || connectionQuality === 'offline') {
+        console.log('Using offline data - not connected to internet', {
+          navigatorOnline: navigator.onLine,
+          isOnline,
+          isConnected,
+          connectionQuality
+        });
+        return offlineData;
+      }
+
+      try {
+        // Online query with proximity optimization
+        let events: NostrEvent[];
+        
+        // Determine search strategy
+        const hasProximitySearch = options.centerLat && options.centerLng && options.radiusKm;
+        const useOptimization = hasProximitySearch && options.useProximityOptimization !== false;
+        
+        if (useOptimization) {
+          events = await queryByProximity();
           
-          // Determine search strategy
-          const hasProximitySearch = options.centerLat && options.centerLng && options.radiusKm;
-          const useOptimization = hasProximitySearch && options.useProximityOptimization !== false;
-          
-          if (useOptimization) {
-            events = await queryByProximity();
-            
-            // If proximity search returns very few results, also try a broader search
-            if (events.length < 5) {
-              const broadEvents = await queryBroad();
-              // Combine and deduplicate
-              const eventIds = new Set(events.map(e => e.id));
-              const newEvents = broadEvents.filter(e => !eventIds.has(e.id));
-              events = [...events, ...newEvents];
-            }
-          } else {
-            events = await queryBroad();
+          // If proximity search returns very few results, also try a broader search
+          if (events.length < 5) {
+            const broadEvents = await queryBroad();
+            // Combine and deduplicate
+            const eventIds = new Set(events.map(e => e.id));
+            const newEvents = broadEvents.filter(e => !eventIds.has(e.id));
+            events = [...events, ...newEvents];
           }
-
-          // Parse geocaches
-          let geocaches: Geocache[] = events
-            .map(parseGeocacheEvent)
-            .filter((g): g is Geocache => g !== null);
-
-          // Cache geocaches offline
-          for (const geocache of geocaches) {
-            try {
-              const cachedGeocache: CachedGeocache = {
-                id: geocache.id,
-                event: events.find(e => e.id === geocache.id)!,
-                lastUpdated: Date.now(),
-                coordinates: geocache.location ? [geocache.location.lat, geocache.location.lng] : undefined,
-                difficulty: geocache.difficulty,
-                terrain: geocache.terrain,
-                type: geocache.type,
-              };
-              await offlineStorage.storeGeocache(cachedGeocache);
-            } catch (error) {
-              console.warn('Failed to cache geocache offline:', error);
-            }
-          }
-
-          // Apply proximity filtering and add distance if specified
-          let geocachesWithDistance: GeocacheWithDistance[];
-          if (hasProximitySearch) {
-            // Add distance to all results and sort by distance
-            geocachesWithDistance = geocaches.map(cache => ({
-              ...cache,
-              distance: calculateDistance(options.centerLat!, options.centerLng!, cache.location.lat, cache.location.lng)
-            }));
-            
-            // Filter by radius with a small buffer (10% extra) for edge cases
-            const radiusBuffer = options.radiusKm! * 1.1;
-            geocachesWithDistance = geocachesWithDistance
-              .filter(cache => cache.distance! <= radiusBuffer)
-              .sort((a, b) => (a.distance || 0) - (b.distance || 0));
-          } else {
-            // No proximity filtering, just convert type
-            geocachesWithDistance = geocaches.map(cache => ({ ...cache }));
-          }
-
-          // Apply filters and get log counts
-          geocachesWithDistance = applyFilters(geocachesWithDistance, options);
-          geocachesWithDistance = await addLogCounts(geocachesWithDistance, nostr, isOnline);
-
-          return geocachesWithDistance;
-        } catch (error) {
-          console.warn('Online geocache query failed, falling back to offline data:', error);
-          return await getOfflineGeocaches(options);
+        } else {
+          events = await queryBroad();
         }
-      } else {
-        // Offline mode
-        return await getOfflineGeocaches(options);
+
+        // Parse geocaches
+        let geocaches: Geocache[] = events
+          .map(parseGeocacheEvent)
+          .filter((g): g is Geocache => g !== null);
+
+        // Cache geocaches offline
+        for (const geocache of geocaches) {
+          try {
+            const cachedGeocache: CachedGeocache = {
+              id: geocache.id,
+              event: events.find(e => e.id === geocache.id)!,
+              lastUpdated: Date.now(),
+              coordinates: geocache.location ? [geocache.location.lat, geocache.location.lng] : undefined,
+              difficulty: geocache.difficulty,
+              terrain: geocache.terrain,
+              type: geocache.type,
+            };
+            await offlineStorage.storeGeocache(cachedGeocache);
+          } catch (error) {
+            console.warn('Failed to cache geocache offline:', error);
+          }
+        }
+
+        // Apply proximity filtering and add distance if specified
+        let geocachesWithDistance: GeocacheWithDistance[];
+        if (hasProximitySearch) {
+          // Add distance to all results and sort by distance
+          geocachesWithDistance = geocaches.map(cache => ({
+            ...cache,
+            distance: calculateDistance(options.centerLat!, options.centerLng!, cache.location.lat, cache.location.lng)
+          }));
+          
+          // Filter by radius with a small buffer (10% extra) for edge cases
+          const radiusBuffer = options.radiusKm! * 1.1;
+          geocachesWithDistance = geocachesWithDistance
+            .filter(cache => cache.distance! <= radiusBuffer)
+            .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+        } else {
+          // No proximity filtering, just convert type
+          geocachesWithDistance = geocaches.map(cache => ({ ...cache }));
+        }
+
+        // Apply filters and get log counts
+        geocachesWithDistance = applyFilters(geocachesWithDistance, options);
+        geocachesWithDistance = await addLogCounts(geocachesWithDistance, nostr, true);
+
+        console.log(`Online query successful - found ${geocachesWithDistance.length} geocaches`);
+        return geocachesWithDistance;
+      } catch (error) {
+        console.warn('Online geocache query failed, using offline data:', error);
+        // Return offline data instead of throwing error
+        return offlineData;
       }
       
       async function queryByProximity(): Promise<NostrEvent[]> {
@@ -230,6 +252,9 @@ export function useOfflineGeocaches(options: UseOfflineGeocachesOptions = {}) {
 // Get geocaches from offline storage
 async function getOfflineGeocaches(options: UseOfflineGeocachesOptions): Promise<GeocacheWithDistance[]> {
   try {
+    // Initialize offline storage if needed
+    await offlineStorage.init();
+    
     let cachedGeocaches: CachedGeocache[];
 
     if (options.bounds) {
@@ -243,10 +268,14 @@ async function getOfflineGeocaches(options: UseOfflineGeocachesOptions): Promise
       cachedGeocaches = await offlineStorage.getAllGeocaches();
     }
 
+    console.log(`Found ${cachedGeocaches.length} cached geocaches in offline storage`);
+
     // Convert cached geocaches to Geocache format
     let geocaches: Geocache[] = cachedGeocaches
       .map(cached => parseGeocacheEvent(cached.event))
       .filter((g): g is Geocache => g !== null);
+
+    console.log(`Successfully parsed ${geocaches.length} geocaches from cache`);
 
     // Apply proximity filtering and add distance if specified
     let geocachesWithDistance: GeocacheWithDistance[];
@@ -261,6 +290,8 @@ async function getOfflineGeocaches(options: UseOfflineGeocachesOptions): Promise
       geocachesWithDistance = geocachesWithDistance
         .filter(cache => cache.distance! <= options.radiusKm!)
         .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+      
+      console.log(`After proximity filtering: ${geocachesWithDistance.length} geocaches within ${options.radiusKm}km`);
     } else {
       // No proximity filtering, just convert type and sort by creation date
       geocachesWithDistance = geocaches
@@ -276,6 +307,7 @@ async function getOfflineGeocaches(options: UseOfflineGeocachesOptions): Promise
       geocachesWithDistance = geocachesWithDistance.slice(0, options.limit);
     }
 
+    console.log(`Final offline result: ${geocachesWithDistance.length} geocaches`);
     return geocachesWithDistance;
   } catch (error) {
     console.error('Failed to get offline geocaches:', error);

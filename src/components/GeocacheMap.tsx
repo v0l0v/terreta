@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
-import { LatLngExpression } from "leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } from "react-leaflet";
+import { LatLngExpression, LatLngBounds } from "leaflet";
 import L from "leaflet";
 import { createRoot } from "react-dom/client";
 import { useTheme } from "next-themes";
-import { MapPin, Navigation, Trophy, MessageSquare, Bookmark, BookmarkCheck, Sparkles } from "lucide-react";
+import { MapPin, Navigation, Trophy, MessageSquare, Bookmark, BookmarkCheck, Sparkles, Download, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { SaveButton } from "@/components/SaveButton";
 import { MapStyleSelector, MAP_STYLES } from "@/components/MapStyleSelector";
 import { useSavedCaches } from "@/hooks/useSavedCaches";
@@ -18,6 +19,9 @@ import { isIOS, logIOSInfo, getIOSCompatibleMapOptions } from "@/lib/ios";
 import { findClosestGeocache } from "@/lib/geo";
 import { geocacheToNaddr } from "@/lib/naddr-utils";
 import { getCacheIconSvg, getCacheColor } from "@/lib/cacheIcons";
+import { useOfflineMode, useOfflineSettings } from "@/hooks/useOfflineStorage";
+import { getCacheEntryCount, cacheMapTile } from "@/lib/cacheUtils";
+import { CACHE_NAMES } from "@/lib/cacheConstants";
 
 // Import Leaflet CSS and adventure theme
 import "leaflet/dist/leaflet.css";
@@ -237,6 +241,7 @@ interface GeocacheMapProps {
   onMarkerClick?: (geocache: Geocache) => void;
   highlightedGeocache?: string; // dTag of geocache to highlight/open popup
   showStyleSelector?: boolean; // Whether to show the map style selector
+  isNearMeActive?: boolean; // Whether "Near Me" mode is active
 }
 
 // Component to handle map centering
@@ -252,23 +257,32 @@ function MapController({
   searchRadius?: number;
 }) {
   const map = useMap();
+  const lastCenterRef = useRef<string | null>(null);
   
   useEffect(() => {
     if (center) {
-      // If we have a search location with radius, fit bounds to show the full circle
-      if (searchLocation && searchRadius) {
-        const bounds = L.latLng(searchLocation.lat, searchLocation.lng).toBounds(searchRadius * 1000);
-        map.fitBounds(bounds, {
-          padding: [50, 50],
-          animate: true,
-          duration: 0.5
-        });
-      } else {
-        // Otherwise just set the view
-        map.setView(center, zoom, {
-          animate: true,
-          duration: 0.5
-        });
+      // Create a key to track if the center has actually changed
+      const centerKey = `${center[0]},${center[1]},${zoom}`;
+      
+      // Only update if the center has actually changed
+      if (centerKey !== lastCenterRef.current) {
+        lastCenterRef.current = centerKey;
+        
+        // If we have a search location with radius, fit bounds to show the full circle
+        if (searchLocation && searchRadius) {
+          const bounds = L.latLng(searchLocation.lat, searchLocation.lng).toBounds(searchRadius * 1000);
+          map.fitBounds(bounds, {
+            padding: [50, 50],
+            animate: true,
+            duration: 0.5
+          });
+        } else {
+          // Otherwise just set the view
+          map.setView(center, zoom, {
+            animate: true,
+            duration: 0.5
+          });
+        }
       }
     }
   }, [map, center, zoom, searchLocation, searchRadius]);
@@ -348,6 +362,38 @@ function PopupController({
   return null;
 }
 
+// Component to handle map size invalidation
+function MapSizeController() {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Invalidate size when component mounts
+    const timer1 = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+    
+    // Additional invalidation after a longer delay to ensure proper rendering
+    const timer2 = setTimeout(() => {
+      map.invalidateSize();
+    }, 500);
+    
+    // Also invalidate size on window resize
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+  
+  return null;
+}
+
 // Custom Leaflet control for map style selector
 function MapStyleControl({ 
   currentStyle, 
@@ -422,6 +468,216 @@ function MapStyleControl({
   return null;
 }
 
+// Component to handle automatic offline tile caching
+function AutoOfflineTileManager({ 
+  userLocation, 
+  searchLocation, 
+  searchRadius,
+  isNearMeActive 
+}: { 
+  userLocation?: { lat: number; lng: number } | null;
+  searchLocation?: { lat: number; lng: number } | null;
+  searchRadius?: number;
+  isNearMeActive?: boolean;
+}) {
+  const map = useMap();
+  const { isOnline, isOfflineMode } = useOfflineMode();
+  const { settings } = useOfflineSettings();
+  const [cachedTiles, setCachedTiles] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [lastCachedLocation, setLastCachedLocation] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const autoCacheMaps = (settings.autoCacheMaps as boolean) ?? true;
+
+  // Check storage limits before caching
+  const checkStorageBeforeCaching = async (): Promise<boolean> => {
+    try {
+      const { isStorageNearLimit } = await import('@/lib/storageConfig');
+      const nearLimit = await isStorageNearLimit();
+      if (nearLimit) {
+        console.log('Storage near limit, skipping map caching');
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.warn('Failed to check storage limit:', error);
+      return true; // Default to allowing caching if check fails
+    }
+  };
+
+  const downloadTilesForBounds = async (bounds: LatLngBounds, minZoom: number, maxZoom: number, silent: boolean = false) => {
+    if (!isOnline || isOfflineMode) return 0;
+    
+    // Check storage limits before starting download
+    const canCache = await checkStorageBeforeCaching();
+    if (!canCache) return 0;
+    
+    setIsDownloading(true);
+    let downloadedCount = 0;
+
+    try {
+      for (let z = minZoom; z <= maxZoom; z++) {
+        const northEast = bounds.getNorthEast();
+        const southWest = bounds.getSouthWest();
+        
+        const minTileX = Math.floor((southWest.lng + 180) / 360 * Math.pow(2, z));
+        const maxTileX = Math.floor((northEast.lng + 180) / 360 * Math.pow(2, z));
+        const minTileY = Math.floor((1 - Math.log(Math.tan(northEast.lat * Math.PI / 180) + 1 / Math.cos(northEast.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z));
+        const maxTileY = Math.floor((1 - Math.log(Math.tan(southWest.lat * Math.PI / 180) + 1 / Math.cos(southWest.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z));
+
+        // Limit the number of tiles to prevent overwhelming the server
+        const totalTiles = (maxTileX - minTileX + 1) * (maxTileY - minTileY + 1);
+        if (totalTiles > 100) {
+          console.log(`Skipping zoom level ${z} - too many tiles (${totalTiles})`);
+          continue;
+        }
+
+        for (let x = minTileX; x <= maxTileX; x++) {
+          for (let y = minTileY; y <= maxTileY; y++) {
+            try {
+              const tileUrl = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+              const success = await cacheMapTile(tileUrl);
+              if (success) {
+                downloadedCount++;
+              }
+              
+              // Add small delay to avoid overwhelming the server
+              await new Promise(resolve => setTimeout(resolve, 50));
+            } catch (error) {
+              console.warn(`Failed to download tile ${z}/${x}/${y}:`, error);
+            }
+          }
+        }
+      }
+
+      setCachedTiles(prev => prev + downloadedCount);
+      
+      // Silent caching - no user notification needed
+      
+      return downloadedCount;
+    } catch (error) {
+      console.error('Failed to download tiles:', error);
+      // Silent failure - no user notification needed for background caching
+      return 0;
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // Auto-cache initial map view
+  useEffect(() => {
+    if (!isOnline || isOfflineMode || !autoCacheMaps) return;
+
+    const cacheInitialView = async () => {
+      // Wait a bit for the map to settle
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const bounds = map.getBounds();
+      const currentZoom = map.getZoom();
+      
+      // Cache current view and one zoom level up/down
+      await downloadTilesForBounds(
+        bounds, 
+        Math.max(currentZoom - 1, 8), 
+        Math.min(currentZoom + 1, 16),
+        true // Silent for initial load
+      );
+    };
+
+    cacheInitialView();
+  }, [map, isOnline, isOfflineMode, autoCacheMaps]);
+
+  // Auto-cache when Near Me is activated or search location changes
+  useEffect(() => {
+    if (!isOnline || isOfflineMode || !autoCacheMaps) return;
+
+    const cacheLocationArea = async () => {
+      const location = searchLocation || (isNearMeActive ? userLocation : null);
+      if (!location) return;
+
+      // Create a location key to avoid re-caching the same area
+      const locationKey = `${location.lat.toFixed(4)},${location.lng.toFixed(4)},${searchRadius || 10}`;
+      if (locationKey === lastCachedLocation) return;
+
+      // Wait a bit for the map to settle after location change
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      let bounds: LatLngBounds;
+      
+      if (searchRadius) {
+        // Create bounds based on search radius
+        const radiusInDegrees = searchRadius / 111; // Rough conversion: 1 degree ≈ 111 km
+        bounds = L.latLngBounds(
+          [location.lat - radiusInDegrees, location.lng - radiusInDegrees],
+          [location.lat + radiusInDegrees, location.lng + radiusInDegrees]
+        );
+      } else {
+        // Use current map bounds
+        bounds = map.getBounds();
+      }
+
+      const downloadedCount = await downloadTilesForBounds(
+        bounds,
+        10, // Start from zoom level 10
+        15, // Go up to zoom level 15
+        true // Silent caching
+      );
+
+      if (downloadedCount > 0) {
+        setLastCachedLocation(locationKey);
+      }
+    };
+
+    cacheLocationArea();
+  }, [map, userLocation, searchLocation, searchRadius, isNearMeActive, isOnline, isOfflineMode, autoCacheMaps, lastCachedLocation]);
+
+  // Count cached tiles on mount
+  useEffect(() => {
+    const countCachedTiles = async () => {
+      const count = await getCacheEntryCount(CACHE_NAMES.OSM_TILES);
+      setCachedTiles(count);
+    };
+
+    countCachedTiles();
+  }, []);
+
+  // Show offline status when offline - center aligned
+  if (isOfflineMode || !isOnline || !navigator.onLine) {
+    return (
+      <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-[1000]">
+        <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 shadow-sm">
+          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+            <WifiOff className="h-3 w-3" />
+            <span>Offline</span>
+            <Badge variant="secondary" className="text-xs">
+              {cachedTiles} tiles
+            </Badge>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't show caching status when online - removed per user request
+  return null;
+}
+
+// Custom tile layer that works offline
+function OfflineTileLayer({ mapStyle }: { mapStyle: any }) {
+  const { isOnline, isOfflineMode } = useOfflineMode();
+
+  return (
+    <TileLayer
+      attribution={mapStyle.attribution}
+      url={mapStyle.url}
+      maxZoom={19}
+      // Add error handling for offline mode
+      errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    />
+  );
+}
+
 // Map styles are now imported from MapStyleSelector component
 
 export function GeocacheMap({ 
@@ -433,10 +689,12 @@ export function GeocacheMap({
   searchRadius,
   onMarkerClick,
   highlightedGeocache,
-  showStyleSelector = true
+  showStyleSelector = true,
+  isNearMeActive = false
 }: GeocacheMapProps) {
   const navigate = useNavigate();
   const { theme, systemTheme } = useTheme();
+  const { isOnline, isOfflineMode } = useOfflineMode();
   
   // Determine if we should use dark mode for the map
   const getDefaultMapStyle = () => {
@@ -534,6 +792,8 @@ export function GeocacheMap({
             })()
           : [40.7128, -74.0060]; // Default to NYC
 
+
+
   const handleMarkerClick = (geocache: Geocache) => {
     if (onMarkerClick) {
       onMarkerClick(geocache);
@@ -569,7 +829,12 @@ export function GeocacheMap({
   }, [geocaches, onMarkerClick]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-lg min-h-[400px] md:min-h-0">
+    <div 
+      className="relative h-full w-full overflow-hidden min-h-[400px] md:min-h-0" 
+      style={{ 
+        backgroundColor: '#f8fafc'
+      }}
+    >
       <MapContainer
         center={mapCenter}
         zoom={zoom}
@@ -579,12 +844,18 @@ export function GeocacheMap({
         doubleClickZoom={true}
         touchZoom={true}
         attributionControl={false}
+
         {...mapOptions}
       >
-      <TileLayer
-        attribution={mapStyle.attribution}
-        url={mapStyle.url}
-        maxZoom={19}
+      <OfflineTileLayer mapStyle={mapStyle} />
+      
+      <MapSizeController />
+      
+      <AutoOfflineTileManager 
+        userLocation={userLocation}
+        searchLocation={searchLocation}
+        searchRadius={searchRadius}
+        isNearMeActive={isNearMeActive}
       />
       
       <MapController 
@@ -767,6 +1038,17 @@ export function GeocacheMap({
       ))}
     </MapContainer>
     
+    {/* Offline status overlay */}
+    {(isOfflineMode || !isOnline || !navigator.onLine) && (
+      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[1000]">
+        <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 shadow-sm">
+          <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+            <WifiOff className="h-3 w-3" />
+            <span>Cached map</span>
+          </div>
+        </div>
+      </div>
+    )}
 
   </div>
   );

@@ -18,9 +18,9 @@ export interface FormState<T extends Record<string, any>> {
   submitError?: string;
 }
 
-export interface FormValidators<T extends Record<string, any>> {
+export type FormValidators<T extends Record<string, any>> = {
   [K in keyof T]?: (value: T[K], allValues: T) => ValidationResult;
-}
+};
 
 export interface UseFormOptions<T extends Record<string, any>> {
   initialValues: T;

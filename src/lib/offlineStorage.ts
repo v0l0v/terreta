@@ -365,6 +365,73 @@ class OfflineStorage {
     };
   }
 
+  // Remove specific geocache from storage
+  async removeGeocache(id: string): Promise<void> {
+    try {
+      const db = await this.ensureDB();
+      const transaction = db.transaction([STORES.GEOCACHES], 'readwrite');
+      const store = transaction.objectStore(STORES.GEOCACHES);
+      await new Promise<void>((resolve, reject) => {
+        const request = store.delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    } catch (error) {
+      console.warn('Failed to remove geocache from storage:', error);
+    }
+  }
+
+  // Remove specific event from storage
+  async removeEvent(id: string): Promise<void> {
+    try {
+      const db = await this.ensureDB();
+      const transaction = db.transaction([STORES.EVENTS], 'readwrite');
+      const store = transaction.objectStore(STORES.EVENTS);
+      await new Promise<void>((resolve, reject) => {
+        const request = store.delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    } catch (error) {
+      console.warn('Failed to remove event from storage:', error);
+    }
+  }
+
+  // Storage management with limits
+  async checkStorageLimit(): Promise<boolean> {
+    try {
+      const { getStorageUsage, isStorageNearLimit } = await import('./storageConfig');
+      return await isStorageNearLimit();
+    } catch (error) {
+      console.warn('Failed to check storage limit:', error);
+      return false;
+    }
+  }
+
+  async performCleanup(): Promise<void> {
+    try {
+      const { getStorageConfig } = await import('./storageConfig');
+      const config = await getStorageConfig();
+      
+      if (config.enableAutoCleanup) {
+        console.log('Performing storage cleanup...');
+        await this.clearOldData(config.maxCacheAge);
+        
+        // Also clear browser caches if needed
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          for (const cacheName of cacheNames) {
+            if (cacheName.includes('old') || cacheName.includes('temp')) {
+              await caches.delete(cacheName);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to perform cleanup:', error);
+    }
+  }
+
   async close(): Promise<void> {
     if (this.db) {
       this.db.close();

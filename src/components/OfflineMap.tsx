@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Download, MapPin, Wifi, WifiOff } from 'lucide-react';
-import { useOfflineMode, useOfflineGeocaches } from '@/hooks/useOfflineStorage';
+import { useOfflineMode, useOfflineGeocaches, useOfflineSettings } from '@/hooks/useOfflineStorage';
 import { useToast } from '@/hooks/useToast';
 import { CACHE_NAMES } from '@/lib/cacheConstants';
 import { getCacheEntryCount, clearCache, cacheMapTile } from '@/lib/cacheUtils';
@@ -24,15 +24,20 @@ interface OfflineMapProps {
   height?: string;
 }
 
-// Component to handle offline tile caching
-function OfflineTileManager() {
+// Component to handle automatic offline tile caching
+function AutoOfflineTileManager() {
   const map = useMap();
-  const { isOnline } = useOfflineMode();
+  const { isOnline, isOfflineMode } = useOfflineMode();
+  const { settings } = useOfflineSettings();
   const [cachedTiles, setCachedTiles] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
-  const downloadTilesForBounds = async (bounds: LatLngBounds, minZoom: number, maxZoom: number) => {
+  const autoCacheMaps = settings.autoCacheMaps as boolean ?? true;
+
+  const downloadTilesForBounds = async (bounds: LatLngBounds, minZoom: number, maxZoom: number, silent: boolean = false) => {
+    if (!isOnline || isOfflineMode) return 0;
+    
     setIsDownloading(true);
     let downloadedCount = 0;
 
@@ -46,6 +51,13 @@ function OfflineTileManager() {
         const minTileY = Math.floor((1 - Math.log(Math.tan(northEast.lat * Math.PI / 180) + 1 / Math.cos(northEast.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z));
         const maxTileY = Math.floor((1 - Math.log(Math.tan(southWest.lat * Math.PI / 180) + 1 / Math.cos(southWest.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z));
 
+        // Limit the number of tiles to prevent overwhelming the server
+        const totalTiles = (maxTileX - minTileX + 1) * (maxTileY - minTileY + 1);
+        if (totalTiles > 50) {
+          console.log(`Skipping zoom level ${z} - too many tiles (${totalTiles})`);
+          continue;
+        }
+
         for (let x = minTileX; x <= maxTileX; x++) {
           for (let y = minTileY; y <= maxTileY; y++) {
             try {
@@ -54,6 +66,9 @@ function OfflineTileManager() {
               if (success) {
                 downloadedCount++;
               }
+              
+              // Add small delay to avoid overwhelming the server
+              await new Promise(resolve => setTimeout(resolve, 100));
             } catch (error) {
               console.warn(`Failed to download tile ${z}/${x}/${y}:`, error);
             }
@@ -62,27 +77,52 @@ function OfflineTileManager() {
       }
 
       setCachedTiles(prev => prev + downloadedCount);
-      toast({
-        title: 'Map tiles downloaded',
-        description: `Downloaded ${downloadedCount} tiles for offline use.`,
-      });
+      
+      if (!silent && downloadedCount > 0) {
+        toast({
+          title: 'Map cached for offline use',
+          description: `Downloaded ${downloadedCount} tiles automatically.`,
+        });
+      }
+      
+      return downloadedCount;
     } catch (error) {
       console.error('Failed to download tiles:', error);
-      toast({
-        title: 'Download failed',
-        description: 'Failed to download map tiles for offline use.',
-        variant: 'destructive',
-      });
+      if (!silent) {
+        toast({
+          title: 'Auto-cache failed',
+          description: 'Failed to cache map tiles automatically.',
+          variant: 'destructive',
+        });
+      }
+      return 0;
     } finally {
       setIsDownloading(false);
     }
   };
 
-  const downloadCurrentView = () => {
-    const bounds = map.getBounds();
-    const currentZoom = map.getZoom();
-    downloadTilesForBounds(bounds, Math.max(currentZoom - 1, 1), Math.min(currentZoom + 2, 18));
-  };
+  // Auto-cache initial map view
+  useEffect(() => {
+    if (!isOnline || isOfflineMode || !autoCacheMaps) return;
+
+    const cacheInitialView = async () => {
+      // Wait a bit for the map to settle
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const bounds = map.getBounds();
+      const currentZoom = map.getZoom();
+      
+      // Cache current view and one zoom level up/down
+      await downloadTilesForBounds(
+        bounds, 
+        Math.max(currentZoom - 1, 8), 
+        Math.min(currentZoom + 1, 15),
+        true // Silent for initial load
+      );
+    };
+
+    cacheInitialView();
+  }, [map, isOnline, isOfflineMode, autoCacheMaps]);
 
   // Count cached tiles on mount
   useEffect(() => {
@@ -94,54 +134,37 @@ function OfflineTileManager() {
     countCachedTiles();
   }, []);
 
-  if (!isOnline) {
+  // Show offline status when offline
+  if (isOfflineMode || !isOnline || !navigator.onLine) {
     return (
       <div className="absolute top-2 left-2 z-[1000]">
-        <Card className="bg-yellow-50 border-yellow-200">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-sm">
-              <WifiOff className="h-4 w-4 text-yellow-600" />
-              <span className="text-yellow-800">Offline mode</span>
-              <Badge variant="secondary" className="text-xs">
-                {cachedTiles} tiles cached
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 shadow-sm">
+          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+            <WifiOff className="h-3 w-3" />
+            <span>Offline</span>
+            <Badge variant="secondary" className="text-xs">
+              {cachedTiles} tiles
+            </Badge>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Show caching status when online
   return (
     <div className="absolute top-2 left-2 z-[1000]">
-      <Card className="bg-white/90 backdrop-blur-sm">
-        <CardContent className="p-3">
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={downloadCurrentView}
-              disabled={isDownloading}
-              className="text-xs"
-            >
-              {isDownloading ? (
-                <>
-                  <Download className="h-3 w-3 mr-1 animate-pulse" />
-                  Downloading...
-                </>
-              ) : (
-                <>
-                  <Download className="h-3 w-3 mr-1" />
-                  Cache Area
-                </>
-              )}
-            </Button>
+      {isDownloading && (
+        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md px-2 py-1 shadow-sm">
+          <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300">
+            <Download className="h-3 w-3 animate-pulse" />
+            <span>Caching map...</span>
             <Badge variant="secondary" className="text-xs">
-              {cachedTiles} cached
+              {cachedTiles}
             </Badge>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }
@@ -240,7 +263,7 @@ export function OfflineMap({
         ref={mapRef}
       >
         <OfflineTileLayer />
-        <OfflineTileManager />
+        <AutoOfflineTileManager />
         <MapClickHandler />
         
         {showGeocaches && <GeocacheMarkers />}
@@ -261,15 +284,13 @@ export function OfflineMap({
 
       {/* Offline status overlay */}
       {!isOnline && (
-        <div className="absolute bottom-2 right-2 z-[1000]">
-          <Card className="bg-yellow-50 border-yellow-200">
-            <CardContent className="p-2">
-              <div className="flex items-center gap-2 text-xs text-yellow-800">
-                <WifiOff className="h-3 w-3" />
-                Using cached map data
-              </div>
-            </CardContent>
-          </Card>
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[1000]">
+          <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 shadow-sm">
+            <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+              <WifiOff className="h-3 w-3" />
+              <span>Cached map</span>
+            </div>
+          </div>
         </div>
       )}
     </div>

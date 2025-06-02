@@ -162,62 +162,40 @@ class OfflineSync {
   private async publishEvent(action: OfflineAction): Promise<void> {
     const eventData = action.data as { event: NostrEvent };
     
-    // This would integrate with your Nostr client
-    // For now, we'll simulate the API call
-    const response = await fetch('/api/nostr/publish', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventData),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to publish event: ${response.statusText}`);
-    }
+    // TODO: This should integrate with your actual Nostr client
+    // For now, we'll just log that we would publish the event
+    console.log('Would publish event:', eventData.event.id);
+    
+    // Simulate success for now
+    // In a real implementation, you would use your nostr client here:
+    // await nostr.event(eventData.event);
   }
 
   private async updateProfile(action: OfflineAction): Promise<void> {
     const profileData = action.data as { metadata: Record<string, unknown> };
     
-    // This would integrate with your Nostr client
-    const response = await fetch('/api/nostr/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(profileData),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to update profile: ${response.statusText}`);
-    }
+    // TODO: This should integrate with your actual Nostr client
+    console.log('Would update profile:', profileData);
+    
+    // Simulate success for now
   }
 
   private async createLog(action: OfflineAction): Promise<void> {
     const logData = action.data as { geocacheId: string; content: string; type: string };
     
-    // This would integrate with your Nostr client
-    const response = await fetch('/api/nostr/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(logData),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create log: ${response.statusText}`);
-    }
+    // TODO: This should integrate with your actual Nostr client
+    console.log('Would create log:', logData);
+    
+    // Simulate success for now
   }
 
   private async bookmarkCache(action: OfflineAction): Promise<void> {
     const bookmarkData = action.data as { geocacheId: string; bookmarked: boolean };
     
-    // This would integrate with your Nostr client
-    const response = await fetch('/api/nostr/bookmark', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bookmarkData),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to bookmark cache: ${response.statusText}`);
-    }
+    // TODO: This should integrate with your actual Nostr client
+    console.log('Would bookmark cache:', bookmarkData);
+    
+    // Simulate success for now
   }
 
   // Queue offline actions

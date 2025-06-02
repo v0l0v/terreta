@@ -177,6 +177,8 @@ export function useOfflineSettings() {
           'offlineMode',
           'offlineOnly',
           'autoSync',
+          'autoCacheMaps', // Add auto cache maps setting
+          'storageConfig', // Add storage config
         ];
 
         const settingsData: Record<string, unknown> = {};
@@ -186,6 +188,13 @@ export function useOfflineSettings() {
             settingsData[key] = value;
           }
         }
+        
+        // Set default for autoCacheMaps if not set
+        if (settingsData.autoCacheMaps === undefined) {
+          settingsData.autoCacheMaps = true;
+          setSetting.mutate({ key: 'autoCacheMaps', value: true });
+        }
+        
         setSettings(settingsData);
       } catch (error) {
         console.error('Failed to load settings:', error);
@@ -205,19 +214,50 @@ export function useOfflineSettings() {
 
 // Hook for checking if app is in offline mode
 export function useOfflineMode() {
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(!navigator.onLine);
   const { status } = useOfflineSync();
+  const { settings } = useOfflineSettings();
 
   useEffect(() => {
-    // Consider app offline if not connected or connection quality is offline
-    setIsOfflineMode(!status.isConnected || status.connectionQuality === 'offline');
-  }, [status.isConnected, status.connectionQuality]);
+    // Check if user has enabled offline-only mode
+    const isOfflineOnly = settings.offlineOnly as boolean ?? false;
+    
+    // Consider app offline if:
+    // 1. User has enabled offline-only mode, OR
+    // 2. Not connected or connection quality is offline
+    const offline = isOfflineOnly || !status.isConnected || status.connectionQuality === 'offline';
+    setIsOfflineMode(offline);
+  }, [status.isConnected, status.connectionQuality, settings.offlineOnly]);
+
+  // Also listen to browser online/offline events for immediate feedback
+  useEffect(() => {
+    const handleOnline = () => {
+      // Don't immediately set to online - let connectivity checker verify
+      console.log('Browser reports online, checking actual connectivity...');
+    };
+    const handleOffline = () => {
+      console.log('Browser reports offline');
+      setIsOfflineMode(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Check if user has enabled offline-only mode
+  const isOfflineOnly = settings.offlineOnly as boolean ?? false;
 
   return {
     isOfflineMode,
-    isOnline: status.isOnline,
-    isConnected: status.isConnected,
-    connectionQuality: status.connectionQuality,
+    // When offline-only mode is enabled, always report as offline
+    isOnline: isOfflineOnly ? false : (status.isOnline && navigator.onLine),
+    isConnected: isOfflineOnly ? false : (status.isConnected && navigator.onLine),
+    connectionQuality: isOfflineOnly ? 'offline' : status.connectionQuality,
     isSyncing: status.isSyncing,
     pendingActions: status.pendingActions,
     lastSyncTime: status.lastSyncTime,

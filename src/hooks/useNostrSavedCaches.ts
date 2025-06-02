@@ -10,6 +10,8 @@ import {
   parseGeocacheEvent, 
   createGeocacheCoordinate 
 } from '@/lib/nip-gc';
+import { useOfflineMode } from '@/hooks/useOfflineStorage';
+import { offlineStorage } from '@/lib/offlineStorage';
 
 interface SavedCache {
   id: string;
@@ -37,56 +39,136 @@ export function useNostrSavedCaches() {
   const { user } = useCurrentUser();
   const { mutateAsync: publishEvent } = useNostrPublish();
   const queryClient = useQueryClient();
+  const { isOnline, isOfflineMode } = useOfflineMode();
 
   // Query user's cache bookmark and deletion events
   const { data: bookmarkEvents, refetch: refetchBookmarks, isLoading: isLoadingBookmarks } = useQuery({
-    queryKey: ['cache-bookmarks', user?.pubkey],
+    queryKey: ['cache-bookmarks', user?.pubkey, isOnline && !isOfflineMode && navigator.onLine],
     queryFn: async () => {
-      if (!user?.pubkey || !nostr) return [];
+      if (!user?.pubkey) return [];
       
-      try {
-        // Query both bookmark events (kind 1985) and deletion events (kind 5)
-        const queries = [
-          { 
-            kinds: [CACHE_BOOKMARK_KIND], 
-            authors: [user.pubkey],
-            '#l': ['treasures/cache-bookmark'],
-            limit: 1000
-          },
-          {
-            kinds: [5], // Deletion events
-            authors: [user.pubkey],
-            limit: 1000
+      console.log('useNostrSavedCaches bookmark query starting...', {
+        isOnline,
+        isOfflineMode,
+        navigatorOnLine: navigator.onLine,
+        userPubkey: user.pubkey.slice(0, 8)
+      });
+      
+      // If we're truly offline or in offline mode, use cached data immediately
+      if (!navigator.onLine || isOfflineMode || !isOnline) {
+        console.log('Using offline bookmark data - not connected to internet');
+        try {
+          const bookmarkEvents = await offlineStorage.getEventsByKind(CACHE_BOOKMARK_KIND);
+          const deletionEvents = await offlineStorage.getEventsByKind(5);
+          
+          // Filter events by user
+          const userBookmarks = bookmarkEvents.filter(event => event.pubkey === user.pubkey);
+          const userDeletions = deletionEvents.filter(event => event.pubkey === user.pubkey);
+          
+          // Filter to only cache bookmark events and relevant deletion events
+          const relevantEvents = [...userBookmarks, ...userDeletions].filter(event => {
+            if (event.kind === CACHE_BOOKMARK_KIND) {
+              return event.tags.some(tag => tag[0] === 'a' && tag[1]?.startsWith('37515:'));
+            } else if (event.kind === 5) {
+              return event.tags.some(tag => tag[0] === 'e');
+            }
+            return false;
+          });
+          
+          console.log(`Found ${relevantEvents.length} offline bookmark events`);
+          return relevantEvents.sort((a, b) => b.created_at - a.created_at);
+        } catch (error) {
+          console.error('Failed to get offline bookmark data:', error);
+          return [];
+        }
+      }
+      
+      // Try online first if available
+      if (isOnline && nostr) {
+        try {
+          // Query both bookmark events (kind 1985) and deletion events (kind 5)
+          const queries = [
+            { 
+              kinds: [CACHE_BOOKMARK_KIND], 
+              authors: [user.pubkey],
+              '#l': ['treasures/cache-bookmark'],
+              limit: 1000
+            },
+            {
+              kinds: [5], // Deletion events
+              authors: [user.pubkey],
+              limit: 1000
+            }
+          ];
+          
+          // Safari-compatible query with shorter timeout
+          const events = await Promise.race([
+            nostr.query(queries),
+            new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error('Bookmark query timeout')), 5000)
+            )
+          ]);
+          
+          // Filter to only cache bookmark events and relevant deletion events
+          const relevantEvents = events.filter(event => {
+            if (event.kind === CACHE_BOOKMARK_KIND) {
+              // Include bookmark events for caches
+              return event.tags.some(tag => tag[0] === 'a' && tag[1]?.startsWith('37515:'));
+            } else if (event.kind === 5) {
+              // Include deletion events that reference bookmark events
+              return event.tags.some(tag => tag[0] === 'e');
+            }
+            return false;
+          });
+          
+          // Cache bookmark events offline for future use
+          for (const event of relevantEvents) {
+            try {
+              await offlineStorage.storeEvent(event);
+            } catch (error) {
+              console.warn('Failed to cache bookmark event offline:', error);
+            }
           }
-        ];
+          
+          console.log(`Online bookmark query successful - found ${relevantEvents.length} events`);
+          return relevantEvents.sort((a, b) => b.created_at - a.created_at);
+        } catch (error) {
+          console.warn('Online bookmark query failed, falling back to offline data:', error);
+          // Fall through to offline query
+        }
+      }
+      
+      // Offline mode or online query failed - use cached data
+      try {
+        const bookmarkEvents = await offlineStorage.getEventsByKind(CACHE_BOOKMARK_KIND);
+        const deletionEvents = await offlineStorage.getEventsByKind(5);
         
-        // Safari-compatible query with shorter timeout
-        const events = await Promise.race([
-          nostr.query(queries),
-          new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('Bookmark query timeout')), 5000)
-          )
-        ]);
+        // Filter events by user
+        const userBookmarks = bookmarkEvents.filter(event => event.pubkey === user.pubkey);
+        const userDeletions = deletionEvents.filter(event => event.pubkey === user.pubkey);
         
         // Filter to only cache bookmark events and relevant deletion events
-        const relevantEvents = events.filter(event => {
+        const relevantEvents = [...userBookmarks, ...userDeletions].filter(event => {
           if (event.kind === CACHE_BOOKMARK_KIND) {
-            // Include bookmark events for caches
             return event.tags.some(tag => tag[0] === 'a' && tag[1]?.startsWith('37515:'));
           } else if (event.kind === 5) {
-            // Include deletion events that reference bookmark events
             return event.tags.some(tag => tag[0] === 'e');
           }
           return false;
         });
         
+        console.log(`Offline bookmark query fallback - found ${relevantEvents.length} events`);
         return relevantEvents.sort((a, b) => b.created_at - a.created_at);
       } catch (error) {
+        console.error('Failed to get offline bookmark data:', error);
         return [];
       }
     },
-    enabled: !!user?.pubkey && !!nostr,
-    staleTime: 30000, // 30 seconds
+    enabled: !!user?.pubkey,
+    staleTime: (isOnline && !isOfflineMode && navigator.onLine) ? 30000 : Infinity, // 30 seconds online, never stale offline
+    retry: false, // Disable retries to prevent cache invalidation
+    refetchOnReconnect: true, // Refetch when connection is restored
+    networkMode: 'always', // Always run queries regardless of network status
   });
 
   // Extract saved cache coordinates from bookmark events, considering deletions
@@ -128,56 +210,177 @@ export function useNostrSavedCaches() {
 
   // Query the actual geocache events for saved caches
   const { data: savedGeocacheEvents, isLoading: isLoadingCaches } = useQuery({
-    queryKey: ['saved-geocaches', savedCacheCoords],
+    queryKey: ['saved-geocaches', savedCacheCoords, isOnline && !isOfflineMode && navigator.onLine],
     queryFn: async () => {
-      if (!nostr || savedCacheCoords.length === 0) return [];
+      if (savedCacheCoords.length === 0) return [];
       
+      console.log('useNostrSavedCaches geocache query starting...', {
+        coordsCount: savedCacheCoords.length,
+        isOnline,
+        isOfflineMode,
+        navigatorOnLine: navigator.onLine
+      });
+      
+      // If we're truly offline or in offline mode, use cached data immediately
+      if (!navigator.onLine || isOfflineMode || !isOnline) {
+        console.log('Using offline geocache data - not connected to internet');
+        try {
+          const events: NostrEvent[] = [];
+          
+          // Try to get cached geocache events for each coordinate
+          for (const coord of savedCacheCoords) {
+            const [kind, pubkey, dTag] = coord.split(':');
+            
+            // First try to get from cached geocaches
+            const cachedGeocaches = await offlineStorage.getAllGeocaches();
+            const cachedGeocache = cachedGeocaches.find(cache => 
+              cache.event.pubkey === pubkey && 
+              cache.event.tags.some(tag => tag[0] === 'd' && tag[1] === dTag)
+            );
+            
+            if (cachedGeocache) {
+              events.push(cachedGeocache.event);
+            } else {
+              // Try to get from general event storage
+              const allEvents = await offlineStorage.getEventsByKind(parseInt(kind));
+              const matchingEvent = allEvents.find(event => 
+                event.pubkey === pubkey && 
+                event.tags.some(tag => tag[0] === 'd' && tag[1] === dTag)
+              );
+              if (matchingEvent) {
+                events.push(matchingEvent);
+              }
+            }
+          }
+          
+          console.log(`Found ${events.length} offline saved geocache events`);
+          return events;
+        } catch (error) {
+          console.error('Failed to get offline saved geocache data:', error);
+          return [];
+        }
+      }
+      
+      // Try online first if available
+      if (isOnline && nostr) {
+        try {
+          // Build filters for each saved geocache coordinate
+          const filters = savedCacheCoords.map(coord => {
+            const [kind, pubkey, dTag] = coord.split(':');
+            return {
+              kinds: [parseInt(kind)],
+              authors: [pubkey],
+              '#d': [dTag],
+              limit: 1
+            };
+          });
+          
+          // Safari-compatible query with batch processing
+          const events: NostrEvent[] = [];
+          
+          // Process filters in smaller batches for Safari
+          const batchSize = 5;
+          for (let i = 0; i < filters.length; i += batchSize) {
+            const batch = filters.slice(i, i + batchSize);
+            try {
+              const batchEvents = await Promise.race([
+                nostr.query(batch),
+                new Promise<never>((_, reject) => 
+                  setTimeout(() => reject(new Error('Batch query timeout')), 5000)
+                )
+              ]);
+              events.push(...batchEvents);
+            } catch (error) {
+              // Continue with other batches
+            }
+          }
+          
+          // Cache geocache events offline for future use
+          for (const event of events) {
+            try {
+              await offlineStorage.storeEvent(event);
+              
+              // Also store as cached geocache for easier retrieval
+              const parsed = parseGeocacheEvent(event);
+              if (parsed) {
+                await offlineStorage.storeGeocache({
+                  id: event.id,
+                  event,
+                  lastUpdated: Date.now(),
+                  coordinates: [parsed.location.lat, parsed.location.lng],
+                  difficulty: parsed.difficulty,
+                  terrain: parsed.terrain,
+                  type: parsed.type,
+                });
+              }
+            } catch (error) {
+              console.warn('Failed to cache geocache event offline:', error);
+            }
+          }
+          
+          console.log(`Online saved geocache query successful - found ${events.length} events`);
+          return events;
+        } catch (error) {
+          console.warn('Online saved geocache query failed, falling back to offline data:', error);
+          // Fall through to offline query
+        }
+      }
+      
+      // Offline mode or online query failed - use cached data
       try {
-        // Build filters for each saved geocache coordinate
-        const filters = savedCacheCoords.map(coord => {
+        const events: NostrEvent[] = [];
+        
+        // Try to get cached geocache events for each coordinate
+        for (const coord of savedCacheCoords) {
           const [kind, pubkey, dTag] = coord.split(':');
-          return {
-            kinds: [parseInt(kind)],
-            authors: [pubkey],
-            '#d': [dTag],
-            limit: 1
-          };
-        });
-        
-        // Safari-compatible query with batch processing
-        const events: any[] = [];
-        
-        // Process filters in smaller batches for Safari
-        const batchSize = 5;
-        for (let i = 0; i < filters.length; i += batchSize) {
-          const batch = filters.slice(i, i + batchSize);
-          try {
-            const batchEvents = await Promise.race([
-              nostr.query(batch),
-              new Promise<never>((_, reject) => 
-                setTimeout(() => reject(new Error('Batch query timeout')), 5000)
-              )
-            ]);
-            events.push(...batchEvents);
-          } catch (error) {
-            // Continue with other batches
+          
+          // First try to get from cached geocaches
+          const cachedGeocaches = await offlineStorage.getAllGeocaches();
+          const cachedGeocache = cachedGeocaches.find(cache => 
+            cache.event.pubkey === pubkey && 
+            cache.event.tags.some(tag => tag[0] === 'd' && tag[1] === dTag)
+          );
+          
+          if (cachedGeocache) {
+            events.push(cachedGeocache.event);
+          } else {
+            // Try to get from general event storage
+            const allEvents = await offlineStorage.getEventsByKind(parseInt(kind));
+            const matchingEvent = allEvents.find(event => 
+              event.pubkey === pubkey && 
+              event.tags.some(tag => tag[0] === 'd' && tag[1] === dTag)
+            );
+            if (matchingEvent) {
+              events.push(matchingEvent);
+            }
           }
         }
         
+        console.log(`Offline saved geocache query fallback - found ${events.length} events`);
         return events;
       } catch (error) {
+        console.error('Failed to get offline saved geocache data:', error);
         return [];
       }
     },
-    enabled: savedCacheCoords.length > 0 && !!nostr,
-    staleTime: 60000, // 1 minute
+    enabled: savedCacheCoords.length > 0,
+    staleTime: (isOnline && !isOfflineMode && navigator.onLine) ? 60000 : Infinity, // 1 minute online, never stale offline
+    retry: false, // Disable retries to prevent cache invalidation
+    refetchOnReconnect: true, // Refetch when connection is restored
+    networkMode: 'always', // Always run queries regardless of network status
   });
 
   // Query log counts for saved caches
   const { data: savedCacheLogCounts, isLoading: isLoadingLogCounts } = useQuery({
-    queryKey: ['saved-cache-log-counts', savedCacheCoords],
+    queryKey: ['saved-cache-log-counts', savedCacheCoords, isOnline && !isOfflineMode && navigator.onLine],
     queryFn: async () => {
-      if (!nostr || savedCacheCoords.length === 0) return new Map();
+      if (savedCacheCoords.length === 0) return new Map();
+      
+      // Skip log counts in offline mode to avoid network requests
+      if (!navigator.onLine || isOfflineMode || !isOnline || !nostr) {
+        console.log('Skipping log counts query - offline mode');
+        return new Map();
+      }
       
       try {
         // Single filter for all log events
@@ -216,13 +419,18 @@ export function useNostrSavedCaches() {
           }
         }
         
+        console.log(`Log counts query successful - found counts for ${logCounts.size} caches`);
         return logCounts;
       } catch (error) {
+        console.warn('Log counts query failed:', error);
         return new Map();
       }
     },
-    enabled: savedCacheCoords.length > 0 && !!nostr,
-    staleTime: 60000, // 1 minute
+    enabled: savedCacheCoords.length > 0,
+    staleTime: (isOnline && !isOfflineMode && navigator.onLine) ? 60000 : Infinity, // 1 minute online, never stale offline
+    retry: false,
+    refetchOnReconnect: true,
+    networkMode: 'always',
   });
 
   // Convert geocache events to SavedCache format
@@ -281,8 +489,7 @@ export function useNostrSavedCaches() {
       return;
     }
 
-    // Publish a bookmark event for this cache
-    await publishEvent({
+    const bookmarkEvent = {
       kind: CACHE_BOOKMARK_KIND,
       content: `Saved cache: ${geocache.name}`,
       tags: [
@@ -293,12 +500,38 @@ export function useNostrSavedCaches() {
         ['action', 'save'],
         ['client', 'treasures']
       ],
-    });
+    };
+
+    if (isOnline) {
+      try {
+        // Publish online
+        await publishEvent(bookmarkEvent);
+      } catch (error) {
+        console.warn('Failed to publish bookmark online, storing offline:', error);
+        // Store offline for later sync
+        if (user.signer) {
+          const signedEvent = await user.signer.signEvent({
+            ...bookmarkEvent,
+            created_at: Math.floor(Date.now() / 1000),
+          });
+          await offlineStorage.storeEvent(signedEvent);
+        }
+      }
+    } else {
+      // Offline mode - store for later sync
+      if (user.signer) {
+        const signedEvent = await user.signer.signEvent({
+          ...bookmarkEvent,
+          created_at: Math.floor(Date.now() / 1000),
+        });
+        await offlineStorage.storeEvent(signedEvent);
+      }
+    }
 
     // Refetch bookmarks to update UI
     await refetchBookmarks();
     queryClient.invalidateQueries({ queryKey: ['saved-geocaches'] });
-  }, [user, savedCacheCoords, publishEvent, refetchBookmarks, queryClient]);
+  }, [user, savedCacheCoords, publishEvent, refetchBookmarks, queryClient, isOnline]);
 
   // Unsave cache by deleting the bookmark event
   const unsaveCache = useCallback(async (geocache: Geocache) => {
@@ -314,21 +547,74 @@ export function useNostrSavedCaches() {
     });
 
     if (bookmarkEvent) {
-      // Publish a deletion event for the bookmark
-      await publishEvent({
+      const deletionEvent = {
         kind: 5, // Event deletion request
         content: `Removed bookmark for cache: ${geocache.name}`,
         tags: [
           ['e', bookmarkEvent.id], // Reference to the bookmark event to delete
           ['client', 'treasures']
         ],
-      });
+      };
+
+      if (isOnline) {
+        try {
+          // Publish deletion online
+          await publishEvent(deletionEvent);
+        } catch (error) {
+          console.warn('Failed to publish deletion online, storing offline:', error);
+          // Store offline for later sync
+          if (user.signer) {
+            const signedEvent = await user.signer.signEvent({
+              ...deletionEvent,
+              created_at: Math.floor(Date.now() / 1000),
+            });
+            await offlineStorage.storeEvent(signedEvent);
+          }
+        }
+      } else {
+        // Offline mode - store for later sync
+        if (user.signer) {
+          const signedEvent = await user.signer.signEvent({
+            ...deletionEvent,
+            created_at: Math.floor(Date.now() / 1000),
+          });
+          await offlineStorage.storeEvent(signedEvent);
+        }
+      }
+
+      // Remove from local storage immediately for better UX
+      try {
+        // Remove the bookmark event from offline storage
+        await offlineStorage.removeEvent(bookmarkEvent.id);
+        
+        // Remove the geocache from offline storage if it exists
+        await offlineStorage.removeGeocache(geocache.id);
+        
+        // Also remove from browser cache if it exists
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          for (const cacheName of cacheNames) {
+            const cache = await caches.open(cacheName);
+            // Remove any cached data related to this geocache
+            const keys = await cache.keys();
+            for (const request of keys) {
+              if (request.url.includes(geocache.id) || request.url.includes(geocache.dTag)) {
+                await cache.delete(request);
+              }
+            }
+          }
+        }
+        
+        console.log(`Removed cache ${geocache.name} from local storage`);
+      } catch (error) {
+        console.warn('Failed to remove cache from local storage:', error);
+      }
     }
 
     // Refetch bookmarks to update UI
     await refetchBookmarks();
     queryClient.invalidateQueries({ queryKey: ['saved-geocaches'] });
-  }, [user, bookmarkEvents, publishEvent, refetchBookmarks, queryClient]);
+  }, [user, bookmarkEvents, publishEvent, refetchBookmarks, queryClient, isOnline]);
 
   // Toggle save cache
   const toggleSaveCache = useCallback(async (geocache: Geocache) => {
@@ -366,6 +652,33 @@ export function useNostrSavedCaches() {
           ['client', 'treasures']
         ],
       });
+
+      // Remove all saved caches from local storage immediately
+      try {
+        // Remove all bookmark events from offline storage
+        for (const event of saveBookmarkEvents) {
+          await offlineStorage.removeEvent(event.id);
+        }
+        
+        // Remove all saved geocaches from offline storage
+        for (const cache of savedCaches) {
+          await offlineStorage.removeGeocache(cache.id);
+        }
+        
+        // Clear related browser cache entries
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          for (const cacheName of cacheNames) {
+            if (cacheName.includes('saved') || cacheName.includes('bookmark')) {
+              await caches.delete(cacheName);
+            }
+          }
+        }
+        
+        console.log(`Cleared all ${saveBookmarkEvents.length} saved caches from local storage`);
+      } catch (error) {
+        console.warn('Failed to clear saved caches from local storage:', error);
+      }
     }
     
     // Force immediate cache invalidation
@@ -375,7 +688,7 @@ export function useNostrSavedCaches() {
     
     // Also refetch the bookmarks
     await refetchBookmarks();
-  }, [user, bookmarkEvents, publishEvent, refetchBookmarks, queryClient]);
+  }, [user, bookmarkEvents, publishEvent, refetchBookmarks, queryClient, savedCaches]);
 
   // Unsave cache by ID (for compatibility with existing components)
   const unsaveCacheById = useCallback(async (cacheId: string) => {

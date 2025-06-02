@@ -4,7 +4,7 @@
  */
 
 export const CACHE_NAMES = {
-  OSM_TILES: 'osm-tiles',
+  OSM_TILES: 'osm-tiles', // This matches the service worker cache name in vite.config.ts
   IMAGES: 'images',
 } as const;
 

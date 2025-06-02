@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Plus, Search, Compass, Trophy, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,30 @@ import LoginDialog from "@/components/auth/LoginDialog";
 import SignupDialog from "@/components/auth/SignupDialog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOfflineGeocaches } from "@/hooks/useOfflineGeocaches";
+import { offlineStorage } from "@/lib/offlineStorage";
 import { GeocacheList } from "@/components/GeocacheList";
 import { ComponentLoading } from "@/components/ui/loading";
 
 export default function Home() {
   const { user } = useCurrentUser();
   const { data: geocaches, isLoading } = useOfflineGeocaches({ limit: 3 });
+
+  // Debug function to test offline storage
+  const testOfflineStorage = async () => {
+    try {
+      console.log('Home: Testing offline storage...');
+      await offlineStorage.init();
+      const allCaches = await offlineStorage.getAllGeocaches();
+      console.log('Home: Offline storage test - found caches:', allCaches.length);
+    } catch (error) {
+      console.error('Home: Offline storage test failed:', error);
+    }
+  };
+
+  // Run test on component mount
+  useEffect(() => {
+    testOfflineStorage();
+  }, []);
   
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);

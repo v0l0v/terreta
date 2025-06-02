@@ -74,5 +74,22 @@ export function OfflineStatusBadge({ className }: { className?: string }) {
 
 // Simple icon-only version
 export function OfflineStatusIcon({ className }: { className?: string }) {
-  return <OfflineIndicator compact showDetails={false} className={className} />;
+  const { isConnected } = useOfflineMode();
+  const { settings } = useOfflineSettings();
+  
+  // Check if user has enabled offline-only mode
+  const isOfflineOnly = settings.offlineOnly as boolean ?? false;
+  
+  // Show offline if not connected OR if user has enabled offline-only mode
+  const showOffline = !isConnected || isOfflineOnly;
+
+  return (
+    <div className={cn('flex items-center gap-2', className)}>
+      {showOffline ? (
+        <WifiOff className="h-4 w-4 text-gray-500" />
+      ) : (
+        <Wifi className="h-4 w-4 text-green-500" />
+      )}
+    </div>
+  );
 }

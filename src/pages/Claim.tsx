@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Upload, AlertCircle, CheckCircle, QrCode } from 'lucide-react';
+import { Camera, Upload, AlertCircle, CheckCircle, QrCode, WifiOff } from 'lucide-react';
 import { CompassSpinner } from '@/components/ui/loading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/useToast';
+import { useOfflineMode } from '@/hooks/useOfflineStorage';
 import { parseVerificationFromHash } from '@/lib/verification';
 import jsQR from 'jsqr';
 import { BrowserQRCodeReader } from '@zxing/library';
@@ -13,6 +14,7 @@ import { BrowserQRCodeReader } from '@zxing/library';
 export default function Claim() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isOfflineMode } = useOfflineMode();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -325,6 +327,31 @@ export default function Claim() {
       reader.readAsDataURL(file);
     });
   };
+
+  if (isOfflineMode) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-md">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                <WifiOff className="h-6 w-6 text-gray-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Offline Mode</h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Claiming treasures requires an internet connection to verify and submit your find. Please check your connection and try again.
+                </p>
+              </div>
+              <Button onClick={() => navigate("/")} variant="outline" className="w-full">
+                Go Back
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">

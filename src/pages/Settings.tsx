@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { OfflineSettings } from "@/components/OfflineSettings";
+import { OfflineModeDebug } from "@/components/OfflineModeDebug";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import { EditProfileForm } from "@/components/EditProfileForm";
@@ -354,8 +355,11 @@ export default function Settings() {
                 Manage offline functionality and data synchronization
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               <OfflineSettings />
+              
+              {/* Debug component to verify offline-only mode is working */}
+              <OfflineModeDebug />
             </CardContent>
           </Card>
 
