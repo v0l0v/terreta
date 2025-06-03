@@ -71,6 +71,7 @@ export default function CacheDetail() {
     terrain: defaults.terrain,
     size: defaults.size,
     type: defaults.type,
+    hidden: false,
   });
   const [editImages, setEditImages] = useState<string[]>([]);
   const [locationVerification, setLocationVerification] = useState<LocationVerification | null>(null);
@@ -101,6 +102,7 @@ export default function CacheDetail() {
         terrain: geocache.terrain.toString(),
         size: geocache.size,
         type: geocache.type,
+        hidden: geocache.hidden || false,
       });
       setEditImages(geocache.images || []);
     }
@@ -181,6 +183,7 @@ export default function CacheDetail() {
         terrain: geocache.terrain.toString(),
         size: geocache.size,
         type: geocache.type,
+        hidden: geocache.hidden || false,
       });
       setEditImages(geocache.images || []);
     }
@@ -210,6 +213,7 @@ export default function CacheDetail() {
       difficulty: parseInt(editFormData.difficulty),
       terrain: parseInt(editFormData.terrain),
       images: editImages,
+      hidden: editFormData.hidden,
     }, {
       onSuccess: () => {
         setIsEditing(false);

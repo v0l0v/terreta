@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,7 @@ export interface GeocacheFormData {
   terrain: string;
   size: string;
   type: string;
+  hidden?: boolean;
 }
 
 export interface GeocacheFormProps {
@@ -182,6 +184,34 @@ export function CacheTerrainField({ value, onChange, fieldId = "terrain" }: Omit
   );
 }
 
+// === HIDDEN FIELD COMPONENT ===
+
+interface CacheHiddenFieldProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  fieldId?: string;
+}
+
+export function CacheHiddenField({ checked, onChange, fieldId = "hidden" }: CacheHiddenFieldProps) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id={fieldId}
+          checked={checked}
+          onCheckedChange={onChange}
+        />
+        <Label htmlFor={fieldId} className="text-sm font-medium cursor-pointer">
+          Hidden from public listings
+        </Label>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        When checked, this cache will not appear in public search results and listings. Only people with the direct link can find it.
+      </p>
+    </div>
+  );
+}
+
 // === IMAGE MANAGEMENT COMPONENT ===
 
 interface CacheImageManagerProps {
@@ -280,7 +310,7 @@ export function GeocacheForm({
   className
 }: GeocacheFormProps) {
   
-  const updateField = (field: keyof GeocacheFormData, value: string) => {
+  const updateField = (field: keyof GeocacheFormData, value: string | boolean) => {
     onFormDataChange({
       ...formData,
       [field]: value
@@ -339,6 +369,15 @@ export function GeocacheForm({
         />
       </div>
 
+      {/* Visibility Settings */}
+      <div className="space-y-4">
+        <CacheHiddenField
+          checked={formData.hidden || false}
+          onChange={(checked) => updateField('hidden', checked)}
+          fieldId={fieldPrefix ? `${fieldPrefix}-hidden` : 'hidden'}
+        />
+      </div>
+
       {/* Images */}
       <CacheImageManager
         images={images}
@@ -361,6 +400,7 @@ export function createDefaultGeocacheFormData(): GeocacheFormData {
     terrain: defaults.terrain,
     size: defaults.size,
     type: defaults.type,
+    hidden: false,
   };
 }
 

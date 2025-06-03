@@ -22,6 +22,7 @@ interface EditGeocacheData {
   size: string;
   type: string;
   images?: string[];
+  hidden?: boolean;
 }
 
 export function useEditGeocache(originalGeocache: Geocache | null) {
@@ -76,6 +77,7 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
         images: data.images,
         relays: originalGeocache.relays,
         verificationPubkey: originalGeocache.verificationPubkey, // Preserve verification key!
+        hidden: data.hidden,
       });
 
       const event = await publishEvent({
