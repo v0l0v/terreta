@@ -129,6 +129,10 @@ Verification events provide cryptographic proof that a someone physically locate
 }
 ```
 
+### Content
+
+The content field must follow the static format: `"Geocache verification for <finder-npub>"` where `<finder-npub>` is the NIP-19 encoded public key (npub) of the person who found the cache.
+
 ### Tags
 
 - `a` (required) - composite identifier containing the finder's pubkey and the geocache naddr being verified
