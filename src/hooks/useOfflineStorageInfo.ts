@@ -6,6 +6,7 @@ import { useState, useCallback } from 'react';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { getCacheEntryCount } from '@/lib/cacheUtils';
 import { CACHE_NAMES } from '@/lib/cacheConstants';
+import { getStorageConfig } from '@/lib/storageConfig';
 
 export interface StorageInfo {
   used: number;
@@ -31,13 +32,15 @@ export function useOfflineStorageInfo() {
   const refreshStorageInfo = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Get storage quota
+      // Get configured storage limit
+      const config = await getStorageConfig();
+      const configuredQuota = config.maxStorageSize;
+      
+      // Get actual storage usage
       let used = 0;
-      let quota = 0;
       if ('storage' in navigator && 'estimate' in navigator.storage) {
         const estimate = await navigator.storage.estimate();
         used = estimate.usage || 0;
-        quota = estimate.quota || 0;
       }
 
       // Count cached items in parallel
@@ -48,7 +51,7 @@ export function useOfflineStorageInfo() {
 
       setStorageInfo({
         used,
-        quota,
+        quota: configuredQuota, // Use configured limit instead of browser quota
         geocaches: geocaches.length,
         profiles: 0, // TODO: Implement profile counting
         events: 0, // TODO: Implement event counting

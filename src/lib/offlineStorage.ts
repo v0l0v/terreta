@@ -31,6 +31,7 @@ export interface CachedGeocache {
   id: string;
   event: NostrEvent;
   lastUpdated: number;
+  lastValidated?: number; // When we last confirmed this exists upstream
   coordinates?: [number, number];
   difficulty?: number;
   terrain?: number;
@@ -378,6 +379,34 @@ class OfflineStorage {
       });
     } catch (error) {
       console.warn('Failed to remove geocache from storage:', error);
+    }
+  }
+
+  // Update validation timestamp for a geocache
+  async updateGeocacheValidation(id: string): Promise<void> {
+    try {
+      const geocache = await this.getGeocache(id);
+      if (geocache) {
+        geocache.lastValidated = Date.now();
+        await this.storeGeocache(geocache);
+      }
+    } catch (error) {
+      console.warn('Failed to update geocache validation:', error);
+    }
+  }
+
+  // Get geocaches that haven't been validated recently
+  async getUnvalidatedGeocaches(maxAge: number = 24 * 60 * 60 * 1000): Promise<CachedGeocache[]> {
+    try {
+      const allCaches = await this.getAllGeocaches();
+      const cutoff = Date.now() - maxAge;
+      
+      return allCaches.filter(cache => 
+        !cache.lastValidated || cache.lastValidated < cutoff
+      );
+    } catch (error) {
+      console.warn('Failed to get unvalidated geocaches:', error);
+      return [];
     }
   }
 

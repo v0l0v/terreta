@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Plus, X, Globe, User, Palette, Sun, Moon, Monitor, Download, RefreshCw, Smartphone, Wifi } from "lucide-react";
+import { MapPin, Plus, X, Globe, Palette, Sun, Moon, Monitor, Download, RefreshCw, Smartphone, Wifi } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { OfflineSettings } from "@/components/OfflineSettings";
-import { OfflineModeDebug } from "@/components/OfflineModeDebug";
+import { CacheStatus } from "@/components/CacheStatus";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
-import { EditProfileForm } from "@/components/EditProfileForm";
 import { usePWAUpdate } from "@/hooks/usePWAUpdate";
 
 const DEFAULT_GEOCACHING_RELAYS = [
@@ -191,7 +190,7 @@ export default function Settings() {
             <CardHeader>
               <CardTitle>Settings</CardTitle>
               <CardDescription>
-                Configure your profile and geocaching preferences
+                Configure your app and geocaching preferences
               </CardDescription>
             </CardHeader>
           </Card>
@@ -358,25 +357,12 @@ export default function Settings() {
             <CardContent className="space-y-6">
               <OfflineSettings />
               
-              {/* Debug component to verify offline-only mode is working */}
-              <OfflineModeDebug />
+              {/* Cache status and invalidation controls */}
+              <CacheStatus />
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile Settings
-              </CardTitle>
-              <CardDescription>
-                Update your profile information and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EditProfileForm />
-            </CardContent>
-          </Card>
+
 
           <DetailsCard title={
             <div className="flex items-center gap-2">

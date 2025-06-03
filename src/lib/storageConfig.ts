@@ -66,16 +66,22 @@ export async function getStorageUsage(): Promise<{
   quota: number;
   percentage: number;
 }> {
+  // Get the configured storage limit (not the browser's quota)
+  // This ensures we respect the user's configured limit (default 2GB)
+  // rather than using the browser's potentially much larger quota
+  const config = await getStorageConfig();
+  const configuredQuota = config.maxStorageSize;
+  
   try {
     if ('storage' in navigator && 'estimate' in navigator.storage) {
       const estimate = await navigator.storage.estimate();
       const used = estimate.usage || 0;
-      const quota = estimate.quota || DEFAULT_STORAGE_LIMIT;
       
+      // Use the configured limit, not the browser's quota
       return {
         used,
-        quota,
-        percentage: quota > 0 ? used / quota : 0,
+        quota: configuredQuota,
+        percentage: configuredQuota > 0 ? used / configuredQuota : 0,
       };
     }
   } catch (error) {
@@ -94,14 +100,14 @@ export async function getStorageUsage(): Promise<{
     
     return {
       used: estimatedSize,
-      quota: DEFAULT_STORAGE_LIMIT,
-      percentage: estimatedSize / DEFAULT_STORAGE_LIMIT,
+      quota: configuredQuota,
+      percentage: estimatedSize / configuredQuota,
     };
   } catch (error) {
     console.warn('Failed to estimate storage usage:', error);
     return {
       used: 0,
-      quota: DEFAULT_STORAGE_LIMIT,
+      quota: configuredQuota,
       percentage: 0,
     };
   }
@@ -112,7 +118,10 @@ export async function isStorageNearLimit(): Promise<boolean> {
   const config = await getStorageConfig();
   const usage = await getStorageUsage();
   
-  return usage.percentage >= config.cleanupThreshold;
+  // Calculate percentage based on configured limit
+  const percentage = usage.quota > 0 ? usage.used / usage.quota : 0;
+  
+  return percentage >= config.cleanupThreshold;
 }
 
 // Format bytes for display

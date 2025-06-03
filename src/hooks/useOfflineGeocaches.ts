@@ -8,6 +8,7 @@ import { useNostr } from '@nostrify/react';
 import type { Geocache } from '@/types/geocache';
 import { useCurrentUser } from './useCurrentUser';
 import { useOfflineSync, useOfflineMode } from './useOfflineStorage';
+import { useCacheInvalidation } from './useCacheInvalidation';
 import { offlineStorage, CachedGeocache } from '@/lib/offlineStorage';
 import { queryNostr, batchQueryNostr } from '@/lib/nostrQuery';
 import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
@@ -43,6 +44,9 @@ export type GeocacheWithDistance = Geocache & { distance?: number };
 export function useOfflineGeocaches(options: UseOfflineGeocachesOptions = {}) {
   const { nostr } = useNostr();
   const { isOnline, isConnected, connectionQuality } = useOfflineMode();
+  
+  // Enable cache invalidation monitoring
+  useCacheInvalidation();
 
   return useQuery({
     queryKey: ['geocaches', 'offline-aware', options, isOnline && isConnected && navigator.onLine, isSafari()],
@@ -110,6 +114,7 @@ export function useOfflineGeocaches(options: UseOfflineGeocachesOptions = {}) {
               id: geocache.id,
               event: events.find(e => e.id === geocache.id)!,
               lastUpdated: Date.now(),
+              lastValidated: Date.now(), // Mark as validated since we just fetched it
               coordinates: geocache.location ? [geocache.location.lat, geocache.location.lng] : undefined,
               difficulty: geocache.difficulty,
               terrain: geocache.terrain,
@@ -461,6 +466,7 @@ export function useOfflineCreateGeocache() {
             id: signedEvent.id,
             event: signedEvent,
             lastUpdated: Date.now(),
+            lastValidated: Date.now(), // Mark as validated since we just created it
             coordinates: [geocacheData.coordinates.lat, geocacheData.coordinates.lng],
             difficulty: geocacheData.difficulty,
             terrain: geocacheData.terrain,

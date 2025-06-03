@@ -11,7 +11,6 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { DesktopHeader } from "@/components/DesktopHeader";
 import { LoginArea } from "@/components/auth/LoginArea";
 import { useOfflineAdaptiveGeocaches, type GeocacheWithDistance } from "@/hooks/useOfflineGeocaches";
-import { offlineStorage } from "@/lib/offlineStorage";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { DetailedGeocacheCard, CompactGeocacheCard } from "@/components/ui/geocache-card";
@@ -48,30 +47,6 @@ export default function Map() {
   const mapRef = useRef<L.Map | null>(null);
   
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
-
-  // Debug function to test offline storage
-  const testOfflineStorage = async () => {
-    try {
-      console.log('Testing offline storage...');
-      await offlineStorage.init();
-      const allCaches = await offlineStorage.getAllGeocaches();
-      console.log('Offline storage test - found caches:', allCaches.length);
-      allCaches.forEach((cache, index) => {
-        console.log(`Cache ${index + 1}:`, {
-          id: cache.id,
-          coordinates: cache.coordinates,
-          lastUpdated: new Date(cache.lastUpdated).toISOString()
-        });
-      });
-    } catch (error) {
-      console.error('Offline storage test failed:', error);
-    }
-  };
-
-  // Run test on component mount
-  useEffect(() => {
-    testOfflineStorage();
-  }, []);
   
   const { data: geocaches, isLoading, error, refetch } = useOfflineAdaptiveGeocaches({
     search: searchQuery,
@@ -118,9 +93,6 @@ export default function Map() {
       />
     </>
   );
-
-  // Add debugging for geocaches
-  // (debugging code removed for production)
 
   useEffect(() => {
     // Update user location when coords change

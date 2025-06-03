@@ -6,6 +6,7 @@ import { queryNostr } from '@/lib/nostrQuery';
 import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
 import { isSafari } from '@/lib/safariNostr';
 import { useOfflineMode } from '@/hooks/useOfflineStorage';
+import { useCacheInvalidation } from '@/hooks/useCacheInvalidation';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { 
   NIP_GC_KINDS, 
@@ -17,6 +18,9 @@ import {
 export function useGeocache(id: string) {
   const { nostr } = useNostr();
   const { isOnline, isConnected, connectionQuality } = useOfflineMode();
+  
+  // Enable cache invalidation monitoring
+  useCacheInvalidation();
 
   return useQuery({
     queryKey: ['geocache', id, isOnline && isConnected && navigator.onLine, isSafari()],
@@ -116,6 +120,7 @@ export function useGeocache(id: string) {
             id: geocache.id,
             event: events[0],
             lastUpdated: Date.now(),
+            lastValidated: Date.now(), // Mark as validated since we just fetched it
             coordinates: geocache.location ? [geocache.location.lat, geocache.location.lng] : undefined,
             difficulty: geocache.difficulty,
             terrain: geocache.terrain,
