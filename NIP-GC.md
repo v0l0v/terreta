@@ -44,7 +44,7 @@ The content field contains the cache description and any additional information 
 
 - `d` (required) - unique identifier for the cache
 - `name` (required) - human-readable name for the cache  
-- `g` (required) - geohash of cache location
+- `g` (required) - geohash of cache location (minimum 8 characters for ±38m accuracy)
 - `difficulty` (required) - integer 1-5 indicating puzzle/finding difficulty
 - `terrain` (required) - integer 1-5 indicating physical difficulty  
 - `size` (required) - one of: `micro`, `small`, `regular`, `large`, `other`
@@ -175,6 +175,7 @@ For the best Geocaching experience, clients implementing geocaching support shou
 - Support hint encoding, such as ROT13, to prevent spoilers.
 - Determine cache status from recent log patterns. Multiple DNF entries and/or maintenance notes would indicate an issue with the cache.
 - Publish logs to relays specified in the cache's `r` tags when available.
+- Validate geohash precision meets minimum requirements (8+ characters, 9+ for micro caches) before accepting cache submissions.
 
 ## Examples
 
@@ -187,7 +188,7 @@ For the best Geocaching experience, clients implementing geocaching support shou
   "tags": [
     ["d", "first-treasure-1748619568668"],
     ["name", "First Treasure"], 
-    ["g", "u4xsu6"],
+    ["g", "u4xsu6ry"],
     ["difficulty", "1"],
     ["terrain", "1"],
     ["size", "small"],
@@ -207,7 +208,7 @@ For the best Geocaching experience, clients implementing geocaching support shou
   "tags": [
     ["d", "verified-treasure-1748619568669"],
     ["name", "Verified Treasure"], 
-    ["g", "u4xsu6"],
+    ["g", "u4xsu6ry"],
     ["difficulty", "3"],
     ["terrain", "2"],
     ["size", "small"],
@@ -277,7 +278,7 @@ For the best Geocaching experience, clients implementing geocaching support shou
   ],
   "pubkey": "6805d4e5c0df48b4f76e2fdcb67a2acb1d97567b01c6fe17a236dc32f34f1c07",
   "created_at": 1672531200,
-  "sig": "3045022100f8ab7ce6c8b6f7d2e1a4b5c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9022059b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8"
+  "sig": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456789012345678901234567890abcdef1234567890abcdef1234567890abcdef12"
 }
 ```
 
@@ -288,8 +289,8 @@ For the best Geocaching experience, clients implementing geocaching support shou
   "kind": 7516,
   "content": "Found it! Great hiding spot.",
   "tags": [
-    ["a", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:first-treasure-1748619568668"],
-    ["verification", "{\"kind\":7517,\"content\":\"Geocache verification for npub1qc0lc5lxnhxnfxlw2lxkv4x4vp6xsf4d5qwvlhfx6qmz6x4nfhqd8h2z3\",\"tags\":[[\"a\",\"0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:naddr1qqxnzd3e8q6n2dfk8qcnjve48qmnsw3jsqgswaehxw309aex2mrp0yhx6tpdsek6w309aex2mrp0yh56tnwdus8vatjvs6kzdrz956k7tjzw6qzypzgd2dmgxhxf34hnlw2y03nckr8f4g6mw9flxqq65v94zkp77rqfgrf8\"]],\"pubkey\":\"6805d4e5c0df48b4f76e2fdcb67a2acb1d97567b01c6fe17a236dc32f34f1c07\",\"created_at\":1672531200,\"sig\":\"3045022100f8ab7ce6c8b6f7d2e1a4b5c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9022059b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8\"}"]
+    ["a", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:verified-treasure-1748619568669"],
+    ["verification", "{\"kind\":7517,\"content\":\"Geocache verification for npub1qc0lc5lxnhxnfxlw2lxkv4x4vp6xsf4d5qwvlhfx6qmz6x4nfhqd8h2z3\",\"tags\":[[\"a\",\"0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:naddr1qqxnzd3e8q6n2dfk8qcnjve48qmnsw3jsqgswaehxw309aex2mrp0yhx6tpdsek6w309aex2mrp0yh56tnwdus8vatjvs6kzdrz956k7tjzw6qzypzgd2dmgxhxf34hnlw2y03nckr8f4g6mw9flxqq65v94zkp77rqfgrf8\"]],\"pubkey\":\"6805d4e5c0df48b4f76e2fdcb67a2acb1d97567b01c6fe17a236dc32f34f1c07\",\"created_at\":1672531200,\"sig\":\"a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456789012345678901234567890abcdef1234567890abcdef1234567890abcdef12\"}"]
   ]
 }
 ```
