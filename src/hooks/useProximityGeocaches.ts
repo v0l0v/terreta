@@ -72,10 +72,11 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
     if (!events || events.length === 0) return [];
 
     try {
-      // Parse geocaches
+      // Parse geocaches and filter out hidden caches from public listings
       const geocaches: Geocache[] = events
         .map(parseGeocacheEvent)
-        .filter((g): g is Geocache => g !== null);
+        .filter((g): g is Geocache => g !== null)
+        .filter(g => !g.hidden); // Filter out hidden caches from public listings
 
       // Apply proximity filtering if specified
       let geocachesWithDistance: GeocacheWithDistance[];

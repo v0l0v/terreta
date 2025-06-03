@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
 interface BaseFormFieldProps {
@@ -191,3 +192,43 @@ export const FormNumberInput = forwardRef<HTMLInputElement, FormNumberInputProps
 );
 
 FormNumberInput.displayName = 'FormNumberInput';
+
+interface FormCheckboxProps extends BaseFormFieldProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+}
+
+export function FormCheckbox({
+  label,
+  error,
+  className,
+  description,
+  checked,
+  onChange,
+  disabled,
+}: FormCheckboxProps) {
+  return (
+    <div className={cn('space-y-2', className)}>
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          checked={checked}
+          onCheckedChange={onChange}
+          disabled={disabled}
+          className={cn(error && 'border-destructive')}
+        />
+        {label && (
+          <Label className="text-sm font-medium cursor-pointer" onClick={() => !disabled && onChange(!checked)}>
+            {label}
+          </Label>
+        )}
+      </div>
+      {description && (
+        <p className="text-xs text-muted-foreground">{description}</p>
+      )}
+      {error && (
+        <p className="text-xs text-destructive">{error}</p>
+      )}
+    </div>
+  );
+}

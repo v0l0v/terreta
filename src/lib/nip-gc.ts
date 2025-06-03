@@ -186,6 +186,9 @@ export function parseGeocacheEvent(event: NostrEvent): Geocache | null {
     const relays = event.tags.filter(t => t[0] === 'r').map(t => t[1]);
     const client = event.tags.find(t => t[0] === 'client')?.[1];
     const verificationPubkey = event.tags.find(t => t[0] === 'verification')?.[1];
+    
+    // Check if cache is hidden (has 't' tag with 'hidden' value)
+    const hidden = event.tags.some(t => t[0] === 't' && t[1] === 'hidden');
 
     return {
       id: event.id,
@@ -204,6 +207,7 @@ export function parseGeocacheEvent(event: NostrEvent): Geocache | null {
       relays,
       client,
       verificationPubkey,
+      hidden,
     };
   } catch (error) {
     return null;
@@ -333,6 +337,7 @@ export function buildGeocacheTags(data: {
   images?: string[];
   relays?: string[];
   verificationPubkey?: string;
+  hidden?: boolean;
 }): string[][] {
   // Validate inputs
   if (!validateCacheType(data.type)) {
@@ -383,6 +388,11 @@ export function buildGeocacheTags(data: {
 
   if (data.verificationPubkey) {
     tags.push(['verification', data.verificationPubkey]);
+  }
+
+  // Add hidden tag if the cache is hidden
+  if (data.hidden) {
+    tags.push(['t', 'hidden']);
   }
 
   return tags;

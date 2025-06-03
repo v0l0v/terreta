@@ -126,6 +126,7 @@ export interface GeocacheFormData {
   terrain: number;
   type: string;
   hint?: string;
+  hidden?: boolean;
 }
 
 export function validateGeocacheForm(data: GeocacheFormData): ValidationResult {

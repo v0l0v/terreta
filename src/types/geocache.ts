@@ -21,6 +21,7 @@ export interface Geocache {
   sourceRelay?: string; // The relay this event was fetched from
   client?: string; // The client that created this event
   verificationPubkey?: string; // Public key for verification
+  hidden?: boolean; // Whether the cache is hidden from public listings
   // Additional metadata from OSM verification
   accessibility?: {
     wheelchair?: boolean;
@@ -75,6 +76,7 @@ export interface CreateGeocacheData {
   size: string;
   type: string;
   images?: string[];
+  hidden?: boolean;
   // Additional metadata from OSM verification
   accessibility?: {
     wheelchair?: boolean;

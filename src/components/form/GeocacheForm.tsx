@@ -3,7 +3,7 @@
  */
 
 import { useForm } from '@/hooks/useForm';
-import { FormInput, FormTextarea, FormSelect, FormNumberInput } from '@/components/form/FormInput';
+import { FormInput, FormTextarea, FormSelect, FormNumberInput, FormCheckbox } from '@/components/form/FormInput';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ButtonLoading } from '@/components/ui/loading';
@@ -33,6 +33,7 @@ export function GeocacheForm({
       terrain: 1,
       type: 'traditional',
       hint: '',
+      hidden: false,
       ...initialData,
     } as GeocacheFormData,
     validators: {
@@ -168,6 +169,16 @@ export function GeocacheForm({
               min={VALIDATION_LIMITS.TERRAIN_MIN}
               max={VALIDATION_LIMITS.TERRAIN_MAX}
               step={0.5}
+            />
+          </div>
+
+          {/* Visibility Settings */}
+          <div className="space-y-4">
+            <FormCheckbox
+              checked={form.values.hidden || false}
+              onChange={(checked) => form.setFieldValue('hidden', checked)}
+              label="Hidden from public listings"
+              description="When checked, this cache will not appear in public search results and listings. Only people with the direct link can find it."
             />
           </div>
 

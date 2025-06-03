@@ -22,10 +22,12 @@ export function useGeocaches() {
     }
   );
 
-  // Parse and transform the events
+  // Parse and transform the events, filtering out hidden caches from public listings
   const geocaches = result?.events?.map(event => {
     const parsed = parseGeocacheEvent(event);
     if (!parsed) return null;
+    // Filter out hidden caches from public listings
+    if (parsed.hidden) return null;
     return {
       ...parsed,
       foundCount: 0, // Could be enhanced with additional queries
@@ -46,7 +48,7 @@ export function useGeocaches() {
  * Hook for getting geocaches near a specific location
  */
 export function useNearbyGeocaches(lat?: number, lon?: number, radiusKm = 50) {
-  return useNostrQuery(
+  const { data: result, ...queryState } = useNostrQuery(
     ['nearby-geocaches', lat, lon, radiusKm],
     [{ 
       kinds: [NIP_GC_KINDS.GEOCACHE], 
@@ -61,6 +63,20 @@ export function useNearbyGeocaches(lat?: number, lon?: number, radiusKm = 50) {
       staleTime: 120000, // 2 minutes for location-based data
     }
   );
+
+  // Filter out hidden caches from public listings
+  const geocaches = result?.events?.map(event => {
+    const parsed = parseGeocacheEvent(event);
+    if (!parsed) return null;
+    // Filter out hidden caches from public listings
+    if (parsed.hidden) return null;
+    return parsed;
+  }).filter(Boolean) || [];
+
+  return {
+    ...queryState,
+    data: geocaches,
+  };
 }
 
 /**

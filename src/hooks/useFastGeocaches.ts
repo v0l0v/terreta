@@ -47,6 +47,7 @@ export function useFastGeocaches(options: FastGeocacheOptions = {}) {
     const geocaches = result.events
       .map(parseGeocacheEvent)
       .filter((g): g is Geocache => g !== null)
+      .filter(g => !g.hidden) // Filter out hidden caches from public listings
       .slice(0, limit);
 
     // Cache in background

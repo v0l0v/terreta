@@ -76,6 +76,7 @@ export function useCreateGeocache(onCacheCreated?: (result: { event: any; verifi
         images: data.images,
         relays: relayPreferences,
         verificationPubkey: verificationKeyPair.publicKey,
+        hidden: data.hidden,
       });
 
       const event = await publishEvent({

@@ -102,10 +102,11 @@ export function useOfflineGeocaches(options: UseOfflineGeocachesOptions = {}) {
           events = await queryBroad();
         }
 
-        // Parse geocaches
+        // Parse geocaches and filter out hidden caches from public listings
         let geocaches: Geocache[] = events
           .map(parseGeocacheEvent)
-          .filter((g): g is Geocache => g !== null);
+          .filter((g): g is Geocache => g !== null)
+          .filter(g => !g.hidden); // Filter out hidden caches from public listings
 
         // Cache geocaches offline
         for (const geocache of geocaches) {
@@ -275,10 +276,11 @@ async function getOfflineGeocaches(options: UseOfflineGeocachesOptions): Promise
 
     console.log(`Found ${cachedGeocaches.length} cached geocaches in offline storage`);
 
-    // Convert cached geocaches to Geocache format
+    // Convert cached geocaches to Geocache format and filter out hidden caches from public listings
     let geocaches: Geocache[] = cachedGeocaches
       .map(cached => parseGeocacheEvent(cached.event))
-      .filter((g): g is Geocache => g !== null);
+      .filter((g): g is Geocache => g !== null)
+      .filter(g => !g.hidden); // Filter out hidden caches from public listings
 
     console.log(`Successfully parsed ${geocaches.length} geocaches from cache`);
 

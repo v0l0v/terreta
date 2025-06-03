@@ -46,10 +46,11 @@ export function useAdvancedGeocaches(options: UseGeocachesOptions = {}) {
   const geocaches = useMemo(() => {
     if (!result?.events) return [];
 
-    // Parse and filter geocaches
+    // Parse and filter geocaches, excluding hidden caches from public listings
     let geocaches: Geocache[] = result.events
       .map(parseGeocacheEvent)
-      .filter((g): g is Geocache => g !== null);
+      .filter((g): g is Geocache => g !== null)
+      .filter(g => !g.hidden); // Filter out hidden caches from public listings
 
     // Apply client-side filters
     if (options.search) {
