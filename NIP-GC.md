@@ -111,21 +111,9 @@ Owners of the cache can officially retire caches using an `archived` tag, thus a
 - `t` (optional) - log type: `dnf`, `note`, `maintenance`, `archived`. If omitted, assumed to be `note`
 - `image` (optional) - photos from the visit
 
-## Verified Finds
+## Geocache Verification Event (Kind 7517)
 
-Geocaches with verification enabled can provide cryptographic proof that a finder physically located the cache. This is accomplished through a verification event signed by the cache's verification key.
-
-### Verification Process
-
-When a cache has a `verification` tag containing a public key, finders can create a verified log by:
-
-1. Obtaining the cache's verification private key (typically via QR code at the cache location)
-2. Creating a verification event (kind 1985) signed by this key
-3. Embedding the verification event in their log entry
-
-### Verification Event Structure
-
-The verification event is a kind 7517 event with the following structure:
+Verification events provide cryptographic proof that a someone physically located a geocache. These events are signed by the cache's verification private key.
 
 ```json
 {
@@ -137,7 +125,33 @@ The verification event is a kind 7517 event with the following structure:
 }
 ```
 
-The verification event must be signed by the cache's verification private key and is typically embedded in the log event's `verification` tag, though clients may choose to publish these events to relays as well.
+### Content
+
+The content field contains a human-readable description of the verification, typically including the finder's npub identifier.
+
+### Tags
+
+- `a` (required) - composite identifier containing the finder's pubkey and the geocache naddr being verified
+
+### Usage
+
+Verification events are created when a finder obtains access to the cache's verification private key (typically via QR code at the cache location). The event must be signed by the cache's verification private key and can be:
+
+1. Embedded in the log event's `verification` tag as a JSON string
+2. Published to relays as standalone events
+3. Both embedded and published for redundancy
+
+## Verified Finds
+
+Geocaches with verification enabled can provide cryptographic proof that a finder physically located the cache. This is accomplished through a verification event (kind 7517) signed by the cache's verification key.
+
+### Verification Process
+
+When a cache has a `verification` tag containing a public key, finders can create a verified log by:
+
+1. Obtaining the cache's verification private key (typically via QR code at the cache location)
+2. Creating a verification event (kind 7517) signed by this key
+3. Embedding the verification event in their log entry
 
 ### Verification Validation
 
