@@ -124,7 +124,7 @@ Verification events provide cryptographic proof that a someone physically locate
   "kind": 7517,
   "content": "Geocache verification for <finder-npub>",
   "tags": [
-    ["a", "<finder-pubkey>:<geocache-naddr>"]
+    ["a", "<finder-pubkey-hex>:<geocache-naddr>"]
   ]
 }
 ```
@@ -135,7 +135,7 @@ The content field must follow the static format: `"Geocache verification for <fi
 
 ### Tags
 
-- `a` (required) - composite identifier containing the finder's pubkey and the geocache naddr being verified
+- `a` (required) - composite identifier containing the finder's pubkey in hex format and the geocache naddr being verified
 
 
 
