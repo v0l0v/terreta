@@ -23,14 +23,14 @@ Geocache listing events are addressable events of kind `37515` with the followin
     ["difficulty", "<1-5>"],
     ["terrain", "<1-5>"],
     ["size", "<size>"],
-    ["cache-type", "<type>"]
+    ["t", "<type>"]
   ]
 }
 ```
 
-Listing events require all information about the cache and information relevant to finding the cache. These include the `name`, location (`g`), `difficulty` and `terrain` scores, `size`, and type of cache (`cache-type`).
+Listing events require all information about the cache and information relevant to finding the cache. These include the `name`, location (`g`), `difficulty` and `terrain` scores, `size`, and type of cache (`t`).
 
-Cache types are currently limited to `traditional`, `multi`, and `mystery` as these types all use the location as either a starting point or destination.
+Cache types are determined by individual clients, with common types including `traditional`, `multi`, and `mystery`. Clients should decide which cache types they support based on their implementation needs.
 
 These requirements are well-known and follow existing standards, such as those outlined on [geocaching.com](https://www.geocaching.com/help/index.php?pg=kb.chapter&id=97).
 
@@ -48,39 +48,68 @@ The content field contains the cache description and any additional information 
 - `difficulty` (required) - integer 1-5 indicating puzzle/finding difficulty
 - `terrain` (required) - integer 1-5 indicating physical difficulty  
 - `size` (required) - one of: `micro`, `small`, `regular`, `large`, `other`
-- `cache-type` (required) - one of: `traditional`, `multi`, `mystery`
+- `t` (required) - cache type, with common values including: `traditional`, `multi`, `mystery`
 - `hint` (optional) - plaintext hint to help find the cache
 - `image` (optional) - image URLs related to the cache
 - `r` (optional) - preferred relay URLs for logs
 - `verification` (optional) - hex-encoded public key for verifying finds at this cache
 
-## Log Event (Kind 7516)
+## Found Log Event (Kind 7516)
 
-Log events are regular events of kind `7516` that record visits to geocaches:
+Found log events are regular events of kind `7516` that record successful visits to geocaches:
 
 ```json
 {
   "kind": 7516,
   "content": "<log message>",
   "tags": [
-    ["a", "37515:<pubkey>:<d-tag>"],
-    ["log-type", "<type>"]
+    ["a", "37515:<pubkey>:<d-tag>"]
   ]
 }
 ```
 
-These events capture successes, failures, and status-related information about the cache via human reporting.
+## Comment Log Events (Kind 1111)
 
-Log events use the common log types for Geocaching, namely `found` (success), `dnf` (failure), and `note` (helpful or neutral context).
+Non-found logs use comment events (kind `1111`) following NIP-22 comment structure:
 
-Caches can be flagged as 'in maintenance' or requiring maintenance via the same 'maintenance' log. Owners of the cache can officially retire caches using an `archived` log, thus allowing the cache's history to be preserved without fully deleting it.
+```json
+{
+  "kind": 1111,
+  "content": "<log message>",
+  "tags": [
+    ["A", "37515:<pubkey>:<d-tag>"],
+    ["K", "37515"],
+    ["P", "<cache-owner-pubkey>"],
+    ["a", "37515:<pubkey>:<d-tag>"],
+    ["k", "37515"],
+    ["p", "<cache-owner-pubkey>"],
+    ["t", "<log-type>"]
+  ]
+}
+```
+
+These events capture failures, notes, and status-related information about the cache via human reporting, following the NIP-22 comment threading model where the geocache listing is both the root and parent content.
+
+Comment log types include `dnf` (did not find), `note` (helpful or neutral context), and `maintenance` (cache needs attention). If no `t` tag is present, the comment is assumed to be a general note.
+
+Owners of the cache can officially retire caches using an `archived` tag, thus allowing the cache's history to be preserved without fully deleting it.
 
 ## Tags
 
+### Found Log Events (Kind 7516)
 - `a` (required) - reference to the geocache being logged
-- `log-type` (required) - one of: `found`, `dnf`, `note`, `maintenance`, `archived`  
 - `image` (optional) - photos from the visit
 - `verification` (optional) - embedded verification event (see Verified Finds section)
+
+### Comment Log Events (Kind 1111)
+- `A` (required) - root geocache reference (same as `a` for top-level comments)
+- `K` (required) - root kind number (`37515`)
+- `P` (required) - root author (cache owner pubkey)
+- `a` (required) - parent reference (same as `A` for top-level comments)
+- `k` (required) - parent kind number (`37515`)
+- `p` (required) - parent author (cache owner pubkey)
+- `t` (optional) - log type: `dnf`, `note`, `maintenance`, `archived`. If omitted, assumed to be `note`
+- `image` (optional) - photos from the visit
 
 ## Verified Finds
 
@@ -96,29 +125,26 @@ When a cache has a `verification` tag containing a public key, finders can creat
 
 ### Verification Event Structure
 
-The verification event is a NIP-32 label event with the following structure:
+The verification event is a kind 7517 event with the following structure:
 
 ```json
 {
-  "kind": 1985,
-  "content": "Verified find by <finder-pubkey>",
+  "kind": 7517,
+  "content": "Geocache verification for <finder-npub>",
   "tags": [
-    ["L", "to.treasures"],
-    ["l", "found", "to.treasures"],
-    ["p", "<finder-pubkey>", "", "finder"],
-    ["a", "<finder-pubkey>:<geocache-naddr>", "", "geocache"]
+    ["a", "<finder-pubkey>:<geocache-naddr>"]
   ]
 }
 ```
 
-The verification event must be signed by the cache's verification private key and embedded in the log event's `verification` tag.
+The verification event must be signed by the cache's verification private key and is typically embedded in the log event's `verification` tag, though clients may choose to publish these events to relays as well.
 
 ### Verification Validation
 
 To validate a verified find:
 
 1. Check that the verification event is signed by the expected verification public key
-2. Verify that the finder pubkey in both the `p` tag and `a` tag matches the log author
+2. Verify that the finder pubkey in the `a` tag matches the log author
 3. Confirm the geocache naddr in the `a` tag correctly references the target cache
 4. Validate the event signature using standard Nostr verification
 
@@ -145,7 +171,7 @@ For the best Geocaching experience, clients implementing geocaching support shou
     ["difficulty", "1"],
     ["terrain", "1"],
     ["size", "small"],
-    ["cache-type", "traditional"],
+    ["t", "traditional"],
     ["hint", "In the branches"],
     ["image", "https://blossom.primal.net/74efe01a767b27dead71b8a9bb8278a108360438e78e55194ed9ab14a9382dd3.jpg"]
   ]
@@ -165,7 +191,7 @@ For the best Geocaching experience, clients implementing geocaching support shou
     ["difficulty", "3"],
     ["terrain", "2"],
     ["size", "small"],
-    ["cache-type", "traditional"],
+    ["t", "traditional"],
     ["hint", "Look for the secret code"],
     ["verification", "6805d4e5c0df48b4f76e2fdcb67a2acb1d97567b01c6fe17a236dc32f34f1c07"]
   ]
@@ -179,9 +205,59 @@ For the best Geocaching experience, clients implementing geocaching support shou
   "kind": 7516,
   "content": "Found it! Great hiding spot.",
   "tags": [
-    ["a", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:first-treasure-1748619568668"],
-    ["log-type", "found"]
+    ["a", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:first-treasure-1748619568668"]
   ]
+}
+```
+
+### DNF Log
+
+```json
+{
+  "kind": 1111,
+  "content": "Searched for 30 minutes but couldn't find it. Maybe it's missing?",
+  "tags": [
+    ["A", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:first-treasure-1748619568668"],
+    ["K", "37515"],
+    ["P", "0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd"],
+    ["a", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:first-treasure-1748619568668"],
+    ["k", "37515"],
+    ["p", "0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd"],
+    ["t", "dnf"]
+  ]
+}
+```
+
+### Note Log
+
+```json
+{
+  "kind": 1111,
+  "content": "Lots of muggles around during the day. Best to visit in the evening.",
+  "tags": [
+    ["A", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:first-treasure-1748619568668"],
+    ["K", "37515"],
+    ["P", "0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd"],
+    ["a", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:first-treasure-1748619568668"],
+    ["k", "37515"],
+    ["p", "0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd"],
+    ["t", "note"]
+  ]
+}
+```
+
+### Verification Event
+
+```json
+{
+  "kind": 7517,
+  "content": "Geocache verification for npub1qc0lc5lxnhxnfxlw2lxkv4x4vp6xsf4d5qwvlhfx6qmz6x4nfhqd8h2z3",
+  "tags": [
+    ["a", "0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:naddr1qqxnzd3e8q6n2dfk8qcnjve48qmnsw3jsqgswaehxw309aex2mrp0yhx6tpdsek6w309aex2mrp0yh56tnwdus8vatjvs6kzdrz956k7tjzw6qzypzgd2dmgxhxf34hnlw2y03nckr8f4g6mw9flxqq65v94zkp77rqfgrf8"]
+  ],
+  "pubkey": "6805d4e5c0df48b4f76e2fdcb67a2acb1d97567b01c6fe17a236dc32f34f1c07",
+  "created_at": 1672531200,
+  "sig": "3045022100f8ab7ce6c8b6f7d2e1a4b5c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9022059b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8"
 }
 ```
 
@@ -193,8 +269,7 @@ For the best Geocaching experience, clients implementing geocaching support shou
   "content": "Found it! Great hiding spot.",
   "tags": [
     ["a", "37515:0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:first-treasure-1748619568668"],
-    ["log-type", "found"],
-    ["verification", "{\"kind\":1985,\"content\":\"Verified find by 0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd\",\"tags\":[[\"L\",\"to.treasures\"],[\"l\",\"found\",\"to.treasures\"],[\"p\",\"0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd\",\"\",\"finder\"],[\"a\",\"0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:naddr1qqxnzd3e8q6n2dfk8qcnjve48qmnsw3jsqgswaehxw309aex2mrp0yhx6tpdsek6w309aex2mrp0yh56tnwdus8vatjvs6kzdrz956k7tjzw6qzypzgd2dmgxhxf34hnlw2y03nckr8f4g6mw9flxqq65v94zkp77rqfgrf8\",\"\",\"geocache\"]],\"pubkey\":\"6805d4e5c0df48b4f76e2fdcb67a2acb1d97567b01c6fe17a236dc32f34f1c07\",\"created_at\":1672531200,\"sig\":\"3045022100f8ab7ce6c8b6f7d2e1a4b5c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9022059b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8\"}"]
+    ["verification", "{\"kind\":7517,\"content\":\"Geocache verification for npub1qc0lc5lxnhxnfxlw2lxkv4x4vp6xsf4d5qwvlhfx6qmz6x4nfhqd8h2z3\",\"tags\":[[\"a\",\"0461fcbecc4c3374439932d6b8f11269ccdb7cc973ad7a50ae362db135a474dd:naddr1qqxnzd3e8q6n2dfk8qcnjve48qmnsw3jsqgswaehxw309aex2mrp0yhx6tpdsek6w309aex2mrp0yh56tnwdus8vatjvs6kzdrz956k7tjzw6qzypzgd2dmgxhxf34hnlw2y03nckr8f4g6mw9flxqq65v94zkp77rqfgrf8\"]],\"pubkey\":\"6805d4e5c0df48b4f76e2fdcb67a2acb1d97567b01c6fe17a236dc32f34f1c07\",\"created_at\":1672531200,\"sig\":\"3045022100f8ab7ce6c8b6f7d2e1a4b5c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9022059b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8\"}"]
   ]
 }
 ```
