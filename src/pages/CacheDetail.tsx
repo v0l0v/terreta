@@ -14,6 +14,7 @@ import { SaveButton } from "@/components/SaveButton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useGeocacheByNaddr } from "@/hooks/useGeocacheByNaddr";
 import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
+import { useGeocachePrefetch } from "@/hooks/usePrefetchManager";
 import { useDeleteWithConfirmation } from "@/hooks/useDeleteWithConfirmation";
 import { useEditGeocache } from "@/hooks/useEditGeocache";
 import { GeocacheMap } from "@/components/GeocacheMap";
@@ -57,6 +58,7 @@ export default function CacheDetail() {
   } = useDeleteWithConfirmation();
   const { mutate: editGeocache, isPending: isEditingGeocache } = useEditGeocache(geocache || null);
   const { toast } = useToast();
+  const { prefetchGeocache } = useGeocachePrefetch();
   
   const author = useAuthor(geocache?.pubkey || "");
   
@@ -105,8 +107,11 @@ export default function CacheDetail() {
         hidden: geocache.hidden || false,
       });
       setEditImages(geocache.images || []);
+      
+      // Prefetch logs for this geocache
+      prefetchGeocache(geocache);
     }
-  }, [geocache]);
+  }, [geocache, prefetchGeocache]);
 
   // Verify location when geocache loads
   useEffect(() => {

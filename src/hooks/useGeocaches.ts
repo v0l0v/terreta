@@ -1,20 +1,22 @@
 import { useNostr } from '@nostrify/react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { NIP_GC_KINDS, parseGeocacheEvent } from '@/lib/nip-gc';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { TIMEOUTS } from '@/lib/constants';
+import { TIMEOUTS, POLLING_INTERVALS, QUERY_LIMITS } from '@/lib/constants';
+import { useEffect } from 'react';
 
 export function useGeocaches() {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
+  const queryClient = useQueryClient();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['geocaches'],
     queryFn: async (c) => {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
       const events = await nostr.query([{
         kinds: [NIP_GC_KINDS.GEOCACHE], 
-        limit: 100 
+        limit: QUERY_LIMITS.GEOCACHES * 2 // Fetch more for better caching
       }], { signal });
 
       return events.map(event => {
@@ -29,10 +31,54 @@ export function useGeocaches() {
         };
       }).filter(Boolean);
     },
-    staleTime: 60000, // 1 minute
-    gcTime: 300000, // 5 minutes
+    staleTime: 30000, // 30 seconds - more aggressive caching
+    gcTime: 600000, // 10 minutes - longer cache retention
     refetchOnWindowFocus: false,
+    refetchInterval: POLLING_INTERVALS.GEOCACHES, // Poll every minute
+    refetchIntervalInBackground: true, // Continue polling in background
   });
+
+  // Prefetch related data when geocaches are loaded
+  useEffect(() => {
+    if (query.data && query.data.length > 0) {
+      // Prefetch logs for the first few geocaches
+      const topGeocaches = query.data.slice(0, 5);
+      topGeocaches.forEach(geocache => {
+        if (geocache.dTag && geocache.pubkey) {
+          queryClient.prefetchQuery({
+            queryKey: ['geocache-logs', geocache.dTag, geocache.pubkey],
+            queryFn: async () => {
+              const signal = AbortSignal.timeout(TIMEOUTS.FAST_QUERY);
+              const geocacheCoordinate = `${NIP_GC_KINDS.GEOCACHE}:${geocache.pubkey}:${geocache.dTag}`;
+              
+              try {
+                const foundLogs = await nostr.query([{
+                  kinds: [NIP_GC_KINDS.FOUND_LOG],
+                  '#a': [geocacheCoordinate],
+                  limit: 20,
+                }], { signal });
+                
+                const commentLogs = await nostr.query([{
+                  kinds: [NIP_GC_KINDS.COMMENT_LOG],
+                  '#a': [geocacheCoordinate],
+                  '#A': [geocacheCoordinate],
+                  limit: 20,
+                }], { signal });
+                
+                return [...foundLogs, ...commentLogs];
+              } catch (error) {
+                console.warn('Prefetch failed for geocache logs:', geocache.id, error);
+                return [];
+              }
+            },
+            staleTime: 60000,
+          });
+        }
+      });
+    }
+  }, [query.data, queryClient, nostr]);
+
+  return query;
 }
 
 /**

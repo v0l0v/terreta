@@ -4,7 +4,7 @@ import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { GeocacheLog } from '@/types/geocache';
 import { NIP_GC_KINDS, parseLogEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
 import { hasEmbeddedVerification, verifyEmbeddedVerification, getEmbeddedVerification } from '@/lib/verification';
-import { TIMEOUTS } from '@/lib/constants';
+import { TIMEOUTS, POLLING_INTERVALS, QUERY_LIMITS } from '@/lib/constants';
 import { useDeletionFilter } from '@/hooks/useDeletionFilter';
 
 export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geocachePubkey?: string, preferredRelays?: string[], verificationPubkey?: string) {
@@ -24,25 +24,25 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
       const geocacheCoordinate = createGeocacheCoordinate(geocachePubkey, geocacheDTag);
       const allEvents: NostrEvent[] = [];
       
-      // Query for found logs
+      // Query for found logs with increased limit for better caching
       try {
         const foundLogs = await nostr.query([{
           kinds: [NIP_GC_KINDS.FOUND_LOG],
           '#a': [geocacheCoordinate],
-          limit: 100,
+          limit: QUERY_LIMITS.LOGS,
         }], { signal });
         allEvents.push(...foundLogs);
       } catch (error) {
         console.warn('Failed to fetch found logs:', error);
       }
       
-      // Query for comment logs
+      // Query for comment logs with increased limit
       try {
         const commentLogs = await nostr.query([{
           kinds: [NIP_GC_KINDS.COMMENT_LOG],
           '#a': [geocacheCoordinate],
           '#A': [geocacheCoordinate],
-          limit: 100,
+          limit: QUERY_LIMITS.LOGS,
         }], { signal });
         allEvents.push(...commentLogs);
       } catch (error) {
@@ -111,9 +111,11 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
       }
     },
     enabled: !!(geocacheDTag && geocachePubkey),
-    staleTime: 30000, // 30 seconds
-    gcTime: 600000, // 10 minutes
+    staleTime: 15000, // 15 seconds - logs change frequently
+    gcTime: 900000, // 15 minutes - longer cache retention
     refetchOnWindowFocus: false,
+    refetchInterval: POLLING_INTERVALS.LOGS, // Poll every 30 seconds
+    refetchIntervalInBackground: true, // Continue polling in background
   });
 }
 

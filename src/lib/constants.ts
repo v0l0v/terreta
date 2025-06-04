@@ -30,6 +30,16 @@ export const RETRY_CONFIG = {
   SYNC_INTERVAL: 300000, // 5 minutes
 } as const;
 
+// Polling intervals for prefetching and updates
+export const POLLING_INTERVALS = {
+  GEOCACHES: 60000, // 1 minute - frequent updates for active data
+  LOGS: 30000, // 30 seconds - logs change more frequently
+  DELETION_EVENTS: 120000, // 2 minutes - deletions are less frequent
+  BACKGROUND_SYNC: 300000, // 5 minutes - full background sync
+  FAST_UPDATES: 15000, // 15 seconds - for critical real-time data
+  SLOW_UPDATES: 600000, // 10 minutes - for less critical data
+} as const;
+
 // Storage configuration
 export const STORAGE_CONFIG = {
   MAX_AGE_DAYS: 30,

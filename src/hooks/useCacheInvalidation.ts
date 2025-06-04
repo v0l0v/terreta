@@ -9,7 +9,7 @@ import { useNostr } from '@nostrify/react';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { useOfflineMode } from './useOfflineStorage';
 import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/lib/nip-gc';
-import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
+import { TIMEOUTS, QUERY_LIMITS, POLLING_INTERVALS } from '@/lib/constants';
 
 interface DeletionEvent {
   id: string;
@@ -49,10 +49,10 @@ export function useCacheInvalidation() {
         return [];
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 60000, // 1 minute
+    gcTime: 1800000, // 30 minutes
     enabled: isOnline && isConnected,
-    refetchInterval: 10 * 60 * 1000, // Check every 10 minutes
+    refetchInterval: POLLING_INTERVALS.DELETION_EVENTS, // Check every 2 minutes
   });
 
   // Process deletion events and invalidate caches
@@ -179,8 +179,8 @@ export function useCacheInvalidation() {
   useEffect(() => {
     if (!isOnline || !isConnected) return;
 
-    // Validate caches every 30 minutes
-    const interval = setInterval(validateCachedGeocaches, 30 * 60 * 1000);
+    // Validate caches using background sync interval
+    const interval = setInterval(validateCachedGeocaches, POLLING_INTERVALS.BACKGROUND_SYNC);
     
     // Also validate on mount
     validateCachedGeocaches();
