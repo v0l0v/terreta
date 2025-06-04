@@ -1,4 +1,5 @@
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useAuthorDeletionFilter } from '@/hooks/useDeletionFilter';
 import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import type { Geocache } from '@/types/geocache';
@@ -12,6 +13,9 @@ export function useUserGeocaches(targetPubkey?: string) {
 
   // Use provided pubkey or fall back to current user's pubkey
   const pubkey = targetPubkey || user?.pubkey;
+
+  // Get deletion filter specifically for this author
+  const { filterByAuthor } = useAuthorDeletionFilter(pubkey);
 
   const { data: geocacheEvents, ...queryResult } = useQuery({
     queryKey: ['user-geocaches-events', pubkey],
@@ -49,15 +53,20 @@ export function useUserGeocaches(targetPubkey?: string) {
     };
   }).filter((geocache): geocache is NonNullable<typeof geocache> => geocache !== null) || [];
 
+  // Filter out deleted geocaches by this author using raw events
+  const nonDeletedEvents = filterByAuthor(geocacheEvents || []);
+  const nonDeletedEventIds = new Set(nonDeletedEvents.map(e => e.id));
+  const filteredGeocaches = geocaches.filter(g => nonDeletedEventIds.has(g.id));
+
   const { data: allLogEvents } = useQuery({
-    queryKey: ['user-geocaches-logs', pubkey, geocaches.map(g => g.dTag).join(',')],
+    queryKey: ['user-geocaches-logs', pubkey, filteredGeocaches.map(g => g.dTag).join(',')],
     queryFn: async (c) => {
-      if (geocaches.length === 0) return [];
+      if (filteredGeocaches.length === 0) return [];
 
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
       
       // Get logs for all geocaches
-      const logPromises = geocaches.map(geocache => 
+      const logPromises = filteredGeocaches.map(geocache => 
         nostr.query([{
           kinds: [NIP_GC_KINDS.FOUND_LOG, NIP_GC_KINDS.COMMENT_LOG],
           '#a': [createGeocacheCoordinate(geocache.pubkey, geocache.dTag)],
@@ -68,7 +77,7 @@ export function useUserGeocaches(targetPubkey?: string) {
       const logResults = await Promise.all(logPromises);
       return logResults.flat();
     },
-    enabled: geocaches.length > 0,
+    enabled: filteredGeocaches.length > 0,
     staleTime: 60000,
     gcTime: 300000,
     refetchOnWindowFocus: false,
@@ -76,13 +85,16 @@ export function useUserGeocaches(targetPubkey?: string) {
 
   // Process the data
   const processedData = (() => {
-    if (!geocaches.length) return [];
+    if (!filteredGeocaches.length) return [];
 
     // Group logs by geocache and count them
     const logCounts = new Map<string, { total: number; found: number }>();
     
     if (allLogEvents) {
-      for (const logEvent of allLogEvents) {
+      // Also filter out deleted logs before counting
+      const nonDeletedLogs = filterByAuthor(allLogEvents);
+      
+      for (const logEvent of nonDeletedLogs) {
         const aTag = logEvent.tags.find(t => t[0] === 'a')?.[1];
         if (aTag) {
           const [, pubkey, dTag] = aTag.split(':');
@@ -108,7 +120,7 @@ export function useUserGeocaches(targetPubkey?: string) {
     }
     
     // Update geocaches with counts
-    const geocachesWithCounts = geocaches.map(geocache => {
+    const geocachesWithCounts = filteredGeocaches.map(geocache => {
       const ref = `${geocache.pubkey}:${geocache.dTag}`;
       const counts = logCounts.get(ref) || { total: 0, found: 0 };
       

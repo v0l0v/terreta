@@ -2,6 +2,7 @@ import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { NostrFilter } from '@nostrify/nostrify';
 import { useCurrentUser } from './useCurrentUser';
+import { useAuthorDeletionFilter } from '@/hooks/useDeletionFilter';
 import { TIMEOUTS } from '@/lib/constants';
 import type { GeocacheLog, Geocache } from '@/types/geocache';
 import { NIP_GC_KINDS, parseLogEvent, parseGeocacheEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
@@ -32,6 +33,9 @@ export function useUserFoundCaches(targetPubkey?: string) {
 
   // Use provided pubkey or fall back to current user's pubkey
   const pubkey = targetPubkey || user?.pubkey;
+  
+  // Get deletion filter for this user's content
+  const { filterByAuthor } = useAuthorDeletionFilter(pubkey);
 
   return useQuery({
     queryKey: ['user-found-caches', pubkey],
@@ -47,8 +51,11 @@ export function useUserFoundCaches(targetPubkey?: string) {
         limit: 500,
       }], { signal });
 
+      // Filter out deleted logs by this author
+      const nonDeletedLogs = filterByAuthor(logEvents);
+
       // Process the logs to find "found" logs
-      const foundLogs = logEvents
+      const foundLogs = nonDeletedLogs
         .map(event => {
           const parsed = parseLogEvent(event);
           if (parsed && parsed.type === 'found') {

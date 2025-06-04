@@ -5,9 +5,13 @@ import type { GeocacheLog } from '@/types/geocache';
 import { NIP_GC_KINDS, parseLogEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
 import { hasEmbeddedVerification, verifyEmbeddedVerification, getEmbeddedVerification } from '@/lib/verification';
 import { TIMEOUTS } from '@/lib/constants';
+import { useDeletionFilter } from '@/hooks/useDeletionFilter';
 
 export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geocachePubkey?: string, preferredRelays?: string[], verificationPubkey?: string) {
   const { nostr } = useNostr();
+  
+  // Get deletion filter for filtering out deleted logs
+  const { filterDeleted } = useDeletionFilter();
   
   return useQuery({
     queryKey: ['geocache-logs', geocacheDTag, geocachePubkey, preferredRelays, verificationPubkey],
@@ -59,8 +63,11 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
 
         const deduplicatedEvents = Array.from(uniqueEvents.values());
 
+        // Filter out deleted events first, before any other processing
+        const nonDeletedEvents = filterDeleted.fast(deduplicatedEvents);
+
         // Filter out verification events
-        const finalEvents = deduplicatedEvents.filter(event => {
+        const finalEvents = nonDeletedEvents.filter(event => {
           if (event.kind === NIP_GC_KINDS.VERIFICATION) {
             return false;
           }

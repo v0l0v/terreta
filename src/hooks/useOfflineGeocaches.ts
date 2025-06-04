@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Geocache } from '@/types/geocache';
 import { useOfflineMode } from '@/hooks/useOfflineStorage';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useDeletionFilter } from '@/hooks/useDeletionFilter';
 import { offlineStorage, type CachedGeocache } from '@/lib/offlineStorage';
 import { NIP_GC_KINDS, parseGeocacheEvent } from '@/lib/nip-gc';
 import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
@@ -15,6 +16,9 @@ export function useOfflineGeocaches() {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
   const { isOnline, isConnected } = useOfflineMode();
+  
+  // Get deletion filter for filtering deleted geocaches
+  const { filterDeleted } = useDeletionFilter();
 
   return useQuery({
     queryKey: ['geocaches', 'offline-aware', isOnline && isConnected],
@@ -30,9 +34,22 @@ export function useOfflineGeocaches() {
       try {
         await offlineStorage.init();
         const cachedGeocaches = await offlineStorage.getAllGeocaches();
-        offlineGeocaches = cachedGeocaches
-          .map(cached => parseGeocacheEvent(cached.event))
-          .filter((g): g is Geocache => g !== null)
+        
+        // Parse geocaches first, then filter out deleted ones using the raw events
+        const parsedWithEvents = cachedGeocaches
+          .map(cached => {
+            const parsed = parseGeocacheEvent(cached.event);
+            return parsed ? { geocache: parsed, event: cached.event } : null;
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null);
+          
+        // Filter out deleted geocaches using the raw events
+        const nonDeletedEvents = filterDeleted.fast(parsedWithEvents.map(item => item.event));
+        const nonDeletedEventIds = new Set(nonDeletedEvents.map(e => e.id));
+        
+        offlineGeocaches = parsedWithEvents
+          .filter(item => nonDeletedEventIds.has(item.event.id))
+          .map(item => item.geocache)
           .filter(g => !g.hidden || g.pubkey === user?.pubkey)
           .map(g => ({ ...g, foundCount: 0, logCount: 0 }));
         
@@ -57,15 +74,18 @@ export function useOfflineGeocaches() {
 
         console.log('Retrieved online events:', events.length);
 
+        // Filter out deleted events first
+        const nonDeletedEvents = filterDeleted.fast(events);
+
         // Parse online geocaches
-        const onlineGeocaches = events
+        const onlineGeocaches = nonDeletedEvents
           .map(parseGeocacheEvent)
           .filter((g): g is Geocache => g !== null)
           .filter(g => !g.hidden || g.pubkey === user?.pubkey)
           .map(g => ({ ...g, foundCount: 0, logCount: 0 }));
 
-        // Cache online geocaches for offline use
-        const cachePromises = events.map(event => {
+        // Cache online geocaches for offline use (only non-deleted ones)
+        const cachePromises = nonDeletedEvents.map(event => {
           const geocache = parseGeocacheEvent(event);
           if (!geocache) return Promise.resolve();
 
@@ -113,6 +133,9 @@ export function useOfflineProximityGeocaches(
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
   const { isOnline, isConnected } = useOfflineMode();
+  
+  // Get deletion filter for filtering deleted geocaches
+  const { filterDeleted } = useDeletionFilter();
 
   return useQuery({
     queryKey: ['proximity-geocaches', lat, lon, radiusKm, isOnline && isConnected],
@@ -120,7 +143,7 @@ export function useOfflineProximityGeocaches(
       if (!lat || !lon) return [];
 
       // Get all geocaches (using cache)
-      const allGeocaches = await getAllGeocachesFromCache();
+      const allGeocaches = await getAllGeocachesFromCache(filterDeleted);
       
       // Filter by proximity
       const proximityGeocaches = allGeocaches.filter(geocache => {
@@ -149,14 +172,31 @@ export function useOfflineProximityGeocaches(
 /**
  * Helper function to get all geocaches from cache or network
  */
-async function getAllGeocachesFromCache(): Promise<Geocache[]> {
+async function getAllGeocachesFromCache(filterDeleted?: any): Promise<Geocache[]> {
   try {
     await offlineStorage.init();
     const cachedGeocaches = await offlineStorage.getAllGeocaches();
-    return cachedGeocaches
-      .map(cached => parseGeocacheEvent(cached.event))
-      .filter((g): g is Geocache => g !== null)
-      .map(g => ({ ...g, foundCount: 0, logCount: 0 }));
+    
+    // Parse geocaches first, then filter out deleted ones using raw events
+    const parsedWithEvents = cachedGeocaches
+      .map(cached => {
+        const parsed = parseGeocacheEvent(cached.event);
+        return parsed ? { geocache: parsed, event: cached.event } : null;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+      
+    // Apply deletion filter if provided
+    if (filterDeleted) {
+      const nonDeletedEvents = filterDeleted.fast(parsedWithEvents.map(item => item.event));
+      const nonDeletedEventIds = new Set(nonDeletedEvents.map((e: any) => e.id));
+      
+      return parsedWithEvents
+        .filter(item => nonDeletedEventIds.has(item.event.id))
+        .map(item => item.geocache)
+        .map(g => ({ ...g, foundCount: 0, logCount: 0 }));
+    }
+      
+    return parsedWithEvents.map(item => ({ ...item.geocache, foundCount: 0, logCount: 0 }));
   } catch (error) {
     console.warn('Failed to get geocaches from cache:', error);
     return [];

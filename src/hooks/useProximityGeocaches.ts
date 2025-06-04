@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useDeletionFilter } from '@/hooks/useDeletionFilter';
 import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
 import type { ComparisonOperator } from '@/components/ui/comparison-filter';
 import { 
@@ -43,6 +44,10 @@ export type GeocacheWithDistance = Geocache & { distance?: number };
 export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}) {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
+  
+  // Get deletion filter for filtering out deleted geocaches
+  const { filterDeleted } = useDeletionFilter();
+  
   const queryKey = useMemo(() => [
     'geocaches-proximity', 
     options
@@ -186,8 +191,11 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
     if (!events || events.length === 0) return [];
 
     try {
+      // Filter out deleted events first
+      const nonDeletedEvents = filterDeleted.fast(events);
+
       // Parse geocaches and filter out hidden caches from public listings
-      const geocaches: Geocache[] = events
+      const geocaches: Geocache[] = nonDeletedEvents
         .map(parseGeocacheEvent)
         .filter((g): g is Geocache => g !== null)
         .filter(g => !g.hidden || g.pubkey === user?.pubkey); // Show hidden caches to their creator
@@ -219,7 +227,7 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
       console.error('Error processing proximity geocaches:', error);
       return [];
     }
-  }, [events, hasProximitySearch, options.centerLat, options.centerLng, options.radiusKm, user?.pubkey, applyClientSideFilters]);
+  }, [events, hasProximitySearch, options.centerLat, options.centerLng, options.radiusKm, user?.pubkey, applyClientSideFilters, filterDeleted]);
 
   return {
     ...queryResult,
