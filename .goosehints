@@ -16,7 +16,7 @@ This project is a Nostr client application built with React 18.x, TailwindCSS 3.
 ## Project Structure
 
 - `/src/components/`: UI components including NostrProvider for Nostr integration
-- `/src/hooks/`: Custom hooks including `useNostr` and `useNostrQuery`
+- `/src/hooks/`: Custom hooks including `useNostr` for Nostr operations
 - `/src/pages/`: Page components used by React Router
 - `/src/lib/`: Utility functions and shared logic
 - `/public/`: Static assets
@@ -77,70 +77,11 @@ These components follow a consistent pattern using React's `forwardRef` and use 
 
 ## Nostr Protocol Integration
 
-This project comes with custom hooks for querying and publishing events on the Nostr network.
-
-### Safari Compatibility
-
-This project includes Safari-specific optimizations for Nostr protocol handling. Safari has stricter WebSocket timing requirements that can cause standard Nostr queries to timeout.
-
-#### Safari Detection and Client
-```typescript
-import { isSafari, createSafariNostr } from '@/lib/safariNostr';
-
-// Automatic Safari detection
-if (isSafari()) {
-  // Use Safari-optimized client
-  const safariClient = createSafariNostr(['wss://relay.damus.io', 'wss://nos.lol']);
-  const events = await safariClient.query([filter], { timeout: 5000, maxRetries: 2 });
-  safariClient.close();
-}
-```
-
-#### Safari Optimizations Applied
-- **Shorter timeouts**: 4-6 seconds instead of 10+ seconds
-- **Smaller query limits**: Reduced event limits for Safari compatibility
-- **Retry logic**: Multiple attempts across different relays
-- **Direct WebSocket management**: Bypasses complex pooling for better timing control
-- **Graceful degradation**: Returns partial results instead of complete failures
-
-#### Hooks with Safari Support
-The following hooks automatically detect Safari and use optimized queries:
-- `useGeocaches()` - Main cache listing
-- `useGeocache()` - Individual cache by ID
-- `useGeocacheByDTag()` - Individual cache by d-tag
-- `useNostrSavedCaches()` - Saved/bookmarked caches
-
-When developing new Nostr hooks, include Safari detection:
-```typescript
-import { isSafari, createSafariNostr } from '@/lib/safariNostr';
-
-export function useMyNostrHook() {
-  const { nostr } = useNostr();
-  
-  return useQuery({
-    queryKey: ['my-data', isSafari()], // Include Safari in cache key
-    queryFn: async () => {
-      if (isSafari()) {
-        const safariClient = createSafariNostr(relays);
-        try {
-          const events = await safariClient.query([filter], { timeout: 5000 });
-          safariClient.close();
-          return events;
-        } catch (error) {
-          safariClient.close();
-          throw error;
-        }
-      } else {
-        return await nostr.query([filter]);
-      }
-    }
-  });
-}
-```
+This project uses a simplified and unified approach to Nostr integration using only the `@nostrify/react` library.
 
 ### The `useNostr` Hook
 
-The `useNostr` hook returns an object containing a `nostr` property, with `.query()` and `.event()` methods for querying and publishing Nostr events respectively.
+The `useNostr` hook returns an object containing a `nostr` property, with `.query()` and `.event()` methods for querying and publishing Nostr events respectively. This is the ONLY way to interact with Nostr in this project.
 
 ```typescript
 import { useNostr } from '@nostrify/react';
@@ -152,13 +93,14 @@ function useCustomHook() {
 }
 ```
 
-### Query Nostr Data with `useNostr` and Tanstack Query
+### Query Nostr Data with `useNostr` and TanStack Query
 
 When querying Nostr, the best practice is to create custom hooks that combine `useNostr` and `useQuery` to get the required data.
 
 ```typescript
 import { useNostr } from '@nostrify/react';
-import { useQuery } from '@tanstack/query';
+import { useQuery } from '@tanstack/react-query';
+import { TIMEOUTS } from '@/lib/constants';
 
 function usePosts() {
   const { nostr } = useNostr();
@@ -166,7 +108,7 @@ function usePosts() {
   return useQuery({
     queryKey: ['posts'],
     queryFn: async (c) => {
-      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(1500)]);
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
       const events = await nostr.query([{ kinds: [1], limit: 20 }], { signal });
       return events; // these events could be transformed into another format
     },
@@ -174,7 +116,16 @@ function usePosts() {
 }
 ```
 
+**Important**: Always use `TIMEOUTS.QUERY` from constants for consistent timeout handling across all browsers.
+
 The data may be transformed into a more appropriate format if needed, and multiple calls to `nostr.query()` may be made in a single queryFn.
+
+### Single Relay Configuration
+
+This project uses a single relay for simplicity:
+- **Primary relay**: `wss://ditto.pub/relay`
+- Configuration is handled automatically by the `NostrProvider`
+- No manual relay management needed in individual hooks
 
 ### The `useAuthor` Hook
 
@@ -424,7 +375,7 @@ export function Post(/* ...props */) {
 - Implements Path Aliases with `@/` prefix for cleaner imports
 - Uses Vite for fast development and production builds
 - Component-based architecture with React hooks
-- Default connection to multiple Nostr relays for network redundancy
+- Single relay configuration for simplicity and reliability
 
 ## Build & Deployment
 
@@ -549,22 +500,26 @@ catch (error: unknown) {
 - Always handle signing errors gracefully
 - Provide user feedback during event creation
 - Use AbortSignal with timeouts for network requests
-- Verify events are published by querying back from relays
+- Use `TIMEOUTS.QUERY` constant for consistent timeouts
 
 ### Query Optimization
 - Use TanStack Query for caching and state management
-- Combine multiple Nostr queries in single `queryFn` when needed
+- Always use `AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)])` pattern
 - Set appropriate `staleTime` and `cacheTime` for different data types
-- Use `AbortSignal.timeout()` to prevent hanging requests
+- Use `TIMEOUTS.QUERY` to prevent hanging requests
 
 ### Error Handling
 ```ts
+import { TIMEOUTS } from '@/lib/constants';
+
 // Robust error handling for Nostr operations
 try {
-  const event = await publishEvent(eventData);
-  // Verify publication
+  const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+  const events = await nostr.query([filter], { signal });
+  
+  // Verify publication if needed
   const verification = await nostr.query([{ ids: [event.id] }], { 
-    signal: AbortSignal.timeout(5000) 
+    signal: AbortSignal.timeout(TIMEOUTS.FAST_QUERY) 
   });
   if (verification.length === 0) {
     throw new Error('Event not found on relays');
@@ -578,5 +533,60 @@ try {
   } else {
     // Handle other errors
   }
+}
+```
+
+### Constants Usage
+Always import and use constants from `@/lib/constants`:
+
+```ts
+import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
+
+// Use TIMEOUTS.QUERY for all nostr queries
+// Use TIMEOUTS.FAST_QUERY for quick operations
+// Use QUERY_LIMITS.GEOCACHES, QUERY_LIMITS.LOGS etc for limits
+```
+
+### Forbidden Patterns
+**Do NOT use these patterns:**
+
+❌ Safari-specific code:
+```ts
+// These are REMOVED - do not use
+import { isSafari } from '@/lib/safariNostr';
+import { UnifiedNostrClient } from '@/lib/nostrClient';
+import { useUnifiedNostr } from '@/hooks/useUnifiedNostr';
+```
+
+❌ Manual relay management:
+```ts
+// Don't manually specify relays
+const relays = ['wss://relay1.com', 'wss://relay2.com'];
+```
+
+❌ Custom timeout logic:
+```ts
+// Use constants instead
+const timeout = isSafari() ? 5000 : 8000; // ❌ Wrong
+const timeout = TIMEOUTS.QUERY; // ✅ Correct
+```
+
+✅ **Always use this pattern:**
+```ts
+import { useNostr } from '@nostrify/react';
+import { useQuery } from '@tanstack/react-query';
+import { TIMEOUTS } from '@/lib/constants';
+
+function useMyData() {
+  const { nostr } = useNostr();
+
+  return useQuery({
+    queryKey: ['my-data'],
+    queryFn: async (c) => {
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+      const events = await nostr.query([{ kinds: [1], limit: 20 }], { signal });
+      return events;
+    },
+  });
 }
 ```

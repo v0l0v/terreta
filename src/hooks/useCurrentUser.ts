@@ -30,6 +30,7 @@ export function useCurrentUser() {
         const user = loginToUser(login);
         users.push(user);
       } catch (error) {
+        console.warn('Failed to create user from login:', error);
       }
     }
 

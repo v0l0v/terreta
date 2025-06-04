@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Navigation, Trophy, MessageSquare, Trash2, Eye, CheckCircle, Edit } from 'lucide-react';
+import { Navigation, Trophy, MessageSquare, Trash2, Eye, EyeOff, CheckCircle, Edit } from 'lucide-react';
 import { InteractiveCard } from '@/components/ui/card-patterns';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { formatDistanceToNow } from '@/lib/date';
 import { formatDistance } from '@/lib/geo';
 import { geocacheToNaddr } from '@/lib/naddr-utils';
 import { getCacheIcon } from '@/lib/cacheIcons';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { Geocache } from '@/types/geocache';
 
 // Base interface for all geocache cards
@@ -29,6 +30,7 @@ interface BaseGeocacheCardProps {
     size: string;
     type: string;
     relays?: string[];
+    hidden?: boolean;
   };
   distance?: number;
   variant?: 'compact' | 'default' | 'detailed';
@@ -85,9 +87,13 @@ export function GeocacheCard({
   showAuthor = true,
   showStats = true
 }: GeocacheCardProps) {
+  const { user } = useCurrentUser();
   const author = useAuthor(cache.pubkey);
   const authorName = author.data?.metadata?.name || cache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
+
+  // Check if this cache is hidden and the current user is the creator
+  const isHiddenByCreator = cache.hidden && cache.pubkey === user?.pubkey;
 
 
   const authorInfo = showAuthor && (
@@ -142,7 +148,12 @@ export function GeocacheCard({
               {getCacheIcon(cache.type, 'sm')}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm truncate hover:text-green-600 transition-colors">{cache.name}</h3>
+              <h3 className="font-semibold text-sm truncate hover:text-green-600 transition-colors flex items-center gap-1">
+                {cache.name}
+                {isHiddenByCreator && (
+                  <EyeOff className="h-3 w-3 text-orange-500 shrink-0" title="Hidden cache" />
+                )}
+              </h3>
               
               {/* Author info */}
               {showAuthor && (
@@ -203,7 +214,12 @@ export function GeocacheCard({
                 {getCacheIcon(cache.type, 'md')}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold truncate hover:text-green-600 transition-colors">{cache.name}</h3>
+                <h3 className="font-semibold truncate hover:text-green-600 transition-colors flex items-center gap-1">
+                  {cache.name}
+                  {isHiddenByCreator && (
+                    <EyeOff className="h-4 w-4 text-orange-500 shrink-0" title="Hidden cache" />
+                  )}
+                </h3>
                 
                 {/* Metadata line */}
                 <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1">
@@ -259,7 +275,12 @@ export function GeocacheCard({
             )}
           </div>
         </div>
-        <CardTitle className="line-clamp-2">{cache.name}</CardTitle>
+        <CardTitle className="line-clamp-2 flex items-center gap-2">
+          {cache.name}
+          {isHiddenByCreator && (
+            <EyeOff className="h-5 w-5 text-orange-500 shrink-0" title="Hidden cache" />
+          )}
+        </CardTitle>
         <CardDescription className="flex items-center justify-between">
           <span className="flex items-center gap-1">
             {showAuthor && authorInfo}

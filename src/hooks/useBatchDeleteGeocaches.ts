@@ -2,10 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useToast } from '@/hooks/useToast';
-import { isSafari, createSafariNostr } from '@/lib/safariNostr';
-import { getUserRelays } from '@/lib/relayConfig';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/lib/nip-gc';
+import { TIMEOUTS, RETRY_CONFIG } from '@/lib/constants';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface BatchDeleteParams {
@@ -53,7 +52,7 @@ export function useBatchDeleteGeocaches() {
       }
 
       // Process deletions in batches to avoid overwhelming the network
-      const batchSize = isSafari() ? 3 : 5;
+      const batchSize = 3;
       const batches = [];
       
       for (let i = 0; i < geocaches.length; i += batchSize) {
@@ -90,32 +89,14 @@ export function useBatchDeleteGeocaches() {
             const signedEvent = await user.signer.signEvent(deletionEvent);
 
             // Publish with retry logic
-            const maxRetries = 2;
-            const timeout = isSafari() ? 4000 : 6000;
+            const maxRetries = RETRY_CONFIG.MAX_RETRIES;
             
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
               try {
-                if (isSafari()) {
-                  const userRelays = getUserRelays();
-                  const safariClient = createSafariNostr(userRelays);
-                  
-                  try {
-                    await safariClient.publish(signedEvent, { 
-                      timeout: timeout,
-                      maxRetries: 1 
-                    });
-                    safariClient.close();
-                    break;
-                  } catch (error) {
-                    safariClient.close();
-                    if (attempt === maxRetries) throw error;
-                  }
-                } else {
-                  await nostr.event(signedEvent, { 
-                    signal: AbortSignal.timeout(timeout) 
-                  });
-                  break;
-                }
+                await nostr.event(signedEvent, { 
+                  signal: AbortSignal.timeout(TIMEOUTS.DELETE_OPERATION) 
+                });
+                break;
               } catch (error) {
                 if (attempt === maxRetries) {
                   throw error;

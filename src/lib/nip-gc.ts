@@ -151,7 +151,8 @@ export function parseGeocacheEvent(event: NostrEvent): Geocache | null {
     const size = event.tags.find(t => t[0] === 'size')?.[1];
     
     // Type tag is 't' according to NIP-GC, defaults to 'traditional' if not specified
-    const cacheType = event.tags.find(t => t[0] === 't')?.[1] || 'traditional';
+    // Look for cache type in 't' tags, excluding 'hidden'
+    const cacheType = event.tags.find(t => t[0] === 't' && t[1] !== 'hidden')?.[1] || 'traditional';
 
     // Validate required fields
     if (!name || !geohash || !difficulty || !terrain || !size) {

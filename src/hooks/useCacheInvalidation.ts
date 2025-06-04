@@ -7,11 +7,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import { useNostr } from '@nostrify/react';
 import { offlineStorage } from '@/lib/offlineStorage';
-import { queryNostr } from '@/lib/nostrQuery';
 import { useOfflineMode } from './useOfflineStorage';
 import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/lib/nip-gc';
-import { TIMEOUTS } from '@/lib/constants';
-import { isSafari } from '@/lib/safariNostr';
+import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
 
 interface DeletionEvent {
   id: string;
@@ -33,22 +31,17 @@ export function useCacheInvalidation() {
   // Query for deletion events (kind 5)
   const { data: deletionEvents = [] } = useQuery({
     queryKey: ['deletion-events', isOnline && isConnected],
-    queryFn: async (): Promise<DeletionEvent[]> => {
+    queryFn: async (c): Promise<DeletionEvent[]> => {
       if (!isOnline || !isConnected) {
         return [];
       }
 
       try {
-        const filter: NostrFilter = {
+        const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+        const events = await nostr.query([{
           kinds: [5], // Deletion events
-          limit: isSafari() ? 50 : 100,
           since: Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000), // Last 7 days
-        };
-
-        const events = await queryNostr(nostr, [filter], {
-          timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY,
-          maxRetries: 1,
-        });
+        }], { signal });
 
         return events.map(parseDeletionEvent).filter((d): d is DeletionEvent => d !== null);
       } catch (error) {
@@ -148,21 +141,16 @@ export function useCacheInvalidation() {
       if (unvalidatedCaches.length === 0) return;
 
       // Limit validation batch size for performance
-      const batchSize = isSafari() ? 5 : 10;
-      const sample = unvalidatedCaches.slice(0, batchSize);
+      const sample = unvalidatedCaches.slice(0, QUERY_LIMITS.BATCH_SIZE);
       const eventIds = sample.map(cache => cache.id);
       
       console.log(`Validating ${eventIds.length} cached geocaches...`);
       
-      const filter: NostrFilter = {
+      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
+      const existingEvents = await nostr.query([{
         ids: eventIds,
         kinds: [NIP_GC_KINDS.GEOCACHE],
-      };
-
-      const existingEvents = await queryNostr(nostr, [filter], {
-        timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY,
-        maxRetries: 1,
-      });
+      }], { signal });
 
       const existingIds = new Set(existingEvents.map(e => e.id));
       const deletedIds = eventIds.filter(id => !existingIds.has(id));

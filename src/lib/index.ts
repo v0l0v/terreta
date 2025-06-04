@@ -19,7 +19,7 @@ export * from './validation';
 export * from './constants';
 
 // Nostr utilities
-export * from './nostrQuery';
+// Note: nostrQuery removed as we use @nostrify/react hooks directly
 
 // Offline utilities
 export * from './offlineStorage';

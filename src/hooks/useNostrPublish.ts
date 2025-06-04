@@ -1,7 +1,7 @@
 import { useNostr } from "@nostrify/react";
 import { useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "./useCurrentUser";
-import { isSafari } from '@/lib/safariNostr';
+import { TIMEOUTS } from "@/lib/constants";
 
 interface EventTemplate {
   kind: number;
@@ -40,27 +40,18 @@ export function useNostrPublish() {
           created_at: t.created_at ?? Math.floor(Date.now() / 1000),
         });
 
-        // Determine timeout based on browser
-        const publishTimeout = isSafari() ? 4000 : 8000;
-        const verifyTimeout = isSafari() ? 3000 : 5000;
-
-        // Send to relays with appropriate timeout
+        // Send to relays with timeout
         try {
-          await nostr.event(event, { signal: AbortSignal.timeout(publishTimeout) });
+          await nostr.event(event, { signal: AbortSignal.timeout(TIMEOUTS.QUERY) });
         } catch (error) {
           const errorObj = error as { message?: string };
           throw new Error(`Failed to publish event: ${errorObj.message || 'Unknown error'}`);
         }
 
-        // For Safari, skip verification to avoid additional timeouts
-        if (isSafari()) {
-          return event;
-        }
-
-        // For other browsers, do a quick verification (but don't fail if it doesn't work)
+        // Do a quick verification (but don't fail if it doesn't work)
         try {
           const verification = await nostr.query([{ ids: [event.id] }], { 
-            signal: AbortSignal.timeout(verifyTimeout) 
+            signal: AbortSignal.timeout(TIMEOUTS.FAST_QUERY) 
           });
           
           if (verification.length === 0) {

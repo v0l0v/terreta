@@ -1,105 +1,101 @@
-/**
- * Example hook using the unified Nostr system
- * This replaces Safari-specific workarounds with a simple, consistent interface
- */
-
-import { useNostrQuery } from '@/hooks/useUnifiedNostr';
+import { useNostr } from '@nostrify/react';
+import { useQuery } from '@tanstack/react-query';
 import { NIP_GC_KINDS, parseGeocacheEvent } from '@/lib/nip-gc';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { TIMEOUTS } from '@/lib/constants';
 
 export function useGeocaches() {
-  const { data: result, ...queryState } = useNostrQuery(
-    ['geocaches'],
-    [{ 
-      kinds: [NIP_GC_KINDS.GEOCACHE], 
-      '#t': ['geocache'], 
-      limit: 100 
-    }],
-    {
-      timeout: 8000, // Automatically optimized for all browsers
-      staleTime: 60000, // 1 minute
-      gcTime: 300000, // 5 minutes
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { nostr } = useNostr();
+  const { user } = useCurrentUser();
 
-  // Parse and transform the events, filtering out hidden caches from public listings
-  const geocaches = result?.events?.map(event => {
-    const parsed = parseGeocacheEvent(event);
-    if (!parsed) return null;
-    // Filter out hidden caches from public listings
-    if (parsed.hidden) return null;
-    return {
-      ...parsed,
-      foundCount: 0, // Could be enhanced with additional queries
-      logCount: 0,
-    };
-  }).filter(Boolean) || [];
+  return useQuery({
+    queryKey: ['geocaches'],
+    queryFn: async (c) => {
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+      const events = await nostr.query([{
+        kinds: [NIP_GC_KINDS.GEOCACHE], 
+        '#t': ['geocache'], 
+        limit: 100 
+      }], { signal });
 
-  return {
-    ...queryState,
-    data: geocaches,
-    events: result?.events || [],
-    sources: result?.sources || new Map(),
-    errors: result?.errors || new Map(),
-  };
+      return events.map(event => {
+        const parsed = parseGeocacheEvent(event);
+        if (!parsed) return null;
+        // Show hidden caches to their creator, filter them out for everyone else
+        if (parsed.hidden && parsed.pubkey !== user?.pubkey) return null;
+        return {
+          ...parsed,
+          foundCount: 0, // Could be enhanced with additional queries
+          logCount: 0,
+        };
+      }).filter(Boolean);
+    },
+    staleTime: 60000, // 1 minute
+    gcTime: 300000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 }
 
 /**
  * Hook for getting geocaches near a specific location
  */
 export function useNearbyGeocaches(lat?: number, lon?: number, radiusKm = 50) {
-  const { data: result, ...queryState } = useNostrQuery(
-    ['nearby-geocaches', lat, lon, radiusKm],
-    [{ 
-      kinds: [NIP_GC_KINDS.GEOCACHE], 
-      '#t': ['geocache'],
-      // Note: Nostr doesn't have built-in geo queries, so we fetch all and filter client-side
-      // In a real implementation, you might use specialized relays or additional filters
-      limit: 500 
-    }],
-    {
-      enabled: lat !== undefined && lon !== undefined,
-      timeout: 10000,
-      staleTime: 120000, // 2 minutes for location-based data
-    }
-  );
+  const { nostr } = useNostr();
+  const { user } = useCurrentUser();
 
-  // Filter out hidden caches from public listings
-  const geocaches = result?.events?.map(event => {
-    const parsed = parseGeocacheEvent(event);
-    if (!parsed) return null;
-    // Filter out hidden caches from public listings
-    if (parsed.hidden) return null;
-    return parsed;
-  }).filter(Boolean) || [];
+  return useQuery({
+    queryKey: ['nearby-geocaches', lat, lon, radiusKm],
+    queryFn: async (c) => {
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+      const events = await nostr.query([{
+        kinds: [NIP_GC_KINDS.GEOCACHE], 
+        '#t': ['geocache'],
+        // Note: Nostr doesn't have built-in geo queries, so we fetch all and filter client-side
+        // In a real implementation, you might use specialized relays or additional filters
+        limit: 500 
+      }], { signal });
 
-  return {
-    ...queryState,
-    data: geocaches,
-  };
+      return events.map(event => {
+        const parsed = parseGeocacheEvent(event);
+        if (!parsed) return null;
+        // Show hidden caches to their creator, filter them out for everyone else
+        if (parsed.hidden && parsed.pubkey !== user?.pubkey) return null;
+        return parsed;
+      }).filter(Boolean);
+    },
+    enabled: lat !== undefined && lon !== undefined,
+    staleTime: 120000, // 2 minutes for location-based data
+  });
 }
 
 /**
  * Hook for getting a specific geocache by coordinate (kind:pubkey:d-tag)
  */
 export function useGeocacheByCoordinate(coordinate?: string) {
+  const { nostr } = useNostr();
   const parts = coordinate?.split(':');
   const kind = parts?.[0] ? parseInt(parts[0]) : undefined;
   const pubkey = parts?.[1];
   const dTag = parts?.[2];
 
-  return useNostrQuery(
-    ['geocache-by-coordinate', coordinate],
-    kind && pubkey && dTag ? [{
-      kinds: [kind],
-      authors: [pubkey],
-      '#d': [dTag],
-      limit: 1
-    }] : [],
-    {
-      enabled: !!(kind && pubkey && dTag),
-      timeout: 6000,
-      staleTime: 300000, // 5 minutes for individual geocaches
-    }
-  );
+  return useQuery({
+    queryKey: ['geocache-by-coordinate', coordinate],
+    queryFn: async (c) => {
+      if (!kind || !pubkey || !dTag) {
+        throw new Error('Invalid coordinate format');
+      }
+
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+      const events = await nostr.query([{
+        kinds: [kind],
+        authors: [pubkey],
+        '#d': [dTag],
+        limit: 1
+      }], { signal });
+
+      return events;
+    },
+    enabled: !!(kind && pubkey && dTag),
+    staleTime: 300000, // 5 minutes for individual geocaches
+  });
 }

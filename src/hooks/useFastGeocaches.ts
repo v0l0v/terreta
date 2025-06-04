@@ -3,11 +3,13 @@
  * Prioritizes speed over completeness for initial loads
  */
 
+import { useNostr } from '@nostrify/react';
+import { useQuery } from '@tanstack/react-query';
 import { NostrEvent } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
 import { offlineStorage, CachedGeocache } from '@/lib/offlineStorage';
-import { useNostrQuery } from '@/hooks/useUnifiedNostr';
-import { QUERY_LIMITS } from '@/lib/constants';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { QUERY_LIMITS, TIMEOUTS } from '@/lib/constants';
 import { NIP_GC_KINDS, parseGeocacheEvent } from '@/lib/nip-gc';
 
 interface FastGeocacheOptions {
@@ -22,44 +24,35 @@ export type GeocacheWithDistance = Geocache & { distance?: number };
  * Uses aggressive caching and simplified queries
  */
 export function useFastGeocaches(options: FastGeocacheOptions = {}) {
+  const { nostr } = useNostr();
+  const { user } = useCurrentUser();
   const { limit = QUERY_LIMITS.FAST_LOAD_LIMIT } = options;
 
-  // Use unified query system with fast timeout
-  const { data: result, ...queryState } = useNostrQuery(
-    ['fast-geocaches', limit],
-    [{
-      kinds: [NIP_GC_KINDS.GEOCACHE],
-      limit: limit,
-    }],
-    {
-      timeout: 3000, // Fast timeout
-      staleTime: 30000, // 30 seconds - aggressive caching
-      gcTime: 300000, // 5 minutes
-      retry: false, // No retries for speed
-      refetchOnWindowFocus: false, // Don't refetch on focus for speed
-    }
-  );
+  return useQuery({
+    queryKey: ['fast-geocaches', limit],
+    queryFn: async (c) => {
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.FAST_QUERY)]);
+      const events = await nostr.query([{
+        kinds: [NIP_GC_KINDS.GEOCACHE],
+        limit: limit,
+      }], { signal });
 
-  // Process the data
-  const processedData = (() => {
-    if (!result?.events) return [];
+      const geocaches = events
+        .map(parseGeocacheEvent)
+        .filter((g): g is Geocache => g !== null)
+        .filter(g => !g.hidden || g.pubkey === user?.pubkey) // Show hidden caches to their creator
+        .slice(0, limit);
 
-    const geocaches = result.events
-      .map(parseGeocacheEvent)
-      .filter((g): g is Geocache => g !== null)
-      .filter(g => !g.hidden) // Filter out hidden caches from public listings
-      .slice(0, limit);
+      // Cache in background
+      cacheGeocachesInBackground(geocaches, events);
 
-    // Cache in background
-    cacheGeocachesInBackground(geocaches, result.events);
-
-    return geocaches;
-  })();
-
-  return {
-    ...queryState,
-    data: processedData,
-  };
+      return geocaches;
+    },
+    staleTime: 30000, // 30 seconds - aggressive caching
+    gcTime: 300000, // 5 minutes
+    retry: false, // No retries for speed
+    refetchOnWindowFocus: false, // Don't refetch on focus for speed
+  });
 }
 
 /**

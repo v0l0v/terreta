@@ -1,41 +1,47 @@
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useNostrBatchQuery } from '@/hooks/useUnifiedNostr';
+import { useNostr } from '@nostrify/react';
+import { useQuery } from '@tanstack/react-query';
 import type { Geocache } from '@/types/geocache';
 import { NostrFilter } from '@nostrify/nostrify';
 import { NIP_GC_KINDS, parseGeocacheEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
+import { TIMEOUTS } from '@/lib/constants';
 
 export function useUserGeocaches(targetPubkey?: string) {
+  const { nostr } = useNostr();
   const { user } = useCurrentUser();
 
   // Use provided pubkey or fall back to current user's pubkey
   const pubkey = targetPubkey || user?.pubkey;
 
-  // Create filter groups for batch query
-  const filterGroups: NostrFilter[][] = pubkey ? [
-    // First batch: Get user's geocaches
-    [{ 
-      kinds: [NIP_GC_KINDS.GEOCACHE], 
-      authors: [pubkey],
-      limit: 100
-    }]
-  ] : [];
+  const { data: geocacheEvents, ...queryResult } = useQuery({
+    queryKey: ['user-geocaches-events', pubkey],
+    queryFn: async (c) => {
+      if (!pubkey) return [];
 
-  const { data: geocacheEvents, ...queryResult } = useNostrBatchQuery(
-    ['user-geocaches-events', pubkey],
-    filterGroups,
-    {
-      enabled: !!pubkey,
-      timeout: 8000, // Automatically optimized for all browsers
-      staleTime: 60000, // 1 minute
-      gcTime: 300000, // 5 minutes
-      refetchOnWindowFocus: false,
-    }
-  );
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+      const events = await nostr.query([{ 
+        kinds: [NIP_GC_KINDS.GEOCACHE], 
+        authors: [pubkey],
+        limit: 100
+      }], { signal });
+
+      return events;
+    },
+    enabled: !!pubkey,
+    staleTime: 60000, // 1 minute
+    gcTime: 300000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 
   // Parse geocaches and prepare log count queries
   const geocaches = geocacheEvents?.map(event => {
     const parsed = parseGeocacheEvent(event);
     if (!parsed) return null;
+    
+    // In useUserGeocaches, we're fetching caches by a specific author (pubkey)
+    // Show ALL caches by that author, including hidden ones, when viewing their profile
+    // The filtering of hidden caches should only happen in the general geocaches list (useGeocaches)
+    
     return {
       ...parsed,
       foundCount: 0, // Will be calculated below
@@ -43,25 +49,30 @@ export function useUserGeocaches(targetPubkey?: string) {
     };
   }).filter((geocache): geocache is NonNullable<typeof geocache> => geocache !== null) || [];
 
-  // Create log count filter groups
-  const logCountFilterGroups: NostrFilter[][] = geocaches.length > 0 ? 
-    geocaches.map(geocache => [{
-      kinds: [NIP_GC_KINDS.LOG],
-      '#a': [createGeocacheCoordinate(geocache.pubkey, geocache.dTag)],
-      limit: 1000, // Get all logs to count them
-    }]) : [];
+  const { data: allLogEvents } = useQuery({
+    queryKey: ['user-geocaches-logs', pubkey, geocaches.map(g => g.dTag).join(',')],
+    queryFn: async (c) => {
+      if (geocaches.length === 0) return [];
 
-  const { data: allLogEvents } = useNostrBatchQuery(
-    ['user-geocaches-logs', pubkey, geocaches.map(g => g.dTag).join(',')],
-    logCountFilterGroups,
-    {
-      enabled: geocaches.length > 0,
-      timeout: 8000,
-      staleTime: 60000,
-      gcTime: 300000,
-      refetchOnWindowFocus: false,
-    }
-  );
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+      
+      // Get logs for all geocaches
+      const logPromises = geocaches.map(geocache => 
+        nostr.query([{
+          kinds: [NIP_GC_KINDS.FOUND_LOG, NIP_GC_KINDS.COMMENT_LOG],
+          '#a': [createGeocacheCoordinate(geocache.pubkey, geocache.dTag)],
+          limit: 1000, // Get all logs to count them
+        }], { signal })
+      );
+
+      const logResults = await Promise.all(logPromises);
+      return logResults.flat();
+    },
+    enabled: geocaches.length > 0,
+    staleTime: 60000,
+    gcTime: 300000,
+    refetchOnWindowFocus: false,
+  });
 
   // Process the data
   const processedData = (() => {

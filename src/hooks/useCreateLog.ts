@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNostrPublish } from '@/hooks/useUnifiedNostr';
 import { useToast } from '@/hooks/useToast';
+import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useOfflineSync, useOfflineMode } from '@/hooks/useOfflineStorage';
 import type { CreateLogData } from '@/types/geocache';
 import { 
@@ -59,21 +59,9 @@ export function useCreateLog() {
       if (isOnline) {
         try {
           const result = await publishEvent({
-            event: {
-              kind: eventKind,
-              content: data.text.trim(), // Plain text log message in content
-              tags,
-            },
-            options: {
-              relays: data.preferredRelays, // Use the geocache's preferred relays if provided
-              requireMinSuccess: 1,
-              verifyPublication: false, // Skip verification for faster response
-            },
-            invalidateQueries: [
-              ['geocache-logs', data.geocacheDTag, data.geocachePubkey],
-              ['geocache', data.geocacheId],
-              ['geocaches'],
-            ],
+            kind: eventKind,
+            content: data.text.trim(), // Plain text log message in content
+            tags,
           });
 
           // Handle success
@@ -84,13 +72,13 @@ export function useCreateLog() {
 
           // Optimistically update the cache
           queryClient.setQueryData(['geocache-logs', data.geocacheDTag, data.geocachePubkey], (oldData: unknown) => {
-            const clientTag = result.event.tags.find(t => t[0] === 'client')?.[1];
-            const relayTags = result.event.tags.filter(t => t[0] === 'relay').map(t => t[1]);
+            const clientTag = result.tags.find(t => t[0] === 'client')?.[1];
+            const relayTags = result.tags.filter(t => t[0] === 'relay').map(t => t[1]);
             
             const newLog = {
-              id: result.event.id,
-              pubkey: result.event.pubkey,
-              created_at: result.event.created_at,
+              id: result.id,
+              pubkey: result.pubkey,
+              created_at: result.created_at,
               geocacheId: data.geocacheId,
               type: data.type,
               text: data.text.trim(),
@@ -100,12 +88,12 @@ export function useCreateLog() {
             };
             
             const existingLogs = Array.isArray(oldData) ? oldData : [];
-            const updatedLogs = [newLog, ...existingLogs.filter((log: { id: string }) => log.id !== result.event.id)];
+            const updatedLogs = [newLog, ...existingLogs.filter((log: { id: string }) => log.id !== result.id)];
             
             return updatedLogs;
           });
 
-          return result.event;
+          return result;
         } catch (error) {
           // If online publishing fails, queue for offline sync
           console.warn('Online log creation failed, queuing for later:', error);

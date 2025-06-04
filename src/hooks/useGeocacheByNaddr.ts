@@ -3,9 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
 import { parseNaddr } from '@/lib/naddr-utils';
-import { queryNostr } from '@/lib/nostrQuery';
 import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
-import { isSafari } from '@/lib/safariNostr';
 import { useOfflineMode } from '@/hooks/useOfflineStorage';
 import { offlineStorage, type CachedGeocache } from '@/lib/offlineStorage';
 import { 
@@ -20,7 +18,7 @@ export function useGeocacheByNaddr(naddr: string) {
   const { isOnline, isConnected, connectionQuality } = useOfflineMode();
 
   return useQuery({
-    queryKey: ['geocache-by-naddr', naddr, isOnline && isConnected && navigator.onLine, isSafari()],
+    queryKey: ['geocache-by-naddr', naddr, isOnline && isConnected && navigator.onLine],
     staleTime: (isOnline && isConnected && navigator.onLine) ? 30000 : Infinity, // 30 seconds online, never stale offline
     gcTime: 300000, // 5 minutes
     retry: false, // Disable retries to prevent cache invalidation
@@ -90,13 +88,7 @@ export function useGeocacheByNaddr(naddr: string) {
           limit: 1,
         };
 
-        // Use unified query utility
-        const events = await queryNostr(nostr, [filter], {
-          timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY,
-          maxRetries: isSafari() ? 2 : 3,
-          signal: c.signal,
-        });
-        
+        const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
 
         if (events.length === 0) {
           // If no online data but we have offline data, return that
@@ -149,30 +141,22 @@ export function useGeocacheByNaddr(naddr: string) {
         const foundLogFilter: NostrFilter = {
           kinds: [NIP_GC_KINDS.FOUND_LOG],
           '#a': [geocacheCoordinate],
-          limit: isSafari() ? QUERY_LIMITS.SAFARI_LOGS / 2 : QUERY_LIMITS.STANDARD_LOGS / 2,
+          limit: QUERY_LIMITS.LOGS / 2,
         };
         
         const commentLogFilter: NostrFilter = {
           kinds: [NIP_GC_KINDS.COMMENT_LOG],
           '#a': [geocacheCoordinate],
           '#A': [geocacheCoordinate],
-          limit: isSafari() ? QUERY_LIMITS.SAFARI_LOGS / 2 : QUERY_LIMITS.STANDARD_LOGS / 2,
+          limit: QUERY_LIMITS.LOGS / 2,
         };
 
-        // Use unified query utility with error handling
+        // Use nostr query with error handling
         let logEvents: NostrEvent[] = [];
         try {
           const [foundEvents, commentEvents] = await Promise.all([
-            queryNostr(nostr, [foundLogFilter], {
-              timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY,
-              maxRetries: 1,
-              signal: c.signal,
-            }),
-            queryNostr(nostr, [commentLogFilter], {
-              timeout: isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY,
-              maxRetries: 1,
-              signal: c.signal,
-            }),
+            nostr.query([foundLogFilter], { signal }),
+            nostr.query([commentLogFilter], { signal }),
           ]);
           logEvents = [...foundEvents, ...commentEvents];
         } catch (error) {

@@ -18,9 +18,10 @@ export function DifficultyTerrainRating({
   const textSize = size === 'small' ? 'text-xs' : 'text-sm';
   const sizeLevel = cacheSize ? getSizeLevel(cacheSize) : 0;
   
-  // Debug logging for size blocks
-  if (cacheSize) {
-  }
+  // Debug logging for size blocks - currently disabled
+  // if (cacheSize) {
+  //   console.debug('Cache size:', cacheSize, 'Level:', sizeLevel);
+  // }
   
   return (
     <div className="space-y-2">

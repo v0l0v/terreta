@@ -65,6 +65,7 @@ export function ProfileHeader({
         setCopiedField(field);
         setTimeout(() => setCopiedField(null), 2000);
       } catch (error) {
+        console.warn('Failed to copy to clipboard:', error);
       }
     }
   };

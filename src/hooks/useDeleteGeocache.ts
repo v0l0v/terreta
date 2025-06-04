@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useToast } from '@/hooks/useToast';
-import { useNostrPublish } from '@/hooks/useUnifiedNostr';
+import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/lib/nip-gc';
 import { TIMEOUTS } from '@/lib/constants';
@@ -50,25 +50,12 @@ export function useDeleteGeocache() {
 
       // Use unified publish system
       const result = await publishEvent({
-        event: {
-          kind: 5,
-          content: reason || 'Geocache deleted by author',
-          tags: deletionTags,
-        },
-        options: {
-          timeout: TIMEOUTS.DELETE_OPERATION,
-          requireMinSuccess: 1,
-          verifyPublication: false, // Skip verification for faster deletion
-        },
-        invalidateQueries: [
-          ['geocaches'],
-          ['offline-geocaches'],
-          ['my-geocaches'],
-          ['geocache', geocacheId],
-        ],
+        kind: 5,
+        content: reason || 'Geocache deleted by author',
+        tags: deletionTags,
       });
 
-      return result.event;
+      return result;
     },
     onMutate: async ({ geocacheId }) => {
       // Optimistic update: immediately remove from UI

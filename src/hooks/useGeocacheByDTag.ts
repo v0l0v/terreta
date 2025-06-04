@@ -1,7 +1,8 @@
+import { useNostr } from '@nostrify/react';
+import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
 import { decodeHint } from '@/lib/rot13';
-import { useNostrQuery, useNostrBatchQuery } from '@/hooks/useUnifiedNostr';
 import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
 import { useOfflineMode } from '@/hooks/useOfflineStorage';
 import { offlineStorage, type CachedGeocache } from '@/lib/offlineStorage';
@@ -39,105 +40,93 @@ function isRot13Encoded(text: string): boolean {
 }
 
 export function useGeocacheByDTag(dTag: string) {
-  const { isOnline, isConnected, connectionQuality } = useOfflineMode();
+  const { nostr } = useNostr();
+  const { isOnline, isConnected } = useOfflineMode();
 
-  // Query for the geocache by d-tag
-  const { data: result, ...queryState } = useNostrQuery(
-    ['geocache-by-dtag', dTag, isOnline && isConnected && navigator.onLine],
-    dTag ? [{
-      kinds: [NIP_GC_KINDS.GEOCACHE],
-      '#d': [dTag],
-      limit: 1,
-    }] : [],
-    {
-      enabled: !!dTag,
-      timeout: TIMEOUTS.QUERY,
-      staleTime: (isOnline && isConnected && navigator.onLine) ? 30000 : Infinity,
-      gcTime: 300000,
-      retry: false,
-      refetchOnReconnect: true,
-      networkMode: 'always',
-    }
-  );
+  return useQuery({
+    queryKey: ['geocache-by-dtag', dTag, isOnline && isConnected && navigator.onLine],
+    queryFn: async (c) => {
+      if (!dTag) return null;
 
-  // Process the geocache data
-  const processedData = (() => {
-    if (!result?.events || result.events.length === 0) {
-      // Try to get offline data
-      return getOfflineGeocache(dTag);
-    }
+      try {
+        const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+        
+        // Query for the geocache by d-tag
+        const geocacheEvents = await nostr.query([{
+          kinds: [NIP_GC_KINDS.GEOCACHE],
+          '#d': [dTag],
+          limit: 1,
+        }], { signal });
 
-    const geocache = parseGeocacheEvent(result.events[0]);
-    if (!geocache) {
-      return getOfflineGeocache(dTag);
-    }
+        let geocache: Geocache | null = null;
 
-    // Cache the geocache offline for future use
-    cacheGeocacheOffline(geocache, result.events[0]);
-
-    return {
-      ...geocache,
-      foundCount: 0, // Will be updated by log query
-      logCount: 0,   // Will be updated by log query
-    };
-  })();
-
-  // Query for logs if we have a geocache
-  const geocache = processedData;
-  const { data: logEvents } = useNostrBatchQuery(
-    ['geocache-logs-count', dTag],
-    geocache ? [
-      // Found logs
-      [{
-        kinds: [NIP_GC_KINDS.FOUND_LOG],
-        '#a': [createGeocacheCoordinate(geocache.pubkey, geocache.dTag)],
-        limit: QUERY_LIMITS.LOGS / 2,
-      }],
-      // Comment logs
-      [{
-        kinds: [NIP_GC_KINDS.COMMENT_LOG],
-        '#a': [createGeocacheCoordinate(geocache.pubkey, geocache.dTag)],
-        '#A': [createGeocacheCoordinate(geocache.pubkey, geocache.dTag)],
-        limit: QUERY_LIMITS.LOGS / 2,
-      }]
-    ] : [],
-    {
-      enabled: !!geocache,
-      timeout: TIMEOUTS.QUERY,
-      staleTime: 30000,
-    }
-  );
-
-  // Calculate final result with log counts
-  const finalResult = (() => {
-    if (!geocache) return null;
-
-    let foundCount = 0;
-    const logCount = logEvents?.length || 0;
-    
-    if (logEvents) {
-      logEvents.forEach(event => {
-        const log = parseLogEvent(event);
-        if (log && log.type === 'found') {
-          foundCount++;
+        if (geocacheEvents.length > 0) {
+          geocache = parseGeocacheEvent(geocacheEvents[0]);
+          if (geocache) {
+            // Cache the geocache offline for future use
+            await cacheGeocacheOffline(geocache, geocacheEvents[0]);
+          }
         }
-      });
-    }
 
-    return {
-      ...geocache,
-      foundCount,
-      logCount,
-    };
-  })();
+        // If not found online, try to get offline data
+        if (!geocache) {
+          geocache = await getOfflineGeocache(dTag);
+          if (!geocache) {
+            return null;
+          }
+        }
 
-  return {
-    ...queryState,
-    data: finalResult,
-  };
+        // Query for logs to get counts
+        let foundCount = 0;
+        let logCount = 0;
+
+        try {
+          const coordinate = createGeocacheCoordinate(geocache.pubkey, geocache.dTag);
+          
+          // Get found logs
+          const foundLogs = await nostr.query([{
+            kinds: [NIP_GC_KINDS.FOUND_LOG],
+            '#a': [coordinate],
+            limit: QUERY_LIMITS.LOGS / 2,
+          }], { signal });
+
+          foundCount = foundLogs.length;
+
+          // Get comment logs
+          const commentLogs = await nostr.query([{
+            kinds: [NIP_GC_KINDS.COMMENT_LOG],
+            '#a': [coordinate],
+            '#A': [coordinate],
+            limit: QUERY_LIMITS.LOGS / 2,
+          }], { signal });
+
+          logCount = foundLogs.length + commentLogs.length;
+        } catch (logError) {
+          console.warn('Failed to fetch logs for geocache:', logError);
+        }
+
+        return {
+          ...geocache,
+          foundCount,
+          logCount,
+        };
+      } catch (error) {
+        console.warn('Failed to fetch geocache by dTag:', error);
+        
+        // Try to get offline data as fallback
+        return await getOfflineGeocache(dTag);
+      }
+    },
+    enabled: !!dTag,
+    staleTime: (isOnline && isConnected && navigator.onLine) ? 30000 : Infinity,
+    gcTime: 300000,
+    retry: false,
+    refetchOnReconnect: true,
+    networkMode: 'always',
+  });
 
   // Helper function to get offline geocache
-  async function getOfflineGeocache(dTag: string) {
+  async function getOfflineGeocache(dTag: string): Promise<Geocache | null> {
     try {
       await offlineStorage.init();
       const cachedGeocaches = await offlineStorage.getAllGeocaches();
@@ -163,7 +152,7 @@ export function useGeocacheByDTag(dTag: string) {
   }
 
   // Helper function to cache geocache offline
-  async function cacheGeocacheOffline(geocache: Geocache, event: NostrEvent) {
+  async function cacheGeocacheOffline(geocache: Geocache, event: NostrEvent): Promise<void> {
     try {
       const cachedGeocache: CachedGeocache = {
         id: geocache.id,

@@ -2,28 +2,28 @@
  * Application-wide constants
  */
 
-// Network timeouts (in milliseconds) - Unified system handles browser optimization
+// Network timeouts (in milliseconds)
 export const TIMEOUTS = {
-  QUERY: 8000, // Automatically optimized per browser (Safari: 5s, Others: 8s)
+  QUERY: 8000,
   CONNECTIVITY_CHECK: 3000,
   TILE_DOWNLOAD: 10000,
-  FAST_QUERY: 2000, // For quick operations
-  DELETE_OPERATION: 5000, // For deletion operations
+  FAST_QUERY: 2000,
+  DELETE_OPERATION: 5000,
 } as const;
 
-// Query limits - Unified system handles browser optimization
+// Query limits
 export const QUERY_LIMITS = {
-  GEOCACHES: 50, // Automatically optimized per browser (Safari: 20, Others: 50)
-  LOGS: 200, // Automatically optimized per browser (Safari: 50, Others: 200)
-  BATCH_SIZE: 3, // Automatically optimized per browser (Safari: 2, Others: 3)
+  GEOCACHES: 50,
+  LOGS: 200,
+  BATCH_SIZE: 3,
   PROXIMITY_RESULTS: 100,
-  HOME_PAGE_LIMIT: 3, // For home page preview
-  FAST_LOAD_LIMIT: 10, // For quick initial loads
+  HOME_PAGE_LIMIT: 3,
+  FAST_LOAD_LIMIT: 10,
 } as const;
 
-// Retry configuration - Unified system handles browser optimization
+// Retry configuration
 export const RETRY_CONFIG = {
-  MAX_RETRIES: 2, // Automatically optimized per browser (Safari: 1, Others: 2)
+  MAX_RETRIES: 2,
   BASE_DELAY: 1000,
   BATCH_DELAY: 100,
   CONNECTIVITY_INTERVAL: 30000,
@@ -72,8 +72,8 @@ export const UI_CONFIG = {
   MOBILE_BREAKPOINT: 768,
 } as const;
 
-// Default relay configuration - using ditto.pub as primary relay
-// Additional relays can be configured by users in Settings
-export const DEFAULT_RELAYS = [
-  'wss://ditto.pub/relay',
-] as const;
+// Single relay configuration - using ditto.pub as sole relay
+export const DEFAULT_RELAY = 'wss://ditto.pub/relay';
+
+// For compatibility with existing code that expects an array
+export const DEFAULT_RELAYS = [DEFAULT_RELAY];

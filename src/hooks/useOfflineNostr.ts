@@ -9,9 +9,7 @@ import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from './useCurrentUser';
 import { useOfflineSync, useOfflineMode } from './useOfflineStorage';
 import { offlineStorage } from '@/lib/offlineStorage';
-import { queryNostr } from '@/lib/nostrQuery';
 import { TIMEOUTS } from '@/lib/constants';
-import { isSafari } from '@/lib/safariNostr';
 
 // Enhanced useNostr hook with offline support
 export function useOfflineNostr() {
@@ -27,14 +25,9 @@ export function useOfflineNostr() {
   ): Promise<NostrEvent[]> => {
     if (isOnline) {
       try {
-        let events: NostrEvent[];
-        
-        // Use unified query utility
-        const events = await queryNostr(nostr, filters, {
-          timeout: options.timeout || (isSafari() ? TIMEOUTS.SAFARI_QUERY : TIMEOUTS.STANDARD_QUERY),
-          maxRetries: isSafari() ? 2 : 3,
-          signal: options.signal,
-        });
+        // Use standard nostr query
+        const signal = options.signal || AbortSignal.timeout(TIMEOUTS.QUERY);
+        const events = await nostr.query(filters, { signal });
 
         // Store events offline for future use
         for (const event of events) {
@@ -160,12 +153,10 @@ export function useOfflineGeocaches() {
   return useQuery({
     queryKey: ['geocaches', 'offline-aware', isOnline],
     queryFn: async () => {
-      const events = await query([
-        {
-          kinds: [30001], // Assuming geocaches are kind 30001
-          limit: 100,
-        }
-      ]);
+      const events = await query([{
+        kinds: [30001], // Assuming geocaches are kind 30001
+        limit: 100,
+      }]);
 
       // Transform events to geocache format
       return events.map(event => {
@@ -199,13 +190,11 @@ export function useOfflineProfile(pubkey: string) {
     queryFn: async () => {
       if (!pubkey) return null;
 
-      const events = await query([
-        {
-          kinds: [0],
-          authors: [pubkey],
-          limit: 1,
-        }
-      ]);
+      const events = await query([{
+        kinds: [0],
+        authors: [pubkey],
+        limit: 1,
+      }]);
 
       if (events.length === 0) return null;
 

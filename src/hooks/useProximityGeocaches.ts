@@ -3,10 +3,12 @@
  * Replaces useAdvancedGeocaches with geohash-based proximity queries
  */
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
+import { useNostr } from '@nostrify/react';
+import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
-import { useNostrQuery, useNostrBatchQuery } from '@/hooks/useUnifiedNostr';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
 import type { ComparisonOperator } from '@/components/ui/comparison-filter';
 import { 
@@ -39,6 +41,8 @@ interface UseProximityGeocachesOptions {
 export type GeocacheWithDistance = Geocache & { distance?: number };
 
 export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}) {
+  const { nostr } = useNostr();
+  const { user } = useCurrentUser();
   const queryKey = useMemo(() => [
     'geocaches-proximity', 
     options
@@ -48,71 +52,8 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
   const hasProximitySearch = options.centerLat && options.centerLng && options.radiusKm;
   const useOptimization = hasProximitySearch && options.useProximityOptimization !== false;
 
-  // Create filter groups based on strategy
-  const filterGroups = useMemo(() => {
-    if (useOptimization) {
-      return createProximityFilterGroups();
-    } else {
-      return createBroadFilterGroups();
-    }
-  }, [useOptimization, options]);
-
-  const { data: events, ...queryResult } = useNostrBatchQuery(
-    queryKey,
-    filterGroups,
-    {
-      timeout: TIMEOUTS.QUERY,
-      staleTime: 60000, // 1 minute
-      gcTime: 300000, // 5 minutes
-    }
-  );
-
-  // Process the events
-  const processedData = useMemo(() => {
-    if (!events || events.length === 0) return [];
-
-    try {
-      // Parse geocaches and filter out hidden caches from public listings
-      const geocaches: Geocache[] = events
-        .map(parseGeocacheEvent)
-        .filter((g): g is Geocache => g !== null)
-        .filter(g => !g.hidden); // Filter out hidden caches from public listings
-
-      // Apply proximity filtering if specified
-      let geocachesWithDistance: GeocacheWithDistance[];
-      if (hasProximitySearch) {
-        // Add distance to all results and sort by distance
-        geocachesWithDistance = geocaches.map(cache => ({
-          ...cache,
-          distance: calculateDistance(options.centerLat!, options.centerLng!, cache.location.lat, cache.location.lng)
-        }));
-        
-        // Filter by radius with a small buffer (10% extra) for edge cases
-        const radiusBuffer = options.radiusKm! * 1.1;
-        geocachesWithDistance = geocachesWithDistance
-          .filter(cache => cache.distance! <= radiusBuffer)
-          .sort((a, b) => (a.distance || 0) - (b.distance || 0));
-      } else {
-        // No proximity filtering, just convert type
-        geocachesWithDistance = geocaches.map(cache => ({ ...cache }));
-      }
-
-      // Apply client-side filters
-      geocachesWithDistance = applyClientSideFilters(geocachesWithDistance);
-
-      return geocachesWithDistance;
-    } catch (error) {
-      console.error('Error processing proximity geocaches:', error);
-      return [];
-    }
-  }, [events, hasProximitySearch, options]);
-
-  return {
-    ...queryResult,
-    data: processedData,
-  };
-
-  function createProximityFilterGroups(): NostrFilter[][] {
+  // Helper functions moved outside of useMemo to prevent dependency issues
+  const createProximityFilterGroups = useCallback((): NostrFilter[][] => {
     if (!options.centerLat || !options.centerLng || !options.radiusKm) {
       return [];
     }
@@ -156,9 +97,9 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
     }
     
     return filterGroups;
-  }
+  }, [options.centerLat, options.centerLng, options.radiusKm, options.maxProximityPrecision, options.authorPubkey]);
 
-  function createBroadFilterGroups(): NostrFilter[][] {
+  const createBroadFilterGroups = useCallback((): NostrFilter[][] => {
     const filter: NostrFilter = {
       kinds: [NIP_GC_KINDS.GEOCACHE],
       limit: options.limit || QUERY_LIMITS.GEOCACHES,
@@ -169,9 +110,9 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
     }
 
     return [[filter]];
-  }
+  }, [options.limit, options.authorPubkey]);
 
-  function applyClientSideFilters(geocaches: GeocacheWithDistance[]): GeocacheWithDistance[] {
+  const applyClientSideFilters = useCallback((geocaches: GeocacheWithDistance[]): GeocacheWithDistance[] => {
     let filtered = [...geocaches];
 
     // Text search filter
@@ -207,7 +148,83 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
     }
 
     return filtered;
-  }
+  }, [options.search, options.difficulty, options.difficultyOperator, options.terrain, options.terrainOperator]);
+
+  // Create filter groups based on strategy
+  const filterGroups = useMemo(() => {
+    if (useOptimization) {
+      return createProximityFilterGroups();
+    } else {
+      return createBroadFilterGroups();
+    }
+  }, [useOptimization, createProximityFilterGroups, createBroadFilterGroups]);
+
+  const { data: events, ...queryResult } = useQuery({
+    queryKey,
+    queryFn: async (c) => {
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+      const allEvents: NostrEvent[] = [];
+      
+      // Execute each filter group
+      for (const filters of filterGroups) {
+        try {
+          const batchEvents = await nostr.query(filters, { signal });
+          allEvents.push(...batchEvents);
+        } catch (error) {
+          console.warn('Filter group failed:', error);
+        }
+      }
+      
+      return allEvents;
+    },
+    staleTime: 60000, // 1 minute
+    gcTime: 300000, // 5 minutes
+  });
+
+  // Process the events
+  const processedData = useMemo(() => {
+    if (!events || events.length === 0) return [];
+
+    try {
+      // Parse geocaches and filter out hidden caches from public listings
+      const geocaches: Geocache[] = events
+        .map(parseGeocacheEvent)
+        .filter((g): g is Geocache => g !== null)
+        .filter(g => !g.hidden || g.pubkey === user?.pubkey); // Show hidden caches to their creator
+
+      // Apply proximity filtering if specified
+      let geocachesWithDistance: GeocacheWithDistance[];
+      if (hasProximitySearch) {
+        // Add distance to all results and sort by distance
+        geocachesWithDistance = geocaches.map(cache => ({
+          ...cache,
+          distance: calculateDistance(options.centerLat!, options.centerLng!, cache.location.lat, cache.location.lng)
+        }));
+        
+        // Filter by radius with a small buffer (10% extra) for edge cases
+        const radiusBuffer = options.radiusKm! * 1.1;
+        geocachesWithDistance = geocachesWithDistance
+          .filter(cache => cache.distance! <= radiusBuffer)
+          .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+      } else {
+        // No proximity filtering, just convert type
+        geocachesWithDistance = geocaches.map(cache => ({ ...cache }));
+      }
+
+      // Apply client-side filters
+      geocachesWithDistance = applyClientSideFilters(geocachesWithDistance);
+
+      return geocachesWithDistance;
+    } catch (error) {
+      console.error('Error processing proximity geocaches:', error);
+      return [];
+    }
+  }, [events, hasProximitySearch, options.centerLat, options.centerLng, options.radiusKm, user?.pubkey, applyClientSideFilters]);
+
+  return {
+    ...queryResult,
+    data: processedData,
+  };
 }
 
 function applyComparison(value: number, operator: ComparisonOperator, target: number): boolean {

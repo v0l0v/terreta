@@ -29,9 +29,10 @@ export function getSizeLevel(size: string): number {
   const normalizedSize = size?.toLowerCase()?.trim() || '';
   const level = sizeMap[normalizedSize];
   
-  // Debug logging to help troubleshoot
-  if (normalizedSize === 'other' && level !== 0) {
-  }
+  // Debug logging to help troubleshoot - currently disabled
+  // if (normalizedSize === 'other' && level !== 0) {
+  //   console.debug('Unexpected level for "other" size:', level);
+  // }
   
   return level !== undefined ? level : 0;
 }

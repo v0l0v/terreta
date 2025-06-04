@@ -1,8 +1,8 @@
 // Helper functions for relay management
 
-export const DEFAULT_GEOCACHING_RELAYS = [
-  'wss://ditto.pub/relay',
-];
+import { DEFAULT_RELAY, DEFAULT_RELAYS } from './constants';
+
+export const DEFAULT_GEOCACHING_RELAYS = DEFAULT_RELAYS;
 
 export function getGeocachingRelays(): string[] {
   const saved = localStorage.getItem('geocaching-relays');
@@ -21,7 +21,7 @@ export function getGeocachingRelays(): string[] {
 
 export function getPrimaryGeocachingRelay(): string {
   const relays = getGeocachingRelays();
-  return relays[0] || DEFAULT_GEOCACHING_RELAYS[0];
+  return relays[0] || DEFAULT_RELAY;
 }
 
 // Extract relay URLs from a geocache event's relay tags

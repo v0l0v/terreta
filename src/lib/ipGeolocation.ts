@@ -77,7 +77,9 @@ export async function getIPLocation(): Promise<IPLocation | null> {
     } catch (error) {
       // Only log non-CORS errors to reduce console noise
       if (error instanceof TypeError && error.message.includes('CORS')) {
+        // CORS errors are expected for some services, ignore them
       } else {
+        console.warn(`IP geolocation service ${service.name} failed:`, error);
       }
     }
     return null;

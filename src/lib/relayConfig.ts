@@ -1,13 +1,26 @@
 /**
  * Relay configuration utilities
- * Provides consistent access to user's preferred relays across the app
+ * Using a single relay configuration for simplicity
  */
 
-// Default relay configuration - using ditto.pub as primary relay
-export const DEFAULT_RELAYS = [
-  'wss://ditto.pub/relay',
-  // Additional relays can be configured by users in Settings
-];
+import { DEFAULT_RELAY, DEFAULT_RELAYS } from './constants';
+
+// Re-export for convenience
+export { DEFAULT_RELAYS };
+
+/**
+ * Get the single relay URL
+ */
+export function getRelay(): string {
+  return DEFAULT_RELAY;
+}
+
+/**
+ * Get relays as array (for compatibility with existing hooks)
+ */
+export function getRelays(): string[] {
+  return DEFAULT_RELAYS;
+}
 
 /**
  * Get user's preferred relays from localStorage, fallback to defaults
@@ -17,12 +30,12 @@ export function getUserRelays(): string[] {
     const saved = localStorage.getItem('geocaching-relays');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_RELAYS;
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : getRelays();
     }
   } catch (error) {
     console.warn('Failed to parse saved relays, using defaults:', error);
   }
-  return DEFAULT_RELAYS;
+  return getRelays();
 }
 
 /**
@@ -56,7 +69,7 @@ export function removeUserRelay(relay: string): void {
   const filtered = currentRelays.filter(r => r !== relay);
   // Ensure we always have at least the default relay
   if (filtered.length === 0) {
-    saveUserRelays(DEFAULT_RELAYS);
+    saveUserRelays(getRelays());
   } else {
     saveUserRelays(filtered);
   }
@@ -66,7 +79,7 @@ export function removeUserRelay(relay: string): void {
  * Reset relays to defaults
  */
 export function resetToDefaultRelays(): void {
-  saveUserRelays(DEFAULT_RELAYS);
+  saveUserRelays(getRelays());
 }
 
 /**
