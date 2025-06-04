@@ -55,12 +55,14 @@ export function useUserFoundCaches(targetPubkey?: string) {
             // Extract geocache info from a-tag
             const aTag = event.tags.find(t => t[0] === 'a')?.[1];
             if (aTag) {
-              const [, pubkey, dTag] = aTag.split(':');
-              return {
-                ...parsed,
-                geocachePubkey: pubkey,
-                geocacheDTag: dTag,
-              };
+              const [kind, geocachePubkey, geocacheDTag] = aTag.split(':');
+              if (kind === NIP_GC_KINDS.GEOCACHE.toString() && geocachePubkey && geocacheDTag) {
+                return {
+                  ...parsed,
+                  geocachePubkey,
+                  geocacheDTag,
+                };
+              }
             }
           }
           return null;

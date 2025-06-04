@@ -88,7 +88,8 @@ export function useUserGeocaches(targetPubkey?: string) {
           const [, pubkey, dTag] = aTag.split(':');
           const ref = `${pubkey}:${dTag}`;
           
-          const logType = logEvent.tags.find(t => t[0] === 'log-type')?.[1];
+          // Determine log type by event kind, not by tag
+          const isFoundLog = logEvent.kind === NIP_GC_KINDS.FOUND_LOG;
           
           if (!logCounts.has(ref)) {
             logCounts.set(ref, { total: 0, found: 0 });
@@ -98,7 +99,7 @@ export function useUserGeocaches(targetPubkey?: string) {
           if (counts) {
             counts.total++;
             
-            if (logType === 'found') {
+            if (isFoundLog) {
               counts.found++;
             }
           }
