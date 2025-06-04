@@ -36,7 +36,9 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
   const { data: logs = [], refetch: refetchLogs } = useGeocacheLogs(
     geocache ? `${geocache.pubkey}:${geocache.dTag}` : '', 
     geocache?.dTag,
-    geocache?.pubkey
+    geocache?.pubkey,
+    geocache?.relays,
+    geocache?.verificationPubkey
   );
   const author = useAuthor(geocache?.pubkey || "");
   

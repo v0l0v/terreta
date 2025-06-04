@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
 import { useAuthor } from "@/hooks/useAuthor";
 import { useGeocaches } from "@/hooks/useGeocaches";
-import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
 import { useUserFoundCaches } from "@/hooks/useUserFoundCaches";
 import { ProfileHeader } from "@/components/ProfileHeader";
 import { MobileTabs } from "@/components/ui/mobile-button-patterns";
