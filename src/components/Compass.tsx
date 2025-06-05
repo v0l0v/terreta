@@ -21,9 +21,25 @@ export function Compass({ targetLat, targetLng, className }: CompassProps) {
     lng: userCoords.longitude
   } : null;
 
-  // Auto-get location when component mounts
+  // Auto-get location when component mounts (with retry for Android)
   useEffect(() => {
-    getLocation();
+    let retryCount = 0;
+    const maxRetries = 2;
+    
+    const tryGetLocation = () => {
+      getLocation();
+      
+      // If no location after 10 seconds and we haven't exceeded retries, try again
+      setTimeout(() => {
+        if (!userCoords && retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Retrying geolocation (attempt ${retryCount + 1})`);
+          tryGetLocation();
+        }
+      }, 10000);
+    };
+    
+    tryGetLocation();
   }, [getLocation]);
 
   // Calculate bearing from user location to target

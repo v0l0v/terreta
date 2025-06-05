@@ -11,16 +11,7 @@ interface IPLocation {
 }
 
 const IP_SERVICES = [
-  {
-    name: 'ipapi.co',
-    url: 'https://ipapi.co/json/',
-    parser: (data: Record<string, unknown>): IPLocation => ({
-      lat: parseFloat(data.latitude as string),
-      lng: parseFloat(data.longitude as string),
-      accuracy: 50000, // 50km accuracy for IP-based
-      source: 'ipapi.co'
-    })
-  },
+  // Most reliable services first (better for Android)
   {
     name: 'ipinfo.io',
     url: 'https://ipinfo.io/json',
@@ -29,10 +20,20 @@ const IP_SERVICES = [
       return {
         lat,
         lng,
-        accuracy: 50000,
+        accuracy: 25000, // More optimistic accuracy for better UX
         source: 'ipinfo.io'
       };
     }
+  },
+  {
+    name: 'ipapi.co',
+    url: 'https://ipapi.co/json/',
+    parser: (data: Record<string, unknown>): IPLocation => ({
+      lat: parseFloat(data.latitude as string),
+      lng: parseFloat(data.longitude as string),
+      accuracy: 25000,
+      source: 'ipapi.co'
+    })
   },
   {
     name: 'ipwhois.app',
@@ -40,59 +41,77 @@ const IP_SERVICES = [
     parser: (data: Record<string, unknown>): IPLocation => ({
       lat: parseFloat(data.latitude as string),
       lng: parseFloat(data.longitude as string),
-      accuracy: 50000,
+      accuracy: 30000,
       source: 'ipwhois.app'
+    })
+  },
+  // Backup service with different approach
+  {
+    name: 'ip-api.com',
+    url: 'http://ip-api.com/json/',
+    parser: (data: Record<string, unknown>): IPLocation => ({
+      lat: parseFloat(data.lat as string),
+      lng: parseFloat(data.lon as string),
+      accuracy: 35000,
+      source: 'ip-api.com'
     })
   }
 ];
 
 export async function getIPLocation(): Promise<IPLocation | null> {
-  // Try all services in parallel for faster response
-  const promises = IP_SERVICES.map(async (service) => {
+  // Try services sequentially for better reliability on Android
+  for (const service of IP_SERVICES) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000); // Slightly longer timeout
+      
       const response = await fetch(service.url, {
-        signal: AbortSignal.timeout(3000), // Shorter timeout for faster fallback
+        signal: controller.signal,
         mode: 'cors',
         headers: {
           'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; GeocachingApp/1.0)', // Some services prefer this
         }
       });
       
-      if (!response.ok) return null;
+      clearTimeout(timeoutId);
       
-      const data = await response.json();
+      if (!response.ok) {
+        console.warn(`IP service ${service.name} returned ${response.status}`);
+        continue;
+      }
+      
+      const data = await response.json() as Record<string, unknown>;
       const location = service.parser(data);
       
-      // Validate coordinates
+      // Validate coordinates more thoroughly
       if (
         !isNaN(location.lat) && 
         !isNaN(location.lng) &&
         location.lat >= -90 && 
         location.lat <= 90 &&
         location.lng >= -180 && 
-        location.lng <= 180
+        location.lng <= 180 &&
+        location.lat !== 0 && // Exclude null island
+        location.lng !== 0
       ) {
+        console.log(`IP geolocation success via ${service.name}:`, location);
         return location;
-      }
-    } catch (error) {
-      // Only log non-CORS errors to reduce console noise
-      if (error instanceof TypeError && error.message.includes('CORS')) {
-        // CORS errors are expected for some services, ignore them
       } else {
-        console.warn(`IP geolocation service ${service.name} failed:`, error);
+        console.warn(`Invalid coordinates from ${service.name}:`, location);
       }
-    }
-    return null;
-  });
-
-  // Race all promises and return the first successful one
-  const results = await Promise.allSettled(promises);
-  
-  for (const result of results) {
-    if (result.status === 'fulfilled' && result.value) {
-      return result.value;
+    } catch (error: unknown) {
+      const err = error as Error;
+      if (err.name === 'AbortError') {
+        console.warn(`IP service ${service.name} timed out`);
+      } else if (err.message?.includes('CORS')) {
+        console.warn(`CORS error for ${service.name}, trying next service`);
+      } else {
+        console.warn(`IP geolocation service ${service.name} failed:`, err.message);
+      }
     }
   }
   
+  console.warn('All IP geolocation services failed');
   return null;
 }
