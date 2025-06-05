@@ -45,10 +45,11 @@ export function useNostrPublish() {
         let lastError: Error | null = null;
         let publishSuccess = false;
         
-        for (let attempt = 1; attempt <= RETRY_CONFIG.MAX_RETRIES; attempt++) {
+        for (let attempt = 1; attempt <= RETRY_CONFIG.PUBLISH_MAX_RETRIES; attempt++) {
           try {
-            // Adaptive timeout that considers network conditions and retry attempts
-            const timeout = getAdaptiveTimeout(TIMEOUTS.QUERY + (attempt - 1) * 2000);
+            // Use shorter, more reasonable timeout for publishing
+            const baseTimeout = TIMEOUTS.PUBLISH + (attempt - 1) * 3000; // Increase timeout slightly per attempt
+            const timeout = getAdaptiveTimeout(baseTimeout);
             await nostr.event(event, { signal: AbortSignal.timeout(timeout) });
             publishSuccess = true;
             break;
@@ -66,11 +67,11 @@ export function useNostrPublish() {
             }
             
             // Log the attempt
-            console.warn(`Publish attempt ${attempt}/${RETRY_CONFIG.MAX_RETRIES} failed:`, errorMessage);
+            console.warn(`Publish attempt ${attempt}/${RETRY_CONFIG.PUBLISH_MAX_RETRIES} failed:`, errorMessage);
             
             // Wait before retrying (except on last attempt)
-            if (attempt < RETRY_CONFIG.MAX_RETRIES) {
-              await new Promise(resolve => setTimeout(resolve, RETRY_CONFIG.BASE_DELAY * attempt));
+            if (attempt < RETRY_CONFIG.PUBLISH_MAX_RETRIES) {
+              await new Promise(resolve => setTimeout(resolve, RETRY_CONFIG.PUBLISH_BASE_DELAY * attempt));
             }
           }
         }
@@ -90,7 +91,7 @@ export function useNostrPublish() {
           } else if (errorMessage.includes('network')) {
             throw new Error("Network error after multiple attempts. Please check your internet connection and try again.");
           } else {
-            throw new Error(`Failed to publish event after ${RETRY_CONFIG.MAX_RETRIES} attempts: ${errorMessage}`);
+            throw new Error(`Failed to publish event after ${RETRY_CONFIG.PUBLISH_MAX_RETRIES} attempts: ${errorMessage}`);
           }
         }
         

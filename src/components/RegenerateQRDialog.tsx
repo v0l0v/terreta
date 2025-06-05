@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RotateCcw, AlertTriangle, QrCode } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -22,28 +22,82 @@ export function RegenerateQRDialog({
 }: RegenerateQRDialogProps) {
   const [showNewQR, setShowNewQR] = useState(false);
   const [newVerificationKeyPair, setNewVerificationKeyPair] = useState<VerificationKeyPair | null>(null);
+  const [operationTimeout, setOperationTimeout] = useState<NodeJS.Timeout | null>(null);
   
-  const { mutate: regenerateKey, isPending } = useRegenerateVerificationKey(geocache);
+  const { mutate: regenerateKey, isPending, reset } = useRegenerateVerificationKey(geocache);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (operationTimeout) {
+        clearTimeout(operationTimeout);
+      }
+    };
+  }, [operationTimeout]);
 
   const handleRegenerate = () => {
+    // Clear any existing timeout
+    if (operationTimeout) {
+      clearTimeout(operationTimeout);
+    }
+
+    // Set a timeout to reset the operation if it takes too long (30 seconds)
+    const timeout = setTimeout(() => {
+      reset();
+      console.warn('QR regeneration operation timed out after 30 seconds');
+    }, 30000);
+    setOperationTimeout(timeout);
+
+    // This creates a new Nostr event (kind 37515) with a new verification key
+    // The new event replaces the previous geocache event, invalidating old QR codes
     regenerateKey(undefined, {
       onSuccess: (result) => {
+        // Clear the timeout on success
+        if (operationTimeout) {
+          clearTimeout(operationTimeout);
+          setOperationTimeout(null);
+        }
+        
         // Extract the verification key pair from the result
         const verificationKeyPair = result.verificationKeyPair;
         setNewVerificationKeyPair(verificationKeyPair);
         setShowNewQR(true);
         onOpenChange(false);
       },
+      onError: () => {
+        // Clear the timeout on error
+        if (operationTimeout) {
+          clearTimeout(operationTimeout);
+          setOperationTimeout(null);
+        }
+      },
     });
   };
 
   const handleCancel = () => {
+    // Clear any pending timeout
+    if (operationTimeout) {
+      clearTimeout(operationTimeout);
+      setOperationTimeout(null);
+    }
+    
+    // Reset the mutation state if it's pending
+    if (isPending) {
+      reset();
+    }
+    
     onOpenChange(false);
   };
 
   const handleQRDialogClose = () => {
     setShowNewQR(false);
     setNewVerificationKeyPair(null);
+    
+    // Clear any remaining timeout
+    if (operationTimeout) {
+      clearTimeout(operationTimeout);
+      setOperationTimeout(null);
+    }
   };
 
   const naddr = geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays);
@@ -58,7 +112,7 @@ export function RegenerateQRDialog({
               Regenerate QR Code
             </DialogTitle>
             <DialogDescription>
-              This will create a new verification QR code for your geocache.
+              This will create a new geocache event with a fresh verification QR code.
             </DialogDescription>
           </DialogHeader>
 
@@ -66,8 +120,8 @@ export function RegenerateQRDialog({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Warning:</strong> This action will invalidate the previous QR code and any verified found log events. 
-                Finders who have already scanned the old QR code will need to scan the new one to submit verified logs.
+                <strong>Warning:</strong> This action will create a new geocache event and invalidate all previous QR codes. 
+                All finders must use the new QR code.
               </AlertDescription>
             </Alert>
 
@@ -76,10 +130,10 @@ export function RegenerateQRDialog({
                 After regenerating:
               </p>
               <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                <li>• The old QR code will stop working</li>
-                <li>• You'll need to print and place the new QR code</li>
-                <li>• Previous verified logs will remain valid</li>
-                <li>• New finders must use the new QR code</li>
+                <li>• A new geocache event will be published to Nostr</li>
+                <li>• Old QR codes will stop working</li>
+                <li>• You must print and place the new QR code</li>
+                <li>• All finders must use the new QR code</li>
               </ul>
             </div>
 
@@ -100,7 +154,7 @@ export function RegenerateQRDialog({
                 {isPending ? (
                   <>
                     <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
-                    Regenerating...
+                    Publishing new event...
                   </>
                 ) : (
                   <>

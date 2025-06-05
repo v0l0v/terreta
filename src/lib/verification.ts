@@ -1,5 +1,9 @@
 /**
  * Geocache verification utilities using Nostr key pairs
+ * 
+ * When regenerating a QR code, a new geocache event (kind 37515) is created
+ * with a new verification key, invalidating all previous verification keys.
+ * Only the most recent verification key from the latest geocache event is valid.
  */
 
 import { nip19 } from 'nostr-tools'; // Keep for NIP-19 encoding/decoding only
@@ -491,6 +495,26 @@ export async function verifyVerificationEvent(
   } catch (error) {
     return false;
   }
+}
+
+/**
+ * Validate that a verification key is the current one for a geocache
+ */
+export function isCurrentVerificationKey(
+  verificationPubkey: string,
+  currentVerificationPubkey: string
+): boolean {
+  return verificationPubkey === currentVerificationPubkey;
+}
+
+/**
+ * Check if a verification attempt uses an outdated key
+ */
+export function isOutdatedVerificationKey(
+  verificationPubkey: string,
+  currentVerificationPubkey: string
+): boolean {
+  return verificationPubkey !== currentVerificationPubkey;
 }
 
 /**

@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { generateVerificationKeyPair } from '@/lib/verification';
+import { TIMEOUTS } from '@/lib/constants';
 import type { Geocache } from '@/types/geocache';
 import { 
   NIP_GC_KINDS, 
@@ -17,6 +18,8 @@ export function useRegenerateVerificationKey(geocache: Geocache | null) {
   const { toast } = useToast();
 
   return useMutation({
+    // Add a timeout for the entire mutation
+    mutationKey: ['regenerate-verification-key', geocache?.id],
     mutationFn: async () => {
       if (!geocache) {
         throw new Error("No geocache provided");
@@ -41,6 +44,7 @@ export function useRegenerateVerificationKey(geocache: Geocache | null) {
         hidden: geocache.hidden,
       });
 
+      // Create a new Nostr event (kind 37515) with the new verification key
       const event = await publishEvent({
         kind: NIP_GC_KINDS.GEOCACHE,
         content: geocache.description,
@@ -54,8 +58,8 @@ export function useRegenerateVerificationKey(geocache: Geocache | null) {
     },
     onSuccess: ({ event, verificationKeyPair }) => {
       toast({
-        title: "Verification key regenerated!",
-        description: "A new QR code has been generated. Previous QR codes are now invalid.",
+        title: "New verification key generated!",
+        description: "A new geocache event has been created. All previous QR codes are now invalid.",
       });
       
       // Update the specific geocache in cache

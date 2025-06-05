@@ -9,6 +9,7 @@ export const TIMEOUTS = {
   TILE_DOWNLOAD: 10000,
   FAST_QUERY: 8000, // 8 seconds - still fast but realistic
   DELETE_OPERATION: 5000, // 5 seconds - a bit more time for deletions
+  PUBLISH: 12000, // 12 seconds - reasonable timeout for publishing events
 } as const;
 
 // Query limits
@@ -23,11 +24,13 @@ export const QUERY_LIMITS = {
 
 // Retry configuration
 export const RETRY_CONFIG = {
-  MAX_RETRIES: 3, // One more retry attempt
-  BASE_DELAY: 1500, // Slightly longer base delay
+  MAX_RETRIES: 2, // Reduced retries for faster feedback
+  BASE_DELAY: 1000, // Shorter delay between retries
   BATCH_DELAY: 200, // More breathing room between batch operations
   CONNECTIVITY_INTERVAL: 30000,
   SYNC_INTERVAL: 300000, // 5 minutes
+  PUBLISH_MAX_RETRIES: 2, // Specific retry count for publishing
+  PUBLISH_BASE_DELAY: 800, // Shorter delay for publishing retries
 } as const;
 
 // Polling intervals for prefetching and updates
