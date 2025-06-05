@@ -58,23 +58,159 @@ export async function generateVerificationKeyPair(): Promise<VerificationKeyPair
 }
 
 /**
- * Generate QR code data URL for verification
+ * Load and resize image while preserving colors and quality
+ */
+async function loadAndResizeImage(src: string, size: number): Promise<HTMLCanvasElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+      
+      canvas.width = size;
+      canvas.height = size;
+      
+      // Enable high-quality image smoothing
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Draw the image scaled to fit, preserving original colors
+      ctx.drawImage(img, 0, 0, size, size);
+      
+      resolve(canvas);
+    };
+    
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = src;
+  });
+}
+
+/**
+ * Generate QR code data URL for verification with centered icon and descriptive text
  */
 export async function generateVerificationQR(naddr: string, nsec: string): Promise<string> {
   const verificationUrl = `https://treasures.to/${naddr}#verify=${nsec}`;
   
   try {
+    // Generate the base QR code with higher error correction to accommodate the logo
     const qrDataUrl = await QRCode.toDataURL(verificationUrl, {
-      width: 512,
-      margin: 2,
+      width: 600,
+      margin: 3,
       color: {
-        dark: '#000000',
+        dark: '#1a1a1a',
         light: '#FFFFFF'
       },
-      errorCorrectionLevel: 'M'
+      errorCorrectionLevel: 'H' // High error correction to handle logo overlay
     });
     
-    return qrDataUrl;
+    // Create a canvas to composite the QR code with the icon and text
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Could not get canvas context');
+    }
+    
+    // Load the QR code image
+    const qrImg = new Image();
+    await new Promise<void>((resolve, reject) => {
+      qrImg.onload = () => resolve();
+      qrImg.onerror = () => reject(new Error('Failed to load QR code'));
+      qrImg.src = qrDataUrl;
+    });
+    
+    // Calculate dimensions for QR code + text with more generous spacing
+    const textHeight = 120; // More space for larger text
+    const textPadding = 30; // More padding around text
+    const topPadding = 20; // Padding above QR code
+    
+    canvas.width = qrImg.width + 40; // Add side padding
+    canvas.height = qrImg.height + textHeight + textPadding + topPadding;
+    
+    // Fill background with white and add subtle border
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add a subtle border around the entire QR code area
+    ctx.strokeStyle = '#e5e5e5';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+    
+    // Draw the QR code centered horizontally with top padding
+    const qrX = (canvas.width - qrImg.width) / 2;
+    ctx.drawImage(qrImg, qrX, topPadding);
+    
+    try {
+      // Use a smaller, optimized icon for better quality in QR codes
+      // The 192x192 icon is a good balance between quality and file size
+      const iconSize = Math.floor(qrImg.width * 0.25); // Reduced from 30% to 25% for better scanning
+      const iconCanvas = await loadAndResizeImage('/icon-192x192.png', iconSize);
+      
+      // Calculate center position for icon
+      const centerX = qrX + (qrImg.width - iconSize) / 2;
+      const centerY = topPadding + (qrImg.height - iconSize) / 2;
+      
+      // Add a white background circle for the icon with optimized padding
+      const padding = Math.floor(iconSize * 0.12); // Increased padding for better contrast
+      const bgRadius = (iconSize + padding * 2) / 2;
+      
+      // Draw shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+      ctx.beginPath();
+      ctx.arc(qrX + qrImg.width / 2 + 2, topPadding + qrImg.height / 2 + 2, bgRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Draw white background
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(qrX + qrImg.width / 2, topPadding + qrImg.height / 2, bgRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Add subtle border around icon background
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Enable image smoothing for better quality
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Draw the colored icon
+      ctx.drawImage(iconCanvas, centerX, centerY);
+      
+    } catch (iconError) {
+      // If icon loading fails, just return the QR code without icon
+      console.warn('Failed to load icon for QR code:', iconError);
+    }
+    
+    // Add descriptive text below the QR code with better formatting
+    const line1 = 'You found a treasure!';
+    const line2 = 'Scan this QR code to log your adventure.';
+    
+    const textStartY = topPadding + qrImg.height + textPadding + 10;
+    
+    // Set up text styling with larger, more readable font
+    ctx.fillStyle = '#2a2a2a';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // First line - larger and bolder
+    const fontSize1 = Math.floor(qrImg.width * 0.045); // Larger font size
+    ctx.font = `bold ${fontSize1}px "Segoe UI", Arial, sans-serif`;
+    ctx.fillText(line1, canvas.width / 2, textStartY);
+    
+    // Second line - slightly smaller but still prominent
+    const fontSize2 = Math.floor(qrImg.width * 0.038); // Slightly smaller but still large
+    const lineSpacing = fontSize1 + 15; // More generous line spacing
+    ctx.font = `${fontSize2}px "Segoe UI", Arial, sans-serif`;
+    ctx.fillText(line2, canvas.width / 2, textStartY + lineSpacing);
+    
+    return canvas.toDataURL('image/png');
   } catch (error) {
     throw new Error('Failed to generate QR code');
   }
