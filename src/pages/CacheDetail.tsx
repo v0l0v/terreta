@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { MapPin, Navigation, Calendar, User, Trophy, Edit, Trash2, RefreshCw, Upload, X, Save, RotateCcw, Compass as CompassIcon, Eye, EyeOff } from "lucide-react";
+import { MapPin, Navigation, Calendar, User, Trophy, Edit, Trash2, RefreshCw, Upload, X, Save, RotateCcw, Compass as CompassIcon, Eye, EyeOff, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ import { GeocacheForm, type GeocacheFormData } from "@/components/ui/geocache-fo
 
 import { ImageGallery } from "@/components/ImageGallery";
 import { ProfileDialog } from "@/components/ProfileDialog";
+import { RegenerateQRDialog } from "@/components/RegenerateQRDialog";
 import { parseVerificationFromHash, verifyKeyPair } from "@/lib/verification";
 
 export default function CacheDetail() {
@@ -88,6 +89,9 @@ export default function CacheDetail() {
   // Profile dialog state
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedProfilePubkey, setSelectedProfilePubkey] = useState<string | null>(null);
+  
+  // Regenerate QR dialog state
+  const [regenerateQRDialogOpen, setRegenerateQRDialogOpen] = useState(false);
   
   // Verification state
   const [verificationKey, setVerificationKey] = useState<string | null>(null);
@@ -390,14 +394,38 @@ export default function CacheDetail() {
               <CardContent className="overflow-hidden">
                 {isEditing ? (
                   // Edit form
-                  <GeocacheForm
-                    formData={editFormData}
-                    onFormDataChange={setEditFormData}
-                    images={editImages}
-                    onImagesChange={setEditImages}
-                    fieldPrefix="edit"
-                    isSubmitting={isEditingGeocache}
-                  />
+                  <div className="space-y-6">
+                    <GeocacheForm
+                      formData={editFormData}
+                      onFormDataChange={setEditFormData}
+                      images={editImages}
+                      onImagesChange={setEditImages}
+                      fieldPrefix="edit"
+                      isSubmitting={isEditingGeocache}
+                    />
+                    
+                    {/* QR Code Management Section */}
+                    {geocache.verificationPubkey && (
+                      <div className="border-t pt-6">
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-medium">QR Code Management</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Manage the verification QR code for this geocache. Regenerating will invalidate the previous QR code.
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setRegenerateQRDialogOpen(true)}
+                            disabled={isEditingGeocache}
+                            className="w-full sm:w-auto"
+                          >
+                            <QrCode className="h-4 w-4 mr-2" />
+                            Regenerate QR Code
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   // View mode
                   <>
@@ -593,6 +621,13 @@ export default function CacheDetail() {
         onConfirm={executeDeletion}
         onCancel={cancelDeletion}
         confirmText="Delete Geocache"
+      />
+      
+      {/* Regenerate QR Dialog */}
+      <RegenerateQRDialog
+        isOpen={regenerateQRDialogOpen}
+        onOpenChange={setRegenerateQRDialogOpen}
+        geocache={geocache}
       />
     </div>
   );
