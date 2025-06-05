@@ -149,3 +149,38 @@ describe('useRegenerateVerificationKey', () => {
     expect(verificationKeyPair.nsec).toBe('nsec1test');
   });
 });
+  it('should invalidate all geocache listing queries on success', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false }
+      }
+    });
+    
+    // Spy on invalidateQueries to verify it's called with correct keys
+    const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+
+    const { result } = renderHook(
+      () => useRegenerateVerificationKey(mockGeocache),
+      { wrapper }
+    );
+
+    result.current.mutate();
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    // Verify that all the correct query keys are invalidated
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['geocaches'] });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['geocaches-fast'] });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['proximity-geocaches'] });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['adaptive-geocaches'] });
+  });
+});

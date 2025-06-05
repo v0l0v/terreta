@@ -83,9 +83,14 @@ export function useDataManager(options: DataManagerOptions = {}) {
    */
   const refreshAll = useCallback(async () => {
     try {
-      // Invalidate and refetch main queries
+      // Invalidate and refetch all geocache queries
       await queryClient.invalidateQueries({ queryKey: ['geocaches'] });
+      await queryClient.invalidateQueries({ queryKey: ['geocaches-fast'] });
       await queryClient.invalidateQueries({ queryKey: ['geocache-logs'] });
+      
+      // Also invalidate proximity and adaptive queries
+      await queryClient.invalidateQueries({ queryKey: ['proximity-geocaches'] });
+      await queryClient.invalidateQueries({ queryKey: ['adaptive-geocaches'] });
       
       // Trigger prefetch
       await prefetchManager.triggerPrefetch();
@@ -154,12 +159,14 @@ export function useDataManager(options: DataManagerOptions = {}) {
   const pausePolling = useCallback(() => {
     // Invalidate queries to stop current polling
     queryClient.invalidateQueries({ queryKey: ['geocaches'] });
+    queryClient.invalidateQueries({ queryKey: ['geocaches-fast'] });
     queryClient.invalidateQueries({ queryKey: ['geocache-logs'] });
   }, [queryClient]);
 
   const resumePolling = useCallback(() => {
     // Force refetch to restart polling with current intervals
     queryClient.invalidateQueries({ queryKey: ['geocaches'] });
+    queryClient.invalidateQueries({ queryKey: ['geocaches-fast'] });
     queryClient.invalidateQueries({ queryKey: ['geocache-logs'] });
   }, [queryClient]);
 

@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { generateVerificationKeyPair } from '@/lib/verification';
+import { geocacheToNaddr } from '@/lib/naddr-utils';
 import { TIMEOUTS } from '@/lib/constants';
 import type { Geocache } from '@/types/geocache';
 import { 
@@ -66,48 +67,45 @@ export function useRegenerateVerificationKey(geocache: Geocache | null) {
       const eventId = geocache?.id;
       const dTag = geocache?.dTag;
       
+      // Parse the new geocache data once
+      const parsed = parseGeocacheEvent(event);
+      if (!parsed || !geocache) {
+        console.warn('Failed to parse regenerated geocache event or geocache is null');
+        return verificationKeyPair;
+      }
+
+      const updatedGeocache = {
+        ...parsed,
+        // Preserve original foundCount and logCount
+        foundCount: geocache.foundCount || 0,
+        logCount: geocache.logCount || 0,
+      };
+      
       if (eventId) {
-        queryClient.setQueryData(['geocache', eventId], (oldData: unknown) => {
-          if (!oldData || !geocache) return oldData;
-          
-          const parsed = parseGeocacheEvent(event);
-          if (!parsed) {
-            return oldData;
-          }
-          
-          return {
-            ...oldData,
-            ...parsed,
-            // Preserve original foundCount and logCount
-            foundCount: (oldData as Geocache).foundCount,
-            logCount: (oldData as Geocache).logCount,
-          };
-        });
+        queryClient.setQueryData(['geocache', eventId], () => updatedGeocache);
       }
 
       if (dTag) {
-        queryClient.setQueryData(['geocache-by-dtag', dTag], (oldData: unknown) => {
-          if (!oldData || !geocache) return oldData;
-          
-          const parsed = parseGeocacheEvent(event);
-          if (!parsed) {
-            return oldData;
-          }
-          
-          return {
-            ...oldData,
-            ...parsed,
-            // Preserve original foundCount and logCount
-            foundCount: (oldData as Geocache).foundCount,
-            logCount: (oldData as Geocache).logCount,
-          };
-        });
+        queryClient.setQueryData(['geocache-by-dtag', dTag], () => updatedGeocache);
       }
+
+      // IMPORTANT: Also update the naddr-based cache that CacheDetail.tsx uses
+      // Generate the naddr for this geocache to update the correct cache key
+      const naddr = geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays);
+      queryClient.setQueryData(['geocache-by-naddr', naddr], () => updatedGeocache);
       
-      // Also update the geocaches list
+      // Invalidate all geocache listings to refresh them immediately
       queryClient.invalidateQueries({ queryKey: ['geocaches'] });
+      queryClient.invalidateQueries({ queryKey: ['geocaches-fast'] });
       
-      // Background refresh after a short delay
+      // Also invalidate proximity-based queries that might contain this geocache
+      queryClient.invalidateQueries({ queryKey: ['proximity-geocaches'] });
+      queryClient.invalidateQueries({ queryKey: ['adaptive-geocaches'] });
+      
+      // Invalidate the naddr-based query immediately
+      queryClient.invalidateQueries({ queryKey: ['geocache-by-naddr', naddr] });
+      
+      // Background refresh after a short delay for individual geocache queries
       setTimeout(() => {
         if (eventId) {
           queryClient.invalidateQueries({ queryKey: ['geocache', eventId] });
@@ -116,6 +114,8 @@ export function useRegenerateVerificationKey(geocache: Geocache | null) {
         if (dTag) {
           queryClient.invalidateQueries({ queryKey: ['geocache-by-dtag', dTag] });
         }
+        // Also refresh the naddr query in the background
+        queryClient.invalidateQueries({ queryKey: ['geocache-by-naddr', naddr] });
       }, 2000);
 
       return verificationKeyPair;
