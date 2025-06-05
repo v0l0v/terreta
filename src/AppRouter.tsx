@@ -3,17 +3,18 @@ import { Suspense, lazy } from "react";
 import { LoadingCard } from "@/components/ui/loading";
 import { MobileHeader, MobileBottomNav } from "@/components/MobileNav";
 
-// Lazy load pages for better performance
-const Home = lazy(() => import("./pages/Home"));
-const Map = lazy(() => import("./pages/Map"));
-const CreateCache = lazy(() => import("./pages/CreateCache"));
+// Import core/frequently used pages directly for instant navigation (no lazy loading)
+import Home from "./pages/Home";
+import Map from "./pages/Map";
+import MyCaches from "./pages/MyCaches";
+import CreateCache from "./pages/CreateCache";
+import Settings from "./pages/Settings";
+
+// Lazy load less frequently used pages (Profile typically accessed once, Install rarely used)
 const CacheDetail = lazy(() => import("./pages/CacheDetail"));
-const MyCaches = lazy(() => import("./pages/MyCaches"));
 const Profile = lazy(() => import("./pages/Profile"));
-const Settings = lazy(() => import("./pages/Settings"));
 const Install = lazy(() => import("./pages/Install"));
 const Claim = lazy(() => import("./pages/Claim"));
-
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 export function AppRouter() {

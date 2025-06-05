@@ -32,8 +32,8 @@ export function LoadPage({
   onRetry,
   children
 }: LoadPageProps) {
-  // Show loading state
-  if (isLoading) {
+  // Only show loading state when we have no data to display (optimization for instant pages)
+  if (isLoading && !hasData) {
     return (
       <FullPageLoading 
         title="Loading..."

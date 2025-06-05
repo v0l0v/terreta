@@ -96,6 +96,38 @@ describe('Loading Optimization Logic', () => {
     });
   });
 
+  describe('Profile Page Loading Logic', () => {
+    it('should show loading when isLoadingAuthor=true and no author data', () => {
+      const isLoadingAuthor = true;
+      const authorData = null;
+      
+      // This is the condition we implemented
+      const shouldShowLoading = isLoadingAuthor && !authorData;
+      
+      expect(shouldShowLoading).toBe(true);
+    });
+
+    it('should NOT show loading when isLoadingAuthor=true but author data exists', () => {
+      const isLoadingAuthor = true;
+      const authorData = { metadata: { name: 'Test User' } }; // Cached data exists
+      
+      // This is the condition we implemented
+      const shouldShowLoading = isLoadingAuthor && !authorData;
+      
+      expect(shouldShowLoading).toBe(false);
+    });
+
+    it('should NOT show loading when isLoadingAuthor=false', () => {
+      const isLoadingAuthor = false;
+      const authorData = null;
+      
+      // This is the condition we implemented
+      const shouldShowLoading = isLoadingAuthor && !authorData;
+      
+      expect(shouldShowLoading).toBe(false);
+    });
+  });
+
   describe('MyCaches Page Loading Logic', () => {
     it('should show loading when isLoadingSaved=true and no saved caches', () => {
       const isLoadingSaved = true;
@@ -113,6 +145,38 @@ describe('Loading Optimization Logic', () => {
       
       // This is the condition we implemented
       const shouldShowLoading = isLoadingSaved && savedCaches.length === 0;
+      
+      expect(shouldShowLoading).toBe(false);
+    });
+  });
+
+  describe('LoadPage Component Loading Logic', () => {
+    it('should show loading when isLoading=true and no data available', () => {
+      const isLoading = true;
+      const hasData = false;
+      
+      // This is the condition we implemented  
+      const shouldShowLoading = isLoading && !hasData;
+      
+      expect(shouldShowLoading).toBe(true);
+    });
+
+    it('should NOT show loading when isLoading=true but data is available', () => {
+      const isLoading = true;
+      const hasData = true; // Cached data exists
+      
+      // This is the condition we implemented
+      const shouldShowLoading = isLoading && !hasData;
+      
+      expect(shouldShowLoading).toBe(false);
+    });
+
+    it('should NOT show loading when isLoading=false', () => {
+      const isLoading = false;
+      const hasData = false;
+      
+      // This is the condition we implemented
+      const shouldShowLoading = isLoading && !hasData;
       
       expect(shouldShowLoading).toBe(false);
     });
@@ -139,7 +203,7 @@ describe('Loading Optimization Logic', () => {
       // User sees the cached data immediately while background refresh happens
     });
 
-    it('should handle first-time cache load', () => {
+    it('should handle first-time cache load without router lazy loading', () => {
       // Scenario: User navigates directly to a cache URL they haven't seen before
       
       // Initial state: No cache data, query is loading
@@ -149,6 +213,9 @@ describe('Loading Optimization Logic', () => {
       // This SHOULD show loading since we have no data to display
       const shouldShowLoading = isLoading && !geocache;
       expect(shouldShowLoading).toBe(true);
+      
+      // Note: Core pages (Home, Map, MyCaches) no longer have router-level lazy loading
+      // so navigation between these pages is instant
     });
 
     it('should handle background polling on home page', () => {

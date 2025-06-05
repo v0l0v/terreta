@@ -21,8 +21,8 @@ export default function Home() {
     enablePrefetching: true,
   });
   
-  // Get the first few geocaches for the home page
-  const geocaches = dataManager.geocaches.slice(0, 3);
+  // Get the first few geocaches for the home page, filtering out null values
+  const geocaches = dataManager.geocaches.filter(Boolean).slice(0, 3);
   const isLoading = dataManager.isLoading;
   
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
@@ -240,8 +240,26 @@ export default function Home() {
               <ComponentLoading 
                 size="sm" 
                 title="Loading geocaches..." 
-                description="Discovering nearby treasures" 
+                description="Searching the network" 
               />
+            </div>
+          ) : dataManager.isError ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <RefreshCw className="h-6 w-6 text-red-400 mx-auto mb-2" />
+                <p className="text-sm font-medium">Failed to load caches</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {dataManager.error instanceof Error ? dataManager.error.message : 'Network connection issue'}
+                </p>
+                <Button 
+                  size="sm" 
+                  onClick={() => dataManager.refreshAll()} 
+                  className="h-8 px-3"
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Try Again
+                </Button>
+              </div>
             </div>
           ) : geocaches && geocaches.length > 0 ? (
             <>

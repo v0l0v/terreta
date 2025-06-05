@@ -125,7 +125,8 @@ export default function Profile() {
     );
   }
 
-  if (isLoadingAuthor) {
+  // Only show loading when we have no author data to display (optimization for instant pages)
+  if (isLoadingAuthor && !authorData) {
     return (
       <FullPageLoading
         title="Loading profile..."
