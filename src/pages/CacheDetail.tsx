@@ -37,6 +37,7 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { BlurredImage } from "@/components/BlurredImage";
 import { ProfileDialog } from "@/components/ProfileDialog";
 import { RegenerateQRDialog } from "@/components/RegenerateQRDialog";
+import { CacheMenu } from "@/components/CacheMenu";
 import { parseVerificationFromHash, verifyKeyPair } from "@/lib/verification";
 import type { Geocache } from "@/types/geocache";
 
@@ -441,6 +442,7 @@ export default function CacheDetail() {
                         )}
                       </>
                     )}
+                    <CacheMenu geocache={typedGeocache} variant="compact" />
                   </div>
                 </div>
               </CardHeader>

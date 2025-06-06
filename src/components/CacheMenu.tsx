@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MoreVertical, Share2, ExternalLink, MapPin } from 'lucide-react';
+import { MoreVertical, Share2, MapPin } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ShareDialog } from '@/components/ShareDialog';
-import { geocacheToNaddr } from '@/lib/naddr-utils';
 import type { Geocache } from '@/types/geocache';
 
 interface CacheMenuProps {
@@ -20,17 +19,6 @@ interface CacheMenuProps {
 
 export function CacheMenu({ geocache, variant = 'default', className }: CacheMenuProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-
-  const naddr = geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays);
-  const cacheUrl = `${window.location.origin}/${naddr}`;
-
-  const handleViewDetails = () => {
-    window.location.href = `/${naddr}`;
-  };
-
-  const handleOpenInNewTab = () => {
-    window.open(`/${naddr}`, '_blank');
-  };
 
   const handleViewOnMap = () => {
     const mapUrl = `/map?lat=${geocache.location.lat}&lng=${geocache.location.lng}&zoom=16&highlight=${geocache.dTag}&tab=map`;
@@ -57,20 +45,6 @@ export function CacheMenu({ geocache, variant = 'default', className }: CacheMen
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={(e) => {
-            e.stopPropagation();
-            handleViewDetails();
-          }}>
-            <ExternalLink className="h-4 w-4 mr-2" />
-            View Details
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={(e) => {
-            e.stopPropagation();
-            handleOpenInNewTab();
-          }}>
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Open in New Tab
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={(e) => {
             e.stopPropagation();
             handleViewOnMap();
