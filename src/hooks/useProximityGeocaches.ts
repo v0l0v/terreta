@@ -50,10 +50,29 @@ export function useProximityGeocaches(options: UseProximityGeocachesOptions = {}
   // Get deletion filter for filtering out deleted geocaches
   const { filterDeleted } = useDeletionFilter();
   
+  // Only include parameters that affect the Nostr query in the query key
+  // Client-side filters (search, difficulty, terrain, cacheType) should not trigger refetches
   const queryKey = useMemo(() => [
-    'geocaches-proximity', 
-    options
-  ], [options]);
+    'geocaches-proximity',
+    {
+      // Only include server-side filter parameters
+      limit: options.limit,
+      authorPubkey: options.authorPubkey,
+      centerLat: options.centerLat,
+      centerLng: options.centerLng,
+      radiusKm: options.radiusKm,
+      useProximityOptimization: options.useProximityOptimization,
+      maxProximityPrecision: options.maxProximityPrecision,
+    }
+  ], [
+    options.limit,
+    options.authorPubkey,
+    options.centerLat,
+    options.centerLng,
+    options.radiusKm,
+    options.useProximityOptimization,
+    options.maxProximityPrecision,
+  ]);
 
   // Determine search strategy
   const hasProximitySearch = options.centerLat && options.centerLng && options.radiusKm;

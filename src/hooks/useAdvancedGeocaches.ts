@@ -28,8 +28,14 @@ export function useAdvancedGeocaches(options: UseGeocachesOptions = {}) {
   const { user } = useCurrentUser();
 
   // Query for geocaches
+  // Only include parameters that affect the Nostr query in the query key
+  // Client-side filters (search, difficulty, terrain) should not trigger refetches
   const { data: geocaches, ...queryState } = useQuery({
-    queryKey: ['geocaches-advanced', options],
+    queryKey: ['geocaches-advanced', {
+      // Only include server-side filter parameters
+      limit: options.limit,
+      authorPubkey: options.authorPubkey,
+    }],
     queryFn: async (c) => {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
       const events = await nostr.query([{
