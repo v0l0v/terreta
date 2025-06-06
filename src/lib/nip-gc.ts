@@ -145,7 +145,11 @@ export function parseGeocacheEvent(event: NostrEvent): Geocache | null {
 
     // Parse required tags according to NIP-GC
     const name = event.tags.find(t => t[0] === 'name')?.[1];
-    const geohash = event.tags.find(t => t[0] === 'g')?.[1];
+    // Get the most precise geohash (longest one) for location parsing
+    const geohashes = event.tags.filter(t => t[0] === 'g').map(t => t[1]);
+    const geohash = geohashes.length > 0 ? geohashes.reduce((longest, current) => 
+      current.length > longest.length ? current : longest
+    ) : undefined;
     const difficulty = event.tags.find(t => t[0] === 'difficulty')?.[1];
     const terrain = event.tags.find(t => t[0] === 'terrain')?.[1];
     const size = event.tags.find(t => t[0] === 'size')?.[1];
@@ -363,19 +367,25 @@ export function buildGeocacheTags(data: {
     throw new Error(`Invalid coordinates: ${data.location.lat}, ${data.location.lng}`);
   }
 
-  // Ensure minimum geohash precision (8 characters for ±38m accuracy)
-  const precision = Math.max(8, data.size === 'micro' ? 9 : 8);
-  const geohash = encodeGeohash(data.location.lat, data.location.lng, precision);
-
   // Build required tags according to NIP-GC
   const tags: string[][] = [
     ['d', data.dTag],
     ['name', data.name],
-    ['g', geohash],
     ['difficulty', data.difficulty.toString()],
     ['terrain', data.terrain.toString()],
     ['size', data.size],
   ];
+
+  // Add multiple geohash tags at different precision levels for proximity search
+  // This enables efficient filtering at various distance ranges
+  const { lat, lng } = data.location;
+  
+  // Add geohashes from precision 3 (metro area) to 9 (exact location)
+  // Each precision level enables different search radius capabilities
+  for (let precision = 3; precision <= 9; precision++) {
+    const geohash = encodeGeohash(lat, lng, precision);
+    tags.push(['g', geohash]);
+  }
 
   // Add type tag only if not 'traditional' (defaults to traditional per NIP-GC)
   if (data.type !== 'traditional') {
@@ -496,271 +506,13 @@ export function getOptimalPrecision(distanceKm: number): number {
   return 9; // Use 9 for very small distances to match geocache precision
 }
 
-/**
- * Get all geohash neighbors for a given geohash
- * @param geohash Base geohash
- * @returns Array of neighboring geohashes (including the center)
- */
-export function getGeohashNeighbors(geohash: string): string[] {
-  const neighbors: string[] = [geohash]; // Include center
-  
-  try {
-    // Get direct neighbors (8 directions)
-    const north = getNeighbor(geohash, 'north');
-    const south = getNeighbor(geohash, 'south');
-    const east = getNeighbor(geohash, 'east');
-    const west = getNeighbor(geohash, 'west');
-    
-    neighbors.push(north, south, east, west);
-    
-    // Get diagonal neighbors
-    neighbors.push(
-      getNeighbor(north, 'east'),  // northeast
-      getNeighbor(north, 'west'),  // northwest
-      getNeighbor(south, 'east'),  // southeast
-      getNeighbor(south, 'west')   // southwest
-    );
-    
-    return [...new Set(neighbors)]; // Remove duplicates
-  } catch (error) {
-    return [geohash];
-  }
-}
 
-/**
- * Get geohashes within a radius from a center point
- * @param centerLat Center latitude
- * @param centerLng Center longitude
- * @param radiusKm Radius in kilometers
- * @param maxPrecision Maximum geohash precision to use
- * @returns Array of geohashes covering the area
- */
-export function getGeohashesInRadius(
-  centerLat: number, 
-  centerLng: number, 
-  radiusKm: number,
-  maxPrecision: number = 9 // Increased to handle 8-9 character geohashes
-): string[] {
-  const precision = Math.min(getOptimalPrecision(radiusKm), maxPrecision);
-  const centerGeohash = encodeGeohash(centerLat, centerLng, precision);
-  
-  // Start with immediate neighbors
-  let candidates = getGeohashNeighbors(centerGeohash);
-  
-  // Always expand for better coverage, especially for larger radiuses
-  const expandedCandidates = new Set(candidates);
-  
-  // Add neighbors of neighbors
-  candidates.forEach(hash => {
-    const neighbors = getGeohashNeighbors(hash);
-    neighbors.forEach(n => expandedCandidates.add(n));
-  });
-  
-  // For larger radiuses, expand one more level
-  if (radiusKm > 5) {
-    const level2Candidates = Array.from(expandedCandidates);
-    level2Candidates.forEach(hash => {
-      const neighbors = getGeohashNeighbors(hash);
-      neighbors.forEach(n => expandedCandidates.add(n));
-    });
-  }
-  
-  // For very precise searches (8-9 character geohashes), add even more expansion
-  if (precision >= 8) {
-    const level3Candidates = Array.from(expandedCandidates);
-    level3Candidates.forEach(hash => {
-      const neighbors = getGeohashNeighbors(hash);
-      neighbors.forEach(n => expandedCandidates.add(n));
-    });
-  }
-  
-  candidates = Array.from(expandedCandidates);
-  
-  // Use more lenient distance filtering - add 50% buffer
-  const searchBuffer = radiusKm * 1.5;
-  return candidates.filter(hash => {
-    try {
-      const { lat, lng } = decodeGeohash(hash);
-      const distance = calculateHaversineDistance(centerLat, centerLng, lat, lng);
-      return distance <= searchBuffer;
-    } catch {
-      return false;
-    }
-  });
-}
 
-/**
- * Create geohash prefixes for broader proximity search
- * @param centerLat Center latitude
- * @param centerLng Center longitude
- * @param radiusKm Radius in kilometers
- * @returns Array of geohash prefixes to search
- */
-export function getGeohashPrefixes(centerLat: number, centerLng: number, radiusKm: number): string[] {
-  const basePrecision = getOptimalPrecision(radiusKm);
-  const centerGeohash = encodeGeohash(centerLat, centerLng, Math.max(basePrecision, 9)); // Ensure we generate at least 9 characters
-  
-  const prefixes = new Set<string>();
-  
-  // Add prefixes at multiple precision levels for comprehensive coverage
-  // Extended range to handle 8-9 character geohashes
-  for (let p = Math.max(1, basePrecision - 2); p <= Math.min(basePrecision + 2, 9); p++) {
-    const hash = centerGeohash.substring(0, p);
-    prefixes.add(hash);
-    
-    // Add neighbors at this precision level for wider coverage
-    try {
-      const neighbors = getGeohashNeighbors(hash);
-      neighbors.forEach(n => prefixes.add(n));
-    } catch {
-      // Continue if neighbor calculation fails
-    }
-  }
-  
-  // Always include 8 and 9 character prefixes for comprehensive geocache coverage
-  if (basePrecision < 8) {
-    for (let p = 8; p <= 9; p++) {
-      const hash = centerGeohash.substring(0, p);
-      prefixes.add(hash);
-      
-      try {
-        const neighbors = getGeohashNeighbors(hash);
-        neighbors.forEach(n => prefixes.add(n));
-      } catch {
-        // Continue if neighbor calculation fails
-      }
-    }
-  }
-  
-  return Array.from(prefixes).filter(p => p.length > 0).sort();
-}
 
-/**
- * Generate comprehensive geohash prefixes for finding ALL 8-9 character geohashes
- * This creates shorter prefixes that will match longer geohashes via prefix matching
- * @param centerLat Center latitude
- * @param centerLng Center longitude
- * @param radiusKm Radius in kilometers
- * @returns Array of geohash prefixes that will capture all 8-9 character geocaches
- */
-export function getComprehensiveGeohashPatterns(centerLat: number, centerLng: number, radiusKm: number): string[] {
-  const patterns = new Set<string>();
-  
-  // Generate comprehensive coverage using multiple precision levels
-  // The key insight: shorter prefixes will match longer geohashes that start with them
-  
-  // Level 1: Very broad coverage (precision 4-6)
-  for (let precision = 4; precision <= 6; precision++) {
-    const centerGeohash = encodeGeohash(centerLat, centerLng, precision);
-    const neighbors = getGeohashNeighbors(centerGeohash);
-    
-    // Add multiple rings of neighbors for comprehensive coverage
-    const expandedNeighbors = new Set(neighbors);
-    
-    // Add neighbors of neighbors for wider coverage
-    neighbors.forEach(hash => {
-      const secondLevelNeighbors = getGeohashNeighbors(hash);
-      secondLevelNeighbors.forEach(n => expandedNeighbors.add(n));
-    });
-    
-    // Add third level for very comprehensive coverage
-    if (precision <= 5) {
-      const secondLevel = Array.from(expandedNeighbors);
-      secondLevel.forEach(hash => {
-        const thirdLevelNeighbors = getGeohashNeighbors(hash);
-        thirdLevelNeighbors.forEach(n => expandedNeighbors.add(n));
-      });
-    }
-    
-    expandedNeighbors.forEach(hash => patterns.add(hash));
-  }
-  
-  // Level 2: More precise coverage (precision 7)
-  // This will help catch 8-9 character geohashes more precisely
-  const precision7Hash = encodeGeohash(centerLat, centerLng, 7);
-  const precision7Neighbors = getGeohashNeighbors(precision7Hash);
-  
-  // Add extensive neighbor coverage at precision 7
-  const expandedP7 = new Set(precision7Neighbors);
-  precision7Neighbors.forEach(hash => {
-    const neighbors = getGeohashNeighbors(hash);
-    neighbors.forEach(n => expandedP7.add(n));
-  });
-  
-  expandedP7.forEach(hash => patterns.add(hash));
-  
-  // Filter by distance with a very generous buffer to ensure we don't miss anything
-  const searchBuffer = radiusKm * 3.0; // Very generous buffer
-  return Array.from(patterns).filter(hash => {
-    try {
-      const { lat, lng } = decodeGeohash(hash);
-      const distance = calculateHaversineDistance(centerLat, centerLng, lat, lng);
-      return distance <= searchBuffer;
-    } catch {
-      return false;
-    }
-  }).sort();
-}
 
-// Helper function to get a neighbor in a specific direction
-function getNeighbor(geohash: string, direction: 'north' | 'south' | 'east' | 'west'): string {
-  const { lat, lng } = decodeGeohash(geohash);
-  const precision = geohash.length;
-  
-  // Calculate approximate offset based on geohash precision
-  const latOffset = getLatitudeOffset(precision);
-  const lngOffset = getLongitudeOffset(precision, lat);
-  
-  let newLat = lat;
-  let newLng = lng;
-  
-  switch (direction) {
-    case 'north':
-      newLat += latOffset;
-      break;
-    case 'south':
-      newLat -= latOffset;
-      break;
-    case 'east':
-      newLng += lngOffset;
-      break;
-    case 'west':
-      newLng -= lngOffset;
-      break;
-  }
-  
-  // Handle edge cases
-  if (newLat > 90) newLat = 90;
-  if (newLat < -90) newLat = -90;
-  if (newLng > 180) newLng -= 360;
-  if (newLng < -180) newLng += 360;
-  
-  return encodeGeohash(newLat, newLng, precision);
-}
 
-function getLatitudeOffset(precision: number): number {
-  // Approximate latitude degrees per geohash cell at different precisions
-  const offsets = [20, 2.5, 0.6, 0.08, 0.02, 0.002, 0.0005, 0.0001, 0.00002];
-  return offsets[precision - 1] || 0.00002;
-}
 
-function getLongitudeOffset(precision: number, latitude: number): number {
-  // Longitude offset varies by latitude due to earth's curvature
-  const baseOffset = getLatitudeOffset(precision);
-  return baseOffset / Math.cos(latitude * Math.PI / 180);
-}
 
-function calculateHaversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 // ===== UTILITIES =====
 

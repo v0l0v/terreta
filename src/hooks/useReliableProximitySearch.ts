@@ -17,7 +17,7 @@ import {
   parseGeocacheEvent,
   encodeGeohash
 } from '@/lib/nip-gc';
-import { calculateDistance } from '@/lib/geo';
+import { calculateDistance as calculateGeoDistance } from '@/lib/geo';
 
 interface UseReliableProximitySearchOptions {
   limit?: number;
@@ -47,65 +47,92 @@ interface SearchResult {
     geohashPatterns?: string[];
     filterGroups?: number;
     errors?: string[];
+    error?: string;
   };
 }
 
 /**
- * Fixed precision calculation that works for all radius sizes
+ * Generate geohash patterns for proximity search using the new multi-precision approach
+ * 
+ * NEW APPROACH: Since geocaches now include geohash tags at precisions 3-9,
+ * we can use exact matches at the appropriate precision level for the search radius.
+ * This is much more efficient than generating complex grid patterns.
  */
-function getReliablePrecision(radiusKm: number): number {
-  // More conservative precision mapping to ensure matches
-  if (radiusKm >= 100) return 1;
-  if (radiusKm >= 50) return 2;
-  if (radiusKm >= 25) return 2;
-  if (radiusKm >= 10) return 3;
-  if (radiusKm >= 5) return 3;
-  if (radiusKm >= 2) return 4;
-  if (radiusKm >= 1) return 4; // Fixed: was 6, now 4 to match 8-char geocaches
-  if (radiusKm >= 0.5) return 5; // Fixed: was 7, now 5
-  return 6; // Fixed: was 8-9, now 6 for very small searches
-}
-
-/**
- * Generate simple, reliable geohash patterns
- */
-function generateReliableGeohashPatterns(
+function generateGeohashPatterns(
   centerLat: number, 
   centerLng: number, 
   radiusKm: number
 ): string[] {
   const patterns = new Set<string>();
   
-  // Use conservative precision
-  const basePrecision = getReliablePrecision(radiusKm);
+  // Determine the optimal precision level based on radius
+  let targetPrecision: number;
+  if (radiusKm >= 100) targetPrecision = 3;      // u4x       (metro area)
+  else if (radiusKm >= 50) targetPrecision = 4;  // u4xs      (city-level)
+  else if (radiusKm >= 25) targetPrecision = 5;  // u4xsu     (broader)
+  else if (radiusKm >= 10) targetPrecision = 6;  // u4xsud    (region)
+  else if (radiusKm >= 5) targetPrecision = 7;   // u4xsudv   (area)
+  else if (radiusKm >= 2) targetPrecision = 8;   // u4xsudvx  (nearby)
+  else targetPrecision = 9;                      // u4xsudvxb (exact)
   
-  // Generate center pattern
-  const centerHash = encodeGeohash(centerLat, centerLng, basePrecision);
-  patterns.add(centerHash);
+  // Generate the center geohash at target precision
+  const centerGeohash = encodeGeohash(centerLat, centerLng, targetPrecision);
+  patterns.add(centerGeohash);
   
-  // Add broader patterns for better coverage
-  for (let p = Math.max(1, basePrecision - 1); p <= basePrecision; p++) {
-    const hash = encodeGeohash(centerLat, centerLng, p);
-    patterns.add(hash);
+  // For comprehensive coverage, also include patterns at nearby precisions
+  // This ensures we catch geocaches that might be at cell boundaries
+  const precisionRange = Math.max(1, Math.min(2, Math.floor(radiusKm / 10)));
+  
+  for (let p = Math.max(3, targetPrecision - precisionRange); p <= Math.min(9, targetPrecision + precisionRange); p++) {
+    const geohash = encodeGeohash(centerLat, centerLng, p);
+    patterns.add(geohash);
+    
+    // For larger radiuses, add some spatial coverage by slightly offsetting coordinates
+    if (radiusKm >= 5) {
+      const offset = 0.001 * Math.pow(2, 9 - p); // Smaller offset for higher precision
+      const offsets = [
+        [offset, 0], [-offset, 0], [0, offset], [0, -offset],
+        [offset, offset], [offset, -offset], [-offset, offset], [-offset, -offset]
+      ];
+      
+      for (const [latOffset, lngOffset] of offsets) {
+        const offsetLat = centerLat + latOffset;
+        const offsetLng = centerLng + lngOffset;
+        
+        if (offsetLat >= -90 && offsetLat <= 90 && offsetLng >= -180 && offsetLng <= 180) {
+          const offsetGeohash = encodeGeohash(offsetLat, offsetLng, p);
+          patterns.add(offsetGeohash);
+        }
+      }
+    }
   }
   
-  // Add neighbor approximations by slightly adjusting coordinates
-  const offset = radiusKm * 0.009; // Rough degrees per km
-  const neighbors = [
-    [centerLat + offset, centerLng],
-    [centerLat - offset, centerLng],
-    [centerLat, centerLng + offset],
-    [centerLat, centerLng - offset],
-  ];
+  const result = Array.from(patterns).sort();
   
-  neighbors.forEach(([lat, lng]) => {
-    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-      const hash = encodeGeohash(lat, lng, basePrecision);
-      patterns.add(hash);
-    }
-  });
+  if (import.meta.env.DEV) {
+    console.log('🔍 Generated geohash patterns:', {
+      radiusKm,
+      targetPrecision,
+      patternCount: result.length,
+      centerGeohash,
+      samplePatterns: result.slice(0, 5)
+    });
+  }
   
-  return Array.from(patterns).sort();
+  return result;
+}
+
+// Helper function for distance calculation (duplicated to avoid import issues)
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 export function useReliableProximitySearch(options: UseReliableProximitySearchOptions = {}) {
@@ -147,7 +174,7 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
     }
 
     try {
-      const patterns = generateReliableGeohashPatterns(
+      const patterns = generateGeohashPatterns(
         options.centerLat,
         options.centerLng,
         options.radiusKm
@@ -157,8 +184,8 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
         console.log('🔍 Proximity search patterns:', {
           center: [options.centerLat, options.centerLng],
           radius: options.radiusKm,
-          patterns,
-          precision: getReliablePrecision(options.radiusKm)
+          patternCount: patterns.length,
+          patterns: patterns.slice(0, 10), // Show first 10 patterns
         });
       }
 
@@ -166,7 +193,7 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
       const filter: NostrFilter = {
         kinds: [NIP_GC_KINDS.GEOCACHE],
         '#g': patterns,
-        limit: Math.min(patterns.length * 20, 200), // Reasonable limit
+        limit: Math.min(patterns.length * 10, 1000), // More generous limit since patterns are more targeted
       };
 
       if (options.authorPubkey) {
@@ -185,7 +212,7 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
 
       return {
         events,
-        successful: events.length > 0,
+        successful: true, // Always consider successful since we have targeted patterns
         debugInfo: {
           geohashPatterns: patterns,
           filterGroups: 1,
@@ -252,7 +279,7 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
     if (hasProximityParams) {
       filtered = filtered.map(cache => ({
         ...cache,
-        distance: calculateDistance(
+        distance: calculateGeoDistance(
           options.centerLat!,
           options.centerLng!,
           cache.location.lat,
@@ -302,7 +329,7 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
           debugInfo = proximityResult.debugInfo;
           
           if (import.meta.env.DEV) {
-            console.log('✅ Proximity search successful:', events.length, 'events');
+            console.log('✅ Proximity search completed:', events.length, 'events');
           }
         } else {
           if (import.meta.env.DEV) {

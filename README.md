@@ -120,7 +120,6 @@ src/
 ├── hooks/              # Custom React hooks
 │   ├── useNostr.ts     # Nostr protocol integration
 │   ├── useGeocaches.ts # Geocache data fetching
-│   ├── useProximityGeocaches.ts # Location-based queries
 │   ├── useOfflineGeocaches.ts # Offline-aware queries
 │   ├── useForm.ts      # Generic form handling
 │   ├── useAsyncOperation.ts # Async operation patterns
