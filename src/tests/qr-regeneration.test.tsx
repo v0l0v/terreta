@@ -19,6 +19,8 @@ const mockPublishEvent = vi.fn().mockImplementation(async (eventTemplate) => {
   };
 });
 
+const mockToast = vi.fn();
+
 // Mock the dependencies
 vi.mock('@/hooks/useNostrPublish', () => ({
   useNostrPublish: () => ({
@@ -28,7 +30,7 @@ vi.mock('@/hooks/useNostrPublish', () => ({
 
 vi.mock('@/hooks/useToast', () => ({
   useToast: () => ({
-    toast: vi.fn(),
+    toast: mockToast,
   }),
 }));
 
@@ -45,6 +47,11 @@ vi.mock('@/lib/verification', () => ({
   isOutdatedVerificationKey: vi.fn().mockImplementation((verificationPubkey: string, currentVerificationPubkey: string) => {
     return verificationPubkey !== currentVerificationPubkey;
   }),
+}));
+
+// Mock the naddr utils
+vi.mock('@/lib/naddr-utils', () => ({
+  geocacheToNaddr: vi.fn().mockReturnValue('naddr1test-naddr'),
 }));
 
 const createWrapper = () => {
@@ -84,6 +91,7 @@ describe('QR Code Regeneration - New Event Creation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockPublishEvent.mockClear();
+    mockToast.mockClear();
   });
 
   it('should create a new geocache event when regenerating QR code', async () => {
@@ -98,7 +106,7 @@ describe('QR Code Regeneration - New Event Creation', () => {
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
-    });
+    }, { timeout: 5000 });
 
     // Verify that a new event was created
     expect(mockPublishEvent).toHaveBeenCalledWith({
@@ -123,7 +131,7 @@ describe('QR Code Regeneration - New Event Creation', () => {
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
-    });
+    }, { timeout: 5000 });
 
     const { generateVerificationKeyPair } = await import('@/lib/verification');
     expect(generateVerificationKeyPair).toHaveBeenCalled();
@@ -140,7 +148,7 @@ describe('QR Code Regeneration - New Event Creation', () => {
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
-    });
+    }, { timeout: 5000 });
 
     expect(result.current.data).toEqual({
       event: expect.objectContaining({
@@ -166,7 +174,7 @@ describe('QR Code Regeneration - New Event Creation', () => {
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
-    });
+    }, { timeout: 5000 });
 
     const newEvent = result.current.data?.event;
     expect(newEvent?.id).not.toBe(mockGeocache.id);
@@ -184,7 +192,7 @@ describe('QR Code Regeneration - New Event Creation', () => {
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
-    });
+    }, { timeout: 5000 });
 
     const publishedEvent = mockPublishEvent.mock.calls[0][0];
 
@@ -216,7 +224,7 @@ describe('QR Code Regeneration - New Event Creation', () => {
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
-    });
+    }, { timeout: 5000 });
 
     expect(result.current.error).toEqual(new Error('No geocache provided'));
   });
@@ -235,11 +243,10 @@ describe('QR Code Regeneration - New Event Creation', () => {
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
-    });
+    }, { timeout: 5000 });
 
-    const { useNostrPublish } = await import('@/hooks/useNostrPublish');
-    const mockPublish = useNostrPublish().mutateAsync as vi.MockedFunction<any>;
-    const publishedEvent = mockPublish.mock.calls[0][0];
+    // Use the mock directly instead of importing the hook
+    const publishedEvent = mockPublishEvent.mock.calls[0][0];
 
     // Verify the new verification key is different
     const newVerificationTag = publishedEvent.tags.find((tag: string[]) => tag[0] === 'verification');

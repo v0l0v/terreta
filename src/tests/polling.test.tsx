@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useDataManager } from '@/hooks/useDataManager';
-import { useAdaptiveGeocaches } from '@/hooks/useProximityGeocaches';
+import { useAdaptiveReliableGeocaches } from '@/hooks/useReliableProximitySearch';
 import { POLLING_INTERVALS } from '@/lib/constants';
 
 // Mock the Nostr hook
@@ -95,8 +95,8 @@ describe('Polling Configuration', () => {
     expect(POLLING_INTERVALS.DELETION_EVENTS).toBe(120000); // 2 minutes
   });
 
-  it('should enable polling in useAdaptiveGeocaches', async () => {
-    const { result } = renderHook(() => useAdaptiveGeocaches({
+  it('should enable polling in useAdaptiveReliableGeocaches', async () => {
+    const { result } = renderHook(() => useAdaptiveReliableGeocaches({
       userLocation: { lat: 40.7128, lng: -74.0060 },
       showNearMe: true,
       searchRadius: 25,
@@ -105,6 +105,7 @@ describe('Polling Configuration', () => {
     // The hook should be configured with polling
     await waitFor(() => {
       expect(result.current.isLoading).toBeDefined();
+      expect(typeof result.current.refetch).toBe('function');
     });
   });
 

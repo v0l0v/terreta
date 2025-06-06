@@ -228,49 +228,28 @@ function parseDeletionEvent(event: NostrEvent): DeletionEvent | null {
 }
 
 /**
- * Hook to create deletion events for geocaches
+ * Create a deletion event template for a geocache
+ * Note: This returns an unsigned event template that needs to be signed before publishing
  */
-export function useDeleteGeocache() {
-  const { nostr } = useNostr();
-  const queryClient = useQueryClient();
+export function createDeletionEventTemplate(geocacheEvent: NostrEvent, reason?: string) {
+  const deletionEventTemplate = {
+    kind: 5,
+    content: reason || 'Geocache deleted by author',
+    tags: [
+      ['e', geocacheEvent.id],
+      ['k', geocacheEvent.kind.toString()],
+    ],
+    created_at: Math.floor(Date.now() / 1000),
+  };
 
-  return useCallback(async (geocacheEvent: NostrEvent, reason?: string) => {
-    try {
-      // Create deletion event template
-      const deletionEventTemplate = {
-        kind: 5,
-        content: reason || 'Geocache deleted by author',
-        tags: [
-          ['e', geocacheEvent.id],
-          ['k', geocacheEvent.kind.toString()],
-        ],
-        created_at: Math.floor(Date.now() / 1000),
-      };
-
-      // If it's a replaceable event, also add 'a' tag
-      if (geocacheEvent.kind === NIP_GC_KINDS.GEOCACHE) {
-        const dTag = geocacheEvent.tags.find(t => t[0] === 'd')?.[1];
-        if (dTag) {
-          const coordinate = createGeocacheCoordinate(geocacheEvent.pubkey, dTag);
-          deletionEventTemplate.tags.push(['a', coordinate]);
-        }
-      }
-
-      // Publish deletion event (this will be signed by the nostr client)
-      await nostr.event(deletionEventTemplate);
-
-      // Immediately invalidate local caches
-      await offlineStorage.removeGeocache(geocacheEvent.id);
-      await offlineStorage.removeEvent(geocacheEvent.id);
-      
-      queryClient.invalidateQueries({ queryKey: ['geocaches'] });
-      queryClient.invalidateQueries({ queryKey: ['geocache', geocacheEvent.id] });
-      queryClient.invalidateQueries({ queryKey: ['offline-geocaches'] });
-
-      console.log(`Published deletion event for geocache: ${geocacheEvent.id}`);
-    } catch (error) {
-      console.error('Failed to delete geocache:', error);
-      throw error;
+  // If it's a replaceable event, also add 'a' tag
+  if (geocacheEvent.kind === NIP_GC_KINDS.GEOCACHE) {
+    const dTag = geocacheEvent.tags.find(t => t[0] === 'd')?.[1];
+    if (dTag) {
+      const coordinate = createGeocacheCoordinate(geocacheEvent.pubkey, dTag);
+      deletionEventTemplate.tags.push(['a', coordinate]);
     }
-  }, [nostr, queryClient]);
+  }
+
+  return deletionEventTemplate;
 }

@@ -14,7 +14,7 @@ class PerformanceMonitor {
   private metrics: PerformanceMetric[] = [];
   private maxMetrics = 100; // Keep last 100 metrics
 
-  startTimer(operation: string): () => void {
+  startTimer(operation: string): (success?: boolean, details?: Record<string, unknown>) => void {
     const startTime = performance.now();
     
     return (success: boolean = true, details?: Record<string, unknown>) => {
@@ -103,7 +103,8 @@ export function measureAsync<T>(
       return result;
     })
     .catch(error => {
-      endTimer(false, { ...details, error: error.message });
+      const errorObj = error as { message?: string };
+      endTimer(false, { ...details, error: errorObj.message });
       throw error;
     });
 }
@@ -130,5 +131,5 @@ export function usePerformanceTimer(componentName: string) {
   const endTimer = performanceMonitor.startTimer(`render:${componentName}`);
   
   // Call this in useEffect to measure render time
-  return () => endTimer();
+  return () => endTimer(true);
 }

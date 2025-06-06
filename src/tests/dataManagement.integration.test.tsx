@@ -507,6 +507,6 @@ describe('Data Management System Integration', () => {
 
     // Check that prefetching doesn't interfere with main queries
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.geocaches[0].name).toBe('Mountain Cache');
+    expect(result.current.geocaches[0]?.name).toBe('Mountain Cache');
   });
 });

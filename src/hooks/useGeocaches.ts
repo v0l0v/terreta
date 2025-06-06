@@ -48,7 +48,7 @@ export function useGeocaches() {
       // Prefetch logs for the first few geocaches
       const topGeocaches = query.data.slice(0, 5);
       topGeocaches.forEach(geocache => {
-        if (geocache.dTag && geocache.pubkey) {
+        if (geocache && geocache.dTag && geocache.pubkey) {
           queryClient.prefetchQuery({
             queryKey: ['geocache-logs', geocache.dTag, geocache.pubkey],
             queryFn: async () => {
@@ -71,7 +71,7 @@ export function useGeocaches() {
                 
                 return [...foundLogs, ...commentLogs];
               } catch (error) {
-                console.warn('Prefetch failed for geocache logs:', geocache.id, error);
+                console.warn('Prefetch failed for geocache logs:', geocache && geocache.id, error);
                 return [];
               }
             },

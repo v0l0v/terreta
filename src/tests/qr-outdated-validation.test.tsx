@@ -143,6 +143,8 @@ describe('QR Code Outdated Validation', () => {
     const { useToast } = await import('@/hooks/useToast');
     vi.mocked(useToast).mockReturnValue({
       toast: mockToast,
+      dismiss: vi.fn(),
+      toasts: [],
     });
 
     const wrapper = createWrapper(['/test-cache']);
@@ -179,6 +181,8 @@ describe('QR Code Outdated Validation', () => {
     const { useToast } = await import('@/hooks/useToast');
     vi.mocked(useToast).mockReturnValue({
       toast: mockToast,
+      dismiss: vi.fn(),
+      toasts: [],
     });
 
     const wrapper = createWrapper(['/test-cache']);
@@ -211,6 +215,8 @@ describe('QR Code Outdated Validation', () => {
     const { useToast } = await import('@/hooks/useToast');
     vi.mocked(useToast).mockReturnValue({
       toast: mockToast,
+      dismiss: vi.fn(),
+      toasts: [],
     });
 
     const wrapper = createWrapper(['/test-cache']);

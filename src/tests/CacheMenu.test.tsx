@@ -129,8 +129,18 @@ describe('CacheMenu', () => {
     
     // Mock window.location.href assignment
     const originalLocation = window.location;
-    delete (window as any).location;
-    window.location = { ...originalLocation, href: '' };
+    const mockLocation = {
+      ...originalLocation,
+      href: '',
+      assign: vi.fn(),
+      replace: vi.fn(),
+      reload: vi.fn(),
+    };
+    
+    Object.defineProperty(window, 'location', {
+      value: mockLocation,
+      writable: true,
+    });
     
     renderWithRouter(<CacheMenu geocache={mockGeocache} />);
     
@@ -143,10 +153,13 @@ describe('CacheMenu', () => {
     await user.click(mapMenuItem);
 
     // Check that the correct URL was generated with the new tab parameter
-    expect(window.location.href).toBe('/map?lat=40.7128&lng=-74.006&zoom=16&highlight=test-dtag&tab=map');
+    expect(mockLocation.href).toBe('/map?lat=40.7128&lng=-74.006&zoom=16&highlight=test-dtag&tab=map');
     
     // Restore original location
-    window.location = originalLocation;
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      writable: true,
+    });
   });
 
   it('renders with correct variant styling', () => {

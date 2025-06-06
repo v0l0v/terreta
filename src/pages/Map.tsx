@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { DesktopHeader } from "@/components/DesktopHeader";
 import { LoginArea } from "@/components/auth/LoginArea";
-import { useAdaptiveGeocaches, type GeocacheWithDistance } from "@/hooks/useProximityGeocaches";
+import { useAdaptiveReliableGeocaches, type GeocacheWithDistance } from "@/hooks/useReliableProximitySearch";
 import { useMapPageGeocaches } from "@/hooks/useOptimisticGeocaches";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { GeocacheMap } from "@/components/GeocacheMap";
@@ -57,7 +57,17 @@ export default function Map() {
   // Use optimistic loading for base geocaches
   const optimisticGeocaches = useMapPageGeocaches();
 
-  const { data: geocaches, isLoading, error, refetch } = useAdaptiveGeocaches({
+  const { 
+    data: geocaches, 
+    isLoading, 
+    error, 
+    refetch,
+    searchStrategy,
+    proximityAttempted,
+    proximitySuccessful,
+    totalFound,
+    debugInfo
+  } = useAdaptiveReliableGeocaches({
     search: searchQuery,
     difficulty,
     difficultyOperator,
@@ -129,13 +139,65 @@ export default function Map() {
 
   // Remove automatic location request - only get location when user clicks "Near Me"
 
-  // Filter and sort geocaches based on location
-  // Note: Proximity filtering and distance calculation is now handled by useAdaptiveGeocaches
-  const filteredGeocaches: GeocacheWithDistance[] = geocaches || [];
-
   // Check if proximity search is active
   const isProximitySearchActive = !!(searchLocation || (showNearMe && userLocation));
   const proximityCenter = searchLocation || (showNearMe ? userLocation : null);
+
+  // Use proximity search results when active, otherwise fall back to optimistic geocaches
+  // Apply client-side filtering when using optimistic geocaches
+  const filteredGeocaches: GeocacheWithDistance[] = isProximitySearchActive 
+    ? (geocaches || [])
+    : applyClientSideFilters(optimisticGeocaches.geocaches || []);
+
+  // Client-side filtering function for optimistic geocaches
+  function applyClientSideFilters(caches: any[]): GeocacheWithDistance[] {
+    let filtered = [...caches];
+
+    // Text search filter
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      filtered = filtered.filter(g => 
+        g.name.toLowerCase().includes(searchLower) ||
+        g.description.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Difficulty filter
+    if (difficulty !== undefined && difficultyOperator && difficultyOperator !== 'all') {
+      filtered = filtered.filter(g => 
+        applyComparison(g.difficulty, difficultyOperator, difficulty)
+      );
+    }
+
+    // Terrain filter
+    if (terrain !== undefined && terrainOperator && terrainOperator !== 'all') {
+      filtered = filtered.filter(g => 
+        applyComparison(g.terrain, terrainOperator, terrain)
+      );
+    }
+
+    // Cache type filter
+    if (cacheType && cacheType !== 'all') {
+      filtered = filtered.filter(g => g.type === cacheType);
+    }
+
+    // Sort by creation date
+    filtered.sort((a, b) => b.created_at - a.created_at);
+
+    return filtered;
+  }
+
+  function applyComparison(value: number, operator: string, target: number): boolean {
+    switch (operator) {
+      case 'eq': return value === target;
+      case 'gt': return value > target;
+      case 'gte': return value >= target;
+      case 'lt': return value < target;
+      case 'lte': return value <= target;
+      case 'all':
+      default: return true;
+    }
+  }
 
   const handleLocationSelect = (location: { lat: number; lng: number; name: string }) => {
     // Update all location-related state
@@ -265,11 +327,11 @@ export default function Map() {
           {/* Results */}
           <div className="flex-1 overflow-y-auto">
             <SmartLoadingState
-              isLoading={isLoading}
-              isError={!!error}
+              isLoading={isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading}
+              isError={isProximitySearchActive ? !!error : optimisticGeocaches.isError}
               hasData={filteredGeocaches.length > 0}
               data={filteredGeocaches}
-              error={error as Error}
+              error={(isProximitySearchActive ? error : optimisticGeocaches.error) as Error}
               onRetry={() => {
                 optimisticGeocaches.refresh();
                 refetch();
@@ -289,10 +351,21 @@ export default function Map() {
             >
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm text-muted-foreground">
-                    {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
-                    {isProximitySearchActive && ` • ${searchRadius}km radius`}
-                  </p>
+                  <div className="text-sm text-muted-foreground">
+                    <p>
+                      {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
+                      {isProximitySearchActive && ` • ${searchRadius}km radius`}
+                      {totalFound > filteredGeocaches.length && ` (${totalFound} total found)`}
+                    </p>
+                    {import.meta.env.DEV && debugInfo && (
+                      <details className="mt-1">
+                        <summary className="cursor-pointer text-xs opacity-60">Debug Info</summary>
+                        <pre className="text-xs mt-1 opacity-60 whitespace-pre-wrap">
+                          {JSON.stringify(debugInfo, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <Button 
                       variant="ghost" 
@@ -303,14 +376,18 @@ export default function Map() {
                       }}
                       className="h-6 w-6 p-0"
                       title="Refresh geocaches"
-                      disabled={isLoading && filteredGeocaches.length === 0}
+                      disabled={(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0}
                     >
-                      <RefreshCw className={`h-3 w-3 ${isLoading && filteredGeocaches.length === 0 ? 'animate-spin' : ''}`} />
+                      <RefreshCw className={`h-3 w-3 ${(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 ? 'animate-spin' : ''}`} />
                     </Button>
                     {isProximitySearchActive && (
-                      <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                      <Badge 
+                        variant={proximitySuccessful ? "secondary" : "outline"} 
+                        className="text-xs flex items-center gap-1"
+                        title={proximityAttempted ? (proximitySuccessful ? "Proximity search successful" : "Proximity search failed, using fallback") : "Using broad search"}
+                      >
                         <Sparkles className="h-3 w-3" />
-                        Smart Search
+                        {proximitySuccessful ? "Smart Search" : searchStrategy === "fallback" ? "Fallback Search" : "Broad Search"}
                       </Badge>
                     )}
                     {optimisticGeocaches.isStale && (
@@ -444,11 +521,11 @@ export default function Map() {
           >
             <TabsContent value="list" className="flex-1 overflow-y-auto p-4 m-0 data-[state=active]:flex data-[state=active]:flex-col bg-background">
               <SmartLoadingState
-                isLoading={isLoading}
-                isError={!!error}
+                isLoading={isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading}
+                isError={isProximitySearchActive ? !!error : optimisticGeocaches.isError}
                 hasData={filteredGeocaches.length > 0}
                 data={filteredGeocaches}
-                error={error as Error}
+                error={(isProximitySearchActive ? error : optimisticGeocaches.error) as Error}
                 onRetry={() => {
                   optimisticGeocaches.refresh();
                   refetch();
@@ -471,10 +548,21 @@ export default function Map() {
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
-                      {isProximitySearchActive && ` • ${searchRadius}km radius`}
-                    </p>
+                    <div className="text-sm text-muted-foreground">
+                      <p>
+                        {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
+                        {isProximitySearchActive && ` • ${searchRadius}km radius`}
+                        {totalFound > filteredGeocaches.length && ` (${totalFound} total found)`}
+                      </p>
+                      {import.meta.env.DEV && debugInfo && (
+                        <details className="mt-1">
+                          <summary className="cursor-pointer text-xs opacity-60">Debug Info</summary>
+                          <pre className="text-xs mt-1 opacity-60 whitespace-pre-wrap">
+                            {JSON.stringify(debugInfo, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
                       <Button 
                         variant="ghost" 
@@ -485,14 +573,18 @@ export default function Map() {
                         }}
                         className="h-6 w-6 p-0"
                         title="Refresh geocaches"
-                        disabled={isLoading && filteredGeocaches.length === 0}
+                        disabled={(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0}
                       >
-                        <RefreshCw className={`h-3 w-3 ${isLoading && filteredGeocaches.length === 0 ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`h-3 w-3 ${(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 ? 'animate-spin' : ''}`} />
                       </Button>
                       {isProximitySearchActive && (
-                        <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                        <Badge 
+                          variant={proximitySuccessful ? "secondary" : "outline"} 
+                          className="text-xs flex items-center gap-1"
+                          title={proximityAttempted ? (proximitySuccessful ? "Proximity search successful" : "Proximity search failed, using fallback") : "Using broad search"}
+                        >
                           <Sparkles className="h-3 w-3" />
-                          Smart Search
+                          {proximitySuccessful ? "Smart Search" : searchStrategy === "fallback" ? "Fallback Search" : "Broad Search"}
                         </Badge>
                       )}
                       {optimisticGeocaches.isStale && (

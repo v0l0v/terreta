@@ -45,7 +45,7 @@ export function ShareDialog({ open, onOpenChange, geocache }: ShareDialogProps) 
   };
 
   const handleNativeShare = async () => {
-    if (navigator.share) {
+    if ('share' in navigator && navigator.share) {
       try {
         await navigator.share({
           title: geocache.name,
@@ -105,7 +105,7 @@ export function ShareDialog({ open, onOpenChange, geocache }: ShareDialogProps) 
           </div>
 
           <div className="flex gap-2">
-            {navigator.share && (
+            {'share' in navigator && (
               <Button onClick={handleNativeShare} className="flex-1">
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
@@ -119,7 +119,7 @@ export function ShareDialog({ open, onOpenChange, geocache }: ShareDialogProps) 
               <ExternalLink className="h-4 w-4 mr-2" />
               Open
             </Button>
-            {!navigator.share && (
+            {!('share' in navigator) && (
               <Button onClick={handleCopyLink} className="flex-1">
                 {copied ? (
                   <>

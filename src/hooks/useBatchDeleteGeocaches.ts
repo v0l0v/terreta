@@ -57,7 +57,7 @@ export function useBatchDeleteGeocaches() {
 
       // Process deletions in batches to avoid overwhelming the network
       const batchSize = 3;
-      const batches = [];
+      const batches: Array<Array<{ id: string; event?: NostrEvent }>> = [];
       
       for (let i = 0; i < geocaches.length; i += batchSize) {
         batches.push(geocaches.slice(i, i + batchSize));
@@ -147,7 +147,10 @@ export function useBatchDeleteGeocaches() {
       // Remove from geocaches list
       queryClient.setQueryData(['geocaches'], (old: unknown) => {
         if (Array.isArray(old)) {
-          return old.filter((cache: { id: string }) => !geocacheIds.has(cache.id));
+          return old.filter((cache: Record<string, unknown>) => {
+            const cacheId = cache.id as string;
+            return !geocacheIds.has(cacheId);
+          });
         }
         return old;
       });

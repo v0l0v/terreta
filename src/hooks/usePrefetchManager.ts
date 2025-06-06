@@ -11,6 +11,7 @@ import { useOnlineStatus } from '@/hooks/useConnectivity';
 import { NIP_GC_KINDS, createGeocacheCoordinate, parseGeocacheEvent, parseLogEvent } from '@/lib/nip-gc';
 import { TIMEOUTS, POLLING_INTERVALS, QUERY_LIMITS } from '@/lib/constants';
 import type { Geocache } from '@/types/geocache';
+import type { NostrEvent } from '@nostrify/nostrify';
 
 interface PrefetchManagerOptions {
   enableBackgroundPolling?: boolean;
@@ -56,7 +57,7 @@ export function usePrefetchManager(options: PrefetchManagerOptions = {}) {
         queryFn: async () => {
           const signal = AbortSignal.timeout(TIMEOUTS.FAST_QUERY);
           const geocacheCoordinate = createGeocacheCoordinate(geocache.pubkey!, geocache.dTag!);
-          const allEvents = [];
+          const allEvents: NostrEvent[] = [];
 
           try {
             const foundLogs = await nostr.query([{
@@ -134,11 +135,12 @@ export function usePrefetchManager(options: PrefetchManagerOptions = {}) {
 
       if (events.length > 0) {
         // Update the cache with new data
-        queryClient.setQueryData(['geocaches'], (oldData: Geocache[] | undefined) => {
-          if (!oldData) return oldData;
+        queryClient.setQueryData(['geocaches'], (oldData: unknown) => {
+          const geocaches = oldData as Geocache[] | undefined;
+          if (!geocaches) return geocaches;
 
-          const newGeocaches = events.map(parseGeocacheEvent).filter(Boolean) as Geocache[];
-          const updatedData = [...oldData];
+          const newGeocaches = events.map(parseGeocacheEvent).filter((g): g is Geocache => g !== null);
+          const updatedData = [...geocaches];
 
           // Update existing geocaches or add new ones
           for (const newGeocache of newGeocaches) {
