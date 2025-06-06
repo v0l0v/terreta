@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BlurredImageProps {
@@ -27,11 +27,6 @@ export function BlurredImage({
     light: 'blur-sm',
     medium: 'blur-md',
     heavy: 'blur-lg',
-  };
-
-  const handleToggleBlur = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsBlurred(!isBlurred);
   };
 
   const handleCenterEyeClick = (e: React.MouseEvent) => {
@@ -62,23 +57,6 @@ export function BlurredImage({
           onClick={handleImageClick}
         />
       </div>
-      
-      {/* Corner toggle button - only shows when not blurred */}
-      {showToggle && !isBlurred && (
-        <button
-          onClick={handleToggleBlur}
-          className={cn(
-            "absolute top-2 right-2 p-2 rounded-full transition-all duration-200",
-            "bg-black/50 hover:bg-black/70 text-white",
-            "opacity-0 group-hover:opacity-100",
-            "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/50"
-          )}
-          title="Blur image"
-          type="button"
-        >
-          <EyeOff className="h-4 w-4" />
-        </button>
-      )}
       
       {/* Center eye overlay when blurred - clicking unhides */}
       {isBlurred && showToggle && (

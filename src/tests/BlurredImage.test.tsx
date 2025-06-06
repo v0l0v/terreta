@@ -36,23 +36,19 @@ describe('BlurredImage', () => {
     fireEvent.click(centerEyeButton);
     expect(image).not.toHaveClass('blur-md');
     
-    // Corner blur button should now be visible
-    expect(screen.getByTitle('Blur image')).toBeInTheDocument();
+    // Center eye overlay should be gone
+    expect(screen.queryByTitle('Show image')).not.toBeInTheDocument();
   });
 
-  it('shows corner blur button when not blurred', () => {
+  it('shows no blur controls when not blurred', () => {
     render(<BlurredImage {...defaultProps} defaultBlurred={false} />);
     
     const image = screen.getByAltText('Test image');
     expect(image).not.toHaveClass('blur-md');
     
-    // Corner button should be visible
-    const blurButton = screen.getByTitle('Blur image');
-    expect(blurButton).toBeInTheDocument();
-    
-    // Click to blur
-    fireEvent.click(blurButton);
-    expect(image).toHaveClass('blur-md');
+    // No blur controls should be visible when image is not blurred
+    expect(screen.queryByTitle('Blur image')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Show image')).not.toBeInTheDocument();
   });
 
   it('calls onClick when image is clicked', () => {
@@ -93,7 +89,7 @@ describe('BlurredImage', () => {
     
     const image = screen.getByAltText('Test image');
     expect(image).not.toHaveClass('blur-md');
-    expect(screen.getByTitle('Blur image')).toBeInTheDocument();
+    expect(screen.queryByTitle('Blur image')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Show image')).not.toBeInTheDocument();
   });
 
@@ -107,7 +103,7 @@ describe('BlurredImage', () => {
   it('applies custom className', () => {
     render(<BlurredImage {...defaultProps} className="custom-class" />);
     
-    const container = screen.getByAltText('Test image').parentElement;
+    const container = screen.getByAltText('Test image').parentElement?.parentElement;
     expect(container).toHaveClass('custom-class');
   });
 
@@ -125,7 +121,7 @@ describe('BlurredImage', () => {
     
     // Should not have center overlay when not blurred
     expect(screen.queryByTitle('Show image')).not.toBeInTheDocument();
-    // Should have corner blur button
-    expect(screen.getByTitle('Blur image')).toBeInTheDocument();
+    // Should not have any blur controls when not blurred
+    expect(screen.queryByTitle('Blur image')).not.toBeInTheDocument();
   });
 });
