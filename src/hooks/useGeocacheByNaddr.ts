@@ -37,7 +37,7 @@ export function useGeocacheByNaddr(naddr: string) {
       // Parse the naddr to get pubkey and dTag
       const parsed = parseNaddr(naddr);
       if (!parsed) {
-        throw new Error('Invalid naddr format');
+        throw new Error('INVALID_CACHE_LINK');
       }
       
       const { pubkey, dTag, relays } = parsed;

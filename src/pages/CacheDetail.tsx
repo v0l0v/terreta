@@ -46,7 +46,28 @@ export default function CacheDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useCurrentUser();
-  const { data: geocache, isLoading, error, isError, refetch } = useGeocacheByNaddr(naddr!);
+  
+  // Early validation of naddr parameter
+  if (!naddr) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <DesktopHeader />
+        <div className="container mx-auto px-4 py-16">
+          <ErrorState
+            title="Invalid Cache Link"
+            description="No cache identifier provided in the URL."
+            primaryAction={
+              <Link to="/" className="block">
+                <Button className="w-full">Browse Caches</Button>
+              </Link>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+  
+  const { data: geocache, isLoading, error, isError, refetch } = useGeocacheByNaddr(naddr);
   const typedGeocache = geocache as Geocache | null | undefined;
   const { data: logs = [], refetch: refetchLogs } = useGeocacheLogs(
     typedGeocache ? `${typedGeocache.pubkey}:${typedGeocache.dTag}` : '', 
@@ -306,24 +327,35 @@ export default function CacheDetail() {
 
   // Show error with retry option if there was an error and no cached data
   if (isError && !typedGeocache) {
+    // Check if this is an invalid cache link error
+    const isInvalidCacheLink = error && (error as Error).message === 'INVALID_CACHE_LINK';
+    
     return (
       <div className="min-h-screen bg-muted/30">
         <DesktopHeader />
         <div className="container mx-auto px-4 py-16">
           <ErrorState
-            title="Connection Issue"
-            description="Unable to load geocache. This might be a temporary network issue."
+            title={isInvalidCacheLink ? "Invalid Cache Link" : "Connection Issue"}
+            description={
+              isInvalidCacheLink 
+                ? "This cache link is not valid. It may be corrupted or from an incompatible source."
+                : "Unable to load geocache. This might be a temporary network issue."
+            }
             error={error}
             primaryAction={
-              <Button onClick={() => refetch()} className="w-full">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Try Again
-              </Button>
+              <Link to="/" className="block">
+                <Button className="w-full">
+                  {isInvalidCacheLink ? "Browse Caches" : "Back to Home"}
+                </Button>
+              </Link>
             }
             secondaryAction={
-              <Link to="/" className="block">
-                <Button variant="outline" className="w-full">Back to Home</Button>
-              </Link>
+              !isInvalidCacheLink ? (
+                <Button onClick={() => refetch()} variant="outline" className="w-full">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              ) : undefined
             }
           />
         </div>
