@@ -210,9 +210,10 @@ interface CacheDetailTabsProps {
   logCount?: number;
   children: ReactNode;
   className?: string;
+  defaultTab?: 'logs' | 'map';
 }
 
-export function CacheDetailTabs({ logCount = 0, children, className }: CacheDetailTabsProps) {
+export function CacheDetailTabs({ logCount = 0, children, className, defaultTab = 'logs' }: CacheDetailTabsProps) {
   const detailTabs: MobileTabItem[] = [
     { 
       value: 'logs', 
@@ -230,7 +231,7 @@ export function CacheDetailTabs({ logCount = 0, children, className }: CacheDeta
   return (
     <MobileTabs
       items={detailTabs}
-      defaultValue="logs"
+      defaultValue={defaultTab}
       className={className}
     >
       {children}
@@ -292,18 +293,54 @@ export function MyCachesTabs({
 interface MapViewTabsProps {
   children: ReactNode;
   className?: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
+  defaultValue?: string;
 }
 
-export function MapViewTabs({ children, className }: MapViewTabsProps) {
+export function MapViewTabs({ children, className, value, onValueChange, defaultValue = "list" }: MapViewTabsProps) {
   const mapTabs: MobileTabItem[] = [
     { value: 'list', label: 'List' },
     { value: 'map', label: 'Map' },
   ];
 
+  // If controlled (value prop provided), use controlled mode
+  if (value !== undefined && onValueChange) {
+    return (
+      <Tabs
+        value={value}
+        onValueChange={onValueChange}
+        className={cn("w-full", className)}
+      >
+        <TabsList className="grid w-full h-auto grid-cols-2">
+          {mapTabs.map((item) => {
+            const Icon = item.icon;
+            return (
+              <TabsTrigger
+                key={item.value}
+                value={item.value}
+                disabled={item.disabled}
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]"
+              >
+                {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                <span className="text-xs sm:text-sm">{item.label}</span>
+                {typeof item.count === 'number' && (
+                  <span className="text-xs sm:text-sm">({item.count})</span>
+                )}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+        {children}
+      </Tabs>
+    );
+  }
+
+  // Otherwise use uncontrolled mode (original behavior)
   return (
     <MobileTabs
       items={mapTabs}
-      defaultValue="list"
+      defaultValue={defaultValue}
       className={className}
     >
       {children}

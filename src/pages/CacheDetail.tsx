@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { MapPin, Navigation, Calendar, User, Trophy, Edit, Trash2, RefreshCw, Upload, X, Save, RotateCcw, Compass as CompassIcon, Eye, EyeOff, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,18 +37,21 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { ProfileDialog } from "@/components/ProfileDialog";
 import { RegenerateQRDialog } from "@/components/RegenerateQRDialog";
 import { parseVerificationFromHash, verifyKeyPair } from "@/lib/verification";
+import type { Geocache } from "@/types/geocache";
 
 export default function CacheDetail() {
   const { naddr } = useParams<{ naddr: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useCurrentUser();
   const { data: geocache, isLoading, error, isError, refetch } = useGeocacheByNaddr(naddr!);
+  const typedGeocache = geocache as Geocache | null | undefined;
   const { data: logs = [], refetch: refetchLogs } = useGeocacheLogs(
-    geocache ? `${geocache.pubkey}:${geocache.dTag}` : '', 
-    geocache?.dTag, 
-    geocache?.pubkey,
-    geocache?.relays,
-    geocache?.verificationPubkey
+    typedGeocache ? `${typedGeocache.pubkey}:${typedGeocache.dTag}` : '', 
+    typedGeocache?.dTag, 
+    typedGeocache?.pubkey,
+    typedGeocache?.relays,
+    typedGeocache?.verificationPubkey
   );
   const {
     confirmSingleDeletion,
@@ -59,11 +62,11 @@ export default function CacheDetail() {
     getConfirmationTitle,
     getConfirmationMessage,
   } = useDeleteWithConfirmation();
-  const { mutate: editGeocache, isPending: isEditingGeocache } = useEditGeocache(geocache || null);
+  const { mutate: editGeocache, isPending: isEditingGeocache } = useEditGeocache(typedGeocache || null);
   const { toast } = useToast();
   const { prefetchGeocache } = useGeocachePrefetch();
   
-  const author = useAuthor(geocache?.pubkey || "");
+  const author = useAuthor(typedGeocache?.pubkey || "");
   
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -101,38 +104,45 @@ export default function CacheDetail() {
   const [verificationKey, setVerificationKey] = useState<string | null>(null);
   const [isVerificationValid, setIsVerificationValid] = useState(false);
   
+  // Mobile detection state
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  
+  // Determine default tab based on URL params and screen size
+  const fromMap = searchParams.get('fromMap') === 'true';
+  const defaultTab = fromMap && isMobile ? 'map' : 'logs';
+  
   // Initialize edit form when geocache loads
   useEffect(() => {
-    if (geocache) {
+    if (typedGeocache) {
       setEditFormData({
-        name: geocache.name,
-        description: geocache.description,
-        hint: geocache.hint || "",
-        difficulty: geocache.difficulty.toString(),
-        terrain: geocache.terrain.toString(),
-        size: geocache.size,
-        type: geocache.type,
-        hidden: geocache.hidden || false,
+        name: typedGeocache.name,
+        description: typedGeocache.description,
+        hint: typedGeocache.hint || "",
+        difficulty: typedGeocache.difficulty.toString(),
+        terrain: typedGeocache.terrain.toString(),
+        size: typedGeocache.size,
+        type: typedGeocache.type,
+        hidden: typedGeocache.hidden || false,
       });
-      setEditImages(geocache.images || []);
-      setEditLocation(geocache.location);
+      setEditImages(typedGeocache.images || []);
+      setEditLocation(typedGeocache.location);
       
       // Prefetch logs for this geocache
-      prefetchGeocache(geocache);
+      prefetchGeocache(typedGeocache);
     }
-  }, [geocache, prefetchGeocache]);
+  }, [typedGeocache, prefetchGeocache]);
 
   // Verify location when geocache loads
   useEffect(() => {
-    if (geocache?.location) {
-      verifyLocation(geocache.location.lat, geocache.location.lng)
+    if (typedGeocache?.location) {
+      verifyLocation(typedGeocache.location.lat, typedGeocache.location.lng)
         .then(setLocationVerification)
         .catch(() => {
           // Silently fail - location verification is optional for viewing
           setLocationVerification(null);
         });
     }
-  }, [geocache?.location]);
+  }, [typedGeocache?.location]);
 
   // Verify edit location when it changes
   useEffect(() => {
@@ -146,13 +156,23 @@ export default function CacheDetail() {
     }
   }, [editLocation, isEditing]);
 
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Check for verification key in URL hash
   useEffect(() => {
     const hash = window.location.hash;
     const nsec = parseVerificationFromHash(hash);
     
-    if (nsec && geocache?.verificationPubkey) {
-      verifyKeyPair(nsec, geocache.verificationPubkey).then(isValid => {
+    if (nsec && typedGeocache?.verificationPubkey) {
+      verifyKeyPair(nsec, typedGeocache.verificationPubkey).then(isValid => {
         setVerificationKey(nsec);
         setIsVerificationValid(isValid);
         
@@ -179,15 +199,15 @@ export default function CacheDetail() {
         }
       });
     }
-  }, [geocache?.verificationPubkey, toast]);
+  }, [typedGeocache?.verificationPubkey, toast]);
 
 
   const handleDelete = () => {
-    if (!geocache) return;
+    if (!typedGeocache) return;
     confirmSingleDeletion(
       {
-        id: geocache.id,
-        name: geocache.name,
+        id: typedGeocache.id,
+        name: typedGeocache.name,
       },
       'Deleted by cache owner',
       () => navigate("/")
@@ -201,19 +221,19 @@ export default function CacheDetail() {
   const handleCancelEdit = () => {
     setIsEditing(false);
     // Reset form to original values
-    if (geocache) {
+    if (typedGeocache) {
       setEditFormData({
-        name: geocache.name,
-        description: geocache.description,
-        hint: geocache.hint || "",
-        difficulty: geocache.difficulty.toString(),
-        terrain: geocache.terrain.toString(),
-        size: geocache.size,
-        type: geocache.type,
-        hidden: geocache.hidden || false,
+        name: typedGeocache.name,
+        description: typedGeocache.description,
+        hint: typedGeocache.hint || "",
+        difficulty: typedGeocache.difficulty.toString(),
+        terrain: typedGeocache.terrain.toString(),
+        size: typedGeocache.size,
+        type: typedGeocache.type,
+        hidden: typedGeocache.hidden || false,
       });
-      setEditImages(geocache.images || []);
-      setEditLocation(geocache.location);
+      setEditImages(typedGeocache.images || []);
+      setEditLocation(typedGeocache.location);
       setEditLocationVerification(null);
     }
   };
@@ -273,7 +293,7 @@ export default function CacheDetail() {
 
   // Only show loading spinner for initial load when we have no data at all
   // Don't show loading if we have cached/placeholder data, even if a background refetch is happening
-  if (isLoading && !geocache && !error) {
+  if (isLoading && !typedGeocache && !error) {
     return (
       <FullPageLoading 
         title="Loading geocache..."
@@ -283,7 +303,7 @@ export default function CacheDetail() {
   }
 
   // Show error with retry option if there was an error and no cached data
-  if (isError && !geocache) {
+  if (isError && !typedGeocache) {
     return (
       <div className="min-h-screen bg-muted/30">
         <DesktopHeader />
@@ -309,7 +329,7 @@ export default function CacheDetail() {
     );
   }
 
-  if (!isLoading && !isError && !geocache) {
+  if (!isLoading && !isError && !typedGeocache) {
     return (
       <div className="min-h-screen bg-muted/30">
         <DesktopHeader />
@@ -335,12 +355,12 @@ export default function CacheDetail() {
   }
 
   // Ensure geocache is not null from here onwards
-  if (!geocache) {
+  if (!typedGeocache) {
     return null;
   }
 
-  const isOwner = user && user.pubkey === geocache.pubkey;
-  const authorName = author.data?.metadata?.name || geocache.pubkey.slice(0, 8);
+  const isOwner = user && user.pubkey === typedGeocache.pubkey;
+  const authorName = author.data?.metadata?.name || typedGeocache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
 
   return (
@@ -355,7 +375,7 @@ export default function CacheDetail() {
               <CardHeader>
                 <div className="flex items-start gap-2 sm:gap-4">
                   <div className="min-w-0 flex-1">
-                    <CardTitle className="text-2xl break-words">{geocache.name}</CardTitle>
+                    <CardTitle className="text-2xl break-words">{typedGeocache.name}</CardTitle>
                     
                     <div className="space-y-1 mt-2 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -364,7 +384,7 @@ export default function CacheDetail() {
                           <span>
                             Hidden by{' '}
                             <button
-                              onClick={() => handleProfileClick(geocache.pubkey)}
+                              onClick={() => handleProfileClick(typedGeocache.pubkey)}
                               className="hover:underline cursor-pointer"
                             >
                               {authorName}
@@ -380,14 +400,14 @@ export default function CacheDetail() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          {formatDistanceToNow(new Date(geocache.created_at * 1000), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(typedGeocache.created_at * 1000), { addSuffix: true })}
                         </span>
                       </div>
                     </div>
 
                   </div>
                   <div className="flex gap-1 sm:gap-2 flex-shrink-0 ml-2">
-                    {!isOwner && <SaveButton geocache={geocache} />}
+                    {!isOwner && <SaveButton geocache={typedGeocache} />}
                     {isOwner && (
                       <>
                         {isEditing ? (
@@ -457,7 +477,7 @@ export default function CacheDetail() {
                     )}
                     
                     {/* QR Code Management Section */}
-                    {geocache.verificationPubkey && (
+                    {typedGeocache.verificationPubkey && (
                       <div className="border-t pt-6">
                         <div className="space-y-3">
                           <h3 className="text-lg font-medium">QR Code Management</h3>
@@ -482,16 +502,16 @@ export default function CacheDetail() {
                   // View mode
                   <>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="outline">D{geocache.difficulty}</Badge>
-                      <Badge variant="outline">T{geocache.terrain}</Badge>
-                      <Badge variant="secondary">{getSizeLabel(geocache.size)}</Badge>
-                      <Badge variant="secondary">{getTypeLabel(geocache.type)}</Badge>
+                      <Badge variant="outline">D{typedGeocache.difficulty}</Badge>
+                      <Badge variant="outline">T{typedGeocache.terrain}</Badge>
+                      <Badge variant="secondary">{getSizeLabel(typedGeocache.size)}</Badge>
+                      <Badge variant="secondary">{getTypeLabel(typedGeocache.type)}</Badge>
                     </div>
                     
                     <div className="prose max-w-none">
-                      <p className="whitespace-pre-wrap break-words">{geocache.description}</p>
+                      <p className="whitespace-pre-wrap break-words">{typedGeocache.description}</p>
                       
-                      {geocache.hint && (
+                      {typedGeocache.hint && (
                         <Alert className="mt-4 py-2">
                           <AlertDescription className="break-words">
                             <div className="flex items-center justify-between gap-2">
@@ -502,7 +522,7 @@ export default function CacheDetail() {
                                     isHintVisible ? '' : 'blur-sm'
                                   }`}
                                 >
-                                  {geocache.hint}
+                                  {typedGeocache.hint}
                                 </span>
                               </div>
                               <button
@@ -523,9 +543,9 @@ export default function CacheDetail() {
                       )}
                     </div>
 
-                    {geocache.images && geocache.images.length > 0 && (
+                    {typedGeocache.images && typedGeocache.images.length > 0 && (
                       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {geocache.images.map((url, index) => (
+                        {typedGeocache.images.map((url, index) => (
                           <img
                             key={index}
                             src={url}
@@ -541,11 +561,11 @@ export default function CacheDetail() {
               </CardContent>
             </Card>
 
-            <CacheDetailTabs logCount={logs?.length || 0}>
+            <CacheDetailTabs logCount={logs?.length || 0} defaultTab={defaultTab}>
               <TabsContent value="logs" className="space-y-4" data-logs-section>
                 <LogsSection 
                   logs={logs}
-                  geocache={geocache}
+                  geocache={typedGeocache}
                   onProfileClick={handleProfileClick}
                   isOwner={isOwner}
                   verificationKey={verificationKey || undefined}
@@ -557,10 +577,10 @@ export default function CacheDetail() {
                 <div className="h-96 rounded-lg overflow-hidden">
                   <GeocacheMap 
                     geocaches={[{
-                      ...geocache,
-                      location: isEditing && editLocation ? editLocation : geocache.location
+                      ...typedGeocache,
+                      location: isEditing && editLocation ? editLocation : typedGeocache.location
                     }]} 
-                    center={isEditing && editLocation ? editLocation : geocache.location}
+                    center={isEditing && editLocation ? editLocation : typedGeocache.location}
                     zoom={15}
                   />
                 </div>
@@ -576,21 +596,21 @@ export default function CacheDetail() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <DifficultyTerrainRating 
-                  difficulty={geocache.difficulty}
-                  terrain={geocache.terrain}
-                  cacheSize={geocache.size}
+                  difficulty={typedGeocache.difficulty}
+                  terrain={typedGeocache.terrain}
+                  cacheSize={typedGeocache.size}
                 />
                 
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
-                    Coordinates {isEditing && editLocation && (editLocation.lat !== geocache.location.lat || editLocation.lng !== geocache.location.lng) && (
+                    Coordinates {isEditing && editLocation && (editLocation.lat !== typedGeocache.location.lat || editLocation.lng !== typedGeocache.location.lng) && (
                       <span className="text-orange-600 text-xs">(modified)</span>
                     )}
                   </p>
                   <p className="text-xs md:text-sm font-mono mt-1 break-all">
                     {isEditing && editLocation ? 
                       `${editLocation.lat.toFixed(6)}, ${editLocation.lng.toFixed(6)}` :
-                      `${geocache.location.lat.toFixed(6)}, ${geocache.location.lng.toFixed(6)}`
+                      `${typedGeocache.location.lat.toFixed(6)}, ${typedGeocache.location.lng.toFixed(6)}`
                     }
                   </p>
                   <Button
@@ -598,7 +618,7 @@ export default function CacheDetail() {
                     size="sm"
                     className="mt-2 w-full"
                     onClick={() => {
-                      const location = isEditing && editLocation ? editLocation : geocache.location;
+                      const location = isEditing && editLocation ? editLocation : typedGeocache.location;
                       window.open(
                         `https://www.openstreetmap.org/directions?from=&to=${location.lat}%2C${location.lng}#map=15/${location.lat}/${location.lng}`,
                         "_blank"
@@ -658,9 +678,9 @@ export default function CacheDetail() {
       </div>
       
       {/* Image Gallery */}
-      {geocache.images && (
+      {typedGeocache.images && (
         <ImageGallery
-          images={geocache.images}
+          images={typedGeocache.images}
           isOpen={galleryOpen}
           onClose={() => setGalleryOpen(false)}
           initialIndex={galleryIndex}
@@ -690,7 +710,7 @@ export default function CacheDetail() {
       <RegenerateQRDialog
         isOpen={regenerateQRDialogOpen}
         onOpenChange={setRegenerateQRDialogOpen}
-        geocache={geocache}
+        geocache={typedGeocache}
       />
     </div>
   );

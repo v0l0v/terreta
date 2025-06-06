@@ -6,6 +6,7 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from '@/component
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SaveButton } from '@/components/SaveButton';
+import { CacheMenu } from '@/components/CacheMenu';
 import { useAuthor } from '@/hooks/useAuthor';
 import { formatDistanceToNow } from '@/lib/date';
 import { formatDistance } from '@/lib/geo';
@@ -193,9 +194,12 @@ export function GeocacheCard({
                   {cache.foundCount || 0}
                 </Badge>
               )}
-              {actions || (
-                <SaveButton geocache={cache as any} size="icon" showText={false} className="h-7 w-7" />
-              )}
+              <div className="flex items-center gap-1">
+                {actions || (
+                  <SaveButton geocache={cache as any} size="icon" showText={false} className="h-7 w-7" />
+                )}
+                <CacheMenu geocache={cache as any} variant="compact" className="h-7 w-7" />
+              </div>
             </div>
           </div>
         </CardContent>
@@ -254,6 +258,7 @@ export function GeocacheCard({
             </Link>
             <div className="flex items-center gap-2 shrink-0">
               {actions}
+              <CacheMenu geocache={cache as any} />
             </div>
           </div>
         </CardContent>
@@ -273,6 +278,7 @@ export function GeocacheCard({
             {actions || (
               <SaveButton geocache={cache as any} size="icon" showText={false} />
             )}
+            <CacheMenu geocache={cache as any} />
           </div>
         </div>
         <CardTitle className="line-clamp-2 flex items-center gap-2">

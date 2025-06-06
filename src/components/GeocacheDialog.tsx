@@ -58,7 +58,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
 
   const handleViewFullDetails = () => {
     onOpenChange(false);
-    navigate(`/${geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays)}`);
+    navigate(`/${geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays)}?fromMap=true`);
   };
 
   const handleImageClick = (index: number) => {

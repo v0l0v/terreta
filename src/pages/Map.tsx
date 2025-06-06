@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { MapPin, Navigation, Filter, X, Locate, Compass, RefreshCw, Sparkles } from "lucide-react";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Map() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
   const [difficultyOperator, setDifficultyOperator] = useState<ComparisonOperator>("all");
@@ -48,6 +49,7 @@ export default function Map() {
   const [selectedGeocache, setSelectedGeocache] = useState<Geocache | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [highlightedGeocache, setHighlightedGeocache] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("list");
   const mapRef = useRef<L.Map | null>(null);
   
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
@@ -69,6 +71,44 @@ export default function Map() {
   });
 
 
+
+  // Parse URL parameters on mount
+  useEffect(() => {
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    const zoom = searchParams.get('zoom');
+    const highlight = searchParams.get('highlight');
+    const tab = searchParams.get('tab');
+
+    if (lat && lng) {
+      const center = {
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+      };
+      setMapCenter(center);
+      setMapUpdateKey(prev => prev + 1);
+      
+      // If coordinates are provided, switch to map tab on mobile
+      if (tab === 'map' || (lat && lng && !tab)) {
+        setActiveTab('map');
+      }
+    }
+
+    if (zoom) {
+      const zoomLevel = parseInt(zoom, 10);
+      if (zoomLevel >= 1 && zoomLevel <= 18) {
+        setMapZoom(zoomLevel);
+      }
+    }
+
+    if (highlight) {
+      setHighlightedGeocache(highlight);
+    }
+
+    if (tab && (tab === 'list' || tab === 'map')) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Update user location when coords change
@@ -397,7 +437,11 @@ export default function Map() {
         
         {/* Mobile Content Area */}
         <div className="flex-1 overflow-hidden">
-          <MapViewTabs className="h-full flex flex-col">
+          <MapViewTabs 
+            className="h-full flex flex-col"
+            value={activeTab}
+            onValueChange={setActiveTab}
+          >
             <TabsContent value="list" className="flex-1 overflow-y-auto p-4 m-0 data-[state=active]:flex data-[state=active]:flex-col bg-background">
               <SmartLoadingState
                 isLoading={isLoading}
