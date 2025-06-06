@@ -23,6 +23,7 @@ interface EditGeocacheData {
   type: string;
   images?: string[];
   hidden?: boolean;
+  location?: { lat: number; lng: number };
 }
 
 export function useEditGeocache(originalGeocache: Geocache | null) {
@@ -68,7 +69,7 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
       const tags = buildGeocacheTags({
         dTag: originalGeocache.dTag, // Use original d-tag - this will replace it!
         name: data.name.trim(),
-        location: originalGeocache.location,
+        location: data.location || originalGeocache.location, // Use new location if provided, otherwise keep original
         difficulty: data.difficulty,
         terrain: data.terrain,
         size: data.size as ValidCacheSize,

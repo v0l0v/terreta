@@ -30,6 +30,8 @@ import { getDifficultyLabel, getTypeLabel, getSizeLabel } from "@/lib/geocache-u
 import { getDefaultCacheValues } from "@/lib/geocache-constants";
 import { DifficultyTerrainRating } from "@/components/ui/difficulty-terrain-rating";
 import { GeocacheForm, type GeocacheFormData } from "@/components/ui/geocache-form";
+import { LocationPicker } from "@/components/LocationPicker";
+import { Label } from "@/components/ui/label";
 
 import { ImageGallery } from "@/components/ImageGallery";
 import { ProfileDialog } from "@/components/ProfileDialog";
@@ -77,7 +79,9 @@ export default function CacheDetail() {
     hidden: false,
   });
   const [editImages, setEditImages] = useState<string[]>([]);
+  const [editLocation, setEditLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationVerification, setLocationVerification] = useState<LocationVerification | null>(null);
+  const [editLocationVerification, setEditLocationVerification] = useState<LocationVerification | null>(null);
   
   // Image gallery state
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -111,6 +115,7 @@ export default function CacheDetail() {
         hidden: geocache.hidden || false,
       });
       setEditImages(geocache.images || []);
+      setEditLocation(geocache.location);
       
       // Prefetch logs for this geocache
       prefetchGeocache(geocache);
@@ -128,6 +133,18 @@ export default function CacheDetail() {
         });
     }
   }, [geocache?.location]);
+
+  // Verify edit location when it changes
+  useEffect(() => {
+    if (editLocation && isEditing) {
+      verifyLocation(editLocation.lat, editLocation.lng)
+        .then(setEditLocationVerification)
+        .catch(() => {
+          // Silently fail - location verification is optional for editing
+          setEditLocationVerification(null);
+        });
+    }
+  }, [editLocation, isEditing]);
 
   // Check for verification key in URL hash
   useEffect(() => {
@@ -196,6 +213,8 @@ export default function CacheDetail() {
         hidden: geocache.hidden || false,
       });
       setEditImages(geocache.images || []);
+      setEditLocation(geocache.location);
+      setEditLocationVerification(null);
     }
   };
 
@@ -218,15 +237,26 @@ export default function CacheDetail() {
       return;
     }
 
+    if (!editLocation) {
+      toast({
+        title: "Location required",
+        description: "Please select a location for your geocache",
+        variant: "destructive",
+      });
+      return;
+    }
+
     editGeocache({
       ...editFormData,
       difficulty: parseInt(editFormData.difficulty),
       terrain: parseInt(editFormData.terrain),
       images: editImages,
       hidden: editFormData.hidden,
+      location: editLocation,
     }, {
       onSuccess: () => {
         setIsEditing(false);
+        setEditLocationVerification(null);
       },
     });
   };
@@ -405,6 +435,26 @@ export default function CacheDetail() {
                       fieldPrefix="edit"
                       isSubmitting={isEditingGeocache}
                     />
+
+                    {/* Location */}
+                    <div>
+                      <Label>Location *</Label>
+                      <LocationPicker
+                        value={editLocation}
+                        onChange={setEditLocation}
+                      />
+                    </div>
+
+                    {/* Location Verification for Edit */}
+                    {editLocationVerification && (
+                      <div className="border rounded-lg p-4 bg-muted/50">
+                        <h4 className="font-medium mb-2">Location Information</h4>
+                        <LocationWarnings 
+                          verification={editLocationVerification} 
+                          className="space-y-2"
+                        />
+                      </div>
+                    )}
                     
                     {/* QR Code Management Section */}
                     {geocache.verificationPubkey && (
@@ -506,8 +556,11 @@ export default function CacheDetail() {
               <TabsContent value="map">
                 <div className="h-96 rounded-lg overflow-hidden">
                   <GeocacheMap 
-                    geocaches={[geocache]} 
-                    center={geocache.location}
+                    geocaches={[{
+                      ...geocache,
+                      location: isEditing && editLocation ? editLocation : geocache.location
+                    }]} 
+                    center={isEditing && editLocation ? editLocation : geocache.location}
                     zoom={15}
                   />
                 </div>
@@ -529,17 +582,25 @@ export default function CacheDetail() {
                 />
                 
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Coordinates</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Coordinates {isEditing && editLocation && (editLocation.lat !== geocache.location.lat || editLocation.lng !== geocache.location.lng) && (
+                      <span className="text-orange-600 text-xs">(modified)</span>
+                    )}
+                  </p>
                   <p className="text-xs md:text-sm font-mono mt-1 break-all">
-                    {geocache.location.lat.toFixed(6)}, {geocache.location.lng.toFixed(6)}
+                    {isEditing && editLocation ? 
+                      `${editLocation.lat.toFixed(6)}, ${editLocation.lng.toFixed(6)}` :
+                      `${geocache.location.lat.toFixed(6)}, ${geocache.location.lng.toFixed(6)}`
+                    }
                   </p>
                   <Button
                     variant="outline"
                     size="sm"
                     className="mt-2 w-full"
                     onClick={() => {
+                      const location = isEditing && editLocation ? editLocation : geocache.location;
                       window.open(
-                        `https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}`,
+                        `https://www.openstreetmap.org/directions?from=&to=${location.lat}%2C${location.lng}#map=15/${location.lat}/${location.lng}`,
                         "_blank"
                       );
                     }}
