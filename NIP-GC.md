@@ -44,7 +44,7 @@ The content field contains the cache description and any additional information 
 
 - `d` (required) - unique identifier for the cache
 - `name` (required) - human-readable name for the cache  
-- `g` (required) - geohash of cache location (minimum 8 characters for ±38m accuracy)
+- `g` (required) - geohash of cache location. To allow for a proximity search, include multiple geohash tags at different precision levels (3-9 characters)
 - `difficulty` (required) - integer 1-5 indicating puzzle/finding difficulty
 - `terrain` (required) - integer 1-5 indicating physical difficulty  
 - `size` (required) - one of: `micro`, `small`, `regular`, `large`, `other`
@@ -188,7 +188,13 @@ For the best Geocaching experience, clients implementing geocaching support shou
   "tags": [
     ["d", "first-treasure-1748619568668"],
     ["name", "First Treasure"], 
+    ["g", "u4x"],
+    ["g", "u4xs"],
+    ["g", "u4xsu"],
+    ["g", "u4xsu6"],
+    ["g", "u4xsu6r"],
     ["g", "u4xsu6ry"],
+    ["g", "u4xsu6ryb"],
     ["difficulty", "1"],
     ["terrain", "1"],
     ["size", "small"],
