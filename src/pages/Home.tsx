@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAppContext } from "@/hooks/useAppContext";
 import { Link } from "react-router-dom";
 import { MapPin, Plus, Search, Compass, Trophy, QrCode, RefreshCw, Scroll, Crown, Shield, Users, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { QUERY_LIMITS } from "@/lib/constants";
 
 export default function Home() {
   const { user } = useCurrentUser();
+  const { config } = useAppContext();
   
   // Use optimistic loading for better UX
   const {
@@ -28,6 +30,8 @@ export default function Home() {
     hasInitialData,
     refresh
   } = useHomePageGeocaches();
+  
+  const [isRetrying, setIsRetrying] = useState(false);
   
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);
@@ -75,6 +79,20 @@ export default function Home() {
   const handleSignupClose = () => {
     setSignupDialogOpen(false);
   };
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    try {
+      await refresh();
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  // Auto-refresh when relay changes
+  useEffect(() => {
+    refresh();
+  }, [config.relayUrl, refresh]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40 dark:from-green-950/40 dark:via-emerald-950/30 dark:to-teal-950/20 adventure:from-amber-100/80 adventure:via-yellow-50/60 adventure:to-orange-100/70">
@@ -460,9 +478,11 @@ export default function Home() {
             hasData={hasInitialData}
             data={geocaches}
             error={error}
-            onRetry={refresh}
+            onRetry={handleRetry}
+            isRetrying={isRetrying}
             skeletonCount={skeletonCount}
             skeletonVariant="featured"
+            showRelayFallback={true}
             emptyState={
               <div className="text-center py-12">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 adventure:from-stone-200 adventure:to-stone-300 flex items-center justify-center">

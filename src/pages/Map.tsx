@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useAppContext } from "@/hooks/useAppContext";
 import { Link, useSearchParams } from "react-router-dom";
 import { MapPin, Navigation, Filter, X, Locate, Compass, RefreshCw, Sparkles } from "lucide-react";
 import L from "leaflet";
@@ -32,6 +33,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Map() {
   const navigate = useNavigate();
+  const { config } = useAppContext();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
@@ -64,6 +66,8 @@ export default function Map() {
   
   // Use optimistic loading for base geocaches - don't block map rendering
   const optimisticGeocaches = useMapPageGeocaches();
+  
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const { 
     data: geocaches, 
@@ -349,6 +353,24 @@ export default function Map() {
     setViewBounds(null);
   };
 
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    try {
+      await Promise.all([
+        optimisticGeocaches.refresh(),
+        refetch()
+      ]);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  // Auto-refresh when relay changes
+  useEffect(() => {
+    optimisticGeocaches.refresh();
+    refetch();
+  }, [config.relayUrl, optimisticGeocaches.refresh, refetch]);
+
   return (
     <div className="bg-background h-screen flex flex-col">
       <DesktopHeader variant="map" />
@@ -461,13 +483,12 @@ export default function Map() {
               hasData={filteredGeocaches.length > 0}
               data={filteredGeocaches}
               error={(isProximitySearchActive ? error : optimisticGeocaches.error) as Error}
-              onRetry={() => {
-                optimisticGeocaches.refresh();
-                refetch();
-              }}
+              onRetry={handleRetry}
+              isRetrying={isRetrying}
               skeletonCount={QUERY_LIMITS.SKELETON_COUNT}
               skeletonVariant="compact"
               compact={true}
+              showRelayFallback={true}
               emptyState={
                 <div className="p-4 text-center text-muted-foreground">
                   <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -658,13 +679,12 @@ export default function Map() {
                   hasData={filteredGeocaches.length > 0}
                   data={filteredGeocaches}
                   error={(isProximitySearchActive ? error : optimisticGeocaches.error) as Error}
-                  onRetry={() => {
-                    optimisticGeocaches.refresh();
-                    refetch();
-                  }}
+                  onRetry={handleRetry}
+                  isRetrying={isRetrying}
                   skeletonCount={QUERY_LIMITS.SKELETON_COUNT}
                   skeletonVariant="compact"
                   compact={true}
+                  showRelayFallback={true}
                   emptyState={
                     <div className="flex items-center justify-center min-h-[300px]">
                       <div className="text-center text-muted-foreground">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RelayErrorFallback } from '@/components/RelayErrorFallback';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -238,6 +239,10 @@ interface SmartLoadingStateProps {
   errorState?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  /** Whether to show relay switcher for errors and empty states */
+  showRelayFallback?: boolean;
+  /** Whether the retry operation is in progress */
+  isRetrying?: boolean;
 }
 
 export function SmartLoadingState({
@@ -253,11 +258,25 @@ export function SmartLoadingState({
   emptyState,
   errorState,
   children,
-  className
+  className,
+  showRelayFallback = true,
+  isRetrying = false
 }: SmartLoadingStateProps) {
   // Error state (with data fallback)
   if (isError && !hasData) {
     if (errorState) return <>{errorState}</>;
+    
+    if (showRelayFallback) {
+      return (
+        <RelayErrorFallback
+          error={error}
+          onRetry={onRetry}
+          isRetrying={isRetrying}
+          compact={compact}
+          className={className}
+        />
+      );
+    }
     
     return (
       <div className="flex items-center justify-center py-12">
@@ -294,6 +313,20 @@ export function SmartLoadingState({
   // Empty state
   if (!isLoading && hasData && data?.length === 0) {
     if (emptyState) return <>{emptyState}</>;
+    
+    if (showRelayFallback) {
+      return (
+        <RelayErrorFallback
+          isEmpty={true}
+          onRetry={onRetry}
+          isRetrying={isRetrying}
+          compact={compact}
+          className={className}
+          title="No Treasures Found"
+          description="No geocaches were found. This might be due to relay connectivity issues or the current relay may not have any data."
+        />
+      );
+    }
     
     return (
       <div className="flex items-center justify-center py-12">
