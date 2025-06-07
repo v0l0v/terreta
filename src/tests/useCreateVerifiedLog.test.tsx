@@ -2,13 +2,13 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useCreateVerifiedLog } from '@/hooks/useCreateVerifiedLog';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useNostr } from '@nostrify/react';
 import { useToast } from '@/hooks/useToast';
+import { useNostrPublish } from '@/hooks/useNostrPublish';
 
 // Mock dependencies
 vi.mock('@/hooks/useCurrentUser');
-vi.mock('@nostrify/react');
 vi.mock('@/hooks/useToast');
+vi.mock('@/hooks/useNostrPublish');
 vi.mock('@/lib/verification');
 
 const mockUser = {
@@ -26,12 +26,8 @@ const mockUser = {
   }
 };
 
-const mockNostr = {
-  event: vi.fn(),
-  query: vi.fn()
-};
-
 const mockToast = vi.fn();
+const mockPublishEvent = vi.fn();
 
 describe('useCreateVerifiedLog', () => {
   let queryClient: QueryClient;
@@ -47,8 +43,11 @@ describe('useCreateVerifiedLog', () => {
     vi.clearAllMocks();
     
     (useCurrentUser as any).mockReturnValue({ user: mockUser });
-    (useNostr as any).mockReturnValue({ nostr: mockNostr });
     (useToast as any).mockReturnValue({ toast: mockToast });
+    (useNostrPublish as any).mockReturnValue({ 
+      mutateAsync: mockPublishEvent,
+      isPending: false 
+    });
     
     // Mock createVerificationEvent
     const { createVerificationEvent } = require('@/lib/verification');
@@ -56,10 +55,21 @@ describe('useCreateVerifiedLog', () => {
       id: 'verification-event-id',
       pubkey: 'verification-pubkey',
       created_at: 1234567890,
-      kind: 37516,
-      tags: [],
-      content: 'verification content',
+      kind: 7517,
+      tags: [['a', 'test-pubkey:naddr1test']],
+      content: 'Geocache verification for npub1test',
       sig: 'verification-sig'
+    });
+    
+    // Mock successful publishing by default
+    mockPublishEvent.mockResolvedValue({
+      id: 'test-event-id',
+      pubkey: 'test-pubkey',
+      created_at: 1234567890,
+      kind: 7516,
+      tags: [['a', '37515:test-cache-pubkey:test-dtag']],
+      content: 'Found the cache!',
+      sig: 'test-sig'
     });
   });
 
@@ -69,24 +79,13 @@ describe('useCreateVerifiedLog', () => {
     </QueryClientProvider>
   );
 
-  it('should retry publishing on failure', async () => {
-    // Mock first two attempts to fail, third to succeed
-    mockNostr.event
-      .mockRejectedValueOnce(new Error('timeout'))
-      .mockRejectedValueOnce(new Error('relay error'))
-      .mockResolvedValueOnce(undefined);
-    
-    // Mock query for verification to succeed
-    mockNostr.query.mockResolvedValue([{ id: 'test-event-id' }]);
-
+  it('should successfully create and publish verified log', async () => {
     const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
 
     const testData = {
       geocacheId: 'test-cache-id',
       geocacheDTag: 'test-dtag',
       geocachePubkey: 'test-cache-pubkey',
-      relayUrl: 'wss://test-relay.com',
-      preferredRelays: ['wss://test-relay.com'],
       type: 'found' as const,
       text: 'Found the cache!',
       verificationKey: 'nsec1test'
@@ -98,13 +97,29 @@ describe('useCreateVerifiedLog', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    // Should have tried 3 times
-    expect(mockNostr.event).toHaveBeenCalledTimes(3);
+    // Should have called createVerificationEvent
+    const { createVerificationEvent } = require('@/lib/verification');
+    expect(createVerificationEvent).toHaveBeenCalledWith(
+      'nsec1test',
+      'test-pubkey',
+      'test-cache-pubkey',
+      'test-dtag'
+    );
+
+    // Should have called publishEvent with correct template
+    expect(mockPublishEvent).toHaveBeenCalledWith({
+      kind: 7516,
+      content: 'Found the cache!',
+      tags: expect.arrayContaining([
+        ['a', '37515:test-cache-pubkey:test-dtag'],
+        ['verification', expect.any(String)]
+      ])
+    });
   });
 
-  it('should fail after maximum retries', async () => {
-    // Mock all attempts to fail
-    mockNostr.event.mockRejectedValue(new Error('persistent error'));
+  it('should handle verification event creation failure', async () => {
+    const { createVerificationEvent } = require('@/lib/verification');
+    createVerificationEvent.mockRejectedValue(new Error('Invalid verification key format'));
 
     const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
 
@@ -112,11 +127,9 @@ describe('useCreateVerifiedLog', () => {
       geocacheId: 'test-cache-id',
       geocacheDTag: 'test-dtag',
       geocachePubkey: 'test-cache-pubkey',
-      relayUrl: 'wss://test-relay.com',
-      preferredRelays: ['wss://test-relay.com'],
       type: 'found' as const,
       text: 'Found the cache!',
-      verificationKey: 'nsec1test'
+      verificationKey: 'invalid-key'
     };
 
     result.current.mutate(testData);
@@ -125,23 +138,15 @@ describe('useCreateVerifiedLog', () => {
       expect(result.current.isError).toBe(true);
     });
 
-    // Should have tried maximum number of times
-    expect(mockNostr.event).toHaveBeenCalledTimes(5); // VERIFIED_LOG_MAX_RETRIES
-    
-    // Should show error toast
     expect(mockToast).toHaveBeenCalledWith({
       title: 'Failed to post verified log',
-      description: expect.stringContaining('multiple attempts'),
+      description: 'Invalid verification key format. Please check the QR code.',
       variant: 'destructive'
     });
   });
 
-  it('should verify event was published', async () => {
-    // Mock publishing to succeed
-    mockNostr.event.mockResolvedValue(undefined);
-    
-    // Mock verification query to find the event
-    mockNostr.query.mockResolvedValue([{ id: 'test-event-id' }]);
+  it('should handle publishing failure', async () => {
+    mockPublishEvent.mockRejectedValue(new Error('Failed to publish event after 2 attempts: timeout'));
 
     const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
 
@@ -149,37 +154,6 @@ describe('useCreateVerifiedLog', () => {
       geocacheId: 'test-cache-id',
       geocacheDTag: 'test-dtag',
       geocachePubkey: 'test-cache-pubkey',
-      relayUrl: 'wss://test-relay.com',
-      preferredRelays: ['wss://test-relay.com'],
-      type: 'found' as const,
-      text: 'Found the cache!',
-      verificationKey: 'nsec1test'
-    };
-
-    result.current.mutate(testData);
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-
-    // Should have queried to verify the event was published
-    expect(mockNostr.query).toHaveBeenCalledWith(
-      [{ ids: ['test-event-id'] }],
-      expect.any(Object)
-    );
-  });
-
-  it('should handle timeout errors gracefully', async () => {
-    mockNostr.event.mockRejectedValue(new Error('timeout'));
-
-    const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
-
-    const testData = {
-      geocacheId: 'test-cache-id',
-      geocacheDTag: 'test-dtag',
-      geocachePubkey: 'test-cache-pubkey',
-      relayUrl: 'wss://test-relay.com',
-      preferredRelays: ['wss://test-relay.com'],
       type: 'found' as const,
       text: 'Found the cache!',
       verificationKey: 'nsec1test'
@@ -193,7 +167,111 @@ describe('useCreateVerifiedLog', () => {
 
     expect(mockToast).toHaveBeenCalledWith({
       title: 'Failed to post verified log',
-      description: expect.stringContaining('timeout after multiple attempts'),
+      description: 'Failed to publish verified log: Failed to publish event after 2 attempts: timeout',
+      variant: 'destructive'
+    });
+  });
+
+  it('should handle user cancellation', async () => {
+    mockPublishEvent.mockRejectedValue(new Error('Event signing was cancelled.'));
+
+    const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
+
+    const testData = {
+      geocacheId: 'test-cache-id',
+      geocacheDTag: 'test-dtag',
+      geocachePubkey: 'test-cache-pubkey',
+      type: 'found' as const,
+      text: 'Found the cache!',
+      verificationKey: 'nsec1test'
+    };
+
+    result.current.mutate(testData);
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(mockToast).toHaveBeenCalledWith({
+      title: 'Failed to post verified log',
+      description: 'Verified log signing was cancelled.',
+      variant: 'destructive'
+    });
+  });
+
+  it('should validate required fields', async () => {
+    const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
+
+    const testData = {
+      geocacheId: '',
+      geocacheDTag: 'test-dtag',
+      geocachePubkey: 'test-cache-pubkey',
+      type: 'found' as const,
+      text: 'Found the cache!',
+      verificationKey: 'nsec1test'
+    };
+
+    result.current.mutate(testData);
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(mockToast).toHaveBeenCalledWith({
+      title: 'Failed to post verified log',
+      description: 'Geocache ID is required',
+      variant: 'destructive'
+    });
+  });
+
+  it('should require user to be logged in', async () => {
+    (useCurrentUser as any).mockReturnValue({ user: null });
+
+    const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
+
+    const testData = {
+      geocacheId: 'test-cache-id',
+      geocacheDTag: 'test-dtag',
+      geocachePubkey: 'test-cache-pubkey',
+      type: 'found' as const,
+      text: 'Found the cache!',
+      verificationKey: 'nsec1test'
+    };
+
+    result.current.mutate(testData);
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(mockToast).toHaveBeenCalledWith({
+      title: 'Failed to post verified log',
+      description: 'User must be logged in to create verified logs',
+      variant: 'destructive'
+    });
+  });
+
+  it('should only allow found logs to be verified', async () => {
+    const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
+
+    const testData = {
+      geocacheId: 'test-cache-id',
+      geocacheDTag: 'test-dtag',
+      geocachePubkey: 'test-cache-pubkey',
+      type: 'dnf' as const,
+      text: 'Did not find',
+      verificationKey: 'nsec1test'
+    };
+
+    result.current.mutate(testData);
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(mockToast).toHaveBeenCalledWith({
+      title: 'Failed to post verified log',
+      description: 'Only found logs can be verified',
       variant: 'destructive'
     });
   });

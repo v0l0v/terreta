@@ -5,15 +5,6 @@ import { useCreateVerifiedLog } from '@/hooks/useCreateVerifiedLog';
 import { TIMEOUTS } from '@/lib/constants';
 
 // Mock the dependencies
-vi.mock('@nostrify/react', () => ({
-  useNostr: () => ({
-    nostr: {
-      event: vi.fn().mockResolvedValue(undefined),
-      query: vi.fn().mockResolvedValue([]),
-    },
-  }),
-}));
-
 vi.mock('@/hooks/useCurrentUser', () => ({
   useCurrentUser: () => ({
     user: {
@@ -39,12 +30,27 @@ vi.mock('@/hooks/useToast', () => ({
   }),
 }));
 
+vi.mock('@/hooks/useNostrPublish', () => ({
+  useNostrPublish: () => ({
+    mutateAsync: vi.fn().mockResolvedValue({
+      id: 'published-event-id',
+      pubkey: 'test-pubkey',
+      created_at: Math.floor(Date.now() / 1000),
+      kind: 7516,
+      content: 'test content',
+      tags: [['client', 'treasures']],
+      sig: 'published-signature',
+    }),
+    isPending: false,
+  }),
+}));
+
 vi.mock('@/lib/verification', () => ({
   createVerificationEvent: vi.fn().mockResolvedValue({
     id: 'verification-event-id',
     pubkey: 'verification-pubkey',
     created_at: Math.floor(Date.now() / 1000),
-    kind: 7515,
+    kind: 7517,
     content: 'Geocache verification for npub123',
     tags: [['a', 'test-pubkey:naddr123']],
     sig: 'verification-signature',
@@ -54,10 +60,10 @@ vi.mock('@/lib/verification', () => ({
 vi.mock('@/lib/nip-gc', () => ({
   NIP_GC_KINDS: {
     FOUND_LOG: 7516,
-    VERIFICATION: 7515,
+    VERIFICATION: 7517,
   },
   buildFoundLogTags: vi.fn().mockReturnValue([
-    ['a', '30001:test-pubkey:test-dtag'],
+    ['a', '37515:test-pubkey:test-dtag'],
     ['client', 'treasures'],
     ['verification', '{"id":"verification-event-id"}'],
   ]),
@@ -80,7 +86,7 @@ describe('useCreateVerifiedLog Performance', () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  it('should use consistent timeouts with regular logs', async () => {
+  it('should use unified publishing logic for consistent performance', async () => {
     const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
 
     const testData = {
@@ -104,17 +110,18 @@ describe('useCreateVerifiedLog Performance', () => {
     const duration = endTime - startTime;
 
     // The operation should complete quickly (under 1 second in tests)
-    // This is much faster than the previous 15+ second timeouts
+    // This uses the same timeouts as regular publishing
     expect(duration).toBeLessThan(1000);
   });
 
-  it('should use TIMEOUTS.QUERY for main publishing', () => {
-    // Verify that we're using the standard timeout constant
-    expect(TIMEOUTS.QUERY).toBe(8000);
-    expect(TIMEOUTS.FAST_QUERY).toBe(2000);
+  it('should use standard timeout constants', () => {
+    // Verify that we're using the unified timeout constants
+    expect(TIMEOUTS.QUERY).toBe(15000);
+    expect(TIMEOUTS.FAST_QUERY).toBe(5000);
+    expect(TIMEOUTS.PUBLISH).toBe(12000);
   });
 
-  it('should have streamlined publishing logic', async () => {
+  it('should use unified publishing hook for consistency', async () => {
     const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
 
     const testData = {
@@ -132,9 +139,39 @@ describe('useCreateVerifiedLog Performance', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    // Should have called nostr.event once (not multiple relay attempts)
-    const { useNostr } = await import('@nostrify/react');
-    const nostr = useNostr().nostr;
-    expect(nostr.event).toHaveBeenCalledTimes(1);
+    // Should have used the unified publishing hook
+    const { useNostrPublish } = await import('@/hooks/useNostrPublish');
+    const publishHook = useNostrPublish();
+    expect(publishHook.mutateAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('should handle verification event creation efficiently', async () => {
+    const { createVerificationEvent } = await import('@/lib/verification');
+    
+    const { result } = renderHook(() => useCreateVerifiedLog(), { wrapper });
+
+    const testData = {
+      geocacheId: 'test-cache-id',
+      geocacheDTag: 'test-dtag',
+      geocachePubkey: 'test-pubkey',
+      type: 'found' as const,
+      text: 'Found the cache!',
+      verificationKey: 'nsec1test',
+    };
+
+    result.current.mutate(testData);
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    // Should create verification event once
+    expect(createVerificationEvent).toHaveBeenCalledTimes(1);
+    expect(createVerificationEvent).toHaveBeenCalledWith(
+      'nsec1test',
+      'test-pubkey',
+      'test-pubkey',
+      'test-dtag'
+    );
   });
 });

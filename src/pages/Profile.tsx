@@ -12,7 +12,8 @@ import {
   Edit,
   Copy,
   Check,
-  Compass
+  Compass,
+  Bookmark
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InfoCard, EmptyStateCard } from '@/components/ui/card-patterns';
@@ -32,6 +33,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useUserGeocaches } from '@/hooks/useUserGeocaches';
 import { useUserFoundCaches } from '@/hooks/useUserFoundCaches';
+import { useSavedCaches } from '@/hooks/useSavedCaches';
 import { useNip05Status } from '@/hooks/useNip05Verification';
 import { formatDistanceToNow } from '@/lib/date';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -52,6 +54,7 @@ export default function Profile() {
   const { data: authorData, isLoading: isLoadingAuthor } = useAuthor(targetPubkey);
   const { data: userCaches, isLoading: isLoadingUserCaches } = useUserGeocaches(targetPubkey);
   const { data: foundCaches, isLoading: isLoadingFoundCaches } = useUserFoundCaches(targetPubkey);
+  const { savedCaches, isLoading: isLoadingSavedCaches } = useSavedCaches();
   const { 
     isVerified, 
     isLoading: isLoadingNip05, 
@@ -78,6 +81,22 @@ export default function Profile() {
   });
 
   const foundCachesWithDistance = (foundCaches || []).map(cache => {
+    let distance: number | undefined;
+    if (coords && cache.location) {
+      const R = 6371; // Earth's radius in kilometers
+      const dLat = (cache.location.lat - coords.latitude) * Math.PI / 180;
+      const dLon = (cache.location.lng - coords.longitude) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(coords.latitude * Math.PI / 180) * Math.cos(cache.location.lat * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      distance = R * c * 1000; // Convert to meters
+    }
+    return { ...cache, distance };
+  });
+
+  const savedCachesWithDistance = (savedCaches || []).map(cache => {
     let distance: number | undefined;
     if (coords && cache.location) {
       const R = 6371; // Earth's radius in kilometers
@@ -152,6 +171,7 @@ export default function Profile() {
               createdAt={authorData?.event?.created_at}
               hiddenCount={userCaches?.length || 0}
               foundCount={foundCaches?.length || 0}
+              savedCount={isOwnProfile ? savedCaches?.length || 0 : undefined}
               variant="page"
               onCopy={copyToClipboard}
               showExtendedDetails={true}
@@ -179,7 +199,7 @@ export default function Profile() {
 
         {/* Cache Tabs */}
         <Tabs defaultValue="created" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsList className={`grid w-full h-auto ${isOwnProfile ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="created" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]">
               <MapPin className="h-4 w-4 flex-shrink-0" />
               <span className="text-xs sm:text-sm">Created</span>
@@ -190,6 +210,13 @@ export default function Profile() {
               <span className="text-xs sm:text-sm">Found</span>
               <span className="text-xs sm:text-sm">({foundCaches?.length || 0})</span>
             </TabsTrigger>
+            {isOwnProfile && (
+              <TabsTrigger value="saved" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-3 sm:px-3 sm:py-2 min-h-[3rem] sm:min-h-[2.5rem]">
+                <Bookmark className="h-4 w-4 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">Saved</span>
+                <span className="text-xs sm:text-sm">({savedCaches?.length || 0})</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="created" className="mt-6">
@@ -284,6 +311,52 @@ export default function Profile() {
               </div>
             )}
           </TabsContent>
+
+          {isOwnProfile && (
+            <TabsContent value="saved" className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Caches you've saved for later exploration
+                </p>
+              </div>
+
+              {isLoadingSavedCaches ? (
+                <div className="flex items-center justify-center py-12">
+                  <ComponentLoading size="sm" title="Loading saved caches..." description="Fetching your bookmarked caches" />
+                </div>
+              ) : !savedCaches || savedCaches.length === 0 ? (
+                <EmptyStateCard
+                  icon={Bookmark}
+                  title="No saved caches yet"
+                  description="Save interesting caches to find them easily later!"
+                  action={
+                    <Link to="/map">
+                      <Button>
+                        <MapPin className="h-4 w-4 mr-2" />
+                        Explore Caches
+                      </Button>
+                    </Link>
+                  }
+                />
+              ) : (
+                <div className="space-y-4">
+                  {savedCachesWithDistance.map((cache) => (
+                    <DetailedGeocacheCard
+                      key={cache.id}
+                      cache={cache}
+                      distance={cache.distance}
+                      metadata={
+                        <>
+                          Saved {formatDistanceToNow(new Date(cache.savedAt), { addSuffix: true })}
+                        </>
+                      }
+                      showAuthor={true}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
 
         <div className="mt-8 text-center">

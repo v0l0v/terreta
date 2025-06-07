@@ -1,4 +1,4 @@
-import { Calendar, MapPin, User, CheckCircle, ShieldCheck, Copy, Check, AlertCircle, Clock } from "lucide-react";
+import { Calendar, MapPin, User, CheckCircle, ShieldCheck, Copy, Check, AlertCircle, Clock, Bookmark } from "lucide-react";
 import { CompassSpinner } from "@/components/ui/loading";
 import { formatDistanceToNow } from "@/lib/date";
 import { useNip05Status } from "@/hooks/useNip05Verification";
@@ -20,6 +20,7 @@ interface ProfileHeaderProps {
   createdAt?: number;
   hiddenCount: number;
   foundCount: number;
+  savedCount?: number;
   variant?: "dialog" | "page";
   className?: string;
   children?: React.ReactNode; // For additional content like edit buttons
@@ -33,6 +34,7 @@ export function ProfileHeader({
   createdAt,
   hiddenCount,
   foundCount,
+  savedCount,
   variant = "dialog",
   className = "",
   children,
@@ -163,6 +165,12 @@ export function ProfileHeader({
             <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
             {foundCount} Found
           </span>
+          {savedCount !== undefined && (
+            <span className="flex items-center gap-1">
+              <Bookmark className="h-3 w-3 sm:h-4 sm:w-4" />
+              {savedCount} Saved
+            </span>
+          )}
         </div>
 
         {/* Extended details section for page variant */}
