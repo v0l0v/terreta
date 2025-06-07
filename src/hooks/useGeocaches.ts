@@ -20,7 +20,7 @@ export function useGeocaches() {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(timeout)]);
       const events = await nostr.query([{
         kinds: [NIP_GC_KINDS.GEOCACHE], 
-        limit: QUERY_LIMITS.GEOCACHES * 2 // Fetch more for better caching
+        limit: QUERY_LIMITS.GEOCACHES
       }], { signal });
 
       return events.map(event => {
@@ -31,11 +31,13 @@ export function useGeocaches() {
         return parsed;
       }).filter(Boolean);
     },
-    staleTime: 120000, // 2 minutes - less aggressive to reduce requests
-    gcTime: 900000, // 15 minutes - even longer cache retention
+    staleTime: 300000, // 5 minutes - much longer to reduce churn
+    gcTime: 1800000, // 30 minutes - longer cache retention
     refetchOnWindowFocus: false,
-    refetchInterval: POLLING_INTERVALS.GEOCACHES, // Poll every minute
-    refetchIntervalInBackground: true, // Continue polling in background
+    refetchInterval: POLLING_INTERVALS.GEOCACHES * 2, // Poll every 2 minutes instead of 1
+    refetchIntervalInBackground: false, // Don't poll in background to reduce load
+    // Keep data even if component unmounts
+    placeholderData: (previousData) => previousData,
   });
 
   // Prefetch related data when geocaches are loaded

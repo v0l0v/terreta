@@ -585,7 +585,7 @@ npm run test  # Full test suite including data management tests
 
 - **Test-Driven Development**: All new features must include comprehensive tests
 - **Test Coverage**: Maintain high test coverage for critical functionality like data management
-- **No Debug/Demo Pages**: Avoid creating temporary debug or demo pages. Use tests to validate functionality instead
+- **No Debug/Demo Pages**: Avoid creating temporary debug or demo pages. Use tests to validate functionality instead - DO NOT CREATE DEBUG PAGES.
 - **Performance Testing**: Include performance tests for data-heavy operations
 - **Integration Testing**: Test how components work together, not just in isolation
 

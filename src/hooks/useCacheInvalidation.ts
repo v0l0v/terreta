@@ -62,14 +62,24 @@ export function useCacheInvalidation() {
     console.log(`Processing ${deletions.length} deletion events...`);
     
     let invalidatedCount = 0;
+    const invalidatedIds = new Set<string>();
     
     for (const deletion of deletions) {
       try {
+        // Only process deletions from the last 7 days to avoid stale deletions
+        const sevenDaysAgo = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
+        if (deletion.created_at < sevenDaysAgo) {
+          continue;
+        }
+
         // Remove deleted events from offline storage
         for (const eventId of deletion.deletedEventIds) {
-          await offlineStorage.removeEvent(eventId);
-          await offlineStorage.removeGeocache(eventId);
-          invalidatedCount++;
+          if (!invalidatedIds.has(eventId)) {
+            await offlineStorage.removeEvent(eventId);
+            await offlineStorage.removeGeocache(eventId);
+            invalidatedIds.add(eventId);
+            invalidatedCount++;
+          }
         }
 
         // Handle coordinate-based deletions (for replaceable events)
@@ -82,9 +92,10 @@ export function useCacheInvalidation() {
             for (const cache of allCaches) {
               const cacheCoordinate = createGeocacheCoordinate(cache.event.pubkey, 
                 cache.event.tags.find(t => t[0] === 'd')?.[1] || '');
-              if (cacheCoordinate === coordinate) {
+              if (cacheCoordinate === coordinate && !invalidatedIds.has(cache.id)) {
                 await offlineStorage.removeGeocache(cache.id);
                 await offlineStorage.removeEvent(cache.id);
+                invalidatedIds.add(cache.id);
                 invalidatedCount++;
               }
             }
@@ -98,12 +109,17 @@ export function useCacheInvalidation() {
     if (invalidatedCount > 0) {
       console.log(`Invalidated ${invalidatedCount} cached items due to upstream deletions`);
       
-      // Invalidate React Query caches
-      queryClient.invalidateQueries({ queryKey: ['geocaches'] });
-      queryClient.invalidateQueries({ queryKey: ['offline-geocaches'] });
+      // Only invalidate specific queries, not all geocache data
+      for (const invalidatedId of invalidatedIds) {
+        queryClient.removeQueries({ queryKey: ['geocache', invalidatedId] });
+        queryClient.removeQueries({ queryKey: ['geocache-logs', invalidatedId] });
+      }
       
-      // Also invalidate specific geocache queries
-      queryClient.invalidateQueries({ queryKey: ['geocache'] });
+      // Refetch main geocaches list to reflect deletions
+      queryClient.invalidateQueries({ 
+        queryKey: ['geocaches'],
+        refetchType: 'active' // Only refetch if actively being used
+      });
     }
   }, [queryClient]);
 
@@ -136,40 +152,49 @@ export function useCacheInvalidation() {
     if (!isOnline || !isConnected) return;
 
     try {
-      // Get geocaches that haven't been validated in the last 24 hours
-      const unvalidatedCaches = await offlineStorage.getUnvalidatedGeocaches();
+      // Get geocaches that haven't been validated in the last 7 days (increased from 24 hours)
+      const unvalidatedCaches = await offlineStorage.getUnvalidatedGeocaches(7 * 24 * 60 * 60 * 1000);
       if (unvalidatedCaches.length === 0) return;
 
-      // Limit validation batch size for performance
-      const sample = unvalidatedCaches.slice(0, QUERY_LIMITS.BATCH_SIZE);
+      // Limit validation batch size for performance - smaller batches
+      const sample = unvalidatedCaches.slice(0, Math.min(QUERY_LIMITS.BATCH_SIZE, 5));
       const eventIds = sample.map(cache => cache.id);
       
       console.log(`Validating ${eventIds.length} cached geocaches...`);
       
       const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
-      const existingEvents = await nostr.query([{
-        ids: eventIds,
-        kinds: [NIP_GC_KINDS.GEOCACHE],
-      }], { signal });
+      
+      try {
+        const existingEvents = await nostr.query([{
+          ids: eventIds,
+          kinds: [NIP_GC_KINDS.GEOCACHE],
+        }], { signal });
 
-      const existingIds = new Set(existingEvents.map(e => e.id));
-      const deletedIds = eventIds.filter(id => !existingIds.has(id));
+        const existingIds = new Set(existingEvents.map(e => e.id));
+        const deletedIds = eventIds.filter(id => !existingIds.has(id));
 
-      // Update validation timestamps for existing geocaches
-      for (const existingId of existingIds) {
-        await offlineStorage.updateGeocacheValidation(existingId);
-      }
-
-      // Remove geocaches that no longer exist
-      if (deletedIds.length > 0) {
-        console.log(`Found ${deletedIds.length} geocaches that no longer exist upstream`);
-        
-        for (const deletedId of deletedIds) {
-          await invalidateGeocache(deletedId);
+        // Update validation timestamps for existing geocaches
+        for (const existingId of existingIds) {
+          await offlineStorage.updateGeocacheValidation(existingId);
         }
-      }
 
-      console.log(`Validation complete: ${existingIds.size} confirmed, ${deletedIds.length} removed`);
+        // Only remove geocaches that definitely no longer exist
+        // Be conservative - only remove if we got a successful response but the cache wasn't found
+        if (deletedIds.length > 0 && existingEvents.length > 0) {
+          console.log(`Found ${deletedIds.length} geocaches that no longer exist upstream`);
+          
+          for (const deletedId of deletedIds) {
+            await invalidateGeocache(deletedId);
+          }
+        } else if (deletedIds.length > 0) {
+          console.log(`Skipping removal of ${deletedIds.length} geocaches - query may have failed`);
+        }
+
+        console.log(`Validation complete: ${existingIds.size} confirmed, ${deletedIds.length} removed`);
+      } catch (queryError) {
+        console.warn('Validation query failed, skipping cache removal:', queryError);
+        // Don't remove caches if the query failed - network might be unreliable
+      }
     } catch (error) {
       console.warn('Failed to validate cached geocaches:', error);
     }

@@ -58,7 +58,7 @@ export function useOptimisticGeocaches(
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.OPTIMISTIC_LOAD)]);
       const events = await nostr.query([{
         kinds: [NIP_GC_KINDS.GEOCACHE], 
-        limit: QUERY_LIMITS.FAST_LOAD_LIMIT // Load first 8 quickly
+        limit: QUERY_LIMITS.FAST_LOAD_LIMIT // Load first 6 quickly
       }], { signal });
 
       const geocaches = events.map(event => {
@@ -81,10 +81,11 @@ export function useOptimisticGeocaches(
       return geocaches;
     },
     enabled: fastInitialLoad,
-    staleTime: 30000, // 30 seconds - short for fast updates
-    gcTime: 300000, // 5 minutes
+    staleTime: 180000, // 3 minutes - longer for stability
+    gcTime: 900000, // 15 minutes
     refetchOnWindowFocus: false,
-    // Start immediately without waiting
+    // Keep data stable
+    placeholderData: (previousData) => previousData,
     networkMode: 'online',
   });
 
@@ -112,12 +113,13 @@ export function useOptimisticGeocaches(
         };
       }).filter(Boolean);
     },
-    staleTime: staleWhileRevalidate ? 60000 : 120000, // 1-2 minutes
-    gcTime: 900000, // 15 minutes
+    staleTime: 300000, // 5 minutes - much longer for stability
+    gcTime: 1800000, // 30 minutes
     refetchOnWindowFocus: false,
-    refetchInterval: enablePolling ? POLLING_INTERVALS.GEOCACHES : false,
-    refetchIntervalInBackground: true,
-    // Run in parallel - don't wait for fast query to complete
+    refetchInterval: enablePolling ? POLLING_INTERVALS.GEOCACHES * 3 : false, // Poll every 3 minutes
+    refetchIntervalInBackground: false, // Don't poll in background
+    // Keep data stable
+    placeholderData: (previousData) => previousData,
     enabled: true,
     networkMode: 'online',
   });
@@ -181,11 +183,12 @@ export function useOptimisticGeocaches(
 
   // Manual refresh function
   const refresh = useCallback(async () => {
+    // Force immediate refetch of both queries
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['geocaches'] }),
-      queryClient.invalidateQueries({ queryKey: ['geocaches-fast'] }),
+      fastQuery.refetch(),
+      fullQuery.refetch(),
     ]);
-  }, [queryClient]);
+  }, [fastQuery, fullQuery]);
 
   // Determine which data to use
   const primaryQuery = fullQuery.data ? fullQuery : fastQuery;
@@ -201,10 +204,11 @@ export function useOptimisticGeocaches(
   const error = primaryQuery.error as Error | null;
   const hasInitialData = !!(fastQuery.data || fullQuery.data);
   
-  // Data is stale if we're showing fast data while full data loads
+  // Data is stale if we're showing fast data while full data loads OR if either query is fetching
   const isStale = staleWhileRevalidate && (
     (fastQuery.data && fullQuery.isLoading) ||
-    (primaryQuery.isStale && !primaryQuery.isFetching)
+    (primaryQuery.isStale && !primaryQuery.isFetching) ||
+    isFetching // Show stale state when any query is fetching
   );
 
   return {

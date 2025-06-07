@@ -21,7 +21,9 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       staleTime: 60000, // 1 minute
-      gcTime: Infinity,
+      gcTime: 900000, // 15 minutes - reasonable cache retention
+      retry: 2, // Limit retries to prevent hanging
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },
 });

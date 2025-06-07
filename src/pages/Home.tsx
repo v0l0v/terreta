@@ -24,6 +24,7 @@ export default function Home() {
     isError,
     error,
     isStale,
+    isFetching,
     hasInitialData,
     refresh
   } = useHomePageGeocaches();
@@ -258,29 +259,31 @@ export default function Home() {
             
             {/* Action buttons */}
             <div className="flex items-center justify-center gap-3 mt-6">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={refresh}
-                className="flex items-center gap-2"
-                title="Refresh geocaches"
-                disabled={isLoading && !hasInitialData}
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading && !hasInitialData ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
-              </Button>
+              {(isLoading && !hasInitialData) || isFetching || isStale ? (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-3 py-2 rounded-full">
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                  <span>
+                    {isLoading && !hasInitialData ? 'Loading...' : 'Updating...'}
+                  </span>
+                </div>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={refresh}
+                  className="flex items-center gap-2"
+                  title="Refresh geocaches"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
+              )}
               <Link to="/map">
                 <Button variant="outline" className="flex items-center gap-2">
                   <Search className="h-4 w-4" />
                   <span>Explore All</span>
                 </Button>
               </Link>
-              {isStale && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                  <RefreshCw className="h-3 w-3 animate-spin" />
-                  <span>Updating...</span>
-                </div>
-              )}
             </div>
           </div>
           

@@ -496,24 +496,24 @@ export default function Map() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => {
-                        optimisticGeocaches.refresh();
-                        refetch();
-                      }}
-                      className="h-6 w-6 p-0"
-                      title="Refresh geocaches"
-                      disabled={(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0}
-                    >
-                      <RefreshCw className={`h-3 w-3 ${(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 ? 'animate-spin' : ''}`} />
-                    </Button>
-                    {optimisticGeocaches.isStale && (
+                    {((isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0) || optimisticGeocaches.isStale || optimisticGeocaches.isFetching ? (
                       <Badge variant="outline" className="text-xs flex items-center gap-1">
                         <RefreshCw className="h-2 w-2 animate-spin" />
-                        Updating
+                        {(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 ? 'Loading' : 'Updating'}
                       </Badge>
+                    ) : (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          optimisticGeocaches.refresh();
+                          refetch();
+                        }}
+                        className="h-6 w-6 p-0"
+                        title="Refresh geocaches"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -696,19 +696,25 @@ export default function Map() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          optimisticGeocaches.refresh();
-                          refetch();
-                        }}
-                        className="h-6 w-6 p-0"
-                        title="Refresh geocaches"
-                        disabled={(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0}
-                      >
-                        <RefreshCw className={`h-2 w-2 ${(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 ? 'animate-spin' : ''}`} />
-                      </Button>
+                      {((isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0) || optimisticGeocaches.isStale || optimisticGeocaches.isFetching ? (
+                        <Badge variant="outline" className="text-xs flex items-center gap-1">
+                          <RefreshCw className="h-2 w-2 animate-spin" />
+                          {(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 ? 'Loading' : 'Updating'}
+                        </Badge>
+                      ) : (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            optimisticGeocaches.refresh();
+                            refetch();
+                          }}
+                          className="h-6 w-6 p-0"
+                          title="Refresh geocaches"
+                        >
+                          <RefreshCw className="h-2 w-2" />
+                        </Button>
+                      )}
                       {isProximitySearchActive && (
                         <Badge 
                           variant={proximitySuccessful ? "secondary" : "outline"} 
@@ -717,12 +723,6 @@ export default function Map() {
                         >
                           <Sparkles className="h-2 w-2" />
                           {proximitySuccessful ? "Smart Search" : searchStrategy === "fallback" ? "Fallback Search" : "Broad Search"}
-                        </Badge>
-                      )}
-                      {optimisticGeocaches.isStale && (
-                        <Badge variant="outline" className="text-xs flex items-center gap-1">
-                          <RefreshCw className="h-2 w-2 animate-spin" />
-                          Updating
                         </Badge>
                       )}
                     </div>

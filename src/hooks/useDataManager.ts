@@ -87,20 +87,27 @@ export function useDataManager(options: DataManagerOptions = {}) {
    */
   const refreshAll = useCallback(async () => {
     try {
-      // Invalidate and refetch all geocache queries
-      await queryClient.invalidateQueries({ queryKey: ['geocaches'] });
-      await queryClient.invalidateQueries({ queryKey: ['geocaches-fast'] });
-      await queryClient.invalidateQueries({ queryKey: ['geocache-logs'] });
+      // Only invalidate main geocaches queries, not all related data
+      await queryClient.invalidateQueries({ 
+        queryKey: ['geocaches'],
+        refetchType: 'active' // Only refetch if actively being used
+      });
+      await queryClient.invalidateQueries({ 
+        queryKey: ['geocaches-fast'],
+        refetchType: 'active'
+      });
       
-      // Also invalidate proximity and adaptive queries
-      await queryClient.invalidateQueries({ queryKey: ['proximity-geocaches'] });
-      await queryClient.invalidateQueries({ queryKey: ['adaptive-geocaches'] });
+      // Don't invalidate logs unless specifically needed
+      // await queryClient.invalidateQueries({ queryKey: ['geocache-logs'] });
       
-      // Trigger prefetch
-      await prefetchManager.triggerPrefetch();
+      // Trigger prefetch for visible data only
+      if (geocachesQuery.data && geocachesQuery.data.length > 0) {
+        const topGeocacheIds = geocachesQuery.data.slice(0, 3).map((g: any) => g.id);
+        await prefetchManager.triggerPrefetch(topGeocacheIds);
+      }
       
-      // Validate cached data
-      await cacheInvalidation.validateCachedGeocaches();
+      // Skip validation on manual refresh to avoid removing data
+      // await cacheInvalidation.validateCachedGeocaches();
       
       setLastUpdate(new Date());
       setErrorCount(0);
@@ -108,7 +115,7 @@ export function useDataManager(options: DataManagerOptions = {}) {
       console.error('Failed to refresh all data:', error);
       setErrorCount(prev => prev + 1);
     }
-  }, [queryClient, prefetchManager, cacheInvalidation]);
+  }, [queryClient, prefetchManager, geocachesQuery.data]);
 
   /**
    * Refresh specific geocache and its logs
