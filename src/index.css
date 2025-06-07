@@ -127,6 +127,10 @@
     --sidebar-accent-foreground: 0 0% 15%;
     --sidebar-border: 35 25% 75%;
     --sidebar-ring: 25 60% 35%;
+
+    /* Custom navigation bar color */
+    --adventure-nav-bg: 74 64 61; /* rgb(74, 64, 61) converted to space-separated values */
+    --adventure-nav-border: 60 50 47; /* Slightly darker border */
   }
 }
 

@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 export function ThemeToggle() {
   const { setTheme, theme } = useTheme()
@@ -21,7 +22,14 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="icon" disabled>
+      <Button 
+        variant="outline" 
+        size="icon" 
+        disabled
+        className={cn(
+          "adventure:bg-transparent adventure:border-stone-400 adventure:text-stone-200 adventure:hover:bg-stone-700/50"
+        )}
+      >
         <Sun className="h-[1.2rem] w-[1.2rem]" />
       </Button>
     )
@@ -30,7 +38,13 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button 
+          variant="outline" 
+          size="icon"
+          className={cn(
+            "adventure:bg-transparent adventure:border-stone-400 adventure:text-stone-200 adventure:hover:bg-stone-700/50 adventure:hover:text-stone-100"
+          )}
+        >
           <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 adventure:-rotate-90 adventure:scale-0" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 adventure:rotate-90 adventure:scale-0" />
           <Sword className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all adventure:rotate-0 adventure:scale-100" />

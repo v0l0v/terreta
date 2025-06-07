@@ -22,7 +22,7 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
     : "border-b sticky top-0 z-50 hidden md:block";
   
   const adventureClasses = isAdventureTheme 
-    ? "bg-stone-800 border-stone-700 text-stone-200" 
+    ? "bg-adventure-nav border-adventure-nav text-stone-200" 
     : variant === 'map' 
       ? "bg-background" 
       : "bg-background/80 backdrop-blur-sm";

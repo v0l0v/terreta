@@ -29,7 +29,7 @@ export function MobileHeader() {
   return (
     <header className={`sticky top-0 z-40 w-full border-b md:hidden pt-safe-top ${
       isAdventureTheme 
-        ? 'bg-stone-800 border-stone-700' 
+        ? 'bg-adventure-nav border-adventure-nav' 
         : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
     }`}>
       <div className="container flex h-16 items-center justify-between">
@@ -38,7 +38,7 @@ export function MobileHeader() {
             <Button 
               variant="ghost" 
               size="sm" 
-              className={`-ml-2 ${isAdventureTheme ? 'text-stone-200 hover:bg-stone-700 hover:text-stone-100' : ''}`}
+              className={`-ml-2 ${isAdventureTheme ? 'text-stone-200 hover:bg-stone-700/50 hover:text-stone-100' : ''}`}
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
@@ -182,7 +182,7 @@ export function MobileBottomNav() {
   return (
     <nav className={`fixed bottom-0 left-0 right-0 z-40 border-t md:hidden pb-safe-bottom ${
       isAdventureTheme 
-        ? 'bg-stone-800 border-stone-700' 
+        ? 'bg-adventure-nav border-adventure-nav' 
         : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
     }`}>
       <div className="grid grid-cols-4 h-16 items-center">
