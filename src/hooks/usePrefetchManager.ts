@@ -207,17 +207,39 @@ export function usePrefetchManager(options: PrefetchManagerOptions = {}) {
     const geocaches = queryClient.getQueryData(['geocaches']) as Geocache[] | undefined;
     if (!geocaches || geocaches.length === 0) return;
 
-    // Prefetch logs for top geocaches
-    const topGeocaches = geocaches.slice(0, 5);
+    // Limit prefetching to reduce memory pressure
+    const topGeocaches = geocaches.slice(0, 3); // Reduced from 5 to 3
+    let prefetchedCount = 0;
+    
     for (const geocache of topGeocaches) {
-      await prefetchGeocacheLogs(geocache);
+      // Check if already cached to avoid unnecessary prefetching
+      if (geocache.dTag && geocache.pubkey) {
+        const queryKey = ['geocache-logs', geocache.dTag, geocache.pubkey];
+        const existingData = queryClient.getQueryData(queryKey);
+        const queryState = queryClient.getQueryState(queryKey);
+        
+        // Only prefetch if not cached or very stale (>5 minutes)
+        if (!existingData || !queryState || Date.now() - queryState.dataUpdatedAt > 300000) {
+          await prefetchGeocacheLogs(geocache);
+          prefetchedCount++;
+        }
+      }
     }
 
-    // Prefetch author metadata
-    const authorPubkeys = geocaches.slice(0, 10).map(g => g.pubkey).filter(Boolean);
-    await prefetchAuthors(authorPubkeys);
+    // Prefetch author metadata (reduced limit)
+    const authorPubkeys = geocaches.slice(0, 5).map(g => g.pubkey).filter(Boolean); // Reduced from 10 to 5
+    const uncachedAuthors = authorPubkeys.filter(pubkey => {
+      const queryState = queryClient.getQueryState(['author', pubkey]);
+      return !queryState?.data || Date.now() - (queryState.dataUpdatedAt || 0) > 300000;
+    });
+    
+    if (uncachedAuthors.length > 0) {
+      await prefetchAuthors(uncachedAuthors.slice(0, 3)); // Limit to 3 authors at once
+    }
 
-    console.log(`Smart prefetch completed for ${topGeocaches.length} geocaches and ${authorPubkeys.length} authors`);
+    if (prefetchedCount > 0 || uncachedAuthors.length > 0) {
+      console.log(`Smart prefetch completed: ${prefetchedCount} geocaches, ${uncachedAuthors.length} authors`);
+    }
   }, [enablePrefetching, isOnline, queryClient, prefetchGeocacheLogs, prefetchAuthors]);
 
   /**
@@ -235,21 +257,22 @@ export function usePrefetchManager(options: PrefetchManagerOptions = {}) {
     intervalsRef.current.forEach(clearInterval);
     intervalsRef.current = [];
 
-    // Setup new intervals
+    // Setup new intervals with longer delays to reduce memory pressure
     const geocacheInterval = setInterval(backgroundUpdateGeocaches, POLLING_INTERVALS.GEOCACHES);
     const logInterval = setInterval(backgroundUpdateLogs, POLLING_INTERVALS.LOGS);
     const prefetchInterval = setInterval(smartPrefetch, POLLING_INTERVALS.BACKGROUND_SYNC);
 
     intervalsRef.current = [geocacheInterval, logInterval, prefetchInterval];
 
-    // Initial smart prefetch
-    setTimeout(smartPrefetch, 1000);
+    // Initial smart prefetch with delay to avoid startup congestion
+    const initialTimeout = setTimeout(smartPrefetch, 2000);
 
     return () => {
       intervalsRef.current.forEach(clearInterval);
       intervalsRef.current = [];
+      clearTimeout(initialTimeout);
     };
-  }, [enableBackgroundPolling, isOnline, backgroundUpdateGeocaches, backgroundUpdateLogs, smartPrefetch]);
+  }, [enableBackgroundPolling, isOnline]);
 
   /**
    * Manual prefetch trigger

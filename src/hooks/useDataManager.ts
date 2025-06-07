@@ -187,12 +187,20 @@ export function useDataManager(options: DataManagerOptions = {}) {
   useEffect(() => {
     if (!user || !isOnline) return;
 
-    // Increase polling frequency when user is active
+    // Debounce visibility changes to prevent rapid firing
+    let visibilityTimeout: NodeJS.Timeout | null = null;
+
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // User returned to tab, trigger immediate refresh
-        refreshAll();
+      if (visibilityTimeout) {
+        clearTimeout(visibilityTimeout);
       }
+      
+      visibilityTimeout = setTimeout(() => {
+        if (document.visibilityState === 'visible') {
+          // User returned to tab, trigger immediate refresh
+          refreshAll();
+        }
+      }, 500); // Debounce for 500ms
     };
 
     const handleFocus = () => {
@@ -205,16 +213,19 @@ export function useDataManager(options: DataManagerOptions = {}) {
       pausePolling();
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
+    window.addEventListener('focus', handleFocus, { passive: true });
+    window.addEventListener('blur', handleBlur, { passive: true });
 
     return () => {
+      if (visibilityTimeout) {
+        clearTimeout(visibilityTimeout);
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
     };
-  }, [user, isOnline, refreshAll, resumePolling, pausePolling]);
+  }, [user, isOnline]);
 
   return {
     // Data

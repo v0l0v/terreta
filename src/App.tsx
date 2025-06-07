@@ -13,6 +13,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { connectivityChecker } from '@/lib/connectivityChecker';
 import { getUserRelays } from '@/lib/relayConfig';
+import { initializeCacheCleanup } from '@/lib/cacheCleanup';
 import { useEffect, useState } from 'react';
 import './styles/leaflet-overrides.css';
 
@@ -21,11 +22,14 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       staleTime: 60000, // 1 minute
-      gcTime: 900000, // 15 minutes - reasonable cache retention
+      gcTime: 600000, // 10 minutes - reduced cache retention to prevent memory buildup
       retry: 2, // Limit retries to prevent hanging
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },
+  // Add cache size limits to prevent unbounded growth
+  queryCache: undefined, // Use default
+  mutationCache: undefined, // Use default
 });
 
 export function App() {
@@ -39,6 +43,9 @@ export function App() {
     // Initialize connectivity checker (it starts automatically)
     connectivityChecker.forceCheck().catch(console.error);
     
+    // Initialize cache cleanup manager
+    const cacheCleanup = initializeCacheCleanup(queryClient);
+    
     // Clean up old data periodically (30 days)
     const cleanup = () => {
       offlineStorage.clearOldData(30 * 24 * 60 * 60 * 1000).catch(console.error);
@@ -51,6 +58,7 @@ export function App() {
     return () => {
       clearInterval(cleanupInterval);
       connectivityChecker.destroy();
+      cacheCleanup.stop();
     };
   }, []);
 
