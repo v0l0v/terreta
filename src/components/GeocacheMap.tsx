@@ -443,17 +443,24 @@ function MapSizeController() {
   const map = useMap();
   
   useEffect(() => {
-    // Invalidate size immediately when component mounts
-    map.invalidateSize();
+    // Add a small delay to ensure map is fully initialized
+    const timer = setTimeout(() => {
+      if (map && typeof map.invalidateSize === 'function') {
+        map.invalidateSize();
+      }
+    }, 100);
     
     // Also invalidate size on window resize
     const handleResize = () => {
-      map.invalidateSize();
+      if (map && typeof map.invalidateSize === 'function') {
+        map.invalidateSize();
+      }
     };
     
     window.addEventListener('resize', handleResize);
     
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('resize', handleResize);
     };
   }, [map]);
@@ -982,11 +989,15 @@ export function GeocacheMap({
         touchZoom={true}
         attributionControl={false}
         // Optimize for fastest loading
-        whenReady={(map) => {
-          // Force immediate tile loading
-          map.invalidateSize();
+        whenReady={(mapInstance) => {
+          // Force immediate tile loading with safety check
+          if (mapInstance && typeof mapInstance.invalidateSize === 'function') {
+            mapInstance.invalidateSize();
+          }
           // Set loading priority
-          map.getContainer().style.background = '#f8fafc';
+          if (mapInstance && mapInstance.getContainer) {
+            mapInstance.getContainer().style.background = '#f8fafc';
+          }
         }}
         {...mapOptions}
       >

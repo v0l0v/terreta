@@ -100,7 +100,7 @@
     --popover: 35 25% 88%;
     --popover-foreground: 0 0% 15%;
 
-    --primary: 25 60% 35%; /* Deep bronze/brown for primary elements */
+    --primary: 218 21% 47%; /* Steel blue for primary elements - rgb(95, 114, 146) */
     --primary-foreground: 35 20% 92%;
 
     --secondary: 35 15% 80%; /* Light parchment for secondary elements */
@@ -117,16 +117,16 @@
 
     --border: 35 25% 75%; /* Parchment border */
     --input: 35 25% 85%;
-    --ring: 25 60% 35%; /* Match primary bronze */
+    --ring: 218 21% 47%; /* Match primary steel blue */
 
     --sidebar-background: 35 25% 88%;
     --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 25 60% 35%;
+    --sidebar-primary: 218 21% 47%;
     --sidebar-primary-foreground: 35 20% 92%;
     --sidebar-accent: 35 15% 80%;
     --sidebar-accent-foreground: 0 0% 15%;
     --sidebar-border: 35 25% 75%;
-    --sidebar-ring: 25 60% 35%;
+    --sidebar-ring: 218 21% 47%;
 
     /* Custom navigation bar color */
     --adventure-nav-bg: 74 64 61; /* rgb(74, 64, 61) converted to space-separated values */

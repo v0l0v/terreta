@@ -77,11 +77,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40 dark:from-green-950/40 dark:via-emerald-950/30 dark:to-teal-950/20 adventure:from-amber-100/80 adventure:via-yellow-50/60 adventure:to-orange-100/70 pb-4 md:pb-0">
+    <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40 dark:from-green-950/40 dark:via-emerald-950/30 dark:to-teal-950/20 adventure:from-amber-100/80 adventure:via-yellow-50/60 adventure:to-orange-100/70">
       <DesktopHeader />
 
       {/* Hero Section */}
-      <section className="relative pt-12 pb-16 px-4 md:py-24 overflow-hidden">
+      <section className="relative pt-16 pb-20 px-4 md:py-24 overflow-hidden">
         {/* Parchment background for adventure mode only - behind everything */}
         <div className="absolute inset-0 -z-20 hidden adventure:block" style={{
           backgroundImage: 'url(/parchment-300.jpg)',
@@ -256,7 +256,7 @@ export default function Home() {
         
         <div className="container mx-auto text-center relative">
           <div className="mb-6 animate-fade-in">
-            <Link to="/install" className="inline-flex flex-col items-center gap-0.5 bg-green-100 dark:bg-green-900 adventure:bg-stone-200 text-green-700 dark:text-green-300 adventure:text-stone-800 px-4 py-1.5 rounded-full text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800 adventure:hover:bg-stone-300 transition-colors">
+            <Link to="/install" className="inline-flex flex-col items-center gap-0.5 bg-green-100 dark:bg-green-900 adventure:bg-[#4682B4] text-green-700 dark:text-green-300 adventure:text-white px-4 py-1.5 rounded-full text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800 adventure:hover:bg-[#4169E1] transition-colors">
               <div className="flex items-center gap-2">
                 <Compass className="w-4 h-4" />
                 <span className="adventure:hidden">Join the Quest</span>
