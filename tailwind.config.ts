@@ -3,6 +3,10 @@ import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
+	// Add support for adventure theme selector
+	future: {
+		hoverOnlyWhenSupported: true,
+	},
 	content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
@@ -156,5 +160,11 @@ export default {
 			}
 		}
 	},
-	plugins: [tailwindcssAnimate],
+	plugins: [
+		tailwindcssAnimate,
+		// Add adventure theme selector support
+		function({ addVariant }: any) {
+			addVariant('adventure', '.adventure &')
+		}
+	],
 } satisfies Config;

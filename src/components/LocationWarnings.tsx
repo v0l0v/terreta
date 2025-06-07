@@ -89,8 +89,8 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
   const StatusIcon = summary.status === 'safe' ? CheckCircle : 
                     summary.status === 'warning' ? AlertTriangle : XCircle;
   
-  const statusColor = summary.status === 'safe' ? 'text-green-600' : 
-                     summary.status === 'warning' ? 'text-yellow-600' : 'text-red-600';
+  const statusColor = summary.status === 'safe' ? 'text-primary' : 
+                     summary.status === 'warning' ? 'text-amber-600' : 'text-destructive';
 
   // Handle overflow features
   const maxDisplayFeatures = 3;
@@ -122,7 +122,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
                       key={idx} 
                       variant="outline"
                       className={`text-xs h-5 ${
-                        feature.type === 'positive' ? 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' :
+                        feature.type === 'positive' ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' :
                         feature.type === 'headsup' ? 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800' :
                         feature.type === 'hindrance' ? 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800' :
                         'bg-muted text-foreground border' // neutral
@@ -148,7 +148,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
         {!hideCreatorWarnings && (summary.status === 'warning' || summary.status === 'restricted') && (
           <div className={`p-3 rounded-md border-2 ${
             summary.status === 'warning' 
-              ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-300 dark:border-yellow-800' 
+              ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800' 
               : 'bg-red-50 dark:bg-red-950/20 border-red-300 dark:border-red-800'
           }`}>
             <div className="flex items-start gap-3">
@@ -172,7 +172,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
         {categorizedWarnings.critical.length > 0 && (
           <div className="p-3 rounded-md border bg-red-50 dark:bg-red-950/20">
             <div className="flex items-start gap-3">
-              <XCircle className="h-4 w-4 mt-0.5 text-red-600 flex-shrink-0" />
+              <XCircle className="h-4 w-4 mt-0.5 text-destructive flex-shrink-0" />
               <div className="flex-1">
                 <div className="font-medium text-sm text-foreground mb-1">Critical Issues</div>
                 <div className="space-y-1">

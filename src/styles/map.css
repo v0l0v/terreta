@@ -17,21 +17,96 @@
 .leaflet-container.adventure-theme .leaflet-tile-pane {
   /* No filters to preserve map visibility */
   opacity: 1;
+  /* Ensure tile pane is below overlays (z-index 200-201) */
+  position: relative;
+  z-index: 100;
 }
 
-/* Adventure overlays now handled in React components above Leaflet container */
+/* Ensure map pane structure is properly layered */
+.leaflet-container.adventure-theme .leaflet-map-pane {
+  position: relative;
+  z-index: 0;
+}
 
-/* Clean adventure popup styling */
+/* Adventure parchment overlay - affects tiles and background */
+.adventure-parchment-overlay {
+  pointer-events: none;
+  mix-blend-mode: color;
+}
+
+/* Adventure border overlay - affects tiles and background */
+.adventure-border-overlay {
+  pointer-events: none;
+  mix-blend-mode: color-burn;
+}
+
+/* Create a stacking context for the map container to isolate blend modes */
+.leaflet-container.adventure-theme {
+  isolation: isolate;
+  /* Ensure proper layering */
+  position: relative;
+}
+
+/* Ensure UI elements stay above adventure overlays */
+.leaflet-container.adventure-theme .leaflet-control-container {
+  position: relative;
+  z-index: 1000 !important;
+  isolation: isolate; /* Create new stacking context to prevent blend mode inheritance */
+}
+
+/* All Leaflet controls elevated above overlays (z-index 200-201) */
+.leaflet-container.adventure-theme .leaflet-control-zoom,
+.leaflet-container.adventure-theme .leaflet-control-attribution {
+  position: relative !important;
+  z-index: 300 !important;
+  isolation: isolate !important;
+}
+
+/* Map style control specifically protected */
+.leaflet-container.adventure-theme .map-style-control {
+  position: relative !important;
+  z-index: 400 !important;
+  isolation: isolate !important;
+}
+
+.leaflet-container.adventure-theme .map-style-control .leaflet-control,
+.leaflet-container.adventure-theme .map-style-control button {
+  position: relative !important;
+  z-index: 401 !important;
+  isolation: isolate !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Protect all interactive map elements from adventure overlay effects */
+.leaflet-container.adventure-theme .leaflet-marker-pane,
+.leaflet-container.adventure-theme .leaflet-popup-pane,
+.leaflet-container.adventure-theme .leaflet-tooltip-pane,
+.leaflet-container.adventure-theme .leaflet-shadow-pane {
+  position: relative !important;
+  z-index: 500 !important;
+  isolation: isolate !important;
+}
+
+/* Ensure markers and popups are completely isolated from blend modes */
+.leaflet-container.adventure-theme .leaflet-marker-icon,
+.leaflet-container.adventure-theme .leaflet-popup,
 .leaflet-container.adventure-theme .leaflet-popup-content-wrapper {
-  /* Clean parchment background */
-  background: 
-    linear-gradient(135deg, #f8f4e6 0%, #f0e6d2 100%);
-  border: 2px solid #a0825a;
+  isolation: isolate !important;
+  /* Reset any inherited blend modes */
+  mix-blend-mode: normal !important;
+}
+
+/* Adventure popup styling - lighter to accommodate overlay blending */
+.leaflet-container.adventure-theme .leaflet-popup-content-wrapper {
+  /* Much lighter parchment background to compensate for overlay effects */
+  background: linear-gradient(135deg, #faf8f4 0%, #f5f1e8 100%);
+  border: 2px solid #d4af37; /* Gold border to stand out through overlays */
   border-radius: 8px;
-  color: #3c2e1f;
+  color: #2d1810; /* Very dark text for contrast through overlays */
   box-shadow: 
-    0 4px 12px rgba(160, 130, 90, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8); /* Strong inset highlight */
   position: relative;
 }
 
@@ -58,7 +133,6 @@
   background: rgba(139, 69, 19, 0.1) !important;
   color: #2d1810 !important;
   border: 2px solid #8b4513 !important;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5) !important;
   font-weight: 600 !important;
 }
 
@@ -68,80 +142,86 @@
   border-color: #654321 !important;
 }
 
-/* Clean badge styling for adventure theme */
+/* Adventure theme badge styling - stronger contrast for overlay visibility */
 .leaflet-container.adventure-theme .leaflet-popup-content .badge,
 .leaflet-container.adventure-theme .leaflet-popup-content [class*="badge"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="items-center"][class*="rounded-full"][class*="border"] {
-  background: rgba(160, 130, 90, 0.9) !important;
-  color: #f5f1e8 !important;
-  border-color: #a0825a !important;
-  font-weight: 600 !important;
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="items-center"][class*="rounded-full"][class*="border"],
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="items-center"][class*="rounded"][class*="border"],
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="items-center"][class*="border"][class*="font-semibold"] {
+  color: #2d1810 !important;
 }
 
-/* Secondary badges - size/type badges */
+/* Secondary badges - size/type badges - much stronger contrast */
 .leaflet-container.adventure-theme .leaflet-popup-content [class*="secondary"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="bg-secondary"] {
-  background: rgba(180, 150, 110, 0.8) !important;
-  color: #3c2e1f !important;
-  border-color: #b4966e !important;
-  font-weight: 500 !important;
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="bg-secondary"],
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="text-secondary-foreground"] {
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%) !important;
+  color: #ffffff !important;
+  border-color: #654321 !important;
 }
 
-/* Outline badges - D/T pills */
+/* Outline badges - D/T pills - stronger contrast */
 .leaflet-container.adventure-theme .leaflet-popup-content [class*="outline"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="text-foreground"] {
-  background: transparent !important;
-  color: #5d4e37 !important;
-  border-color: #a0825a !important;
-  font-weight: 600 !important;
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="text-foreground"],
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="border-transparent"] {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #2d1810 !important;
+  border-color: #8b4513 !important;
 }
 
-/* Clean text colors for adventure theme */
+/* Adventure theme text colors - very dark for overlay visibility */
 .leaflet-container.adventure-theme .leaflet-popup-content {
-  color: #3c2e1f !important;
+  color: #2d1810 !important; /* Very dark brown for maximum contrast */
+}
+
+/* Specific fix for the exact badge class combination mentioned in the issue */
+.leaflet-container.adventure-theme .leaflet-popup-content .inline-flex.items-center.rounded-full.border.font-semibold.border-transparent.bg-secondary.text-secondary-foreground,
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="items-center"][class*="rounded-full"][class*="border"][class*="font-semibold"][class*="border-transparent"][class*="bg-secondary"][class*="text-secondary-foreground"] {
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid #654321 !important;
 }
 
 .leaflet-container.adventure-theme .leaflet-popup-content h3,
 .leaflet-container.adventure-theme .leaflet-popup-content h4,
 .leaflet-container.adventure-theme .leaflet-popup-content p {
-  color: #3c2e1f !important;
+  color: #2d1810 !important; /* Very dark brown for maximum contrast */
 }
 
 .leaflet-container.adventure-theme .leaflet-popup-content .text-gray-600,
 .leaflet-container.adventure-theme .leaflet-popup-content .text-gray-500,
 .leaflet-container.adventure-theme .leaflet-popup-content .text-muted-foreground {
-  color: #6b5b3f !important;
+  color: #4a3c28 !important; /* Dark brown for muted text but still visible */
 }
 
 .leaflet-container.adventure-theme .leaflet-popup-tip {
-  /* Clean parchment tip */
-  background: 
-    linear-gradient(135deg, #f8f4e6 0%, #f0e6d2 100%);
-  border: 2px solid #a0825a;
-  filter: drop-shadow(0 2px 4px rgba(160, 130, 90, 0.3));
+  /* Lighter tip to match popup background */
+  background: linear-gradient(135deg, #faf8f4 0%, #f5f1e8 100%);
+  border: 2px solid #d4af37; /* Gold border to match popup */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-/* Clean adventure zoom controls */
+/* Clean adventure zoom controls - lighter styling */
 .leaflet-container.adventure-theme .leaflet-control-zoom a {
   background: 
-    linear-gradient(135deg, #f5f1e8 0%, #ede4d3 50%, #e6d7c3 100%) !important;
-  border: 1px solid #a0825a !important;
-  color: #5d4e37 !important;
+    linear-gradient(135deg, #faf8f4 0%, #f5f1e8 50%, #f0ebe0 100%) !important;
+  border: 1px solid #c4a373 !important;
+  color: #6b5b3f !important;
   font-family: 'serif' !important;
-  font-weight: 600 !important;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+  font-weight: 500 !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.7) !important;
   box-shadow: 
-    0 2px 4px rgba(160, 130, 90, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    0 2px 4px rgba(160, 130, 90, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
 
 .leaflet-container.adventure-theme .leaflet-control-zoom a:hover {
   background: 
-    linear-gradient(135deg, #ede4d3 0%, #e6d7c3 50%, #dcc9a8 100%) !important;
-  color: #4a3c28 !important;
+    linear-gradient(135deg, #f5f1e8 0%, #f0ebe0 50%, #ebe4d5 100%) !important;
+  color: #5d4e37 !important;
   box-shadow: 
-    0 3px 6px rgba(160, 130, 90, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+    0 3px 6px rgba(160, 130, 90, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
 }
 
 /* Dark theme styling */
@@ -649,27 +729,33 @@
 
 /* Enhanced badge support for all dark mode themes - comprehensive coverage */
 
-/* All badge variants in adventure theme popups */
+/* All badge variants in adventure theme popups - comprehensive coverage */
 .leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="items-center"][class*="border"],
 .leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="rounded"],
 .leaflet-container.adventure-theme .leaflet-popup-content .badge {
-  color: #ffffff !important;
+  color: #2d1810 !important;
   font-weight: 600 !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8) !important;
 }
 
-/* Adventure theme outline badges (D/T pills) */
+/* Adventure theme outline badges (D/T pills) - stronger contrast */
 .leaflet-container.adventure-theme .leaflet-popup-content [class*="outline"][class*="inline-flex"] {
-  background: transparent !important;
-  color: #ffffff !important;
-  border-color: #cd853f !important;
+  background: none !important;
+  color: #2d1810 !important;
+  border-color: #8b4513 !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 1px 3px rgba(139, 69, 19, 0.3) !important;
+  opacity: .5;
 }
 
-/* Adventure theme secondary badges (size/type) */
+/* Adventure theme secondary badges (size/type) - much stronger contrast */
 .leaflet-container.adventure-theme .leaflet-popup-content [class*="bg-secondary"],
 .leaflet-container.adventure-theme .leaflet-popup-content [class*="secondary"][class*="inline-flex"] {
-  background: #374151 !important;
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%) !important;
   color: #ffffff !important;
-  border-color: #6b7280 !important;
+  border-color: #654321 !important;
+  box-shadow: 0 1px 3px rgba(139, 69, 19, 0.4) !important;
+  opacity: .5;
 }
 
 /* All badge variants in dark theme popups */
@@ -809,4 +895,166 @@
   background: #374151 !important;
   color: #ffffff !important;
   border-color: #6b7280 !important;
+}
+
+/* Ensure all modal and overlay components are above adventure overlays */
+[data-radix-dialog-overlay],
+[data-radix-dialog-content] {
+  z-index: 9999 !important;
+}
+
+/* Dropdown menus, selects, and popovers should be above headers but below dialogs */
+[data-radix-popover-content],
+[data-radix-dropdown-menu-content],
+[data-radix-select-content],
+[data-radix-tooltip-content] {
+  z-index: 9996 !important;
+}
+
+/* Specifically ensure GeocacheDialog and related modals are at the top */
+.geocache-dialog,
+.profile-dialog {
+  z-index: 9999 !important;
+}
+
+/* Image gallery should be above all other dialogs */
+.image-gallery {
+  z-index: 10001 !important;
+}
+
+/* Adventure theme map style selector popover */
+.adventure-popover {
+  /* Ensure proper contrast and readability */
+  background: linear-gradient(135deg, #f5f1e8 0%, #ede4d3 100%) !important;
+  border: 2px solid #a0825a !important;
+  color: #3c2e1f !important;
+  box-shadow: 
+    0 4px 12px rgba(160, 130, 90, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Adventure popover text colors */
+.adventure-popover h4,
+.adventure-popover span,
+.adventure-popover p {
+  color: #3c2e1f !important;
+}
+
+/* Adventure popover muted text */
+.adventure-popover .text-muted-foreground {
+  color: #6b5b3f !important;
+}
+
+/* Adventure popover buttons */
+.adventure-popover button {
+  color: #3c2e1f !important;
+}
+
+.adventure-popover button:hover {
+  background-color: rgba(180, 150, 110, 0.2) !important;
+}
+
+.adventure-popover button:hover span,
+.adventure-popover button:hover p {
+  color: #3c2e1f !important;
+  font-weight: 500 !important;
+}
+
+/* Adventure popover active button */
+.adventure-popover button[data-active="true"] {
+  background-color: rgba(212, 175, 55, 0.25) !important;
+  border-color: #d4af37 !important;
+}
+
+.adventure-popover button[data-active="true"] span,
+.adventure-popover button[data-active="true"] p {
+  color: #3c2e1f !important;
+  font-weight: 600 !important;
+}
+
+/* Adventure popover icons */
+.adventure-popover svg {
+  color: inherit !important;
+}
+
+/* Ensure all text in adventure popover is readable */
+.adventure-popover * {
+  color: #3c2e1f !important;
+}
+
+/* Adventure popover muted text override */
+.adventure-popover p:not(.font-medium) {
+  color: #6b5b3f !important;
+}
+
+/* Adventure popover button text - force dark colors */
+.adventure-popover button * {
+  color: #3c2e1f !important;
+}
+
+.adventure-popover button p {
+  color: #6b5b3f !important;
+}
+
+/* Adventure popover hover state - ensure dark text */
+.adventure-popover button:hover * {
+  color: #2d1810 !important;
+}
+
+.adventure-popover button:hover p {
+  color: #5d4e37 !important;
+}
+
+/* Adventure theme map style selector button */
+.adventure-map-style-button {
+  background: linear-gradient(135deg, #f5f1e8 0%, #ede4d3 100%) !important;
+  border-color: #a0825a !important;
+  color: #3c2e1f !important;
+}
+
+.adventure-map-style-button:hover {
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%) !important;
+  border-color: #654321 !important;
+  color: #a0825a !important;
+}
+
+.adventure-map-style-button svg {
+  color: #3c2e1f !important;
+}
+
+/* Adventure theme Leaflet popup buttons - stronger colors for overlay visibility */
+.leaflet-container.adventure-theme .leaflet-popup-content button {
+  /* Primary buttons with strong contrast for overlay visibility */
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid #654321 !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 6px rgba(139, 69, 19, 0.4) !important;
+}
+
+.leaflet-container.adventure-theme .leaflet-popup-content button:hover {
+  background: linear-gradient(135deg, #a0522d 0%, #cd853f 100%) !important;
+  color: #ffffff !important;
+  border-color: #8b4513 !important;
+  box-shadow: 0 3px 8px rgba(139, 69, 19, 0.5) !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Outline buttons in adventure theme popups */
+.leaflet-container.adventure-theme .leaflet-popup-content button[class*="outline"] {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #2d1810 !important;
+  border: 2px solid #8b4513 !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px rgba(139, 69, 19, 0.3) !important;
+}
+
+.leaflet-container.adventure-theme .leaflet-popup-content button[class*="outline"]:hover {
+  background: rgba(250, 248, 244, 0.95) !important;
+  color: #1a0f08 !important;
+  border-color: #654321 !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 2px 4px rgba(139, 69, 19, 0.4) !important;
 }

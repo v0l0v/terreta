@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLoggedInAccounts } from '@/hooks/useLoggedInAccounts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -114,8 +115,12 @@ export function MobileHeader() {
                       <p className="text-xs text-muted-foreground">Logged in</p>
                     </div>
                   </div>
-                  <div className="px-3 py-2">
+                  <div className="px-3 py-2 space-y-2">
                     <OfflineIndicator showDetails={false} />
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Theme</span>
+                      <ThemeToggle />
+                    </div>
                   </div>
                   <Button
                     variant="outline"
@@ -166,14 +171,14 @@ export function MobileBottomNav() {
               to={item.href}
               className={`flex flex-col items-center justify-center gap-1 px-2 py-1 text-xs transition-colors ${
                 isActive
-                  ? 'text-green-600'
+                  ? 'text-green-600 adventure:text-stone-700'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <div className="flex items-center justify-center w-6 h-6">
-                <Icon className={`h-5 w-5 ${isActive ? 'text-green-600' : ''}`} />
+                <Icon className={`h-5 w-5 ${isActive ? 'text-green-600 adventure:text-stone-700' : ''}`} />
               </div>
-              <span className={`text-center leading-tight ${isActive ? 'text-green-600 font-medium' : ''}`}>
+              <span className={`text-center leading-tight ${isActive ? 'text-green-600 adventure:text-stone-700 font-medium' : ''}`}>
                 {item.name}
               </span>
             </Link>

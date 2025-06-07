@@ -84,6 +84,7 @@ export function App() {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
+      themes={['light', 'dark', 'system', 'adventure']}
     >
       <NostrLoginProvider storageKey='nostr:login'>
         <NostrProvider relays={relays}>

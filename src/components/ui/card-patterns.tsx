@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 // Feature Card - Used for main features/benefits (like in Home page)
 interface FeatureCardProps {
   icon: LucideIcon;
-  title: string;
-  description: string;
+  title: string | ReactNode;
+  description: string | ReactNode;
   iconColor?: string;
   centered?: boolean;
   className?: string;
@@ -17,7 +17,7 @@ export function FeatureCard({
   icon: Icon, 
   title, 
   description, 
-  iconColor = "text-green-600",
+  iconColor = "text-green-600 adventure:text-amber-600",
   centered = false,
   className 
 }: FeatureCardProps) {

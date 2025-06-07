@@ -175,7 +175,7 @@ export function GeocacheCard({
           </Badge>
         )}
         {'foundAt' in cache && (
-          <Badge variant="default" className={`flex items-center gap-1 bg-green-600 text-xs ${isCompact ? 'py-0 px-1.5' : 'px-1.5 py-0.5 sm:px-2'} shrink-0`}>
+          <Badge variant="default" className={`flex items-center gap-1 bg-green-600 adventure:bg-stone-700 text-xs ${isCompact ? 'py-0 px-1.5' : 'px-1.5 py-0.5 sm:px-2'} shrink-0`}>
             <CheckCircle className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
             Found
           </Badge>
@@ -242,7 +242,7 @@ export function GeocacheCard({
           <div className="flex-1 min-w-0 flex flex-col h-full">
             {/* Title row with action buttons */}
             <div className="flex items-start justify-between gap-2 sm:gap-3">
-              <h3 className="font-semibold text-base leading-tight line-clamp-2 sm:line-clamp-1 group-hover:text-green-600 transition-colors duration-150 min-w-0 flex-1">
+              <h3 className="font-semibold text-base leading-tight line-clamp-2 sm:line-clamp-1 group-hover:text-green-600 adventure:group-hover:text-amber-700 transition-colors duration-150 min-w-0 flex-1">
                 {cache.name}
               </h3>
               {variant !== 'detailed' && renderActionButtons(buttonSize)}
@@ -305,7 +305,7 @@ export function GeocacheCard({
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-green-600 transition-colors">
+                <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-green-600 adventure:group-hover:text-amber-700 transition-colors">
                   {cache.name}
                 </h3>
                 
@@ -354,7 +354,7 @@ export function GeocacheCard({
                   </Badge>
                 )}
                 {'foundAt' in cache && (
-                  <Badge variant="default" className="flex items-center gap-1 bg-green-600 text-xs py-0 px-1.5 shrink-0">
+                  <Badge variant="default" className="flex items-center gap-1 bg-green-600 adventure:bg-stone-700 text-xs py-0 px-1.5 shrink-0">
                     <CheckCircle className="h-2 w-2" />
                     Found
                   </Badge>

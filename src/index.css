@@ -88,6 +88,46 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  .adventure {
+    /* Adventure theme */
+    --background: 35 20% 92%; /* Aged parchment background */
+    --foreground: 0 0% 15%; /* Dark charcoal text */
+
+    --card: 35 25% 88%; /* Slightly darker parchment for cards */
+    --card-foreground: 0 0% 15%;
+
+    --popover: 35 25% 88%;
+    --popover-foreground: 0 0% 15%;
+
+    --primary: 25 60% 35%; /* Deep bronze/brown for primary elements */
+    --primary-foreground: 35 20% 92%;
+
+    --secondary: 35 15% 80%; /* Light parchment for secondary elements */
+    --secondary-foreground: 0 0% 15%;
+
+    --muted: 35 15% 85%; /* Muted parchment */
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 0 0% 20%; /* Dark charcoal accent */
+    --accent-foreground: 35 20% 92%;
+
+    --destructive: 0 70% 45%; /* Dark red for destructive actions */
+    --destructive-foreground: 35 20% 92%;
+
+    --border: 35 25% 75%; /* Parchment border */
+    --input: 35 25% 85%;
+    --ring: 25 60% 35%; /* Match primary bronze */
+
+    --sidebar-background: 35 25% 88%;
+    --sidebar-foreground: 0 0% 15%;
+    --sidebar-primary: 25 60% 35%;
+    --sidebar-primary-foreground: 35 20% 92%;
+    --sidebar-accent: 35 15% 80%;
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 35 25% 75%;
+    --sidebar-ring: 25 60% 35%;
+  }
 }
 
 @layer base {

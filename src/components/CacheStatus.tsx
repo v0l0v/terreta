@@ -171,13 +171,13 @@ export function CacheStatus() {
           <div className="flex items-center gap-1">
             {isMonitoring ? (
               <>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="text-xs text-green-600 dark:text-green-400">Active</span>
+                <CheckCircle className="h-4 w-4 text-primary" />
+                <span className="text-xs text-primary">Active</span>
               </>
             ) : (
               <>
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                <span className="text-xs text-amber-600 dark:text-amber-400">Offline</span>
+                <AlertTriangle className="h-4 w-4 text-accent" />
+                <span className="text-xs text-accent">Offline</span>
               </>
             )}
           </div>

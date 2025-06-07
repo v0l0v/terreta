@@ -30,9 +30,9 @@ export function OfflineIndicator({
     return (
       <div className={cn('flex items-center gap-2', className)}>
         {showOffline ? (
-          <WifiOff className="h-4 w-4 text-gray-500" />
+          <WifiOff className="h-4 w-4 text-muted-foreground" />
         ) : (
-          <Wifi className="h-4 w-4 text-green-500" />
+          <Wifi className="h-4 w-4 text-primary" />
         )}
       </div>
     );
@@ -42,11 +42,11 @@ export function OfflineIndicator({
     return (
       <div className={cn('flex items-center gap-2', className)}>
         {showOffline ? (
-          <WifiOff className="h-4 w-4 text-gray-500" />
+          <WifiOff className="h-4 w-4 text-muted-foreground" />
         ) : (
-          <Wifi className="h-4 w-4 text-green-500" />
+          <Wifi className="h-4 w-4 text-primary" />
         )}
-        <span className={cn('text-sm font-medium', showOffline ? 'text-gray-500' : 'text-green-600')}>
+        <span className={cn('text-sm font-medium', showOffline ? 'text-muted-foreground' : 'text-primary')}>
           {showOffline ? 'Offline' : 'Online'}
         </span>
       </div>
@@ -56,11 +56,11 @@ export function OfflineIndicator({
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {showOffline ? (
-        <WifiOff className="h-4 w-4 text-gray-500" />
+        <WifiOff className="h-4 w-4 text-muted-foreground" />
       ) : (
-        <Wifi className="h-4 w-4 text-green-500" />
+        <Wifi className="h-4 w-4 text-primary" />
       )}
-      <span className={cn('text-sm font-medium', showOffline ? 'text-gray-500' : 'text-green-600')}>
+      <span className={cn('text-sm font-medium', showOffline ? 'text-muted-foreground' : 'text-primary')}>
         {showOffline ? 'Offline' : 'Online'}
       </span>
     </div>
@@ -86,9 +86,9 @@ export function OfflineStatusIcon({ className }: { className?: string }) {
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {showOffline ? (
-        <WifiOff className="h-4 w-4 text-gray-500" />
+        <WifiOff className="h-4 w-4 text-muted-foreground" />
       ) : (
-        <Wifi className="h-4 w-4 text-green-500" />
+        <Wifi className="h-4 w-4 text-primary" />
       )}
     </div>
   );

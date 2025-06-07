@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoginArea } from '@/components/auth/LoginArea';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -43,6 +44,7 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
               </Link>
             )}
             
+            <ThemeToggle />
             <LoginArea />
           </nav>
         </div>

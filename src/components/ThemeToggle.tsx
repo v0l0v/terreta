@@ -1,4 +1,4 @@
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Sword } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 
@@ -44,6 +44,10 @@ export function ThemeToggle() {
         <DropdownMenuItem onClick={() => setTheme("dark")}>
           <Moon className="mr-2 h-4 w-4" />
           Dark
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("adventure")}>
+          <Sword className="mr-2 h-4 w-4" />
+          Adventure
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("system")}>
           <span className="mr-2 h-4 w-4 text-xs">🖥️</span>

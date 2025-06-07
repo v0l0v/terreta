@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Plus, Search, Compass, Trophy, QrCode, RefreshCw } from "lucide-react";
+import { MapPin, Plus, Search, Compass, Trophy, QrCode, RefreshCw, Scroll, Crown, Shield, Users, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FeatureCard, EmptyStateCard } from "@/components/ui/card-patterns";
 import { DesktopHeader } from "@/components/DesktopHeader";
@@ -77,13 +77,17 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40 dark:from-green-950/40 dark:via-emerald-950/30 dark:to-teal-950/20 pb-4 md:pb-0">
+    <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40 dark:from-green-950/40 dark:via-emerald-950/30 dark:to-teal-950/20 adventure:from-amber-100/80 adventure:via-yellow-50/60 adventure:to-orange-100/70 pb-4 md:pb-0">
       <DesktopHeader />
 
       {/* Hero Section */}
       <section className="relative pt-6 pb-12 px-4 md:py-20 overflow-hidden">
-        {/* Animated background elements - constrained to max-width container */}
-        <div className="absolute inset-0 -z-10 flex justify-center">
+        {/* Full-width top depth shadow with better fade */}
+        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/35 via-black/18 via-black/10 via-black/5 via-black/2 to-transparent pointer-events-none z-20"></div>
+        {/* Full-width bottom depth shadow with better fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/35 via-black/18 via-black/10 via-black/5 via-black/2 to-transparent pointer-events-none z-20"></div>
+        {/* Modern background elements (default and dark themes) */}
+        <div className="absolute inset-0 -z-10 flex justify-center adventure:hidden">
           <div className="relative w-full max-w-screen-2xl h-full">
             {/* Map markers - replacing dots */}
             <div className="absolute top-1/4 left-1/4 animate-pulse" style={{animationDelay: '0s'}}>
@@ -109,105 +113,222 @@ export default function Home() {
                 {/* Top latitude line */}
                 <path 
                   d="M 10,25 Q 50,22 90,25" 
-                  stroke="rgb(34 197 94 / 0.35)" 
+                  stroke="currentColor" 
                   strokeWidth="0.3" 
                   fill="none"
+                  className="text-green-200 dark:text-green-800"
                 />
                 {/* Middle latitude line */}
                 <path 
                   d="M 5,50 Q 50,48 95,50" 
-                  stroke="rgb(34 197 94 / 0.4)" 
+                  stroke="currentColor" 
                   strokeWidth="0.3" 
                   fill="none"
+                  className="text-green-300 dark:text-green-700"
                 />
                 {/* Bottom latitude line */}
                 <path 
                   d="M 10,75 Q 50,78 90,75" 
-                  stroke="rgb(34 197 94 / 0.35)" 
+                  stroke="currentColor" 
                   strokeWidth="0.3" 
                   fill="none"
+                  className="text-green-200 dark:text-green-800"
                 />
                 
                 {/* Vertical longitude lines - curved to show globe curvature */}
                 <path 
                   d="M 25,10 Q 22,50 25,90" 
-                  stroke="rgb(34 197 94 / 0.3)" 
+                  stroke="currentColor" 
                   strokeWidth="0.2" 
                   fill="none"
+                  className="text-green-100 dark:text-green-900"
                 />
                 <path 
                   d="M 50,5 Q 48,50 50,95" 
-                  stroke="rgb(34 197 94 / 0.4)" 
+                  stroke="currentColor" 
                   strokeWidth="0.2" 
                   fill="none"
+                  className="text-green-200 dark:text-green-800"
                 />
                 <path 
                   d="M 75,10 Q 78,50 75,90" 
-                  stroke="rgb(34 197 94 / 0.3)" 
+                  stroke="currentColor" 
                   strokeWidth="0.2" 
                   fill="none"
+                  className="text-green-100 dark:text-green-900"
                 />
               </svg>
             </div>
 
             {/* Subtle background texture - much less opaque */}
-            <div className="absolute inset-0 bg-adventure-map opacity-5"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-green-50/20 to-emerald-50/10 dark:from-green-950/20 dark:to-emerald-950/10"></div>
+          </div>
+        </div>
+
+        {/* Adventure theme background - quest-style treasure map elements */}
+        <div className="absolute inset-0 -z-10 hidden adventure:flex justify-center">
+          <div className="relative w-full max-w-screen-2xl h-full">
+            {/* Vintage compass roses - with darker parchment colors */}
+            <div className="absolute top-1/4 left-1/4 animate-pulse" style={{animationDelay: '0s'}}>
+              <Compass className="w-8 h-8 text-stone-700/80 opacity-85 drop-shadow-sm transform rotate-12" />
+            </div>
+            <div className="absolute top-2/3 right-1/3 animate-pulse" style={{animationDelay: '2s'}}>
+              <Compass className="w-6 h-6 text-stone-800/70 opacity-80 drop-shadow-sm transform -rotate-45" />
+            </div>
+            <div className="absolute bottom-1/4 left-1/2 animate-pulse" style={{animationDelay: '1s'}}>
+              <Compass className="w-7 h-7 text-stone-700/80 opacity-75 drop-shadow-sm transform rotate-90" />
+            </div>
+            <div className="absolute top-1/2 left-1/3 animate-pulse" style={{animationDelay: '1.5s'}}>
+              <Compass className="w-5 h-5 text-stone-800/70 opacity-70 drop-shadow-sm transform -rotate-12" />
+            </div>
+            <div className="absolute bottom-2/3 right-1/4 animate-pulse" style={{animationDelay: '0.5s'}}>
+              <Compass className="w-6 h-6 text-stone-800/80 opacity-80 drop-shadow-sm transform rotate-180" />
+            </div>
+            
+            {/* Vintage map elements - hand-drawn treasure paths */}
+            <div className="absolute inset-0 pointer-events-none">
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                {/* Meandering treasure paths - irregular, hand-drawn style */}
+                <path 
+                  d="M 15,20 Q 25,18 35,22 T 55,25 Q 65,28 75,24 T 90,28" 
+                  stroke="currentColor" 
+                  strokeWidth="0.4" 
+                  fill="none"
+                  strokeDasharray="2,1"
+                  className="text-stone-600/60"
+                />
+                <path 
+                  d="M 10,45 Q 20,42 30,48 T 50,52 Q 60,55 70,50 T 85,53" 
+                  stroke="currentColor" 
+                  strokeWidth="0.3" 
+                  fill="none"
+                  strokeDasharray="1.5,0.5"
+                  className="text-stone-700/50"
+                />
+                <path 
+                  d="M 20,70 Q 30,68 40,72 T 60,75 Q 70,78 80,74" 
+                  stroke="currentColor" 
+                  strokeWidth="0.4" 
+                  fill="none"
+                  strokeDasharray="2,1"
+                  className="text-stone-600/55"
+                />
+                
+                {/* Vertical treasure routes - winding paths */}
+                <path 
+                  d="M 25,15 Q 22,25 28,35 T 25,55 Q 22,65 28,75 T 25,85" 
+                  stroke="currentColor" 
+                  strokeWidth="0.3" 
+                  fill="none"
+                  strokeDasharray="1,0.5"
+                  className="text-stone-800/45"
+                />
+                <path 
+                  d="M 50,10 Q 48,20 52,30 T 50,50 Q 48,60 52,70 T 50,90" 
+                  stroke="currentColor" 
+                  strokeWidth="0.4" 
+                  fill="none"
+                  strokeDasharray="1.5,1"
+                  className="text-stone-700/55"
+                />
+                <path 
+                  d="M 75,12 Q 78,22 72,32 T 75,52 Q 78,62 72,72 T 75,88" 
+                  stroke="currentColor" 
+                  strokeWidth="0.3" 
+                  fill="none"
+                  strokeDasharray="1,0.5"
+                  className="text-stone-800/45"
+                />
+              </svg>
+            </div>
+
+            {/* Parchment texture overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-50/40 via-yellow-50/30 to-orange-50/35 opacity-70"></div>
+            
+            {/* Subtle aged paper texture */}
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: `radial-gradient(circle at 20% 30%, rgba(120, 113, 108, 0.1) 0%, transparent 50%),
+                               radial-gradient(circle at 80% 70%, rgba(87, 83, 78, 0.08) 0%, transparent 50%),
+                               radial-gradient(circle at 40% 80%, rgba(68, 64, 60, 0.06) 0%, transparent 50%)`
+            }}></div>
           </div>
         </div>
         
         <div className="container mx-auto text-center relative">
           <div className="mb-6 animate-fade-in">
-            <Link to="/install" className="inline-flex flex-col items-center gap-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-4 py-1.5 rounded-full text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800 transition-colors">
+            <Link to="/install" className="inline-flex flex-col items-center gap-0.5 bg-green-100 dark:bg-green-900 adventure:bg-stone-200 text-green-700 dark:text-green-300 adventure:text-stone-800 px-4 py-1.5 rounded-full text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800 adventure:hover:bg-stone-300 transition-colors">
               <div className="flex items-center gap-2">
                 <Compass className="w-4 h-4" />
-                <span>Join the Quest</span>
+                <span className="adventure:hidden">Join the Quest</span>
+                <span className="hidden adventure:inline">Begin Your Journey</span>
               </div>
-              <span className="text-[10px] opacity-75 leading-none">Install the PWA</span>
+              <span className="text-[10px] opacity-75 leading-none">
+                <span className="adventure:hidden">Install the PWA</span>
+                <span className="hidden adventure:inline">Forge Your Tools</span>
+              </span>
             </Link>
           </div>
           
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 md:mb-6 animate-slide-up">
-            Discover Hidden 
+            <span className="adventure:hidden">Discover Hidden</span>
+            <span className="hidden adventure:inline">Embark on Epic</span>
             <span className="relative inline-block mx-2">
-              <span className="text-green-600">Treasures</span>
-              <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-600 transform scale-x-0 animate-expand-line"></span>
+              <span className="text-green-600 adventure:text-stone-800">
+                <span className="adventure:hidden">Treasures</span>
+                <span className="hidden adventure:inline">Quests</span>
+              </span>
+              <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-600 adventure:from-stone-600 adventure:to-stone-800 transform scale-x-0 animate-expand-line"></span>
             </span>
           </h2>
           
           <p className="text-lg md:text-xl text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto animate-slide-up-delay">
-            Join the decentralized geocaching adventure powered by Nostr. 
-            Hide caches, find treasures, and connect with explorers worldwide.
+            <span className="adventure:hidden">
+              Join the decentralized geocaching adventure powered by Nostr. 
+              Hide caches, find treasures, and connect with explorers worldwide.
+            </span>
+            <span className="hidden adventure:inline">
+              Join a fellowship of treasure hunters on an ancient quest powered by mystical networks. 
+              Conceal artifacts, discover legendary treasures, and forge bonds with fellow adventurers across the realm.
+            </span>
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center animate-slide-up-delay-2">
             <Link to="/map" className="flex-1 sm:flex-initial group">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto transform transition-all duration-200 hover:scale-105 hover:shadow-lg">
-                <Search className="h-5 w-5 mr-2 transition-transform group-hover:scale-110" />
-                Start Exploring
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 adventure:bg-stone-700 adventure:hover:bg-stone-800 adventure:text-stone-100 w-full sm:w-auto transform transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                <Search className="h-5 w-5 mr-2 transition-transform group-hover:scale-110 adventure:hidden" />
+                <Compass className="h-5 w-5 mr-2 transition-transform group-hover:scale-110 hidden adventure:inline" />
+                <span className="adventure:hidden">Start Exploring</span>
+                <span className="hidden adventure:inline">Begin Your Quest</span>
               </Button>
             </Link>
             <Link to="/claim" className="flex-1 sm:flex-initial group">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 hover:bg-green-50 dark:hover:bg-green-950 transform transition-all duration-200 hover:scale-105">
-                <QrCode className="h-5 w-5 mr-2 transition-transform group-hover:scale-110" />
-                Claim Treasure
+              <Button size="lg" variant="outline" className="w-full sm:w-auto border-green-200 dark:border-green-800 adventure:border-stone-400 hover:border-green-300 dark:hover:border-green-700 adventure:hover:border-stone-500 hover:bg-green-50 dark:hover:bg-green-950 adventure:hover:bg-stone-200 adventure:hover:text-stone-800 transform transition-all duration-200 hover:scale-105">
+                <QrCode className="h-5 w-5 mr-2 transition-transform group-hover:scale-110 adventure:hidden" />
+                <Scroll className="h-5 w-5 mr-2 transition-transform group-hover:scale-110 hidden adventure:inline" />
+                <span className="adventure:hidden">Claim Treasure</span>
+                <span className="hidden adventure:inline">Claim Artifact</span>
               </Button>
             </Link>
             {user ? (
               <Link to="/create" className="flex-1 sm:flex-initial group">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 hover:bg-green-50 dark:hover:bg-green-950 transform transition-all duration-200 hover:scale-105 animate-fade-in">
-                  <Plus className="h-5 w-5 mr-2 transition-transform group-hover:rotate-90" />
-                  Hide a Treasure
+                <Button size="lg" variant="outline" className="w-full sm:w-auto border-green-200 dark:border-green-800 adventure:border-stone-400 hover:border-green-300 dark:hover:border-green-700 adventure:hover:border-stone-500 hover:bg-green-50 dark:hover:bg-green-950 adventure:hover:bg-stone-200 adventure:hover:text-stone-800 transform transition-all duration-200 hover:scale-105 animate-fade-in">
+                  <Plus className="h-5 w-5 mr-2 transition-transform group-hover:rotate-90 adventure:hidden" />
+                  <Crown className="h-5 w-5 mr-2 transition-transform group-hover:rotate-12 hidden adventure:inline" />
+                  <span className="adventure:hidden">Hide a Treasure</span>
+                  <span className="hidden adventure:inline">Conceal an Artifact</span>
                 </Button>
               </Link>
             ) : (
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="w-full sm:w-auto border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 hover:bg-green-50 dark:hover:bg-green-950 transform transition-all duration-200 hover:scale-105 group"
+                className="w-full sm:w-auto border-green-200 dark:border-green-800 adventure:border-stone-400 hover:border-green-300 dark:hover:border-green-700 adventure:hover:border-stone-500 hover:bg-green-50 dark:hover:bg-green-950 adventure:hover:bg-stone-200 adventure:hover:text-stone-800 transform transition-all duration-200 hover:scale-105 group"
                 onClick={handleLoginClick}
               >
-                <Plus className="h-5 w-5 mr-2 transition-transform group-hover:rotate-12" />
-                Login to Hide Treasures
+                <Plus className="h-5 w-5 mr-2 transition-transform group-hover:rotate-12 adventure:hidden" />
+                <Shield className="h-5 w-5 mr-2 transition-transform group-hover:rotate-12 hidden adventure:inline" />
+                <span className="adventure:hidden">Login to Hide Treasures</span>
+                <span className="hidden adventure:inline">Join the Guild</span>
               </Button>
             )}
           </div>
@@ -217,24 +338,60 @@ export default function Home() {
       {/* Features */}
       <section className="py-12 md:py-16 px-4 bg-background border-t">
         <div className="container mx-auto">
-          <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 text-foreground">Why Treasures?</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 text-foreground">
+            <span className="adventure:hidden">Why Treasures?</span>
+            <span className="hidden adventure:inline">The Ancient Ways</span>
+          </h3>
           <div className="grid gap-6 md:grid-cols-3 md:gap-8">
             <FeatureCard
-              icon={MapPin}
-              title="Decentralized"
-              description="Your geocaches are stored on the Nostr network, ensuring they're always accessible and censorship-resistant."
+              icon={Shield}
+              title={
+                <span>
+                  <span className="adventure:hidden">Decentralized</span>
+                  <span className="hidden adventure:inline">Protected by Ancient Magic</span>
+                </span>
+              }
+              description={
+                <span>
+                  <span className="adventure:hidden">Your geocaches are stored on the Nostr network, ensuring they're always accessible and censorship-resistant.</span>
+                  <span className="hidden adventure:inline">Your artifacts are safeguarded by mystical networks, ensuring they remain eternal and beyond the reach of dark forces.</span>
+                </span>
+              }
+              iconColor="text-green-600 adventure:text-stone-700"
               centered={true}
             />
             <FeatureCard
-              icon={Trophy}
-              title="Community Driven"
-              description="Connect with fellow geocachers, share experiences, and build lasting friendships through adventure."
+              icon={Users}
+              title={
+                <span>
+                  <span className="adventure:hidden">Community Driven</span>
+                  <span className="hidden adventure:inline">Fellowship of Adventurers</span>
+                </span>
+              }
+              description={
+                <span>
+                  <span className="adventure:hidden">Connect with fellow geocachers, share experiences, and build lasting friendships through adventure.</span>
+                  <span className="hidden adventure:inline">Unite with fellow treasure hunters, share tales of glory, and forge unbreakable bonds through epic quests.</span>
+                </span>
+              }
+              iconColor="text-green-600 adventure:text-stone-700"
               centered={true}
             />
             <FeatureCard
-              icon={Search}
-              title="Global Adventure"
-              description="Discover caches hidden by explorers from around the world, each with its own unique story and challenge."
+              icon={Globe}
+              title={
+                <span>
+                  <span className="adventure:hidden">Global Adventure</span>
+                  <span className="hidden adventure:inline">Realm-Wide Expeditions</span>
+                </span>
+              }
+              description={
+                <span>
+                  <span className="adventure:hidden">Discover caches hidden by explorers from around the world, each with its own unique story and challenge.</span>
+                  <span className="hidden adventure:inline">Uncover artifacts concealed by legendary explorers across distant lands, each bearing ancient secrets and trials.</span>
+                </span>
+              }
+              iconColor="text-green-600 adventure:text-stone-700"
               centered={true}
             />
           </div>
@@ -246,15 +403,23 @@ export default function Home() {
         <div className="container mx-auto">
           {/* Section Header */}
           <div className="text-center mb-8 md:mb-12">
-            <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-4 py-2 rounded-full text-sm font-medium mb-4">
-              <MapPin className="w-4 h-4" />
-              <span>Latest Adventures</span>
+            <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 adventure:bg-stone-200 text-green-700 dark:text-green-300 adventure:text-stone-800 px-4 py-2 rounded-full text-sm font-medium mb-4">
+              <MapPin className="w-4 h-4 adventure:hidden" />
+              <Scroll className="w-4 h-4 hidden adventure:inline" />
+              <span className="adventure:hidden">Latest Adventures</span>
+              <span className="hidden adventure:inline">Recent Discoveries</span>
             </div>
             <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-              Recently Hidden Treasures
+              <span className="adventure:hidden">Recently Hidden Treasures</span>
+              <span className="hidden adventure:inline">Newly Concealed Artifacts</span>
             </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover the newest geocaches hidden by adventurers around the world. Each one waiting for you to find it.
+              <span className="adventure:hidden">
+                Discover the newest geocaches hidden by adventurers around the world. Each one waiting for you to find it.
+              </span>
+              <span className="hidden adventure:inline">
+                Uncover the latest artifacts concealed by legendary explorers across the realm. Each one holds ancient secrets awaiting discovery.
+              </span>
             </p>
             
             {/* Action buttons */}
@@ -280,8 +445,10 @@ export default function Home() {
               )}
               <Link to="/map">
                 <Button variant="outline" className="flex items-center gap-2">
-                  <Search className="h-4 w-4" />
-                  <span>Explore All</span>
+                  <Search className="h-4 w-4 adventure:hidden" />
+                  <Compass className="h-4 w-4 hidden adventure:inline" />
+                  <span className="adventure:hidden">Explore All</span>
+                  <span className="hidden adventure:inline">Survey the Realm</span>
                 </Button>
               </Link>
             </div>
@@ -298,24 +465,36 @@ export default function Home() {
             skeletonVariant="featured"
             emptyState={
               <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 flex items-center justify-center">
-                  <MapPin className="w-8 h-8 text-green-600" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 adventure:from-stone-200 adventure:to-stone-300 flex items-center justify-center">
+                  <MapPin className="w-8 h-8 text-green-600 adventure:text-stone-700" />
                 </div>
-                <h4 className="text-lg font-semibold text-foreground mb-2">No treasures found yet</h4>
+                <h4 className="text-lg font-semibold text-foreground mb-2">
+                  <span className="adventure:hidden">No treasures found yet</span>
+                  <span className="hidden adventure:inline">The realm awaits your legend</span>
+                </h4>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Be the first explorer to hide a geocache and start the adventure!
+                  <span className="adventure:hidden">
+                    Be the first explorer to hide a geocache and start the adventure!
+                  </span>
+                  <span className="hidden adventure:inline">
+                    Be the first legendary explorer to conceal an artifact and begin the epic quest!
+                  </span>
                 </p>
                 {user ? (
                   <Link to="/create">
-                    <Button className="bg-green-600 hover:bg-green-700">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Hide Your First Treasure
+                    <Button className="bg-green-600 hover:bg-green-700 adventure:bg-stone-700 adventure:hover:bg-stone-800 adventure:text-stone-100">
+                      <Plus className="h-4 w-4 mr-2 adventure:hidden" />
+                      <Crown className="h-4 w-4 mr-2 hidden adventure:inline" />
+                      <span className="adventure:hidden">Hide Your First Treasure</span>
+                      <span className="hidden adventure:inline">Conceal Your First Artifact</span>
                     </Button>
                   </Link>
                 ) : (
-                  <Button onClick={handleLoginClick} className="bg-green-600 hover:bg-green-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Login to Hide Treasures
+                  <Button onClick={handleLoginClick} className="bg-green-600 hover:bg-green-700 adventure:bg-stone-700 adventure:hover:bg-stone-800 adventure:text-stone-100">
+                    <Plus className="h-4 w-4 mr-2 adventure:hidden" />
+                    <Shield className="h-4 w-4 mr-2 hidden adventure:inline" />
+                    <span className="adventure:hidden">Login to Hide Treasures</span>
+                    <span className="hidden adventure:inline">Join the Guild of Explorers</span>
                   </Button>
                 )}
               </div>
@@ -337,8 +516,10 @@ export default function Home() {
               <div className="text-center mt-8">
                 <Link to="/map">
                   <Button variant="outline" size="lg" className="group">
-                    <Search className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-                    Discover {geocaches.length - 6} More Treasures
+                    <Search className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform adventure:hidden" />
+                    <Compass className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform hidden adventure:inline" />
+                    <span className="adventure:hidden">Discover {geocaches.length - 6} More Treasures</span>
+                    <span className="hidden adventure:inline">Uncover {geocaches.length - 6} More Artifacts</span>
                   </Button>
                 </Link>
               </div>
@@ -348,8 +529,10 @@ export default function Home() {
             <div className="mt-8 text-center sm:hidden">
               <Link to="/map">
                 <Button variant="outline" className="w-full">
-                  <Search className="h-4 w-4 mr-2" />
-                  View All Geocaches
+                  <Search className="h-4 w-4 mr-2 adventure:hidden" />
+                  <Compass className="h-4 w-4 mr-2 hidden adventure:inline" />
+                  <span className="adventure:hidden">View All Geocaches</span>
+                  <span className="hidden adventure:inline">Survey All Artifacts</span>
                 </Button>
               </Link>
             </div>

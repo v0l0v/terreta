@@ -813,6 +813,8 @@ export function GeocacheMap({
       return "dark";
     } else if (theme === "light") {
       return "original";
+    } else if (theme === "adventure") {
+      return "adventure";
     } else if (theme === "system") {
       // Use system preference if theme is set to system
       return systemTheme === "dark" ? "dark" : "original";
@@ -849,6 +851,8 @@ export function GeocacheMap({
         return "dark";
       } else if (theme === "light") {
         return "original";
+      } else if (theme === "adventure") {
+        return "adventure";
       } else if (theme === "system") {
         return systemTheme === "dark" ? "dark" : "original";
       }
@@ -945,25 +949,23 @@ export function GeocacheMap({
         <>
           {/* Strong parchment overlay */}
           <div 
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none adventure-parchment-overlay"
             style={{
               backgroundColor: '#d2b48c',
               mixBlendMode: 'color',
               opacity: 0.5,
-              zIndex: 1000
+              zIndex: 200
             }}
           />
           
-          {/* Subtle border */}
+          {/* Subtle border overlay */}
           <div 
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none adventure-border-overlay"
             style={{
-              background: `
-                linear-gradient(to right, rgba(139, 69, 19, 0.3) 0%, transparent 4px, transparent calc(100% - 4px), rgba(139, 69, 19, 0.3) 100%),
-                linear-gradient(to bottom, rgba(139, 69, 19, 0.3) 0%, transparent 4px, transparent calc(100% - 4px), rgba(139, 69, 19, 0.3) 100%)
-              `,
+              backgroundColor: 'slategray',
+              mixBlendMode: 'color-burn',
               opacity: 0.6,
-              zIndex: 1001
+              zIndex: 201
             }}
           />
         </>

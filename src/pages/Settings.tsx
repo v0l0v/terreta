@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Plus, X, Globe, Palette, Sun, Moon, Monitor, Wifi } from "lucide-react";
+import { MapPin, Plus, X, Globe, Palette, Sun, Moon, Monitor, Wifi, Compass } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -175,10 +175,10 @@ export default function Settings() {
                 <div>
                   <Label htmlFor="theme">Theme</Label>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Select the app theme. System follows your device's theme settings.
+                    Select the app theme. Adventure uses warm parchment colors perfect for geocaching. System follows your device's theme settings.
                   </p>
                   {mounted ? (
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <Button
                         variant={theme === "light" ? "default" : "outline"}
                         onClick={() => setTheme("light")}
@@ -196,6 +196,14 @@ export default function Settings() {
                         <span className="text-sm">Dark</span>
                       </Button>
                       <Button
+                        variant={theme === "adventure" ? "default" : "outline"}
+                        onClick={() => setTheme("adventure")}
+                        className="flex items-center gap-2 h-10 px-4"
+                      >
+                        <Compass className="h-4 w-4" />
+                        <span className="text-sm">Adventure</span>
+                      </Button>
+                      <Button
                         variant={theme === "system" ? "default" : "outline"}
                         onClick={() => setTheme("system")}
                         className="flex items-center gap-2 h-10 px-4"
@@ -205,7 +213,7 @@ export default function Settings() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <Button
                         variant="outline"
                         disabled
@@ -221,6 +229,14 @@ export default function Settings() {
                       >
                         <Moon className="h-4 w-4" />
                         <span className="text-sm">Dark</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        disabled
+                        className="flex items-center gap-2 h-10 px-4"
+                      >
+                        <Compass className="h-4 w-4" />
+                        <span className="text-sm">Adventure</span>
                       </Button>
                       <Button
                         variant="outline"
