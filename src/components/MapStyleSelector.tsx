@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Map, Moon, Satellite, Anchor } from "lucide-react";
+import { Map, Moon, Satellite, Sword } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
@@ -39,12 +39,12 @@ export const MAP_STYLES: Record<string, MapStyle> = {
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics'
   },
-  pirate: {
-    key: "pirate",
-    name: "Treasure Map",
+  adventure: {
+    key: "adventure",
+    name: "Quest Map",
     description: "For true adventurers",
-    icon: <Anchor className="h-4 w-4" />,
-    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    icon: <Sword className="h-4 w-4" />,
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   }
 };

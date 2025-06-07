@@ -28,99 +28,76 @@ import { CACHE_NAMES } from "@/lib/cacheConstants";
 import "leaflet/dist/leaflet.css";
 import "@/styles/map.css";
 
-// Create cache icons with optional pirate theme styling
-const createCacheIcon = (type: string, isPirateTheme: boolean = false) => {
+// Create cache icons with optional adventure theme styling
+const createCacheIcon = (type: string, isAdventureTheme: boolean = false) => {
   const iconSvg = getCacheIconSvg(type);
   const color = getCacheColor(type);
   
-  if (isPirateTheme) {
-    // Fantasy pirate treasure chest style icons with magical glow
-    const pirateColors = {
-      traditional: '#92400e', // Rich brown for treasure chests
-      multi: '#dc2626',      // Ruby red for magical compass
-      mystery: '#7c2d12',    // Dark mystical brown
+  if (isAdventureTheme) {
+    // Clean adventure-inspired icons
+    const adventureColors = {
+      traditional: '#a0825a', // Warm bronze
+      multi: '#b8860b',      // Golden brass
+      mystery: '#6b5b3f',    // Dark bronze
     };
     
-    const glowColors = {
-      traditional: '#fbbf24', // Golden glow
-      multi: '#ef4444',      // Ruby glow  
-      mystery: '#a855f7',    // Purple mystical glow
+    const accentColors = {
+      traditional: '#d4af37', // Gold accent
+      multi: '#ffd700',      // Bright gold
+      mystery: '#8b7355',    // Bronze accent
     };
     
-    const pirateColor = pirateColors[type as keyof typeof pirateColors] || pirateColors.traditional;
-    const glowColor = glowColors[type as keyof typeof glowColors] || glowColors.traditional;
+    const adventureColor = adventureColors[type as keyof typeof adventureColors] || adventureColors.traditional;
+    const accentColor = accentColors[type as keyof typeof accentColors] || accentColors.traditional;
     
     return L.divIcon({
       html: `
         <div style="
-          background: linear-gradient(135deg, ${pirateColor} 0%, ${color} 50%, ${glowColor} 100%);
-          border: 4px solid #fbbf24;
-          border-radius: 12px;
-          width: 48px;
-          height: 48px;
+          background: 
+            linear-gradient(135deg, ${adventureColor} 0%, ${accentColor} 50%, ${adventureColor} 100%);
+          border: 2px solid ${accentColor};
+          border-radius: 6px;
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
           box-shadow: 
-            0 0 12px ${glowColor}80,
-            0 0 24px ${glowColor}40,
-            0 6px 16px rgba(139, 69, 19, 0.5),
-            inset 0 2px 0 rgba(255, 255, 255, 0.4),
-            inset 0 -2px 0 rgba(146, 64, 14, 0.3);
+            0 3px 8px rgba(160, 130, 90, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            inset 0 -1px 0 rgba(107, 91, 63, 0.3);
           position: relative;
-          transition: all 0.4s ease;
+          transition: all 0.3s ease;
           cursor: pointer;
-          transform: rotate(-3deg);
-          animation: treasureGlow 3s ease-in-out infinite;
         ">
           ${iconSvg}
         </div>
         <div style="
           position: absolute;
-          bottom: -12px;
+          bottom: -10px;
           left: 50%;
-          transform: translateX(-50%) rotate(3deg);
+          transform: translateX(-50%);
           width: 0;
           height: 0;
-          border-left: 12px solid transparent;
-          border-right: 12px solid transparent;
-          border-top: 12px solid ${pirateColor};
-          filter: drop-shadow(0 4px 8px ${glowColor}60);
+          border-left: 10px solid transparent;
+          border-right: 10px solid transparent;
+          border-top: 10px solid ${adventureColor};
+          filter: drop-shadow(0 2px 4px rgba(160, 130, 90, 0.3));
         "></div>
         <style>
-          @keyframes treasureGlow {
-            0%, 100% { 
-              box-shadow: 
-                0 0 12px ${glowColor}80,
-                0 0 24px ${glowColor}40,
-                0 6px 16px rgba(139, 69, 19, 0.5),
-                inset 0 2px 0 rgba(255, 255, 255, 0.4),
-                inset 0 -2px 0 rgba(146, 64, 14, 0.3);
-            }
-            50% { 
-              box-shadow: 
-                0 0 20px ${glowColor}90,
-                0 0 40px ${glowColor}60,
-                0 8px 20px rgba(139, 69, 19, 0.6),
-                inset 0 3px 0 rgba(255, 255, 255, 0.5),
-                inset 0 -3px 0 rgba(146, 64, 14, 0.4);
-            }
-          }
           .custom-cache-icon:hover > div:first-child {
-            transform: scale(1.2) rotate(0deg);
+            transform: scale(1.1);
             box-shadow: 
-              0 0 24px ${glowColor}95,
-              0 0 48px ${glowColor}70,
-              0 10px 24px rgba(139, 69, 19, 0.7),
-              inset 0 4px 0 rgba(255, 255, 255, 0.6),
-              inset 0 -4px 0 rgba(146, 64, 14, 0.5);
+              0 4px 12px rgba(160, 130, 90, 0.5),
+              inset 0 2px 0 rgba(255, 255, 255, 0.4),
+              inset 0 -2px 0 rgba(107, 91, 63, 0.4);
           }
         </style>
       `,
-      className: "custom-cache-icon fantasy-pirate-cache-icon",
-      iconSize: [48, 60],
-      iconAnchor: [24, 60],
-      popupAnchor: [0, -60],
+      className: "custom-cache-icon adventure-cache-icon",
+      iconSize: [44, 54],
+      iconAnchor: [22, 54],
+      popupAnchor: [0, -54],
     });
   }
   
@@ -414,13 +391,13 @@ function ThemeController({
     const container = map.getContainer();
     
     // Remove all theme classes
-    container.classList.remove('dark-theme', 'pirate-theme', 'system-dark-theme');
+    container.classList.remove('dark-theme', 'adventure-theme', 'system-dark-theme');
     
     // Add current theme class
     if (currentStyle === 'dark') {
       container.classList.add('dark-theme');
-    } else if (currentStyle === 'pirate') {
-      container.classList.add('pirate-theme');
+    } else if (currentStyle === 'adventure') {
+      container.classList.add('adventure-theme');
     } else if (currentStyle === 'original') {
       // For original style, check if we should apply system dark theme
       if (appTheme === 'system' && systemTheme === 'dark') {
@@ -963,6 +940,35 @@ export function GeocacheMap({
         backgroundColor: '#f8fafc'
       }}
     >
+      {/* Clean Adventure-style Map */}
+      {currentMapStyle === 'adventure' && (
+        <>
+          {/* Strong parchment overlay */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundColor: '#d2b48c',
+              mixBlendMode: 'color',
+              opacity: 0.5,
+              zIndex: 1000
+            }}
+          />
+          
+          {/* Subtle border */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `
+                linear-gradient(to right, rgba(139, 69, 19, 0.3) 0%, transparent 4px, transparent calc(100% - 4px), rgba(139, 69, 19, 0.3) 100%),
+                linear-gradient(to bottom, rgba(139, 69, 19, 0.3) 0%, transparent 4px, transparent calc(100% - 4px), rgba(139, 69, 19, 0.3) 100%)
+              `,
+              opacity: 0.6,
+              zIndex: 1001
+            }}
+          />
+        </>
+      )}
+      
       {/* Map Loading Skeleton - minimal loading time */}
       {!isMapReady && (
         <div className="absolute inset-0 z-10 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -1038,14 +1044,14 @@ export function GeocacheMap({
         <Circle
           center={[searchLocation.lat, searchLocation.lng]}
           radius={searchRadius * 1000} // Convert km to meters
-          pathOptions={currentMapStyle === 'pirate' ? {
-            color: '#fbbf24', // Golden for fantasy pirate theme
-            fillColor: '#f59e0b', // Rich amber fill
-            fillOpacity: 0.2,
-            weight: 4,
-            dashArray: '15, 10',
-            opacity: 0.8,
-            className: 'search-radius-circle'
+          pathOptions={currentMapStyle === 'adventure' ? {
+            color: '#a0825a', // Clean bronze for adventure theme
+            fillColor: '#b4966e', // Light bronze fill
+            fillOpacity: 0.1,
+            weight: 3,
+            dashArray: '10, 5', // Simple dash pattern
+            opacity: 0.7,
+            className: 'search-radius-circle adventure-circle'
           } : {
             color: '#059669', // Emerald-600
             fillColor: '#10b981', // Emerald-500
@@ -1077,7 +1083,7 @@ export function GeocacheMap({
         <Marker
           key={geocache.dTag}
           position={[geocache.location.lat, geocache.location.lng]}
-          icon={createCacheIcon(geocache.type, currentMapStyle === 'pirate')}
+          icon={createCacheIcon(geocache.type, currentMapStyle === 'adventure')}
         >
           <Popup>
             <div className="p-3 min-w-[200px]">
