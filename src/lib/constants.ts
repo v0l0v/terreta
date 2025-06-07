@@ -33,10 +33,8 @@ export const RETRY_CONFIG = {
   SYNC_INTERVAL: 300000, // 5 minutes
   PUBLISH_MAX_RETRIES: 2, // Specific retry count for publishing
   PUBLISH_BASE_DELAY: 800, // Shorter delay for publishing retries
-  // Verified logs are critical - be much more patient
-  VERIFIED_LOG_MAX_RETRIES: 5, // More retries for verified logs
-  VERIFIED_LOG_BASE_DELAY: 2000, // Longer delay between retries
-  VERIFIED_LOG_TIMEOUT: 30000, // 30 seconds per attempt
+  // Verified logs use the same retry logic as regular publishing
+  // The useNostrPublish hook handles all retry logic consistently
 } as const;
 
 // Polling intervals for prefetching and updates

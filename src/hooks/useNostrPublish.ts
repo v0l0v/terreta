@@ -62,6 +62,10 @@ export function useNostrPublish() {
             // Don't retry for certain types of errors
             if (errorMessage.includes('User rejected') || 
                 errorMessage.includes('cancelled') ||
+                errorMessage.includes('denied') ||
+                errorMessage.includes('user denied') ||
+                errorMessage.includes('user cancelled') ||
+                errorMessage.includes('user rejected') ||
                 errorMessage.includes('signEvent')) {
               throw error;
             }
@@ -119,7 +123,12 @@ export function useNostrPublish() {
         const errorMessage = errorObj.message || 'Unknown error';
         
         // Handle signing and other errors
-        if (errorMessage.includes("User rejected") || errorMessage.includes("cancelled")) {
+        if (errorMessage.includes("User rejected") || 
+            errorMessage.includes("cancelled") || 
+            errorMessage.includes("denied") ||
+            errorMessage.includes("user denied") ||
+            errorMessage.includes("user cancelled") ||
+            errorMessage.includes("user rejected")) {
           throw new Error("Event signing was cancelled.");
         } else if (errorMessage.includes("Failed to publish") || errorMessage.includes("All relay connections failed")) {
           // Re-throw our custom publish errors as-is

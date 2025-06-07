@@ -303,9 +303,14 @@ export async function createVerificationEvent(
   geocacheDTag: string
 ): Promise<NostrEvent> {
   try {
+    // Validate inputs
+    if (!nsec || !finderPubkey || !geocachePubkey || !geocacheDTag) {
+      throw new Error('Missing required parameters for verification event');
+    }
+
     const decoded = nip19.decode(nsec);
     if (decoded.type !== 'nsec') {
-      throw new Error('Invalid private key');
+      throw new Error('Invalid private key format - must be nsec');
     }
     
     const privateKey = decoded.data;
@@ -328,8 +333,19 @@ export async function createVerificationEvent(
     };
     
     return await signer.signEvent(eventTemplate);
-  } catch (error) {
-    throw new Error('Failed to create verification event');
+  } catch (error: unknown) {
+    const errorObj = error as { message?: string };
+    
+    // Provide more specific error messages
+    if (errorObj.message?.includes('Invalid private key format')) {
+      throw new Error('Invalid verification key format. Please check the QR code.');
+    } else if (errorObj.message?.includes('Missing required parameters')) {
+      throw new Error('Missing required data for verification. Please try again.');
+    } else if (errorObj.message?.includes('decode')) {
+      throw new Error('Could not decode verification key. Please check the QR code.');
+    } else {
+      throw new Error(`Failed to create verification event: ${errorObj.message || 'Unknown error'}`);
+    }
   }
 }
 
