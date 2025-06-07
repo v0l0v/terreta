@@ -9,6 +9,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLoggedInAccounts } from '@/hooks/useLoggedInAccounts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useTheme } from 'next-themes';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
@@ -22,6 +23,8 @@ export function MobileHeader() {
   const location = useLocation();
   const { user } = useCurrentUser();
   const { currentUser, removeLogin } = useLoggedInAccounts();
+  const { theme } = useTheme();
+  const isAdventureTheme = theme === 'adventure';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden pt-safe-top">
@@ -35,7 +38,11 @@ export function MobileHeader() {
           </SheetTrigger>
           <SheetContent side="left">
             <div className="flex items-center gap-2 px-2 py-4">
-              <img src="/icon.png" alt="Treasures" className="h-10 w-10" />
+              <img 
+                src="/icon.png" 
+                alt="Treasures" 
+                className={`h-10 w-10 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
+              />
               <span className="font-bold text-lg text-foreground">Treasures</span>
             </div>
             <nav className="flex flex-col gap-2 px-2">
@@ -143,7 +150,11 @@ export function MobileHeader() {
         </Sheet>
         
         <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-1">
-          <img src="/icon.png" alt="Treasures" className="h-8 w-8" />
+          <img 
+            src="/icon.png" 
+            alt="Treasures" 
+            className={`h-8 w-8 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
+          />
           <h1 className="text-xs font-bold text-foreground m-0 leading-none">Treasures</h1>
         </Link>
         

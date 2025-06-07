@@ -3,6 +3,7 @@ import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useTheme } from 'next-themes';
 
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -12,6 +13,8 @@ interface DesktopHeaderProps {
 
 export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
   const { user } = useCurrentUser();
+  const { theme } = useTheme();
+  const isAdventureTheme = theme === 'adventure';
 
   // Map page has different styling needs due to layout constraints
   const headerClasses = variant === 'map' 
@@ -23,7 +26,11 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/icon.png" alt="Treasures" className="h-12 w-12" />
+            <img 
+              src="/icon.png" 
+              alt="Treasures" 
+              className={`h-12 w-12 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
+            />
             <h1 className="text-2xl font-bold text-foreground m-0 leading-none">Treasures</h1>
           </Link>
           
