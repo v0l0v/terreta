@@ -59,7 +59,7 @@ interface DefaultGeocacheCardProps extends BaseGeocacheCardProps {
   };
 }
 
-// Detailed Card - Used in My Caches page for more info
+// Detailed Card - Used in Saved Caches page for more info
 interface DetailedGeocacheCardProps extends BaseGeocacheCardProps {
   variant: 'detailed';
   cache: BaseGeocacheCardProps['cache'] & {
@@ -331,12 +331,6 @@ export function GeocacheCard({
             </div>
             
             <div className="flex flex-col items-end gap-1 shrink-0">
-              {'foundCount' in cache && showStats && (
-                <Badge variant="outline" className="text-xs py-0 px-1.5">
-                  <Trophy className="h-2.5 w-2.5 mr-1" />
-                  {cache.foundCount || 0}
-                </Badge>
-              )}
               {renderActionButtons("h-4 w-4 sm:h-5 sm:w-5")}
             </div>
           </div>

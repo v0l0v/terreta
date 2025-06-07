@@ -28,6 +28,7 @@ interface SavedCache {
   type: string;
   foundCount?: number;
   logCount?: number;
+  hidden?: boolean;
 }
 
 // Use a custom event kind for cache bookmarks
@@ -168,6 +169,7 @@ export function useNostrSavedCaches() {
         type: parsed.type,
         foundCount: 0,
         logCount: 0,
+        hidden: parsed.hidden,
       } as SavedCache;
     }).filter((cache): cache is SavedCache => cache !== null)
       .sort((a, b) => b.savedAt - a.savedAt); // Sort by most recently saved

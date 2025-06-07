@@ -66,7 +66,7 @@ export function MobileHeader() {
                 }`}
               >
                 <Bookmark className="h-4 w-4" />
-                My Caches
+                Saved Caches
               </Link>
               {user && (
                 <>

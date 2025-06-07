@@ -239,55 +239,6 @@ export function CacheDetailTabs({ logCount = 0, children, className, defaultTab 
   );
 }
 
-// === MY CACHES TABS (Specialized) ===
-
-interface MyCachesTabsProps {
-  savedCount?: number;
-  foundCount?: number;
-  createdCount?: number;
-  children: ReactNode;
-  className?: string;
-}
-
-export function MyCachesTabs({ 
-  savedCount = 0, 
-  foundCount = 0, 
-  createdCount = 0, 
-  children, 
-  className 
-}: MyCachesTabsProps) {
-  const cachesTabs: MobileTabItem[] = [
-    { 
-      value: 'saved', 
-      label: 'Saved',
-      icon: Bookmark,
-      count: savedCount
-    },
-    { 
-      value: 'found', 
-      label: 'Found',
-      icon: CheckCircle,
-      count: foundCount
-    },
-    { 
-      value: 'created', 
-      label: 'Created',
-      icon: MapPin,
-      count: createdCount
-    },
-  ];
-
-  return (
-    <MobileTabs
-      items={cachesTabs}
-      defaultValue="saved"
-      className={className}
-    >
-      {children}
-    </MobileTabs>
-  );
-}
-
 // === MAP VIEW TABS (Specialized) ===
 
 interface MapViewTabsProps {

@@ -71,7 +71,7 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
         >
           <Bookmark className='w-4 h-4' />
-          <span>My Caches</span>
+          <span>Saved Caches</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => navigate('/settings')}
