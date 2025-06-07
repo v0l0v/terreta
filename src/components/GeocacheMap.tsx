@@ -982,7 +982,7 @@ export function GeocacheMap({
         touchZoom={true}
         attributionControl={false}
         // Optimize for fastest loading
-        whenCreated={(map) => {
+        whenReady={(map) => {
           // Force immediate tile loading
           map.invalidateSize();
           // Set loading priority

@@ -51,7 +51,7 @@ export function MobileHeader() {
                 alt="Treasures" 
                 className={`h-10 w-10 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
               />
-              <span className={`font-bold text-lg ${isAdventureTheme ? 'text-stone-200' : 'text-foreground'}`}>Treasures</span>
+              <span className={`font-bold text-lg ${isAdventureTheme ? 'text-stone-800' : 'text-foreground'}`}>Treasures</span>
             </div>
             <nav className="flex flex-col gap-2 px-2">
               {navigation.map((item) => {
@@ -134,7 +134,7 @@ export function MobileHeader() {
                     <OfflineIndicator showDetails={false} />
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Theme</span>
-                      <ThemeToggle />
+                      <ThemeToggle variant="mobile-sheet" />
                     </div>
                   </div>
                   <Button

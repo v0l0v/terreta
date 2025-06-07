@@ -26,142 +26,136 @@
   z-index: 0;
 }
 
-/* Adventure parchment overlay - affects tiles and background */
+/* Adventure parchment overlay - simplified for performance */
 .adventure-parchment-overlay {
   pointer-events: none;
-  mix-blend-mode: color;
+  /* Removed mix-blend-mode for better performance */
+  opacity: 0.15;
 }
 
-/* Adventure border overlay - affects tiles and background */
+/* Adventure border overlay - simplified for performance */
 .adventure-border-overlay {
   pointer-events: none;
-  mix-blend-mode: color-burn;
+  /* Removed mix-blend-mode for better performance */
+  opacity: 0.1;
 }
 
-/* Create a stacking context for the map container to isolate blend modes */
+/* Simplified stacking context for better performance */
 .leaflet-container.adventure-theme {
-  isolation: isolate;
-  /* Ensure proper layering */
+  /* Removed isolation: isolate for better performance */
   position: relative;
 }
 
-/* Ensure UI elements stay above adventure overlays */
+/* Simplified UI element positioning */
 .leaflet-container.adventure-theme .leaflet-control-container {
   position: relative;
   z-index: 1000 !important;
-  isolation: isolate; /* Create new stacking context to prevent blend mode inheritance */
+  /* Removed isolation: isolate for better performance */
 }
 
-/* All Leaflet controls elevated above overlays (z-index 200-201) */
+/* Simplified control positioning for better performance */
 .leaflet-container.adventure-theme .leaflet-control-zoom,
 .leaflet-container.adventure-theme .leaflet-control-attribution {
   position: relative !important;
   z-index: 300 !important;
-  isolation: isolate !important;
+  /* Removed isolation: isolate for better performance */
 }
 
-/* Map style control specifically protected */
+/* Map style control simplified */
 .leaflet-container.adventure-theme .map-style-control {
   position: relative !important;
   z-index: 400 !important;
-  isolation: isolate !important;
+  /* Removed isolation: isolate for better performance */
 }
 
 .leaflet-container.adventure-theme .map-style-control .leaflet-control,
 .leaflet-container.adventure-theme .map-style-control button {
   position: relative !important;
   z-index: 401 !important;
-  isolation: isolate !important;
+  /* Removed isolation: isolate for better performance */
   background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(8px) !important;
+  /* Removed backdrop-filter for better performance */
 }
 
-/* Protect all interactive map elements from adventure overlay effects */
+/* Simplified interactive element positioning */
 .leaflet-container.adventure-theme .leaflet-marker-pane,
 .leaflet-container.adventure-theme .leaflet-popup-pane,
 .leaflet-container.adventure-theme .leaflet-tooltip-pane,
 .leaflet-container.adventure-theme .leaflet-shadow-pane {
   position: relative !important;
   z-index: 500 !important;
-  isolation: isolate !important;
+  /* Removed isolation: isolate for better performance */
 }
 
-/* Ensure markers and popups are completely isolated from blend modes */
+/* Simplified marker and popup styling */
 .leaflet-container.adventure-theme .leaflet-marker-icon,
 .leaflet-container.adventure-theme .leaflet-popup,
 .leaflet-container.adventure-theme .leaflet-popup-content-wrapper {
-  isolation: isolate !important;
-  /* Reset any inherited blend modes */
-  mix-blend-mode: normal !important;
+  /* Removed isolation: isolate and mix-blend-mode for better performance */
 }
 
-/* Adventure popup styling - lighter to accommodate overlay blending */
+/* Simplified adventure popup styling for better performance */
 .leaflet-container.adventure-theme .leaflet-popup-content-wrapper {
-  /* Much lighter parchment background to compensate for overlay effects */
-  background: linear-gradient(135deg, #faf8f4 0%, #f5f1e8 100%);
-  border: 2px solid #d4af37; /* Gold border to stand out through overlays */
+  /* Simplified background for better performance */
+  background: #faf8f4;
+  border: 2px solid #d4af37;
   border-radius: 8px;
-  color: #2d1810; /* Very dark text for contrast through overlays */
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8); /* Strong inset highlight */
+  color: #2d1810;
+  /* Simplified shadow for better performance */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   position: relative;
 }
 
-/* Clean button styling for adventure theme */
+/* Simplified button styling for better performance */
 .leaflet-container.adventure-theme .leaflet-popup-content button {
-  /* Primary buttons with strong background */
-  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%) !important;
+  /* Simplified background for better performance */
+  background: #8b4513 !important;
   color: #ffffff !important;
   border: 2px solid #654321 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
   font-weight: 600 !important;
+  /* Simplified shadow for better performance */
   box-shadow: 0 2px 4px rgba(139, 69, 19, 0.3) !important;
 }
 
 .leaflet-container.adventure-theme .leaflet-popup-content button:hover {
-  background: linear-gradient(135deg, #a0522d 0%, #cd853f 100%) !important;
+  /* Simplified hover background for better performance */
+  background: #a0522d !important;
   color: #ffffff !important;
   border-color: #8b4513 !important;
   box-shadow: 0 3px 6px rgba(139, 69, 19, 0.4) !important;
 }
 
-/* Outline buttons */
+/* Simplified outline buttons for better performance */
 .leaflet-container.adventure-theme .leaflet-popup-content button[class*="outline"] {
-  background: rgba(139, 69, 19, 0.1) !important;
+  background: transparent !important;
   color: #2d1810 !important;
   border: 2px solid #8b4513 !important;
   font-weight: 600 !important;
 }
 
 .leaflet-container.adventure-theme .leaflet-popup-content button[class*="outline"]:hover {
-  background: rgba(139, 69, 19, 0.2) !important;
+  background: #f5f1e8 !important;
   color: #1a0f08 !important;
   border-color: #654321 !important;
 }
 
-/* Adventure theme badge styling - stronger contrast for overlay visibility */
+/* Simplified adventure theme badge styling for better performance */
 .leaflet-container.adventure-theme .leaflet-popup-content .badge,
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="badge"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="items-center"][class*="rounded-full"][class*="border"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="items-center"][class*="rounded"][class*="border"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="inline-flex"][class*="items-center"][class*="border"][class*="font-semibold"] {
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="badge"] {
   color: #2d1810 !important;
 }
 
-/* Secondary badges - size/type badges - much stronger contrast */
+/* Simplified secondary badges */
 .leaflet-container.adventure-theme .leaflet-popup-content [class*="secondary"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="bg-secondary"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="text-secondary-foreground"] {
-  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%) !important;
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="bg-secondary"] {
+  background: #8b4513 !important;
   color: #ffffff !important;
   border-color: #654321 !important;
 }
 
-/* Outline badges - D/T pills - stronger contrast */
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="outline"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="text-foreground"],
-.leaflet-container.adventure-theme .leaflet-popup-content [class*="border-transparent"] {
+/* Simplified outline badges */
+.leaflet-container.adventure-theme .leaflet-popup-content [class*="outline"] {
   background: rgba(255, 255, 255, 0.95) !important;
   color: #2d1810 !important;
   border-color: #8b4513 !important;
@@ -200,27 +194,24 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-/* Clean adventure zoom controls - lighter styling */
+/* Simplified adventure zoom controls for better performance */
 .leaflet-container.adventure-theme .leaflet-control-zoom a {
-  background: 
-    linear-gradient(135deg, #faf8f4 0%, #f5f1e8 50%, #f0ebe0 100%) !important;
+  /* Simplified background for better performance */
+  background: #faf8f4 !important;
   border: 1px solid #c4a373 !important;
   color: #6b5b3f !important;
   font-family: 'serif' !important;
   font-weight: 500 !important;
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.7) !important;
-  box-shadow: 
-    0 2px 4px rgba(160, 130, 90, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  /* Simplified shadow for better performance */
+  box-shadow: 0 2px 4px rgba(160, 130, 90, 0.2) !important;
 }
 
 .leaflet-container.adventure-theme .leaflet-control-zoom a:hover {
-  background: 
-    linear-gradient(135deg, #f5f1e8 0%, #f0ebe0 50%, #ebe4d5 100%) !important;
+  /* Simplified hover background for better performance */
+  background: #f5f1e8 !important;
   color: #5d4e37 !important;
-  box-shadow: 
-    0 3px 6px rgba(160, 130, 90, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 3px 6px rgba(160, 130, 90, 0.3) !important;
 }
 
 /* Dark theme styling */
@@ -330,34 +321,15 @@
   color: #9ca3af !important;
 }
 
-/* Search radius circle glow effect */
+/* Simplified radius circle effects for better performance */
 .search-radius-circle {
-  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));
-  animation: radiusGlow 3s ease-in-out infinite;
+  /* Removed animation and filter for better performance */
+  opacity: 0.7;
 }
 
-@keyframes radiusGlow {
-  0%, 100% {
-    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));
-  }
-  50% {
-    filter: drop-shadow(0 0 16px rgba(16, 185, 129, 0.6));
-  }
-}
-
-/* Clean adventure circle effect */
 .adventure-circle {
-  filter: drop-shadow(0 0 6px rgba(160, 130, 90, 0.4));
-  animation: adventureRadiusGlow 3s ease-in-out infinite;
-}
-
-@keyframes adventureRadiusGlow {
-  0%, 100% {
-    filter: drop-shadow(0 0 6px rgba(160, 130, 90, 0.4));
-  }
-  50% {
-    filter: drop-shadow(0 0 10px rgba(160, 130, 90, 0.6));
-  }
+  /* Removed animation and filter for better performance */
+  opacity: 0.6;
 }
 
 /* Enhanced map container styling - only for non-themed maps */
@@ -1049,39 +1021,4 @@
   color: #3c2e1f !important;
 }
 
-/* Adventure theme Leaflet popup buttons - stronger colors for overlay visibility */
-.leaflet-container.adventure-theme .leaflet-popup-content button {
-  /* Primary buttons with strong contrast for overlay visibility */
-  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%) !important;
-  color: #ffffff !important;
-  border: 2px solid #654321 !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7) !important;
-  font-weight: 600 !important;
-  box-shadow: 0 2px 6px rgba(139, 69, 19, 0.4) !important;
-}
-
-.leaflet-container.adventure-theme .leaflet-popup-content button:hover {
-  background: linear-gradient(135deg, #a0522d 0%, #cd853f 100%) !important;
-  color: #ffffff !important;
-  border-color: #8b4513 !important;
-  box-shadow: 0 3px 8px rgba(139, 69, 19, 0.5) !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8) !important;
-}
-
-/* Outline buttons in adventure theme popups */
-.leaflet-container.adventure-theme .leaflet-popup-content button[class*="outline"] {
-  background: rgba(255, 255, 255, 0.9) !important;
-  color: #2d1810 !important;
-  border: 2px solid #8b4513 !important;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8) !important;
-  font-weight: 600 !important;
-  box-shadow: 0 1px 3px rgba(139, 69, 19, 0.3) !important;
-}
-
-.leaflet-container.adventure-theme .leaflet-popup-content button[class*="outline"]:hover {
-  background: rgba(250, 248, 244, 0.95) !important;
-  color: #1a0f08 !important;
-  border-color: #654321 !important;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9) !important;
-  box-shadow: 0 2px 4px rgba(139, 69, 19, 0.4) !important;
-}
+/* Removed duplicate button styling - already defined above for better performance */

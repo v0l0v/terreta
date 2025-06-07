@@ -81,7 +81,7 @@ export default function Home() {
       <DesktopHeader />
 
       {/* Hero Section */}
-      <section className="relative pt-6 pb-12 px-4 md:py-20 overflow-hidden">
+      <section className="relative pt-12 pb-16 px-4 md:py-24 overflow-hidden">
         {/* Parchment background for adventure mode only - behind everything */}
         <div className="absolute inset-0 -z-20 hidden adventure:block" style={{
           backgroundImage: 'url(/parchment-300.jpg)',
