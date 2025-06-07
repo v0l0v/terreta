@@ -7,6 +7,7 @@ import { SaveButton } from '@/components/SaveButton';
 import { CacheMenu } from '@/components/CacheMenu';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useGeocacheNavigation } from '@/hooks/useGeocacheNavigation';
+import { useGeocacheStats } from '@/hooks/useGeocacheStats';
 import { formatDistanceToNow } from '@/lib/date';
 import { formatDistance } from '@/lib/geo';
 import { getCacheIcon } from '@/lib/cacheIcons';
@@ -102,6 +103,9 @@ export function GeocacheCard({
   const author = useAuthor(cache.pubkey);
   const authorName = author.data?.metadata?.name || cache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
+  
+  // Get real-time stats for this geocache
+  const stats = useGeocacheStats(cache.dTag, cache.pubkey);
 
   // Check if this cache is hidden and the current user is the creator
   const isHiddenByCreator = cache.hidden && cache.pubkey === user?.pubkey;
@@ -179,18 +183,16 @@ export function GeocacheCard({
       </div>
       
       {/* Stats */}
-      {showStats && 'foundCount' in cache && (
+      {showStats && (
         <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground shrink-0">
           <span className="flex items-center gap-1">
             <Trophy className="h-3 w-3" />
-            <span>{cache.foundCount || 0}</span>
+            <span>{stats.foundCount}</span>
           </span>
-          {'logCount' in cache && (
-            <span className="flex items-center gap-1">
-              <MessageSquare className="h-3 w-3" />
-              <span>{cache.logCount || 0}</span>
-            </span>
-          )}
+          <span className="flex items-center gap-1">
+            <MessageSquare className="h-3 w-3" />
+            <span>{stats.logCount}</span>
+          </span>
         </div>
       )}
     </div>
@@ -290,48 +292,88 @@ export function GeocacheCard({
     return (
       <InteractiveCard onClick={() => handleNavigate()} compact={true} className="group hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-3">
-          <div className="flex items-start gap-3">
-            <div className="relative shrink-0">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted">
-                {getCacheIcon(cache.type, 'sm')}
-              </div>
-              {isHiddenByCreator && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
-                  <EyeOff className="h-2 w-2 text-white" />
+          <div className="flex flex-col h-full">
+            <div className="flex items-start gap-3">
+              <div className="relative shrink-0">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted">
+                  {getCacheIcon(cache.type, 'sm')}
                 </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-green-600 transition-colors">
-                {cache.name}
-              </h3>
+                {isHiddenByCreator && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                    <EyeOff className="h-2 w-2 text-white" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-green-600 transition-colors">
+                  {cache.name}
+                </h3>
+                
+                {/* Author and metadata */}
+                {showAuthor && (
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    <span className="flex items-center gap-1">
+                      by {authorName}
+                      {profilePicture && (
+                        <img 
+                          src={profilePicture} 
+                          alt={authorName}
+                          className="h-3 w-3 rounded-full object-cover"
+                        />
+                      )}
+                    </span>
+                    {metadata && <span>{metadata}</span>}
+                  </p>
+                )}
+                
+                {/* Created time */}
+                {renderCreatedTime()}
+              </div>
               
-              {/* Author and metadata */}
-              {showAuthor && (
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <span className="flex items-center gap-1">
-                    by {authorName}
-                    {profilePicture && (
-                      <img 
-                        src={profilePicture} 
-                        alt={authorName}
-                        className="h-3 w-3 rounded-full object-cover"
-                      />
-                    )}
-                  </span>
-                  {metadata && <span>{metadata}</span>}
-                </p>
-              )}
-              
-              {/* Created time */}
-              {renderCreatedTime()}
-              
-              {/* Compact badges */}
-              {renderBadgesAndStats(true)}
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                {renderActionButtons("h-4 w-4 sm:h-5 sm:w-5")}
+              </div>
             </div>
             
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              {renderActionButtons("h-4 w-4 sm:h-5 sm:w-5")}
+            {/* Bottom row with badges and stats */}
+            <div className="flex items-center justify-between gap-2 mt-3">
+              <div className="flex flex-wrap gap-1 min-w-0">
+                <Badge variant="outline" className="text-xs py-0 px-1.5 shrink-0">
+                  D{cache.difficulty}
+                </Badge>
+                <Badge variant="outline" className="text-xs py-0 px-1.5 shrink-0">
+                  T{cache.terrain}
+                </Badge>
+                <Badge variant="secondary" className="text-xs py-0 px-1.5 shrink-0">
+                  {cache.size}
+                </Badge>
+                {distance !== undefined && (
+                  <Badge variant="outline" className="text-xs py-0 px-1.5 flex items-center gap-1 shrink-0">
+                    <Navigation className="h-2 w-2" />
+                    {formatDistance(distance)}
+                  </Badge>
+                )}
+                {'foundAt' in cache && (
+                  <Badge variant="default" className="flex items-center gap-1 bg-green-600 text-xs py-0 px-1.5 shrink-0">
+                    <CheckCircle className="h-2 w-2" />
+                    Found
+                  </Badge>
+                )}
+              </div>
+              
+              {/* Stats in bottom right */}
+              {showStats && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
+                  <span className="flex items-center gap-1">
+                    <Trophy className="h-3 w-3" />
+                    <span>{stats.foundCount}</span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" />
+                    <span>{stats.logCount}</span>
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>

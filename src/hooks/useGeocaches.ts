@@ -28,11 +28,7 @@ export function useGeocaches() {
         if (!parsed) return null;
         // Show hidden caches to their creator, filter them out for everyone else
         if (parsed.hidden && parsed.pubkey !== user?.pubkey) return null;
-        return {
-          ...parsed,
-          foundCount: 0, // Could be enhanced with additional queries
-          logCount: 0,
-        };
+        return parsed;
       }).filter(Boolean);
     },
     staleTime: 120000, // 2 minutes - less aggressive to reduce requests
