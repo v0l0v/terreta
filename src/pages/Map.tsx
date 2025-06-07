@@ -397,31 +397,31 @@ export default function Map() {
                 <div className="flex gap-2">
                   <Button 
                     variant={showNearMe ? "default" : "outline"} 
-                    className={`h-8 ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
+                    className={`h-8 text-xs ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
                     onClick={handleNearMe}
                     disabled={isGettingLocation}
                   >
-                    <Locate className="h-4 w-4 mr-1" />
+                    <Locate className="h-3 w-3 mr-1" />
                     {isGettingLocation ? "Finding..." : "Near Me"}
                   </Button>
                   
                   <Button 
                     variant={searchInView ? "default" : "outline"} 
-                    className={`h-8 ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
+                    className={`h-8 text-xs ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
                     onClick={handleSearchInView}
                     disabled={isLoading}
                   >
-                    <MapPin className="h-4 w-4 mr-1" />
+                    <MapPin className="h-3 w-3 mr-1" />
                     {(showNearMe || searchLocation || searchInView) ? 'In View' : 'Search in View'}
                   </Button>
                   
                   {(showNearMe || searchLocation || searchInView) && (
                     <>
                       <Select value={searchRadius.toString()} onValueChange={(v) => setSearchRadius(Number(v) || 25)}>
-                        <SelectTrigger className="w-20 h-8" >
-                          <SelectValue />
+                        <SelectTrigger className="w-24 h-8 text-xs" >
+                          <SelectValue placeholder="25 km" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[60]">
                           <SelectItem value="1">1 km</SelectItem>
                           <SelectItem value="5">5 km</SelectItem>
                           <SelectItem value="10">10 km</SelectItem>
@@ -589,31 +589,31 @@ export default function Map() {
                 <div className="flex gap-2">
                   <Button 
                     variant={showNearMe ? "default" : "outline"} 
-                    className={`h-9 ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
+                    className={`h-9 text-xs ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
                     onClick={handleNearMe}
                     disabled={isGettingLocation}
                   >
-                    <Locate className="h-4 w-4 mr-1" />
+                    <Locate className="h-3 w-3 mr-1" />
                     {isGettingLocation ? "Finding..." : "Near Me"}
                   </Button>
                   
                   <Button 
                     variant={searchInView ? "default" : "outline"} 
-                    className={`h-9 ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
+                    className={`h-9 text-xs ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
                     onClick={handleSearchInView}
                     disabled={isLoading}
                   >
-                    <MapPin className="h-4 w-4 mr-1" />
+                    <MapPin className="h-3 w-3 mr-1" />
                     {(showNearMe || searchLocation || searchInView) ? 'In View' : 'Search in View'}
                   </Button>
                   
                   {(showNearMe || searchLocation || searchInView) && (
                     <>
                       <Select value={searchRadius.toString()} onValueChange={(v) => setSearchRadius(Number(v) || 25)}>
-                        <SelectTrigger className="w-20 h-9">
-                          <SelectValue />
+                        <SelectTrigger className="w-24 h-9 text-xs">
+                          <SelectValue placeholder="25 km" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[60]">
                           <SelectItem value="1">1 km</SelectItem>
                           <SelectItem value="5">5 km</SelectItem>
                           <SelectItem value="10">10 km</SelectItem>
