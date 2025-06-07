@@ -17,9 +17,17 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
   const isAdventureTheme = theme === 'adventure';
 
   // Map page has different styling needs due to layout constraints
-  const headerClasses = variant === 'map' 
-    ? "hidden lg:block border-b bg-background sticky top-0 z-50"
-    : "border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50 hidden md:block";
+  const baseClasses = variant === 'map' 
+    ? "hidden lg:block border-b sticky top-0 z-50"
+    : "border-b sticky top-0 z-50 hidden md:block";
+  
+  const adventureClasses = isAdventureTheme 
+    ? "bg-stone-800 border-stone-700 text-stone-200" 
+    : variant === 'map' 
+      ? "bg-background" 
+      : "bg-background/80 backdrop-blur-sm";
+  
+  const headerClasses = `${baseClasses} ${adventureClasses}`;
 
   return (
     <header className={headerClasses}>
@@ -31,7 +39,7 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
               alt="Treasures" 
               className={`h-12 w-12 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
             />
-            <h1 className="text-2xl font-bold text-foreground m-0 leading-none">Treasures</h1>
+            <h1 className={`text-2xl font-bold m-0 leading-none ${isAdventureTheme ? 'text-stone-200' : 'text-foreground'}`}>Treasures</h1>
           </Link>
           
           <nav className="flex items-center gap-4">

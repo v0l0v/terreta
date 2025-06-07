@@ -27,11 +27,19 @@ export function MobileHeader() {
   const isAdventureTheme = theme === 'adventure';
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden pt-safe-top">
+    <header className={`sticky top-0 z-40 w-full border-b md:hidden pt-safe-top ${
+      isAdventureTheme 
+        ? 'bg-stone-800 border-stone-700' 
+        : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
+    }`}>
       <div className="container flex h-16 items-center justify-between">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="-ml-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={`-ml-2 ${isAdventureTheme ? 'text-stone-200 hover:bg-stone-700 hover:text-stone-100' : ''}`}
+            >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
@@ -43,7 +51,7 @@ export function MobileHeader() {
                 alt="Treasures" 
                 className={`h-10 w-10 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
               />
-              <span className="font-bold text-lg text-foreground">Treasures</span>
+              <span className={`font-bold text-lg ${isAdventureTheme ? 'text-stone-200' : 'text-foreground'}`}>Treasures</span>
             </div>
             <nav className="flex flex-col gap-2 px-2">
               {navigation.map((item) => {
@@ -155,7 +163,7 @@ export function MobileHeader() {
             alt="Treasures" 
             className={`h-8 w-8 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
           />
-          <h1 className="text-xs font-bold text-foreground m-0 leading-none">Treasures</h1>
+          <h1 className={`text-xs font-bold m-0 leading-none ${isAdventureTheme ? 'text-stone-200' : 'text-foreground'}`}>Treasures</h1>
         </Link>
         
         <div className="-mr-2 flex items-center gap-2">
@@ -168,9 +176,15 @@ export function MobileHeader() {
 
 export function MobileBottomNav() {
   const location = useLocation();
+  const { theme } = useTheme();
+  const isAdventureTheme = theme === 'adventure';
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden pb-safe-bottom">
+    <nav className={`fixed bottom-0 left-0 right-0 z-40 border-t md:hidden pb-safe-bottom ${
+      isAdventureTheme 
+        ? 'bg-stone-800 border-stone-700' 
+        : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
+    }`}>
       <div className="grid grid-cols-4 h-16 items-center">
         {navigation.map((item) => {
           const Icon = item.icon;
@@ -182,14 +196,14 @@ export function MobileBottomNav() {
               to={item.href}
               className={`flex flex-col items-center justify-center gap-1 px-2 py-1 text-xs transition-colors ${
                 isActive
-                  ? 'text-green-600 adventure:text-stone-700'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? isAdventureTheme ? 'text-stone-200' : 'text-green-600'
+                  : isAdventureTheme ? 'text-stone-400 hover:text-stone-200' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <div className="flex items-center justify-center w-6 h-6">
-                <Icon className={`h-5 w-5 ${isActive ? 'text-green-600 adventure:text-stone-700' : ''}`} />
+                <Icon className={`h-5 w-5 ${isActive ? (isAdventureTheme ? 'text-stone-200' : 'text-green-600') : ''}`} />
               </div>
-              <span className={`text-center leading-tight ${isActive ? 'text-green-600 adventure:text-stone-700 font-medium' : ''}`}>
+              <span className={`text-center leading-tight ${isActive ? (isAdventureTheme ? 'text-stone-200 font-medium' : 'text-green-600 font-medium') : ''}`}>
                 {item.name}
               </span>
             </Link>
