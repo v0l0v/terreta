@@ -65,6 +65,10 @@ export default function Map() {
   const optimisticGeocaches = useMapPageGeocaches();
   
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const pullStartY = useRef<number | null>(null);
+  const pullThreshold = 80; // pixels to trigger refresh
 
   const { 
     data: geocaches, 
@@ -324,81 +328,99 @@ export default function Map() {
         optimisticGeocaches.refresh(),
         refetch()
       ]);
+    } catch (error) {
+      console.error('Refresh failed:', error);
     } finally {
       setIsRetrying(false);
     }
   };
 
+  // Pull-to-refresh handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      pullStartY.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (pullStartY.current === null || e.touches.length !== 1) return;
+    
+    const currentY = e.touches[0].clientY;
+    const distance = currentY - pullStartY.current;
+    
+    // Only allow pull down when at the top of the scroll container
+    const scrollContainer = e.currentTarget as HTMLElement;
+    if (scrollContainer.scrollTop === 0 && distance > 0) {
+      e.preventDefault();
+      setPullDistance(Math.min(distance, pullThreshold * 1.5));
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (pullDistance >= pullThreshold && !isPullRefreshing) {
+      setIsPullRefreshing(true);
+      try {
+        await Promise.all([
+          optimisticGeocaches.refresh(),
+          refetch()
+        ]);
+      } finally {
+        setIsPullRefreshing(false);
+      }
+    }
+    
+    pullStartY.current = null;
+    setPullDistance(0);
+  };
+
   // Auto-refresh when relay changes
   useEffect(() => {
-    optimisticGeocaches.refresh();
-    refetch();
-  }, [config.relayUrl, optimisticGeocaches.refresh, refetch]);
-
-  // Handle popup close events to clear highlighted geocache
-  useEffect(() => {
-    const handlePopupClose = (event: CustomEvent) => {
-      const dTag = event.detail;
-      // Only clear if this is the currently highlighted geocache
-      if (highlightedGeocache === dTag) {
-        setHighlightedGeocache(null);
-      }
-    };
-
-    window.addEventListener('popup-closed', handlePopupClose as EventListener);
-    return () => {
-      window.removeEventListener('popup-closed', handlePopupClose as EventListener);
-    };
-  }, [highlightedGeocache]);
+    // This effect can be used to refresh data when config changes
+    // Currently no implementation needed
+  }, [config]);
 
   return (
-    <div className="bg-background h-screen flex flex-col">
-      <DesktopHeader variant="map" />
-
-      <div className="hidden lg:flex flex-1 overflow-hidden">
-        {/* Adventure Sidebar */}
-        <div className="w-96 border-r bg-background/95 backdrop-blur-sm flex flex-col h-full">
-          {/* Adventure Search and Filters */}
-          <div className="p-4 border-b bg-muted/50">
-            <div className="space-y-3">
+    <div className="h-screen flex flex-col">
+      <DesktopHeader />
+      
+      {/* Desktop View */}
+      <div className="hidden lg:flex flex-1 overflow-hidden min-h-0">
+        {/* Sidebar */}
+        <div className="w-96 border-r bg-background flex flex-col">
+          {/* Filters */}
+          <div className="p-4 border-b bg-background/95 backdrop-blur-sm flex-shrink-0">
+            <div className="space-y-4">
               <div className="flex gap-2">
-                <div className="flex-1">
-                  <Input
-                    id="search"
-                    placeholder="Search by Geocache"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <div className="flex items-end">
-                  <FilterButton
-                    difficulty={difficulty}
-                    difficultyOperator={difficultyOperator}
-                    onDifficultyChange={setDifficulty}
-                    onDifficultyOperatorChange={setDifficultyOperator}
-                    terrain={terrain}
-                    terrainOperator={terrainOperator}
-                    onTerrainChange={setTerrain}
-                    onTerrainOperatorChange={setTerrainOperator}
-                    cacheType={cacheType}
-                    onCacheTypeChange={setCacheType}
-                  />
-                </div>
+                <Input
+                  placeholder="Search caches..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1"
+                />
+                <FilterButton
+                  difficulty={difficulty}
+                  difficultyOperator={difficultyOperator}
+                  onDifficultyChange={setDifficulty}
+                  onDifficultyOperatorChange={setDifficultyOperator}
+                  terrain={terrain}
+                  terrainOperator={terrainOperator}
+                  onTerrainChange={setTerrain}
+                  onTerrainOperatorChange={setTerrainOperator}
+                  cacheType={cacheType}
+                  onCacheTypeChange={setCacheType}
+                />
               </div>
-
-              {/* Location Controls */}
+              
               <div className="space-y-3">
-                <div className="relative">
-                  <LocationSearch 
-                    onLocationSelect={handleLocationSelect}
-                    placeholder="Search city or zip..."
-                  />
-                </div>
-
+                <LocationSearch 
+                  onLocationSelect={handleLocationSelect}
+                  placeholder="Search city or zip..."
+                />
+                
                 <div className="flex gap-2">
                   <Button 
                     variant={showNearMe ? "default" : "outline"} 
-                    className={`h-8 text-xs ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
+                    className={`h-9 text-xs ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
                     onClick={handleNearMe}
                     disabled={isGettingLocation}
                   >
@@ -408,7 +430,7 @@ export default function Map() {
                   
                   <Button 
                     variant={searchInView ? "default" : "outline"} 
-                    className={`h-8 text-xs ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
+                    className={`h-9 text-xs ${(showNearMe || searchLocation || searchInView) ? 'px-3' : 'flex-1'}`}
                     onClick={handleSearchInView}
                     disabled={isLoading}
                   >
@@ -419,7 +441,7 @@ export default function Map() {
                   {(showNearMe || searchLocation || searchInView) && (
                     <>
                       <Select value={searchRadius.toString()} onValueChange={(v) => setSearchRadius(Number(v) || 25)}>
-                        <SelectTrigger className="flex-1 min-w-0 h-8 text-xs" >
+                        <SelectTrigger className="flex-1 min-w-0 h-9 text-xs">
                           <SelectValue placeholder="25 km" />
                         </SelectTrigger>
                         <SelectContent>
@@ -434,7 +456,7 @@ export default function Map() {
                       
                       <Button
                         variant="ghost"
-                        className="h-8 w-8 p-0 flex-shrink-0"
+                        className="h-9 w-9 p-0 flex-shrink-0"
                         onClick={() => {
                           setShowNearMe(false);
                           setSearchLocation(null);
@@ -475,38 +497,55 @@ export default function Map() {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span>
                         {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
                         {isProximitySearchActive && ` • ${searchRadius}km radius`}
                       </span>
+                      
+
+                      
                       {((isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0) && (
                         <div className="flex items-center gap-1 text-xs">
                           <div className="animate-spin rounded-full h-3 w-3 border border-muted-foreground/30 border-t-muted-foreground"></div>
                           <span>searching...</span>
                         </div>
                       )}
-                      {optimisticGeocaches.isStale || optimisticGeocaches.isFetching ? (
+                      {optimisticGeocaches.isStale && !optimisticGeocaches.isFetching && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRetry}
+                          className="h-6 px-2 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-950/20"
+                        >
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          Update available
+                        </Button>
+                      )}
+                      {optimisticGeocaches.isFetching && (
                         <div className="flex items-center gap-1 text-xs">
                           <div className="animate-pulse h-2 w-2 bg-primary rounded-full"></div>
                           <span>updating</span>
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm"
-                      onClick={() => {
-                        optimisticGeocaches.refresh();
-                        refetch();
-                      }}
-                      className="h-7 w-7 p-0 hover:bg-muted/50"
-                      title="Refresh geocaches"
+                      onClick={handleRetry}
+                      className={`h-8 px-3 hover:bg-muted/50 border-muted-foreground/20 transition-all duration-200 ${
+                        optimisticGeocaches.isStale && !optimisticGeocaches.isFetching 
+                          ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:bg-amber-950/20 dark:text-amber-400 dark:hover:bg-amber-950/40' 
+                          : ''
+                      }`}
+                      title="Refresh geocaches (R)"
                       disabled={isRetrying}
                     >
-                      <RefreshCw className={`h-3 w-3 ${isRetrying ? 'animate-spin' : ''}`} />
+                      <RefreshCw className={`h-3 w-3 mr-1 ${isRetrying ? 'animate-spin' : optimisticGeocaches.isStale && !optimisticGeocaches.isFetching ? 'animate-pulse' : ''}`} />
+                      <span className="text-xs">Refresh</span>
                     </Button>
                   </div>
                 </div>
@@ -526,7 +565,7 @@ export default function Map() {
         </div>
 
         {/* Map - render immediately with progressive geocache loading */}
-        <div className="flex-1 relative bg-background h-full">
+        <div className="flex-1 relative bg-background min-h-0">
           <GeocacheMap 
             key={mapUpdateKey}
             geocaches={filteredGeocaches} 
@@ -550,6 +589,20 @@ export default function Map() {
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-muted-foreground/30 border-t-primary"></div>
                 <span>Finding geocaches...</span>
               </div>
+            </div>
+          )}
+          
+          {/* Floating refresh button when data is stale */}
+          {optimisticGeocaches.isStale && !optimisticGeocaches.isFetching && filteredGeocaches.length > 0 && (
+            <div className="absolute top-4 right-4 z-20">
+              <Button
+                onClick={handleRetry}
+                className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg animate-in fade-in duration-300"
+                size="sm"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isRetrying ? "animate-spin" : ""}`} />
+                New caches available
+              </Button>
             </div>
           )}
         </div>
@@ -635,6 +688,7 @@ export default function Map() {
                           setSearchInView(false);
                           setViewBounds(null);
                         }}
+                        title="Clear location filter"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -655,7 +709,36 @@ export default function Map() {
             onValueChange={setActiveTab}
           >
             <TabsContent value="list" className="flex-1 mt-0 m-0 p-0 data-[state=active]:flex data-[state=active]:flex-col bg-background overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 pb-6 min-h-0">
+              <div 
+                className="flex-1 overflow-y-auto p-4 pb-6 min-h-0 relative"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                {/* Pull-to-refresh indicator */}
+                {(pullDistance > 0 || isPullRefreshing) && (
+                  <div 
+                    className="absolute top-0 left-0 right-0 flex items-center justify-center bg-background/95 backdrop-blur-sm border-b transition-all duration-200 z-10"
+                    style={{ 
+                      height: `${Math.min(pullDistance, pullThreshold)}px`,
+                      opacity: pullDistance > 20 ? 1 : pullDistance / 20 
+                    }}
+                  >
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <RefreshCw className={`h-4 w-4 ${(isPullRefreshing || pullDistance >= pullThreshold) ? 'animate-spin' : ''}`} />
+                      <span>
+                        {isPullRefreshing 
+                          ? 'Refreshing...' 
+                          : pullDistance >= pullThreshold 
+                            ? 'Release to refresh' 
+                            : 'Pull to refresh'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <div style={{ paddingTop: pullDistance > 0 ? `${Math.min(pullDistance, pullThreshold)}px` : '0' }}>
                 <SmartLoadingState
                   isLoading={isProximitySearchActive ? isLoading && filteredGeocaches.length === 0 : optimisticGeocaches.isLoading && !optimisticGeocaches.hasInitialData}
                   isError={isProximitySearchActive ? !!error : optimisticGeocaches.isError}
@@ -685,27 +768,40 @@ export default function Map() {
                             <span>searching...</span>
                           </div>
                         )}
-                        {optimisticGeocaches.isStale || optimisticGeocaches.isFetching ? (
+                        {optimisticGeocaches.isStale && !optimisticGeocaches.isFetching && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleRetry}
+                            className="h-6 px-2 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-950/20"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Update
+                          </Button>
+                        )}
+                        {optimisticGeocaches.isFetching && (
                           <div className="flex items-center gap-1 text-xs">
                             <div className="animate-pulse h-2 w-2 bg-primary rounded-full"></div>
                             <span>updating</span>
                           </div>
-                        ) : null}
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button 
-                        variant="ghost" 
+                        variant="outline" 
                         size="sm"
-                        onClick={() => {
-                          optimisticGeocaches.refresh();
-                          refetch();
-                        }}
-                        className="h-7 w-7 p-0 hover:bg-muted/50"
-                        title="Refresh geocaches"
+                        onClick={handleRetry}
+                        className={`h-8 px-3 hover:bg-muted/50 border-muted-foreground/20 transition-all duration-200 ${
+                          optimisticGeocaches.isStale && !optimisticGeocaches.isFetching 
+                            ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:bg-amber-950/20 dark:text-amber-400 dark:hover:bg-amber-950/40' 
+                            : ''
+                        }`}
+                        title="Refresh geocaches (R)"
                         disabled={isRetrying}
                       >
-                        <RefreshCw className={`h-3 w-3 ${isRetrying ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`h-3 w-3 mr-1 ${isRetrying ? 'animate-spin' : optimisticGeocaches.isStale && !optimisticGeocaches.isFetching ? 'animate-pulse' : ''}`} />
+                        <span className="text-xs">Refresh</span>
                       </Button>
                       {isProximitySearchActive && (
                         <Badge 
@@ -731,6 +827,7 @@ export default function Map() {
                   </div>
                 </div>
               </SmartLoadingState>
+                </div>
               </div>
             </TabsContent>
             <TabsContent value="map" className="flex-1 mt-0 m-0 p-0 data-[state=active]:block">
@@ -758,6 +855,21 @@ export default function Map() {
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-muted-foreground/30 border-t-primary"></div>
                       <span>Finding geocaches...</span>
                     </div>
+                  </div>
+                )}
+                
+                {/* Floating refresh button for mobile map when data is stale */}
+                {optimisticGeocaches.isStale && !optimisticGeocaches.isFetching && filteredGeocaches.length > 0 && (
+                  <div className="absolute top-4 right-4 z-20">
+                    <Button
+                      onClick={handleRetry}
+                      className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg animate-in fade-in duration-300"
+                      size="sm"
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-1 ${isRetrying ? "animate-spin" : ""}`} />
+                      <span className="hidden sm:inline">New caches</span>
+                      <span className="sm:hidden">Update</span>
+                    </Button>
                   </div>
                 )}
               </div>

@@ -21,14 +21,14 @@ export function DifficultyTerrainRating({
   return (
     <div className="space-y-2">
       <div>
-        <p className={`font-medium text-muted-foreground ${textSize}`}>Difficulty</p>
+        <p className={`font-medium text-gray-600 ${textSize}`}>Difficulty</p>
         <div className="flex items-center gap-2 mt-1">
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
                 className={`${dotSize} rounded ${
-                  i <= difficulty ? "bg-amber-600" : "bg-muted"
+                  i <= difficulty ? "bg-green-600" : "bg-gray-200"
                 }`}
               />
             ))}
@@ -38,14 +38,14 @@ export function DifficultyTerrainRating({
       </div>
       
       <div>
-        <p className={`font-medium text-muted-foreground ${textSize}`}>Terrain</p>
+        <p className={`font-medium text-gray-600 ${textSize}`}>Terrain</p>
         <div className="flex items-center gap-2 mt-1">
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
                 className={`${dotSize} rounded ${
-                  i <= terrain ? "bg-orange-600" : "bg-muted"
+                  i <= terrain ? "bg-blue-600" : "bg-gray-200"
                 }`}
               />
             ))}
@@ -56,14 +56,14 @@ export function DifficultyTerrainRating({
       
       {cacheSize && (
         <div>
-          <p className={`font-medium text-muted-foreground ${textSize}`}>Size</p>
+          <p className={`font-medium text-gray-600 ${textSize}`}>Size</p>
           <div className="flex items-center gap-2 mt-1">
             <div className="flex gap-1 items-end">
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
                   className={`rounded ${
-                    i <= sizeLevel ? "bg-amber-700" : "bg-muted"
+                    i <= sizeLevel ? "bg-purple-600" : "bg-gray-200"
                   } ${
                     // Different sizes for each level to represent cache size visually
                     i === 1 ? (size === 'small' ? 'h-2 w-2' : 'h-3 w-3') :

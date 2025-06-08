@@ -956,9 +956,10 @@ export function GeocacheMap({
 
   return (
     <div 
-      className="relative h-full w-full overflow-hidden min-h-[400px] md:min-h-0" 
+      className="relative h-full w-full overflow-hidden" 
       style={{ 
-        backgroundColor: '#f8fafc'
+        backgroundColor: '#f8fafc',
+        minHeight: '100%'
       }}
     >
       {/* Clean Adventure-style Map */}
@@ -1011,7 +1012,7 @@ export function GeocacheMap({
       <MapContainer
         center={mapCenter}
         zoom={zoom}
-        style={{ height: "100%", width: "100%", minHeight: "400px" }}
+        style={{ height: "100%", width: "100%" }}
         className="z-0"
         zoomControl={true}
         doubleClickZoom={true}

@@ -314,6 +314,16 @@
   overflow: hidden !important;
 }
 
+/* Desktop map container fixes */
+@media (min-width: 1024px) {
+  /* Ensure desktop map takes full height */
+  .leaflet-container {
+    height: 100% !important;
+    width: 100% !important;
+    min-height: 100% !important;
+  }
+}
+
 /* Mobile map container fixes */
 @media (max-width: 1024px) {
   /* Ensure map tabs content is properly sized */
