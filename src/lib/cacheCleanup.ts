@@ -85,11 +85,6 @@ export class CacheCleanupManager {
       if (removedCount > 0) {
         console.log(`Cache cleanup: removed ${removedCount} stale queries`);
       }
-
-      // Force garbage collection if available (development only)
-      if (import.meta.env.DEV && 'gc' in window) {
-        (window as any).gc();
-      }
     } catch (error) {
       console.warn('Cache cleanup failed:', error);
     }

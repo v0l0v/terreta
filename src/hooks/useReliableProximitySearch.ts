@@ -109,16 +109,6 @@ function generateGeohashPatterns(
   
   const result = Array.from(patterns).sort();
   
-  if (import.meta.env.DEV) {
-    console.log('🔍 Generated geohash patterns:', {
-      radiusKm,
-      targetPrecision,
-      patternCount: result.length,
-      centerGeohash,
-      samplePatterns: result.slice(0, 5)
-    });
-  }
-  
   return result;
 }
 
@@ -180,15 +170,6 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
         options.radiusKm
       );
 
-      if (import.meta.env.DEV) {
-        console.log('🔍 Proximity search patterns:', {
-          center: [options.centerLat, options.centerLng],
-          radius: options.radiusKm,
-          patternCount: patterns.length,
-          patterns: patterns.slice(0, 10), // Show first 10 patterns
-        });
-      }
-
       // Create a single filter with all patterns
       const filter: NostrFilter = {
         kinds: [NIP_GC_KINDS.GEOCACHE],
@@ -201,14 +182,6 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
       }
 
       const events = await nostr.query([filter], { signal });
-
-      if (import.meta.env.DEV) {
-        console.log('🔍 Proximity search results:', {
-          patterns: patterns.length,
-          eventsFound: events.length,
-          successful: events.length > 0
-        });
-      }
 
       return {
         events,
@@ -327,14 +300,7 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
           searchStrategy = 'proximity';
           proximitySuccessful = true;
           debugInfo = proximityResult.debugInfo;
-          
-          if (import.meta.env.DEV) {
-            console.log('✅ Proximity search completed:', events.length, 'events');
-          }
         } else {
-          if (import.meta.env.DEV) {
-            console.log('❌ Proximity search failed, falling back to broad search');
-          }
           debugInfo = proximityResult.debugInfo;
         }
       }
@@ -344,10 +310,6 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
         try {
           events = await executeBroadSearch(signal);
           searchStrategy = proximityAttempted ? 'fallback' : 'broad';
-          
-          if (import.meta.env.DEV) {
-            console.log(`✅ ${searchStrategy} search completed:`, events.length, 'events');
-          }
         } catch (error) {
           console.error('❌ Broad search also failed:', error);
           debugInfo.broadSearchError = error instanceof Error ? error.message : String(error);
@@ -370,7 +332,6 @@ export function useReliableProximitySearch(options: UseReliableProximitySearchOp
         proximityAttempted,
         proximitySuccessful,
         totalFound: events.length,
-        debugInfo: import.meta.env.DEV ? debugInfo : undefined
       };
     },
     staleTime: 60000, // 1 minute

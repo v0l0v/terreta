@@ -357,11 +357,6 @@ describe('Proximity Search Functionality', () => {
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
-
-      // Should have debug info in development mode
-      if (import.meta.env.DEV) {
-        expect(result.current).toHaveProperty('debugInfo');
-      }
     });
   });
 

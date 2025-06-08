@@ -618,11 +618,6 @@ npm run test  # Full test suite including data management tests
 
 **Example debugging setup:**
 ```tsx
-// ✅ Good: Use development-only logging
-if (import.meta.env.DEV) {
-  console.log('Data manager status:', dataManager.getStatus());
-}
-
 // ✅ Good: Test complex scenarios
 it('should handle rapid status changes', async () => {
   const { result } = renderHook(() => useDataManager());

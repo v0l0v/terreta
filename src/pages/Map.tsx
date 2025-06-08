@@ -450,14 +450,6 @@ export default function Map() {
                       {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
                       {isProximitySearchActive && ` • ${searchRadius}km radius`}
                     </p>
-                    {import.meta.env.DEV && debugInfo && (
-                      <details className="mt-1">
-                        <summary className="cursor-pointer text-xs opacity-60">Debug Info</summary>
-                        <pre className="text-xs mt-1 opacity-60 whitespace-pre-wrap">
-                          {JSON.stringify(debugInfo, null, 2)}
-                        </pre>
-                      </details>
-                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {((isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0) || optimisticGeocaches.isStale || optimisticGeocaches.isFetching ? (
