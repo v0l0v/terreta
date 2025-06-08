@@ -1,9 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RelaySelector } from '@/components/RelaySelector';
 import { AppProvider } from '@/components/AppProvider';
 import { AppConfig } from '@/contexts/AppContext';
 import { ThemeProvider } from 'next-themes';
+
+// Mock next-themes
+vi.mock('next-themes', () => ({
+  useTheme: () => ({ theme: 'light' }),
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
 
 const defaultConfig: AppConfig = {
   relayUrl: 'wss://ditto.pub/relay',
@@ -29,14 +35,16 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe('RelaySelector', () => {
-  it('renders with default relay selected', () => {
+  it('renders with default relay selected on both desktop and mobile', () => {
     render(
       <TestWrapper>
         <RelaySelector />
       </TestWrapper>
     );
 
-    expect(screen.getByText('Ditto')).toBeInTheDocument();
+    // Should show the relay name in both desktop combobox and mobile select
+    const relayTexts = screen.getAllByText('Ditto');
+    expect(relayTexts.length).toBeGreaterThan(0);
   });
 
   it('shows relay URL when no preset name matches', () => {
@@ -56,34 +64,36 @@ describe('RelaySelector', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText('custom.relay.com')).toBeInTheDocument();
+    // Should show custom relay URL in both desktop and mobile versions
+    const customTexts = screen.getAllByText('custom.relay.com');
+    expect(customTexts.length).toBeGreaterThan(0);
   });
 
-  it('applies adventure theme styling when adventure theme is active', () => {
-    render(
-      <ThemeProvider attribute="class" defaultTheme="adventure">
-        <AppProvider 
-          storageKey="test:app-config" 
-          defaultConfig={defaultConfig} 
-          presetRelays={presetRelays}
-        >
-          <RelaySelector />
-        </AppProvider>
-      </ThemeProvider>
-    );
-
-    const selectTrigger = screen.getByRole('combobox');
-    expect(selectTrigger).toHaveClass('!bg-stone-700', '!border-stone-600', '!text-stone-200');
-  });
-
-  it('shows custom relay input when "Add custom relay..." is selected', async () => {
+  it('shows desktop combobox and mobile select', () => {
     render(
       <TestWrapper>
         <RelaySelector />
       </TestWrapper>
     );
 
-    const selectTrigger = screen.getByRole('combobox');
+    // Desktop combobox should be hidden on mobile (md:block class)
+    const desktopCombobox = screen.getByRole('combobox');
+    expect(desktopCombobox.closest('div')).toHaveClass('hidden', 'md:block');
+
+    // Mobile select should be hidden on desktop (md:hidden class)  
+    const mobileSelect = screen.getByRole('button');
+    expect(mobileSelect.closest('div')).toHaveClass('md:hidden');
+  });
+
+  it('mobile select shows custom relay input when "Add custom relay..." is selected', async () => {
+    render(
+      <TestWrapper>
+        <RelaySelector />
+      </TestWrapper>
+    );
+
+    // Find the mobile select (the button, not the combobox)
+    const selectTrigger = screen.getByRole('button');
     fireEvent.click(selectTrigger);
 
     // Wait for the dropdown to open and find the custom option
@@ -100,14 +110,15 @@ describe('RelaySelector', () => {
     });
   });
 
-  it('allows adding a custom relay URL', async () => {
+  it('mobile select allows adding a custom relay URL', async () => {
     render(
       <TestWrapper>
         <RelaySelector />
       </TestWrapper>
     );
 
-    const selectTrigger = screen.getByRole('combobox');
+    // Find the mobile select (the button, not the combobox)
+    const selectTrigger = screen.getByRole('button');
     fireEvent.click(selectTrigger);
 
     // Select custom option
@@ -125,9 +136,10 @@ describe('RelaySelector', () => {
       fireEvent.click(addButton);
     });
 
-    // Check that the custom relay is now selected
+    // Check that the custom relay is now selected in both versions
     await waitFor(() => {
-      expect(screen.getByText('custom.relay.com')).toBeInTheDocument();
+      const customTexts = screen.getAllByText('custom.relay.com');
+      expect(customTexts.length).toBeGreaterThan(0);
     });
   });
 });

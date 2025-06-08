@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useAppContext } from "@/hooks/useAppContext";
 import { useTheme } from "next-themes";
+import { RelayCombobox } from "@/components/RelayCombobox";
 
 interface RelaySelectorProps {
   className?: string;
@@ -83,108 +84,116 @@ export function RelaySelector(props: RelaySelectorProps) {
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <div className="flex items-center gap-2">
-        <Select 
-          value={isCustomRelay ? "custom" : selectedRelay} 
-          onValueChange={handlePresetSelection}
-        >
-          <SelectTrigger 
-            className={cn(
-              "flex-1",
-              isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 hover:!bg-stone-600 hover:!text-stone-100"
-            )}
-          >
-            <SelectValue placeholder="Select relay...">
-              {selectedOption 
-                ? selectedOption.name 
-                : isCustomRelay 
-                  ? selectedRelay.replace(/^wss?:\/\//, '')
-                  : "Select relay..."
-              }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {presetRelays.map((option) => (
-              <SelectItem key={option.url} value={option.url}>
-                <div className="flex flex-col">
-                  <span className="font-medium">{option.name}</span>
-                  <span className="text-xs text-muted-foreground">{option.url}</span>
-                </div>
-              </SelectItem>
-            ))}
-            <SelectItem value="custom">
-              <div className="flex items-center">
-                <Plus className="mr-2 h-4 w-4" />
-                <span>Add custom relay...</span>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        
-        {isCustomRelay && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              setSelectedRelay("");
-              setShowCustomInput(false);
-            }}
-            className={cn(
-              "shrink-0",
-              isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 hover:!bg-stone-600 hover:!text-stone-100"
-            )}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+    <>
+      {/* Desktop: Use combobox */}
+      <div className={cn("hidden md:block", className)}>
+        <RelayCombobox />
       </div>
 
-      {showCustomInput && (
+      {/* Mobile: Use select dropdown */}
+      <div className={cn("md:hidden space-y-2", className)}>
         <div className="flex items-center gap-2">
-          <Input
-            placeholder="wss://relay.example.com"
-            value={customUrl}
-            onChange={(e) => setCustomUrl(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleAddCustomRelay();
-              } else if (e.key === 'Escape') {
+          <Select 
+            value={isCustomRelay ? "custom" : selectedRelay} 
+            onValueChange={handlePresetSelection}
+          >
+            <SelectTrigger 
+              className={cn(
+                "flex-1",
+                isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 hover:!bg-stone-600 hover:!text-stone-100"
+              )}
+            >
+              <SelectValue placeholder="Select relay...">
+                {selectedOption 
+                  ? selectedOption.name 
+                  : isCustomRelay 
+                    ? selectedRelay.replace(/^wss?:\/\//, '')
+                    : "Select relay..."
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {presetRelays.map((option) => (
+                <SelectItem key={option.url} value={option.url}>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{option.name}</span>
+                    <span className="text-xs text-muted-foreground">{option.url}</span>
+                  </div>
+                </SelectItem>
+              ))}
+              <SelectItem value="custom">
+                <div className="flex items-center">
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span>Add custom relay...</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {isCustomRelay && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                setSelectedRelay("");
+                setShowCustomInput(false);
+              }}
+              className={cn(
+                "shrink-0",
+                isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 hover:!bg-stone-600 hover:!text-stone-100"
+              )}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        {showCustomInput && (
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="wss://relay.example.com"
+              value={customUrl}
+              onChange={(e) => setCustomUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleAddCustomRelay();
+                } else if (e.key === 'Escape') {
+                  setShowCustomInput(false);
+                  setCustomUrl("");
+                }
+              }}
+              className={cn(
+                "flex-1",
+                isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 placeholder:!text-stone-400"
+              )}
+              autoFocus
+            />
+            <Button
+              onClick={handleAddCustomRelay}
+              disabled={!isValidRelayInput(customUrl)}
+              size="sm"
+              className={cn(
+                isAdventureTheme && "!bg-stone-600 !text-stone-100 hover:!bg-stone-500"
+              )}
+            >
+              Add
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
                 setShowCustomInput(false);
                 setCustomUrl("");
-              }
-            }}
-            className={cn(
-              "flex-1",
-              isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 placeholder:!text-stone-400"
-            )}
-            autoFocus
-          />
-          <Button
-            onClick={handleAddCustomRelay}
-            disabled={!isValidRelayInput(customUrl)}
-            size="sm"
-            className={cn(
-              isAdventureTheme && "!bg-stone-600 !text-stone-100 hover:!bg-stone-500"
-            )}
-          >
-            Add
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowCustomInput(false);
-              setCustomUrl("");
-            }}
-            size="sm"
-            className={cn(
-              isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 hover:!bg-stone-600"
-            )}
-          >
-            Cancel
-          </Button>
-        </div>
-      )}
-    </div>
+              }}
+              size="sm"
+              className={cn(
+                isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 hover:!bg-stone-600"
+              )}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
