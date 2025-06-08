@@ -495,7 +495,12 @@ function MapRefController({
 }) {
   const map = useMap();
   
-  useEffect(() => {   
+  useEffect(() => {
+    // Expose map reference immediately
+    if (mapRef) {
+      mapRef.current = map;
+    }
+    
     // Mark map as ready almost immediately - just a tiny delay for DOM
     const timer = setTimeout(() => {
       onMapReady?.();
@@ -816,6 +821,7 @@ export function GeocacheMap({
   const { theme, systemTheme } = useTheme();
   const { isOnline, isOfflineMode } = useOfflineMode();
   const [isMapReady, setIsMapReady] = useState(false);
+  const [isMapInitialized, setIsMapInitialized] = useState(false);
   
   // Determine if we should use dark mode for the map
   const getDefaultMapStyle = () => {
@@ -982,12 +988,22 @@ export function GeocacheMap({
         </>
       )}
       
-      {/* Map Loading Skeleton - minimal loading time */}
-      {!isMapReady && (
+      {/* Map Loading Skeleton - show only during initial map creation */}
+      {!isMapInitialized && (
         <div className="absolute inset-0 z-10 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
             <p className="text-sm text-muted-foreground">Loading map...</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Geocache Loading Indicator - subtle overlay when geocaches are loading */}
+      {isMapInitialized && !isMapReady && geocaches.length === 0 && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 shadow-sm">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            <span>Loading geocaches...</span>
           </div>
         </div>
       )}
@@ -1003,6 +1019,9 @@ export function GeocacheMap({
         attributionControl={false}
         // Optimize for fastest loading
         whenReady={(mapInstance) => {
+          // Mark map as initialized immediately
+          setIsMapInitialized(true);
+          
           // Force immediate tile loading with safety check
           if (mapInstance && typeof mapInstance.invalidateSize === 'function') {
             mapInstance.invalidateSize();

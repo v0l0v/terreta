@@ -518,7 +518,7 @@ export default function Map() {
           </div>
         </div>
 
-        {/* Map - render immediately, don't wait for geocache data */}
+        {/* Map - render immediately with progressive geocache loading */}
         <div className="flex-1 relative bg-background h-full">
           <GeocacheMap 
             key={mapUpdateKey}
@@ -535,6 +535,16 @@ export default function Map() {
             mapRef={mapRef}
             isMapCenterLocked={isMapCenterLocked}
           />
+          
+          {/* Progressive loading indicator for geocaches */}
+          {(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 shadow-sm">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <span>Finding geocaches...</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -710,7 +720,7 @@ export default function Map() {
               </div>
             </TabsContent>
             <TabsContent value="map" className="flex-1 mt-0 m-0 p-0 data-[state=active]:block">
-              <div className="h-full w-full bg-background">
+              <div className="h-full w-full bg-background relative">
                 <GeocacheMap 
                   key={mapUpdateKey}
                   geocaches={filteredGeocaches} 
@@ -726,6 +736,16 @@ export default function Map() {
                   mapRef={mapRef}
                   isMapCenterLocked={isMapCenterLocked}
                 />
+                
+                {/* Progressive loading indicator for mobile map */}
+                {(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 shadow-sm">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      <span>Finding geocaches...</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </MapViewTabs>
