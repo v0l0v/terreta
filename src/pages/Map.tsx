@@ -141,13 +141,16 @@ export default function Map() {
       };
       setUserLocation(location);
       
-      // If Near Me is active, update the map center only once when location is first obtained
-      if (showNearMe && !userLocation) {
+      // If Near Me is active, update the map center when location is obtained
+      // Force map update even if we already have a location (in case it's more accurate)
+      if (showNearMe) {
+        clearMapInteractionLock(); // Clear any interaction locks for explicit location update
         setMapCenter(location);
         setMapZoom(13);
+        setMapUpdateKey(prev => prev + 1); // Force map update
       }
     }
-  }, [coords, showNearMe, userLocation]);
+  }, [coords, showNearMe]);
 
   // Check if proximity search is active
   const isProximitySearchActive = !!(searchLocation || (showNearMe && userLocation) || searchInView);
@@ -225,7 +228,7 @@ export default function Map() {
     setMapUpdateKey(prev => prev + 1); // Force map update
   };
 
-  const handleNearMe = () => {
+  const handleNearMe = async () => {
     // This is an explicit user action - clear all interaction locks
     clearMapInteractionLock();
     
@@ -234,7 +237,16 @@ export default function Map() {
     setSearchInView(false); // Clear search in view
     setViewBounds(null); // Clear view bounds
     setHighlightedGeocache(null); // Clear any highlighted geocache
-    getLocation();
+    
+    // Start location request
+    try {
+      await getLocation();
+      // Location will be handled by the useEffect that watches coords
+    } catch (error) {
+      // If location fails, turn off Near Me mode
+      console.warn('Location request failed:', error);
+      setShowNearMe(false);
+    }
   };
 
   const handleSearchInView = () => {
@@ -284,6 +296,8 @@ export default function Map() {
   const handleMarkerClick = (geocache: Geocache) => {
     setSelectedGeocache(geocache);
     setDialogOpen(true);
+    // Clear highlighted geocache when opening dialog to prevent popup conflicts
+    setHighlightedGeocache(null);
   };
 
   const handleCardClick = (geocache: Geocache) => {
@@ -320,6 +334,22 @@ export default function Map() {
     optimisticGeocaches.refresh();
     refetch();
   }, [config.relayUrl, optimisticGeocaches.refresh, refetch]);
+
+  // Handle popup close events to clear highlighted geocache
+  useEffect(() => {
+    const handlePopupClose = (event: CustomEvent) => {
+      const dTag = event.detail;
+      // Only clear if this is the currently highlighted geocache
+      if (highlightedGeocache === dTag) {
+        setHighlightedGeocache(null);
+      }
+    };
+
+    window.addEventListener('popup-closed', handlePopupClose as EventListener);
+    return () => {
+      window.removeEventListener('popup-closed', handlePopupClose as EventListener);
+    };
+  }, [highlightedGeocache]);
 
   return (
     <div className="bg-background h-screen flex flex-col">
@@ -372,8 +402,8 @@ export default function Map() {
                     onClick={handleNearMe}
                     disabled={isGettingLocation}
                   >
-                    <Locate className="h-3 w-3 mr-1" />
-                    {isGettingLocation ? "Finding..." : "Near Me"}
+                    <Locate className={`h-3 w-3 mr-1 ${isGettingLocation ? 'animate-pulse' : ''}`} />
+                    {isGettingLocation ? "Finding..." : showNearMe && userLocation ? "Near Me ✓" : "Near Me"}
                   </Button>
                   
                   <Button 
@@ -549,8 +579,8 @@ export default function Map() {
                     onClick={handleNearMe}
                     disabled={isGettingLocation}
                   >
-                    <Locate className="h-3 w-3 mr-1" />
-                    {isGettingLocation ? "Finding..." : "Near Me"}
+                    <Locate className={`h-3 w-3 mr-1 ${isGettingLocation ? 'animate-pulse' : ''}`} />
+                    {isGettingLocation ? "Finding..." : showNearMe && userLocation ? "Near Me ✓" : "Near Me"}
                   </Button>
                   
                   <Button 

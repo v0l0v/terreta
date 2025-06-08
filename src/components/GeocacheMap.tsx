@@ -265,10 +265,10 @@ function MapController({
     const handleInteractionEnd = () => {
       userIsInteracting.current = false;
       
-      // Set a longer timeout before allowing automatic updates
+      // Set a reasonable timeout before allowing automatic updates
       interactionTimeoutRef.current = setTimeout(() => {
         userHasInteracted.current = false;
-      }, 15000); // 15 seconds - much longer protection
+      }, 8000); // 8 seconds - balanced protection that's not too long
     };
     
     // Listen to all possible user interactions
@@ -314,7 +314,7 @@ function MapController({
           !userIsInteracting.current &&
           !userHasInteracted.current &&
           !isMapCenterLocked &&
-          now - lastUpdateTime.current > 2000) { // 2 second minimum between updates
+          now - lastUpdateTime.current > 1000) { // Reduced to 1 second for more responsive location updates
         
         lastCenterRef.current = centerKey;
         lastUpdateTime.current = now;
@@ -325,14 +325,14 @@ function MapController({
           
           map.setView([searchLocation.lat, searchLocation.lng], targetZoom, {
             animate: true,
-            duration: 0.25
+            duration: 0.5 // Slightly longer animation for smoother experience
           });
           lastRadiusRef.current = searchRadius;
         } else {
           // Otherwise just set the view
           map.setView(center, zoom, {
             animate: true,
-            duration: 0.25
+            duration: 0.5
           });
         }
       }
@@ -408,14 +408,25 @@ function PopupController({
   onMarkerClick?: (geocache: Geocache) => void;
 }) {
   const map = useMap();
+  const lastHighlightedRef = useRef<string | null>(null);
+  const popupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
-    if (highlightedGeocache) {
+    // Clear any existing timeout
+    if (popupTimeoutRef.current) {
+      clearTimeout(popupTimeoutRef.current);
+      popupTimeoutRef.current = null;
+    }
+    
+    // Only open popup if highlightedGeocache has actually changed
+    if (highlightedGeocache && highlightedGeocache !== lastHighlightedRef.current) {
+      lastHighlightedRef.current = highlightedGeocache;
+      
       // Find the geocache
       const geocache = geocaches.find(g => g.dTag === highlightedGeocache);
       if (geocache) {
         // Small delay to ensure map has centered, then trigger popup on the marker
-        setTimeout(() => {
+        popupTimeoutRef.current = setTimeout(() => {
           // Find all markers and open the popup for the matching one
           map.eachLayer((layer: any) => {
             if (layer instanceof L.Marker && layer.getLatLng) {
@@ -428,7 +439,17 @@ function PopupController({
           });
         }, 500);
       }
+    } else if (!highlightedGeocache) {
+      // Clear the reference when no geocache is highlighted
+      lastHighlightedRef.current = null;
     }
+    
+    return () => {
+      if (popupTimeoutRef.current) {
+        clearTimeout(popupTimeoutRef.current);
+        popupTimeoutRef.current = null;
+      }
+    };
   }, [map, highlightedGeocache, geocaches]);
   
   return null;
@@ -1080,6 +1101,12 @@ export function GeocacheMap({
           key={geocache.dTag}
           position={[geocache.location.lat, geocache.location.lng]}
           icon={createCacheIcon(geocache.type, currentMapStyle === 'adventure')}
+          eventHandlers={{
+            popupclose: () => {
+              // Dispatch custom event to clear highlighted geocache when popup is closed
+              window.dispatchEvent(new CustomEvent('popup-closed', { detail: geocache.dTag }));
+            }
+          }}
         >
           <Popup>
             <div className="p-3 min-w-[200px]">
