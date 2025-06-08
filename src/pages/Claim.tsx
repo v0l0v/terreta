@@ -1,46 +1,33 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Upload, AlertCircle, CheckCircle, QrCode, WifiOff } from 'lucide-react';
-import { CompassSpinner } from '@/components/ui/loading';
+import { Camera, Link, AlertCircle, CheckCircle, WifiOff, Smartphone, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/useToast';
 import { useOfflineMode } from '@/hooks/useOfflineStorage';
 import { parseVerificationFromHash } from '@/lib/verification';
-import jsQR from 'jsqr';
 
 export default function Claim() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isOfflineMode } = useOfflineMode();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const scanIntervalRef = useRef<number | null>(null);
   
-  const [isScanning, setIsScanning] = useState(false);
-  const [hasCamera, setHasCamera] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
-  const [selectedImagePreview, setSelectedImagePreview] = useState<string | null>(null);
+  const [manualUrl, setManualUrl] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Check if camera API is available (but don't request permissions yet)
-    const checkCameraAPI = () => {
-      if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
-        setHasCamera(true);
-      } else {
-        setHasCamera(false);
-      }
+    // Detect if user is on mobile device
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const mobileKeywords = ['android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone'];
+      return mobileKeywords.some(keyword => userAgent.includes(keyword));
     };
-
-    checkCameraAPI();
-
-    return () => {
-      stopScanning();
-    };
+    setIsMobile(checkMobile());
   }, []);
 
   const validateTreasureUrl = (url: string): { isValid: boolean; naddr?: string; nsec?: string; error?: string } => {
@@ -73,10 +60,11 @@ export default function Claim() {
     }
   };
 
-  const handleQRCodeDetected = (result: string) => {
+  const handleUrlSubmit = (url: string) => {
     setIsProcessing(true);
+    setError(null);
     
-    const validation = validateTreasureUrl(result);
+    const validation = validateTreasureUrl(url);
     
     if (validation.isValid && validation.naddr && validation.nsec) {
       toast({
@@ -87,230 +75,52 @@ export default function Claim() {
       // Redirect to the cache page with verification key
       navigate(`/${validation.naddr}#verify=${validation.nsec}`);
     } else {
-      let errorMessage = validation.error || 'Invalid QR code';
-      let toastDescription = validation.error || 'This QR code is not a valid treasure verification code.';
+      let errorMessage = validation.error || 'Invalid URL';
+      let toastDescription = validation.error || 'This URL is not a valid treasure verification link.';
       
       // Provide more specific guidance for common issues
       if (validation.error?.includes('No verification key found')) {
-        errorMessage = 'QR code missing verification key';
-        toastDescription = 'This QR code appears to be damaged or incomplete. Please try scanning again or look for a replacement QR code at the cache location.';
+        errorMessage = 'URL missing verification key';
+        toastDescription = 'This URL appears to be incomplete. Please make sure you copied the complete link from the QR code.';
       } else if (validation.error?.includes('Invalid treasure URL format')) {
-        errorMessage = 'Outdated or invalid QR code';
-        toastDescription = 'This QR code may be outdated or from an older version. Please look for a newer QR code at the cache location.';
+        errorMessage = 'Invalid treasure URL';
+        toastDescription = 'This URL may be outdated or incorrect. Please scan the QR code again and copy the complete link.';
       }
       
       setError(errorMessage);
       setIsProcessing(false);
       
       toast({
-        title: 'QR Code Issue',
+        title: 'Invalid URL',
         description: toastDescription,
         variant: 'destructive',
       });
     }
   };
 
-  const startScanning = async () => {
-    if (!hasCamera) {
-      setError('Camera not available');
-      return;
-    }
-
-    try {
-      setIsScanning(true);
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setManualUrl(value);
+    
+    // Clear error when user starts typing
+    if (error) {
       setError(null);
-      
-      // Request camera stream with back camera preference
-      let stream: MediaStream;
-      try {
-        // Try back camera first
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        });
-      } catch (backCameraError) {
-        // Fallback to any camera
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        });
-      }
+    }
 
-      setCameraPermission('granted');
-      
-      // Set up video element
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        
-        // Start continuous scanning
-        startContinuousScanning();
-      }
-
-    } catch (err) {
-      const errorObj = err as { message?: string; name?: string };
-      
-      console.error('Camera error:', errorObj);
-      
-      if (errorObj.name === 'NotAllowedError') {
-        setError('Camera permission denied. Please allow camera access and try again.');
-        setCameraPermission('denied');
-      } else if (errorObj.name === 'NotFoundError') {
-        setError('No camera found on this device.');
-      } else {
-        setError(errorObj.message || 'Failed to start camera');
-      }
-      setIsScanning(false);
+    // Auto-submit if user pastes a complete URL
+    if (value.includes('treasures.to') && value.includes('#verify=')) {
+      // Small delay to let the paste complete
+      setTimeout(() => {
+        handleUrlSubmit(value);
+      }, 100);
     }
   };
 
-  const startContinuousScanning = () => {
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualUrl.trim()) {
+      handleUrlSubmit(manualUrl.trim());
     }
-    
-    scanIntervalRef.current = window.setInterval(() => {
-      scanVideoFrame();
-    }, 500); // Scan every 500ms
-  };
-
-  const scanVideoFrame = () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    
-    if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) {
-      return;
-    }
-    
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    
-    // Set canvas size to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    // Draw current video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Get image data for jsQR
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    
-    // Scan for QR code
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
-    
-    if (code) {
-      handleQRCodeDetected(code.data);
-      stopScanning();
-    }
-  };
-
-  const stopScanning = () => {
-    // Stop scanning interval
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-    
-    // Stop the video stream
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    
-    setIsScanning(false);
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Reset file input
-    event.target.value = '';
-
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      // Basic validation
-      if (!file.type.startsWith('image/')) {
-        throw new Error('Please select an image file');
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        throw new Error('File too large (max 10MB)');
-      }
-
-      // Create preview using data URL
-      const previewDataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsDataURL(file);
-      });
-      
-      setSelectedImagePreview(previewDataUrl);
-
-      // Try to read QR code
-      const qrData = await readQRFromFile(file);
-      
-      // Process the QR code
-      handleQRCodeDetected(qrData);
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-      setError(errorMessage);
-      setIsProcessing(false);
-    }
-  };
-
-  // Use jsQR for static images (simple & reliable), ZXing for camera
-  const readQRFromFile = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
-        const img = new Image();
-        
-        img.onload = () => {
-          // Create canvas and get image data
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          if (!ctx) {
-            reject(new Error('Canvas not supported'));
-            return;
-          }
-          
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          
-          // Get image data for jsQR
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          
-          // jsQR is synchronous and reliable for static images
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
-          
-          if (code) {
-            resolve(code.data);
-          } else {
-            reject(new Error('No QR code found in image'));
-          }
-        };
-        
-        img.onerror = () => reject(new Error('Image load failed'));
-        img.src = dataUrl;
-      };
-      
-      reader.onerror = () => reject(new Error('File read failed'));
-      reader.readAsDataURL(file);
-    });
   };
 
   if (isOfflineMode) {
@@ -343,181 +153,166 @@ export default function Claim() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Claim Treasure</h1>
         <p className="text-muted-foreground">
-          Scan the QR code found with your treasure to claim your verified find!
+          {isMobile 
+            ? "Use your camera to scan the QR code - it will automatically detect it!"
+            : "Use your phone's camera to scan the QR code, then enter the link below"
+          }
         </p>
       </div>
 
       <div className="space-y-6">
-        {/* Hidden canvas for video frame capture */}
-        <canvas ref={canvasRef} className="hidden" />
-        
-        {/* Camera Scanner */}
-        <Card>
+        {/* QR Scanning Instructions */}
+        <Card className="border-2 border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Camera className="h-5 w-5" />
-              Camera Scanner
+              {isMobile ? <Smartphone className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+              {isMobile ? "Scan with Your Camera" : "Scan with Your Phone"}
             </CardTitle>
             <CardDescription>
-              Point your camera at the QR code inside the treasure container
+              {isMobile 
+                ? "Your camera app can automatically detect QR codes"
+                : "Use your mobile device to scan the QR code"
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Video preview */}
-            <div className="relative">
-              <video
-                ref={videoRef}
-                className={`w-full rounded-lg bg-black ${isScanning ? 'block' : 'hidden'}`}
-                style={{ maxHeight: '400px' }}
-                playsInline
-                muted
-              />
-              
-              {!isScanning && (
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <QrCode className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">Camera preview will appear here</p>
+            {/* Visual Instructions */}
+            <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-6 rounded-lg">
+              <div className="grid gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                    1
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">
+                      {isMobile ? "Open your Camera app" : "Get your phone and open the Camera app"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isMobile ? "The default camera app works best" : "Most phones have QR scanning built-in"}
+                    </p>
                   </div>
                 </div>
-              )}
-
-              {isScanning && (
-                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                  {/* QR Code frame overlay */}
-                  <div className="relative">
-                    {/* Frame border */}
-                    <div className="w-64 h-64 border-2 border-white rounded-lg shadow-lg relative">
-                      <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-green-500 rounded-tl-lg"></div>
-                      <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-green-500 rounded-tr-lg"></div>
-                      <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-green-500 rounded-bl-lg"></div>
-                      <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-green-500 rounded-br-lg"></div>
-                    </div>
-                    {/* Positioning message */}
-                    <div className="absolute top-full mt-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
-                      Position QR code within the frame
-                    </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                    2
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Point the camera at the QR code</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Make sure the entire QR code is visible and well-lit
+                    </p>
                   </div>
                 </div>
-              )}
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                    3
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">
+                      {isMobile ? "Tap the popup that appears" : "Copy the treasure link that appears"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isMobile 
+                        ? "Your phone will show a notification to open the link"
+                        : "Then paste it in the form below"
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Camera controls */}
-            <div className="flex gap-2">
-              {!isScanning ? (
-                <Button 
-                  onClick={startScanning} 
-                  disabled={!hasCamera || isProcessing}
-                  className="flex-1"
-                >
-                  {isProcessing ? (
-                    <>
-                      <CompassSpinner size={16} variant="component" className="mr-2" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="h-4 w-4 mr-2" />
-                      Start Scanning
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Button onClick={stopScanning} variant="outline" className="flex-1">
-                  Stop Scanning
-                </Button>
-              )}
-            </div>
-
-            {/* Camera permission message - only show after attempting to start scanning */}
-            {cameraPermission === 'denied' && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Camera access is required to scan QR codes. Please enable camera permissions in your browser settings and try again.
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Camera scanning tips */}
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p className="font-medium">Tips for best results:</p>
-              <ul className="list-disc pl-4 space-y-0.5">
-                <li>Ensure the QR code is clearly visible and well-lit</li>
-                <li>Hold your camera steady and close enough to read the code</li>
-                <li>Avoid shadows, glare, or blurry images</li>
-                <li>Try adjusting the distance if the code won't scan</li>
+            {/* Pro Tips */}
+            <div className="bg-muted/30 p-4 rounded-lg">
+              <p className="font-medium text-sm mb-2">💡 Pro Tips:</p>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>• Hold your phone steady about 6-12 inches from the QR code</li>
+                <li>• Make sure there's good lighting (avoid shadows and glare)</li>
+                <li>• If it doesn't work immediately, try moving slightly closer or further away</li>
+                {!isMobile && <li>• If scanning fails, you can manually type the URL below</li>}
               </ul>
             </div>
           </CardContent>
         </Card>
 
-        {/* File Upload Alternative */}
-        <Card>
+        {/* Manual URL Entry - More Prominent */}
+        <Card className="border-2 border-muted">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Upload Image
+              <Link className="h-5 w-5" />
+              {isMobile ? "Or Enter the Link Manually" : "Enter the Treasure Link"}
             </CardTitle>
             <CardDescription>
-              Alternatively, upload a photo of the QR code
+              {isMobile 
+                ? "If the QR scan didn't work, paste the treasure link here"
+                : "After scanning with your phone, paste the treasure link here"
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-            
-            {/* Image preview */}
-            {selectedImagePreview && (
-              <div className="relative">
-                <img
-                  src={selectedImagePreview}
-                  alt="Selected QR code image"
-                  className="w-full max-h-64 object-contain rounded-lg border bg-muted"
-                />
-                <div className="absolute top-2 right-2">
-                  {isProcessing && (
-                    <div className="bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs">
-                      Analyzing...
-                    </div>
+            <form onSubmit={handleManualSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="treasure-url" className="text-sm font-medium">
+                  Treasure Link
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="treasure-url"
+                    type="url"
+                    placeholder="Paste the treasure link here..."
+                    value={manualUrl}
+                    onChange={handleUrlChange}
+                    disabled={isProcessing}
+                    className="text-base pr-20"
+                    autoComplete="off"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    spellCheck="false"
+                  />
+                  {manualUrl && !isProcessing && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-1 top-1 h-8 px-2 text-xs"
+                      onClick={() => setManualUrl('')}
+                    >
+                      Clear
+                    </Button>
                   )}
                 </div>
               </div>
-            )}
+              
+              <Button
+                type="submit"
+                disabled={isProcessing || !manualUrl.trim()}
+                className="w-full"
+                size="lg"
+              >
+                {isProcessing ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2 animate-spin" />
+                    Validating treasure link...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Claim This Treasure
+                  </>
+                )}
+              </Button>
+            </form>
             
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              variant="outline"
-              disabled={isProcessing}
-              className="w-full mb-4"
-            >
-              {isProcessing ? (
-                <>
-                  <CompassSpinner size={16} variant="component" className="mr-2" />
-                  Processing image...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  {selectedImagePreview ? 'Choose Different Image' : 'Choose Image'}
-                </>
-              )}
-            </Button>
-            
-            {/* File upload specific tips */}
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p className="font-medium">Image upload tips:</p>
-              <ul className="list-disc pl-4 space-y-0.5">
-                <li>Supported formats: JPG, PNG, GIF (max 10MB)</li>
-                <li>Ensure the entire QR code is visible in the photo</li>
-                <li>Take the photo directly above the QR code for best results</li>
-              </ul>
+            {/* Helpful example */}
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs font-medium text-muted-foreground mb-1">
+                The link should look like this:
+              </p>
+              <p className="font-mono text-xs text-muted-foreground break-all">
+                https://treasures.to/naddr1qqs8x...#verify=nsec1abc...
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -556,13 +351,23 @@ export default function Claim() {
               <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium mt-0.5">
                 2
               </div>
-              <p className="text-sm">Scan it with your camera or upload a photo</p>
+              <p className="text-sm">
+                {isMobile 
+                  ? "Point your camera at the QR code - it will detect it automatically"
+                  : "Use your phone's camera to scan the QR code"
+                }
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium mt-0.5">
                 3
               </div>
-              <p className="text-sm">You'll be redirected to submit your verified find log</p>
+              <p className="text-sm">
+                {isMobile 
+                  ? "Tap the popup to open the treasure page automatically"
+                  : "Copy the treasure link and paste it above to claim your find"
+                }
+              </p>
             </div>
           </CardContent>
         </Card>

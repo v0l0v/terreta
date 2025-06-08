@@ -27,10 +27,7 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Mock QR scanning library
-vi.mock('jsqr', () => ({
-  default: vi.fn(),
-}));
+
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -199,7 +196,9 @@ describe('Claim Page QR Validation', () => {
     
     // Check that main elements are present
     expect(screen.getByText('Claim Treasure')).toBeInTheDocument();
-    expect(screen.getByText('Camera Scanner')).toBeInTheDocument();
-    expect(screen.getByText('Upload Image')).toBeInTheDocument();
+    expect(screen.getByText(/Scan with Your/)).toBeInTheDocument();
+    expect(screen.getByText(/Enter the/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /claim this treasure/i })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Paste the treasure link here...')).toBeInTheDocument();
   });
 });
