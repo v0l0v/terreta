@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, Palette, Sun, Moon, Monitor, Wifi, Compass, Settings as SettingsIcon } from "lucide-react";
+import { MapPin, Palette, Sun, Moon, Monitor, Wifi, Compass, Settings as SettingsIcon, Smartphone } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { OfflineSettings } from "@/components/OfflineSettings";
 import { RelaySelector } from "@/components/RelaySelector";
+import { PWASettings } from "@/components/PWASettings";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRelayConfig } from "@/hooks/useRelayConfig";
 
@@ -147,6 +148,22 @@ export default function Settings() {
                 Currently using: <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{relayUrl}</code>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* PWA Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5" />
+              App & Updates
+            </CardTitle>
+            <CardDescription>
+              Manage app installation and updates
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PWASettings />
           </CardContent>
         </Card>
 

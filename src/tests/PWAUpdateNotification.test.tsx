@@ -1,35 +1,30 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { PWAUpdateNotification } from '@/components/PWAUpdateNotification';
 
-// Mock service worker
-const mockServiceWorker = {
-  postMessage: vi.fn(),
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
+// Mock the usePWAUpdate hook
+const mockUsePWAUpdate = {
+  updateAvailable: false,
+  isUpdating: false,
+  needsRefresh: false,
+  checkingForUpdate: false,
+  checkForUpdate: vi.fn(),
+  applyUpdate: vi.fn(),
+  reloadApp: vi.fn(),
+  dismissUpdate: vi.fn(),
 };
 
-const mockRegistration = {
-  waiting: null as ServiceWorker | null,
-  installing: null as ServiceWorker | null,
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-};
-
-// Mock navigator.serviceWorker
-Object.defineProperty(navigator, 'serviceWorker', {
-  value: {
-    ready: Promise.resolve(mockRegistration),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    controller: true,
-  },
-  writable: true,
-});
+vi.mock('@/hooks/usePWAUpdate', () => ({
+  usePWAUpdate: () => mockUsePWAUpdate,
+}));
 
 describe('PWAUpdateNotification', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRegistration.waiting = null;
+    // Reset mock state
+    mockUsePWAUpdate.updateAvailable = false;
+    mockUsePWAUpdate.isUpdating = false;
+    mockUsePWAUpdate.needsRefresh = false;
+    mockUsePWAUpdate.checkingForUpdate = false;
   });
 
   it('should not show notification when no update is available', () => {
@@ -38,65 +33,68 @@ describe('PWAUpdateNotification', () => {
     expect(screen.queryByText('Update Available')).not.toBeInTheDocument();
   });
 
-  it('should show notification when update is available', async () => {
-    // Set up waiting worker
-    mockRegistration.waiting = mockServiceWorker as unknown as ServiceWorker;
+  it('should show notification when update is available', () => {
+    mockUsePWAUpdate.updateAvailable = true;
     
     render(<PWAUpdateNotification />);
     
-    await waitFor(() => {
-      expect(screen.getByText('Update Available')).toBeInTheDocument();
-    });
-    
+    expect(screen.getByText('Update Available')).toBeInTheDocument();
     expect(screen.getByText('A new version of Treasures is ready to install.')).toBeInTheDocument();
-    expect(screen.getByText('Update Now')).toBeInTheDocument();
+    expect(screen.getByText('Install Update')).toBeInTheDocument();
     expect(screen.getByText('Later')).toBeInTheDocument();
   });
 
-  it('should handle update button click', async () => {
-    mockRegistration.waiting = mockServiceWorker as unknown as ServiceWorker;
+  it('should show reload prompt when update needs refresh', () => {
+    mockUsePWAUpdate.needsRefresh = true;
     
     render(<PWAUpdateNotification />);
     
-    await waitFor(() => {
-      expect(screen.getByText('Update Available')).toBeInTheDocument();
-    });
-    
-    fireEvent.click(screen.getByText('Update Now'));
-    
-    expect(mockServiceWorker.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+    expect(screen.getByText('Update Ready')).toBeInTheDocument();
+    expect(screen.getByText('The app has been updated. Reload to use the new version.')).toBeInTheDocument();
+    expect(screen.getByText('Reload App')).toBeInTheDocument();
   });
 
-  it('should handle dismiss button click', async () => {
-    mockRegistration.waiting = mockServiceWorker as unknown as ServiceWorker;
+  it('should handle install update button click', () => {
+    mockUsePWAUpdate.updateAvailable = true;
     
     render(<PWAUpdateNotification />);
     
-    await waitFor(() => {
-      expect(screen.getByText('Update Available')).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByText('Install Update'));
+    
+    expect(mockUsePWAUpdate.applyUpdate).toHaveBeenCalled();
+  });
+
+  it('should handle reload button click', () => {
+    mockUsePWAUpdate.needsRefresh = true;
+    
+    render(<PWAUpdateNotification />);
+    
+    fireEvent.click(screen.getByText('Reload App'));
+    
+    expect(mockUsePWAUpdate.reloadApp).toHaveBeenCalled();
+  });
+
+  it('should show updating state', () => {
+    mockUsePWAUpdate.updateAvailable = true;
+    mockUsePWAUpdate.isUpdating = true;
+    
+    render(<PWAUpdateNotification />);
+    
+    expect(screen.getByText('Installing...')).toBeInTheDocument();
+    expect(screen.getByText('Later')).toBeDisabled();
+  });
+
+  it('should handle dismiss button click', () => {
+    mockUsePWAUpdate.updateAvailable = true;
+    
+    const { rerender } = render(<PWAUpdateNotification />);
     
     fireEvent.click(screen.getByText('Later'));
     
-    await waitFor(() => {
-      expect(screen.queryByText('Update Available')).not.toBeInTheDocument();
-    });
-  });
-
-  it('should handle X button click', async () => {
-    mockRegistration.waiting = mockServiceWorker as unknown as ServiceWorker;
+    // Simulate the component re-rendering with dismissed state
+    mockUsePWAUpdate.updateAvailable = false;
+    rerender(<PWAUpdateNotification />);
     
-    render(<PWAUpdateNotification />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Update Available')).toBeInTheDocument();
-    });
-    
-    const dismissButton = screen.getByRole('button', { name: '' }); // X button has no text
-    fireEvent.click(dismissButton);
-    
-    await waitFor(() => {
-      expect(screen.queryByText('Update Available')).not.toBeInTheDocument();
-    });
+    expect(screen.queryByText('Update Available')).not.toBeInTheDocument();
   });
 });

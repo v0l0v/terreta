@@ -1,62 +1,57 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RefreshCw, X } from 'lucide-react';
+import { RefreshCw, X, Download } from 'lucide-react';
+import { usePWAUpdate } from '@/hooks/usePWAUpdate';
 
 export function PWAUpdateNotification() {
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    if (!('serviceWorker' in navigator)) return;
-
-    const handleServiceWorkerUpdate = async () => {
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        
-        // Check for waiting worker immediately
-        if (registration.waiting) {
-          setWaitingWorker(registration.waiting);
-          setUpdateAvailable(true);
-        }
-
-        // Listen for new service worker installations
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (!newWorker) return;
-
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              setWaitingWorker(newWorker);
-              setUpdateAvailable(true);
-              setDismissed(false); // Reset dismissed state for new updates
-            }
-          });
-        });
-      } catch (error) {
-        console.error('Service worker setup failed:', error);
-      }
-    };
-
-    // Listen for controller changes (when update is applied)
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
-
-    handleServiceWorkerUpdate();
-  }, []);
+  const { updateAvailable, isUpdating, needsRefresh, applyUpdate, reloadApp } = usePWAUpdate();
 
   const handleUpdate = () => {
-    if (waitingWorker) {
-      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-      setUpdateAvailable(false);
-    }
+    applyUpdate();
   };
 
   const handleDismiss = () => {
     setDismissed(true);
   };
+
+  const handleReload = () => {
+    reloadApp();
+  };
+
+  // Reset dismissed state when new update becomes available
+  if (updateAvailable && dismissed) {
+    setDismissed(false);
+  }
+
+  // Show reload prompt after update is applied
+  if (needsRefresh) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 max-w-sm">
+        <Card className="shadow-lg border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-green-900 dark:text-green-100">
+              Update Ready
+            </CardTitle>
+            <CardDescription className="text-green-700 dark:text-green-300">
+              The app has been updated. Reload to use the new version.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Button
+              size="sm"
+              onClick={handleReload}
+              className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500"
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Reload App
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!updateAvailable || dismissed) {
     return null;
@@ -88,15 +83,21 @@ export function PWAUpdateNotification() {
             <Button
               size="sm"
               onClick={handleUpdate}
+              disabled={isUpdating}
               className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
             >
-              <RefreshCw className="h-3 w-3 mr-1" />
-              Update Now
+              {isUpdating ? (
+                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Download className="h-3 w-3 mr-1" />
+              )}
+              {isUpdating ? 'Installing...' : 'Install Update'}
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={handleDismiss}
+              disabled={isUpdating}
               className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-600 dark:text-blue-300 dark:hover:bg-blue-900"
             >
               Later
