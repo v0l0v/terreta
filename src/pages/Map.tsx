@@ -109,11 +109,6 @@ export default function Map() {
       };
       setMapCenter(center);
       setMapUpdateKey(prev => prev + 1);
-      
-      // If coordinates are provided, switch to map tab on mobile
-      if (tab === 'map' || (lat && lng && !tab)) {
-        setActiveTab('map');
-      }
     }
 
     if (zoom) {
@@ -127,8 +122,13 @@ export default function Map() {
       setHighlightedGeocache(highlight);
     }
 
+    // Handle tab switching logic
     if (tab && (tab === 'list' || tab === 'map')) {
+      // Explicit tab parameter takes priority
       setActiveTab(tab);
+    } else if (lat && lng) {
+      // If coordinates are provided but no valid tab, switch to map tab on mobile
+      setActiveTab('map');
     }
   }, [searchParams]);
 

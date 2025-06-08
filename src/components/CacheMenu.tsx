@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MoreVertical, Share2, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,10 +20,11 @@ interface CacheMenuProps {
 
 export function CacheMenu({ geocache, variant = 'default', className }: CacheMenuProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleViewOnMap = () => {
     const mapUrl = `/map?lat=${geocache.location.lat}&lng=${geocache.location.lng}&zoom=16&highlight=${geocache.dTag}&tab=map`;
-    window.location.href = mapUrl;
+    navigate(mapUrl);
   };
 
   const buttonSize = variant === 'compact' ? 'sm' : 'icon';
