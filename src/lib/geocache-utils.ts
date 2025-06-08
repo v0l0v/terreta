@@ -29,22 +29,5 @@ export function getSizeLevel(size: string): number {
   const normalizedSize = size?.toLowerCase()?.trim() || '';
   const level = sizeMap[normalizedSize];
   
-  // Debug logging to help troubleshoot - currently disabled
-  // if (normalizedSize === 'other' && level !== 0) {
-  //   console.debug('Unexpected level for "other" size:', level);
-  // }
-  
   return level !== undefined ? level : 0;
-}
-
-// Note: This function is deprecated. Use getCacheIcon from @/lib/cacheIcons instead
-// for React components, which provides consistent Lucide icons.
-export function getTypeIcon(type: string): string {
-  // Only NIP-GC supported cache types - keeping for backward compatibility
-  const icons: Record<string, string> = {
-    traditional: '📦',
-    multi: '🔗',
-    mystery: '❓',
-  };
-  return icons[type.toLowerCase()] || '📦';
 }
