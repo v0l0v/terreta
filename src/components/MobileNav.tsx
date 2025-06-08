@@ -11,6 +11,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLoggedInAccounts } from '@/hooks/useLoggedInAccounts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
@@ -19,6 +20,51 @@ const navigation = [
   { name: 'New', href: '/create', icon: Plus },
 ];
 
+// Helper function for consistent theme-aware styling
+function getThemeClasses(isAdventureTheme: boolean) {
+  return {
+    header: isAdventureTheme 
+      ? 'bg-adventure-nav border-adventure-nav' 
+      : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60',
+    text: isAdventureTheme ? 'text-stone-200' : 'text-foreground',
+    textMuted: isAdventureTheme ? 'text-stone-400' : 'text-muted-foreground',
+    textActive: isAdventureTheme ? 'text-stone-200' : 'text-green-600',
+    button: isAdventureTheme ? 'text-stone-200 hover:bg-stone-700/50 hover:text-stone-100' : '',
+    icon: isAdventureTheme ? 'sepia' : '',
+  };
+}
+
+// Navigation link component for reusability
+function NavLink({ 
+  to, 
+  icon: Icon, 
+  children, 
+  isActive, 
+  onClick 
+}: { 
+  to: string; 
+  icon: React.ComponentType<{ className?: string }>; 
+  children: React.ReactNode; 
+  isActive: boolean; 
+  onClick: () => void; 
+}) {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+        isActive 
+          ? "bg-accent text-accent-foreground" 
+          : "text-muted-foreground"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {children}
+    </Link>
+  );
+}
+
 export function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
@@ -26,97 +72,91 @@ export function MobileHeader() {
   const { currentUser, removeLogin } = useLoggedInAccounts();
   const { theme } = useTheme();
   const isAdventureTheme = theme === 'adventure';
+  const themeClasses = getThemeClasses(isAdventureTheme);
+
+  const closeSheet = () => setIsOpen(false);
 
   return (
-    <header className={`sticky top-0 z-40 w-full border-b md:hidden pt-safe-top ${
-      isAdventureTheme 
-        ? 'bg-adventure-nav border-adventure-nav' 
-        : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
-    }`}>
+    <header className={cn(
+      "sticky top-0 z-40 w-full border-b md:hidden pt-safe-top",
+      themeClasses.header
+    )}>
       <div className="container flex h-16 items-center justify-between">
+        {/* Menu Button */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button 
               variant="ghost" 
               size="sm" 
-              className={`-ml-2 ${isAdventureTheme ? 'text-stone-200 hover:bg-stone-700/50 hover:text-stone-100' : ''}`}
+              className={cn("-ml-2", themeClasses.button)}
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left">
+          
+          {/* Side Sheet Content */}
+          <SheetContent side="left" className="flex flex-col">
+            {/* Header */}
             <div className="flex items-center gap-2 px-2 py-4">
               <img 
                 src="/icon.png" 
                 alt="Treasures" 
-                className={`h-10 w-10 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
+                className={cn("h-10 w-10 transition-all duration-200", themeClasses.icon)} 
               />
-              <span className={`font-bold text-lg ${isAdventureTheme ? 'text-stone-800' : 'text-foreground'}`}>Treasures</span>
+              <span className="font-bold text-lg">Treasures</span>
             </div>
-            <nav className="flex flex-col gap-2 px-2">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
-                      location.pathname === item.href
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.name}
-                  </Link>
-                );
-              })}
-              <Link
+            
+            {/* Navigation Links */}
+            <nav className="flex flex-col gap-2 px-2 flex-1">
+              {navigation.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  icon={item.icon}
+                  isActive={location.pathname === item.href}
+                  onClick={closeSheet}
+                >
+                  {item.name}
+                </NavLink>
+              ))}
+              
+              <NavLink
                 to="/saved"
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
-                  location.pathname === '/saved'
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground'
-                }`}
+                icon={Bookmark}
+                isActive={location.pathname === '/saved'}
+                onClick={closeSheet}
               >
-                <Bookmark className="h-4 w-4" />
                 Saved Caches
-              </Link>
+              </NavLink>
+              
               {user && (
                 <>
-                  <Link
+                  <NavLink
                     to="/profile"
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
-                      location.pathname === '/profile'
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground'
-                    }`}
+                    icon={User}
+                    isActive={location.pathname === '/profile'}
+                    onClick={closeSheet}
                   >
-                    <User className="h-4 w-4" />
                     My Profile
-                  </Link>
-                  <Link
+                  </NavLink>
+                  <NavLink
                     to="/settings"
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
-                      location.pathname === '/settings'
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground'
-                    }`}
+                    icon={Settings}
+                    isActive={location.pathname === '/settings'}
+                    onClick={closeSheet}
                   >
-                    <Settings className="h-4 w-4" />
                     App Settings
-                  </Link>
+                  </NavLink>
                 </>
               )}
             </nav>
+            
+            {/* Footer */}
             <div className="mt-auto p-2">
               {currentUser ? (
                 <div className="space-y-3">
+                  {/* User Info */}
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/50">
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={currentUser.metadata.picture} alt={currentUser.metadata.name} />
@@ -126,28 +166,32 @@ export function MobileHeader() {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">
-                        {currentUser.metadata.name || currentUser.pubkey.slice(0, 8) + '...'}
+                        {currentUser.metadata.name || `${currentUser.pubkey.slice(0, 8)}...`}
                       </p>
                       <p className="text-xs text-muted-foreground">Logged in</p>
                     </div>
                   </div>
+                  
+                  {/* Settings */}
                   <div className="px-3 py-2 space-y-3">
                     <OfflineIndicator showDetails={false} />
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Theme</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground shrink-0">Theme</span>
                       <ThemeToggle variant="mobile-sheet" />
                     </div>
-                    <div className="space-y-2">
-                      <span className="text-sm text-muted-foreground">Relay</span>
-                      <RelaySelector className="w-full" />
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground shrink-0">Relay</span>
+                      <RelaySelector className="flex-1" />
                     </div>
                   </div>
+                  
+                  {/* Logout Button */}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
                       removeLogin(currentUser.id);
-                      setIsOpen(false);
+                      closeSheet();
                     }}
                     className="w-full flex items-center gap-2"
                   >
@@ -162,16 +206,20 @@ export function MobileHeader() {
           </SheetContent>
         </Sheet>
         
+        {/* Center Logo */}
         <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-1">
           <img 
             src="/icon.png" 
             alt="Treasures" 
-            className={`h-8 w-8 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
+            className={cn("h-8 w-8 transition-all duration-200", themeClasses.icon)} 
           />
-          <h1 className={`text-xs font-bold m-0 leading-none ${isAdventureTheme ? 'text-stone-200' : 'text-foreground'}`}>Treasures</h1>
+          <h1 className={cn("text-xs font-bold m-0 leading-none", themeClasses.text)}>
+            Treasures
+          </h1>
         </Link>
         
-        <div className="-mr-2 flex items-center gap-2">
+        {/* Right Side Login */}
+        <div className="-mr-2">
           <LoginArea compact />
         </div>
       </div>
@@ -179,41 +227,66 @@ export function MobileHeader() {
   );
 }
 
+// Bottom navigation item component
+function BottomNavItem({ 
+  to, 
+  icon: Icon, 
+  children, 
+  isActive, 
+  themeClasses 
+}: { 
+  to: string; 
+  icon: React.ComponentType<{ className?: string }>; 
+  children: React.ReactNode; 
+  isActive: boolean; 
+  themeClasses: ReturnType<typeof getThemeClasses>; 
+}) {
+  return (
+    <Link
+      to={to}
+      className={cn(
+        "flex flex-col items-center justify-center gap-1 px-2 py-1 text-xs transition-colors",
+        isActive 
+          ? themeClasses.textActive 
+          : cn(themeClasses.textMuted, "hover:text-foreground")
+      )}
+    >
+      <div className="flex items-center justify-center w-6 h-6">
+        <Icon className={cn("h-5 w-5", isActive && themeClasses.textActive)} />
+      </div>
+      <span className={cn(
+        "text-center leading-tight",
+        isActive && cn(themeClasses.textActive, "font-medium")
+      )}>
+        {children}
+      </span>
+    </Link>
+  );
+}
+
 export function MobileBottomNav() {
   const location = useLocation();
   const { theme } = useTheme();
   const isAdventureTheme = theme === 'adventure';
+  const themeClasses = getThemeClasses(isAdventureTheme);
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 z-40 border-t md:hidden pb-safe-bottom ${
-      isAdventureTheme 
-        ? 'bg-adventure-nav border-adventure-nav' 
-        : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
-    }`}>
+    <nav className={cn(
+      "fixed bottom-0 left-0 right-0 z-40 border-t md:hidden pb-safe-bottom",
+      themeClasses.header
+    )}>
       <div className="grid grid-cols-4 h-16 items-center">
-        {navigation.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.href;
-          
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={`flex flex-col items-center justify-center gap-1 px-2 py-1 text-xs transition-colors ${
-                isActive
-                  ? isAdventureTheme ? 'text-stone-200' : 'text-green-600'
-                  : isAdventureTheme ? 'text-stone-400 hover:text-stone-200' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <div className="flex items-center justify-center w-6 h-6">
-                <Icon className={`h-5 w-5 ${isActive ? (isAdventureTheme ? 'text-stone-200' : 'text-green-600') : ''}`} />
-              </div>
-              <span className={`text-center leading-tight ${isActive ? (isAdventureTheme ? 'text-stone-200 font-medium' : 'text-green-600 font-medium') : ''}`}>
-                {item.name}
-              </span>
-            </Link>
-          );
-        })}
+        {navigation.map((item) => (
+          <BottomNavItem
+            key={item.name}
+            to={item.href}
+            icon={item.icon}
+            isActive={location.pathname === item.href}
+            themeClasses={themeClasses}
+          >
+            {item.name}
+          </BottomNavItem>
+        ))}
       </div>
     </nav>
   );
