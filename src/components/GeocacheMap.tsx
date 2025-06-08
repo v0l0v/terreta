@@ -1000,9 +1000,9 @@ export function GeocacheMap({
       
       {/* Geocache Loading Indicator - subtle overlay when geocaches are loading */}
       {isMapInitialized && !isMapReady && geocaches.length === 0 && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 shadow-sm">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/95 backdrop-blur-sm border rounded-full px-4 py-2 shadow-lg animate-in fade-in duration-300">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-muted-foreground/30 border-t-primary"></div>
             <span>Loading geocaches...</span>
           </div>
         </div>

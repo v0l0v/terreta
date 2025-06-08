@@ -402,8 +402,8 @@ export default function Map() {
                     onClick={handleNearMe}
                     disabled={isGettingLocation}
                   >
-                    <Locate className={`h-3 w-3 mr-1 ${isGettingLocation ? 'animate-pulse' : ''}`} />
-                    {isGettingLocation ? "Finding..." : showNearMe && userLocation ? "Near Me ✓" : "Near Me"}
+                    <Locate className={`h-3 w-3 mr-1 ${isGettingLocation ? 'animate-spin' : ''}`} />
+                    {isGettingLocation ? "Locating..." : showNearMe && userLocation ? "Near Me ✓" : "Near Me"}
                   </Button>
                   
                   <Button 
@@ -459,48 +459,55 @@ export default function Map() {
           {/* Results */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <SmartLoadingState
-              isLoading={isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading}
+              isLoading={isProximitySearchActive ? isLoading && filteredGeocaches.length === 0 : optimisticGeocaches.isLoading && !optimisticGeocaches.hasInitialData}
               isError={isProximitySearchActive ? !!error : optimisticGeocaches.isError}
-              hasData={isProximitySearchActive ? !isLoading || filteredGeocaches.length > 0 : optimisticGeocaches.hasInitialData}
+              hasData={filteredGeocaches.length > 0 || optimisticGeocaches.hasInitialData}
               data={filteredGeocaches}
               error={(isProximitySearchActive ? error : optimisticGeocaches.error) as Error}
               onRetry={handleRetry}
               isRetrying={isRetrying}
-              skeletonCount={QUERY_LIMITS.SKELETON_COUNT}
+              skeletonCount={3}
               skeletonVariant="compact"
               compact={true}
               showRelayFallback={true}
-
               className="h-full"
             >
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-sm text-muted-foreground">
-                    <p>
-                      {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
-                      {isProximitySearchActive && ` • ${searchRadius}km radius`}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <span>
+                        {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
+                        {isProximitySearchActive && ` • ${searchRadius}km radius`}
+                      </span>
+                      {((isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0) && (
+                        <div className="flex items-center gap-1 text-xs">
+                          <div className="animate-spin rounded-full h-3 w-3 border border-muted-foreground/30 border-t-muted-foreground"></div>
+                          <span>searching...</span>
+                        </div>
+                      )}
+                      {optimisticGeocaches.isStale || optimisticGeocaches.isFetching ? (
+                        <div className="flex items-center gap-1 text-xs">
+                          <div className="animate-pulse h-2 w-2 bg-primary rounded-full"></div>
+                          <span>updating</span>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {((isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0) || optimisticGeocaches.isStale || optimisticGeocaches.isFetching ? (
-                      <Badge variant="outline" className="text-xs flex items-center gap-1">
-                        <RefreshCw className="h-2 w-2 animate-spin" />
-                        {(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 ? 'Loading' : 'Updating'}
-                      </Badge>
-                    ) : (
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          optimisticGeocaches.refresh();
-                          refetch();
-                        }}
-                        className="h-6 w-6 p-0"
-                        title="Refresh geocaches"
-                      >
-                        <RefreshCw className="h-3 w-3" />
-                      </Button>
-                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        optimisticGeocaches.refresh();
+                        refetch();
+                      }}
+                      className="h-7 w-7 p-0 hover:bg-muted/50"
+                      title="Refresh geocaches"
+                      disabled={isRetrying}
+                    >
+                      <RefreshCw className={`h-3 w-3 ${isRetrying ? 'animate-spin' : ''}`} />
+                    </Button>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -538,9 +545,9 @@ export default function Map() {
           
           {/* Progressive loading indicator for geocaches */}
           {(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 && (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 shadow-sm">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/95 backdrop-blur-sm border rounded-full px-4 py-2 shadow-lg">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-muted-foreground/30 border-t-primary"></div>
                 <span>Finding geocaches...</span>
               </div>
             </div>
@@ -589,8 +596,8 @@ export default function Map() {
                     onClick={handleNearMe}
                     disabled={isGettingLocation}
                   >
-                    <Locate className={`h-3 w-3 mr-1 ${isGettingLocation ? 'animate-pulse' : ''}`} />
-                    {isGettingLocation ? "Finding..." : showNearMe && userLocation ? "Near Me ✓" : "Near Me"}
+                    <Locate className={`h-3 w-3 mr-1 ${isGettingLocation ? 'animate-spin' : ''}`} />
+                    {isGettingLocation ? "Locating..." : showNearMe && userLocation ? "Near Me ✓" : "Near Me"}
                   </Button>
                   
                   <Button 
@@ -650,49 +657,56 @@ export default function Map() {
             <TabsContent value="list" className="flex-1 mt-0 m-0 p-0 data-[state=active]:flex data-[state=active]:flex-col bg-background overflow-hidden">
               <div className="flex-1 overflow-y-auto p-4 pb-6 min-h-0">
                 <SmartLoadingState
-                  isLoading={isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading}
+                  isLoading={isProximitySearchActive ? isLoading && filteredGeocaches.length === 0 : optimisticGeocaches.isLoading && !optimisticGeocaches.hasInitialData}
                   isError={isProximitySearchActive ? !!error : optimisticGeocaches.isError}
-                  hasData={isProximitySearchActive ? !isLoading || filteredGeocaches.length > 0 : optimisticGeocaches.hasInitialData}
+                  hasData={filteredGeocaches.length > 0 || optimisticGeocaches.hasInitialData}
                   data={filteredGeocaches}
                   error={(isProximitySearchActive ? error : optimisticGeocaches.error) as Error}
                   onRetry={handleRetry}
                   isRetrying={isRetrying}
-                  skeletonCount={QUERY_LIMITS.SKELETON_COUNT}
+                  skeletonCount={3}
                   skeletonVariant="compact"
                   compact={true}
                   showRelayFallback={true}
-
                   className="h-full"
                 >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      <p>
-                        {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
-                        {isProximitySearchActive && ` • ${searchRadius}km radius`}
-                        {searchInView && ' • in view'}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span>
+                          {filteredGeocaches.length} cache{filteredGeocaches.length !== 1 ? 's' : ''}
+                          {isProximitySearchActive && ` • ${searchRadius}km radius`}
+                          {searchInView && ' • in view'}
+                        </span>
+                        {((isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0) && (
+                          <div className="flex items-center gap-1 text-xs">
+                            <div className="animate-spin rounded-full h-3 w-3 border border-muted-foreground/30 border-t-muted-foreground"></div>
+                            <span>searching...</span>
+                          </div>
+                        )}
+                        {optimisticGeocaches.isStale || optimisticGeocaches.isFetching ? (
+                          <div className="flex items-center gap-1 text-xs">
+                            <div className="animate-pulse h-2 w-2 bg-primary rounded-full"></div>
+                            <span>updating</span>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {((isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0) || optimisticGeocaches.isStale || optimisticGeocaches.isFetching ? (
-                        <Badge variant="outline" className="text-xs flex items-center gap-1">
-                          <RefreshCw className="h-2 w-2 animate-spin" />
-                          {(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 ? 'Loading' : 'Updating'}
-                        </Badge>
-                      ) : (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            optimisticGeocaches.refresh();
-                            refetch();
-                          }}
-                          className="h-6 w-6 p-0"
-                          title="Refresh geocaches"
-                        >
-                          <RefreshCw className="h-2 w-2" />
-                        </Button>
-                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          optimisticGeocaches.refresh();
+                          refetch();
+                        }}
+                        className="h-7 w-7 p-0 hover:bg-muted/50"
+                        title="Refresh geocaches"
+                        disabled={isRetrying}
+                      >
+                        <RefreshCw className={`h-3 w-3 ${isRetrying ? 'animate-spin' : ''}`} />
+                      </Button>
                       {isProximitySearchActive && (
                         <Badge 
                           variant={proximitySuccessful ? "secondary" : "outline"} 
@@ -700,7 +714,7 @@ export default function Map() {
                           title={proximityAttempted ? (proximitySuccessful ? "Proximity search successful" : "Proximity search failed, using fallback") : "Using broad search"}
                         >
                           <Sparkles className="h-2 w-2" />
-                          {proximitySuccessful ? "Smart Search" : searchStrategy === "fallback" ? "Fallback Search" : "Broad Search"}
+                          {proximitySuccessful ? "Smart" : searchStrategy === "fallback" ? "Fallback" : "Broad"}
                         </Badge>
                       )}
                     </div>
@@ -739,9 +753,9 @@ export default function Map() {
                 
                 {/* Progressive loading indicator for mobile map */}
                 {(isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading) && filteredGeocaches.length === 0 && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 shadow-sm">
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/95 backdrop-blur-sm border rounded-full px-4 py-2 shadow-lg">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-muted-foreground/30 border-t-primary"></div>
                       <span>Finding geocaches...</span>
                     </div>
                   </div>
