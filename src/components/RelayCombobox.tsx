@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, X, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,6 +106,7 @@ export function RelayCombobox(props: RelayComboboxProps) {
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex items-center gap-2">
+        <Wifi className="h-4 w-4 text-muted-foreground shrink-0" />
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -113,7 +114,7 @@ export function RelayCombobox(props: RelayComboboxProps) {
               role="combobox"
               aria-expanded={open}
               className={cn(
-                "flex-1 justify-between",
+                "w-48 justify-between",
                 isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 hover:!bg-stone-600 hover:!text-stone-100"
               )}
             >
@@ -121,7 +122,7 @@ export function RelayCombobox(props: RelayComboboxProps) {
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
+          <PopoverContent className="w-[300px] p-0" align="start">
             <Command>
               <CommandInput placeholder="Search relays..." />
               <CommandList>

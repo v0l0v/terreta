@@ -5,10 +5,11 @@ import { AppProvider } from '@/components/AppProvider';
 import { AppConfig } from '@/contexts/AppContext';
 
 const defaultConfig: AppConfig = {
-  relayUrl: 'wss://ditto.pub/relay',
+  relayUrl: 'wss://relay.primal.net',
 };
 
 const presetRelays = [
+  { url: 'wss://relay.primal.net', name: 'Primal' },
   { url: 'wss://ditto.pub/relay', name: 'Ditto' },
   { url: 'wss://relay.nostr.band', name: 'Nostr.Band' },
 ];
@@ -31,7 +32,7 @@ describe('useAppContext', () => {
       wrapper: TestWrapper,
     });
 
-    expect(result.current.config.relayUrl).toBe('wss://ditto.pub/relay');
+    expect(result.current.config.relayUrl).toBe('wss://relay.primal.net');
     expect(result.current.presetRelays).toEqual(presetRelays);
   });
 

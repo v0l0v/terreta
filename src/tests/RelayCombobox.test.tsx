@@ -11,10 +11,11 @@ vi.mock('next-themes', () => ({
 
 const mockUpdateConfig = vi.fn();
 
-const createMockContext = (relayUrl = 'wss://ditto.pub/relay'): AppContextType => ({
+const createMockContext = (relayUrl = 'wss://relay.primal.net'): AppContextType => ({
   config: { relayUrl },
   updateConfig: mockUpdateConfig,
   presetRelays: [
+    { url: 'wss://relay.primal.net', name: 'Primal' },
     { url: 'wss://ditto.pub/relay', name: 'Ditto' },
     { url: 'wss://relay.nostr.band', name: 'Nostr.Band' },
     { url: 'wss://relay.damus.io', name: 'Damus' },
@@ -41,7 +42,7 @@ describe('RelayCombobox', () => {
     renderWithContext(context);
     
     expect(screen.getByRole('combobox')).toBeInTheDocument();
-    expect(screen.getByText('Ditto')).toBeInTheDocument();
+    expect(screen.getByText('Primal')).toBeInTheDocument();
   });
 
   it('opens dropdown when clicked', async () => {
@@ -64,6 +65,7 @@ describe('RelayCombobox', () => {
     fireEvent.click(combobox);
     
     await waitFor(() => {
+      expect(screen.getByText('Primal')).toBeInTheDocument();
       expect(screen.getByText('Ditto')).toBeInTheDocument();
       expect(screen.getByText('Nostr.Band')).toBeInTheDocument();
       expect(screen.getByText('Damus')).toBeInTheDocument();
@@ -87,7 +89,7 @@ describe('RelayCombobox', () => {
     
     // Test the updater function
     const updaterFn = mockUpdateConfig.mock.calls[0][0];
-    const result = updaterFn({ relayUrl: 'wss://ditto.pub/relay' });
+    const result = updaterFn({ relayUrl: 'wss://relay.primal.net' });
     expect(result).toEqual({ relayUrl: 'wss://relay.nostr.band' });
   });
 
@@ -132,7 +134,7 @@ describe('RelayCombobox', () => {
     
     // Test the updater function
     const updaterFn = mockUpdateConfig.mock.calls[0][0];
-    const result = updaterFn({ relayUrl: 'wss://ditto.pub/relay' });
+    const result = updaterFn({ relayUrl: 'wss://relay.primal.net' });
     expect(result).toEqual({ relayUrl: 'wss://relay.custom.com' });
   });
 
@@ -155,7 +157,7 @@ describe('RelayCombobox', () => {
     fireEvent.click(addButton);
     
     const updaterFn = mockUpdateConfig.mock.calls[0][0];
-    const result = updaterFn({ relayUrl: 'wss://ditto.pub/relay' });
+    const result = updaterFn({ relayUrl: 'wss://relay.primal.net' });
     expect(result.relayUrl).toBe('wss://relay.custom.com');
   });
 
