@@ -18,6 +18,7 @@ export function useOfflineSync() {
     lastSyncTime: null,
     pendingActions: 0,
     syncErrors: [],
+    isInitialCheck: true,
   });
 
   useEffect(() => {
@@ -221,6 +222,11 @@ export function useOfflineMode() {
   const { settings } = useOfflineSettings();
 
   useEffect(() => {
+    // Don't update state during initial connectivity check to prevent flickering
+    if (status.isInitialCheck) {
+      return;
+    }
+
     // Check if user has enabled offline-only mode
     const isOfflineOnly = settings.offlineOnly as boolean ?? false;
     
@@ -229,7 +235,7 @@ export function useOfflineMode() {
     // 2. Not connected or connection quality is offline
     const offline = isOfflineOnly || !status.isConnected || status.connectionQuality === 'offline';
     setIsOfflineMode(offline);
-  }, [status.isConnected, status.connectionQuality, settings.offlineOnly]);
+  }, [status.isConnected, status.connectionQuality, status.isInitialCheck, settings.offlineOnly]);
 
   // Also listen to browser online/offline events for immediate feedback
   useEffect(() => {
@@ -265,6 +271,7 @@ export function useOfflineMode() {
     lastSyncTime: status.lastSyncTime,
     syncErrors: status.syncErrors,
     latency: status.latency,
+    isInitialCheck: status.isInitialCheck,
   };
 }
 

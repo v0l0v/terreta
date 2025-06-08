@@ -15,6 +15,7 @@ export interface SyncStatus {
   pendingActions: number;
   syncErrors: string[];
   latency?: number;
+  isInitialCheck?: boolean;
 }
 
 export interface SyncOptions {
@@ -236,6 +237,7 @@ class OfflineSync {
       pendingActions: pendingActions.length,
       syncErrors: [...this.syncErrors],
       latency: this.connectivity.latency,
+      isInitialCheck: this.connectivity.isInitialCheck,
     };
   }
 

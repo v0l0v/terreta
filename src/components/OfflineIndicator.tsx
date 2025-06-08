@@ -17,7 +17,7 @@ export function OfflineIndicator({
   compact = false, 
   showDetails = true 
 }: OfflineIndicatorProps) {
-  const { isConnected } = useOfflineMode();
+  const { isConnected, isInitialCheck } = useOfflineMode();
   const { settings } = useOfflineSettings();
   
   // Check if user has enabled offline-only mode
@@ -25,6 +25,11 @@ export function OfflineIndicator({
   
   // Show offline if not connected OR if user has enabled offline-only mode
   const showOffline = !isConnected || isOfflineOnly;
+
+  // Don't render anything during initial connectivity check to prevent flickering
+  if (isInitialCheck) {
+    return null;
+  }
 
   if (compact) {
     return (
@@ -74,7 +79,7 @@ export function OfflineStatusBadge({ className }: { className?: string }) {
 
 // Simple icon-only version
 export function OfflineStatusIcon({ className }: { className?: string }) {
-  const { isConnected } = useOfflineMode();
+  const { isConnected, isInitialCheck } = useOfflineMode();
   const { settings } = useOfflineSettings();
   
   // Check if user has enabled offline-only mode
@@ -82,6 +87,11 @@ export function OfflineStatusIcon({ className }: { className?: string }) {
   
   // Show offline if not connected OR if user has enabled offline-only mode
   const showOffline = !isConnected || isOfflineOnly;
+
+  // Don't render anything during initial connectivity check to prevent flickering
+  if (isInitialCheck) {
+    return null;
+  }
 
   return (
     <div className={cn('flex items-center gap-2', className)}>

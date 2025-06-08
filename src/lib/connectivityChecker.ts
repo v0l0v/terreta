@@ -10,6 +10,7 @@ export interface ConnectivityStatus {
   lastChecked: number;
   latency?: number;
   error?: string;
+  isInitialCheck?: boolean;
 }
 
 export interface ConnectivityOptions {
@@ -25,14 +26,16 @@ class ConnectivityChecker {
     isConnected: false,
     connectionQuality: 'offline',
     lastChecked: 0,
+    isInitialCheck: true,
   };
 
   private listeners: ((status: ConnectivityStatus) => void)[] = [];
   private checkInterval: number | null = null;
   private isChecking = false;
+  private hasCompletedInitialCheck = false;
 
   private options: ConnectivityOptions = {
-    timeout: 5000,
+    timeout: 3000, // Reduced timeout for faster initial check
     checkInterval: 30000, // Check every 30 seconds
     testUrls: [
       // Use reliable, fast endpoints for connectivity testing
@@ -40,7 +43,7 @@ class ConnectivityChecker {
       'https://cloudflare.com/favicon.ico',
       'https://httpbin.org/status/200',
     ],
-    maxRetries: 2,
+    maxRetries: 1, // Reduced retries for faster initial check
   };
 
   constructor(options?: Partial<ConnectivityOptions>) {
@@ -51,8 +54,8 @@ class ConnectivityChecker {
     this.setupNetworkListeners();
     this.startPeriodicChecks();
     
-    // Do initial connectivity check
-    this.checkConnectivity();
+    // Do fast initial connectivity check
+    this.performInitialCheck();
   }
 
   private setupNetworkListeners(): void {
@@ -69,6 +72,8 @@ class ConnectivityChecker {
       this.status.isConnected = false;
       this.status.connectionQuality = 'offline';
       this.status.lastChecked = Date.now();
+      this.status.isInitialCheck = false;
+      this.hasCompletedInitialCheck = true;
       this.notifyListeners();
     });
 
@@ -104,7 +109,9 @@ class ConnectivityChecker {
           isConnected: false,
           connectionQuality: 'offline',
           lastChecked: Date.now(),
+          isInitialCheck: false,
         };
+        this.hasCompletedInitialCheck = true;
         this.notifyListeners();
         return this.status;
       }
@@ -120,6 +127,7 @@ class ConnectivityChecker {
         lastChecked: Date.now(),
         latency: isConnected ? latency : undefined,
         error: undefined,
+        isInitialCheck: false,
       };
 
     } catch (error) {
@@ -129,9 +137,11 @@ class ConnectivityChecker {
         connectionQuality: 'offline',
         lastChecked: Date.now(),
         error: error instanceof Error ? error.message : 'Unknown error',
+        isInitialCheck: false,
       };
     } finally {
       this.isChecking = false;
+      this.hasCompletedInitialCheck = true;
       this.notifyListeners();
     }
 
@@ -214,6 +224,38 @@ class ConnectivityChecker {
         console.error('Error in connectivity listener:', error);
       }
     });
+  }
+
+  // Perform fast initial connectivity check
+  private async performInitialCheck(): Promise<void> {
+    // Use a faster, simpler check for the initial load
+    if (!navigator.onLine) {
+      this.status = {
+        isOnline: false,
+        isConnected: false,
+        connectionQuality: 'offline',
+        lastChecked: Date.now(),
+        isInitialCheck: false,
+      };
+      this.hasCompletedInitialCheck = true;
+      this.notifyListeners();
+      return;
+    }
+
+    // For initial check, just assume we're online if navigator.onLine is true
+    // The full connectivity check will run in the background
+    this.status = {
+      isOnline: true,
+      isConnected: true,
+      connectionQuality: 'good',
+      lastChecked: Date.now(),
+      isInitialCheck: false,
+    };
+    this.hasCompletedInitialCheck = true;
+    this.notifyListeners();
+
+    // Then perform the full check in the background
+    setTimeout(() => this.checkConnectivity(), 100);
   }
 
   // Force an immediate connectivity check
