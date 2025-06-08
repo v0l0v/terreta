@@ -15,12 +15,12 @@ export const TIMEOUTS = {
 
 // Query limits
 export const QUERY_LIMITS = {
-  GEOCACHES: 50,
-  LOGS: 200,
+  GEOCACHES: 100, // Increased for better caching
+  LOGS: 100, // Reasonable limit per geocache
   BATCH_SIZE: 3,
   PROXIMITY_RESULTS: 100,
   HOME_PAGE_LIMIT: 6,
-  FAST_LOAD_LIMIT: 6, // Load 5 geocaches quickly for immediate display
+  FAST_LOAD_LIMIT: 6, // Load 6 geocaches quickly for immediate display
   SKELETON_COUNT: 6, // Number of skeleton cards to show
 } as const;
 
@@ -39,11 +39,11 @@ export const RETRY_CONFIG = {
 
 // Polling intervals for prefetching and updates
 export const POLLING_INTERVALS = {
-  GEOCACHES: 300000, // 5 minutes - much less aggressive polling to reduce memory pressure
-  LOGS: 240000, // 4 minutes - less frequent log updates
+  GEOCACHES: 180000, // 3 minutes - background polling for real updates only
+  LOGS: 120000, // 2 minutes - more frequent for active logs
   DELETION_EVENTS: 600000, // 10 minutes - deletions are rare
-  BACKGROUND_SYNC: 900000, // 15 minutes - much less frequent background sync
-  FAST_UPDATES: 120000, // 2 minutes - less aggressive fast updates
+  BACKGROUND_SYNC: 300000, // 5 minutes - intelligent background sync with LRU cache
+  FAST_UPDATES: 60000, // 1 minute - for immediate updates when needed
   SLOW_UPDATES: 1800000, // 30 minutes - for less critical data
 } as const;
 

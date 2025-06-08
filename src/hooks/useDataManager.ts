@@ -11,7 +11,10 @@ import { useCacheInvalidation } from '@/hooks/useCacheInvalidation';
 import { useOnlineStatus } from '@/hooks/useConnectivity';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useGeocacheNavigation } from '@/hooks/useGeocacheNavigation';
-import { POLLING_INTERVALS } from '@/lib/constants';
+import { cacheManager } from '@/lib/cacheManager';
+import { useNostr } from '@nostrify/react';
+import { NIP_GC_KINDS } from '@/lib/nip-gc';
+import { POLLING_INTERVALS, TIMEOUTS } from '@/lib/constants';
 
 interface DataManagerOptions {
   enablePolling?: boolean;
@@ -63,6 +66,121 @@ export function useDataManager(options: DataManagerOptions = {}) {
   // Cache invalidation
   const cacheInvalidation = useCacheInvalidation();
 
+  const { nostr } = useNostr();
+
+  // Background sync functions
+  const backgroundSync = {
+    syncGeocaches: useCallback(async () => {
+      try {
+        const signal = AbortSignal.timeout(TIMEOUTS.FAST_QUERY);
+        const events = await nostr.query([{
+          kinds: [NIP_GC_KINDS.GEOCACHE],
+          limit: 100,
+          since: Math.floor(Date.now() / 1000) - 3600, // Last hour
+        }], { signal });
+
+        let updatedCount = 0;
+        
+        // Only process if we actually got events
+        if (events && events.length > 0) {
+          events.forEach(event => {
+            // Only update if this is actually newer data
+            const wasUpdated = cacheManager.updateIfNewer(
+              'geocache',
+              event.id,
+              event, // Store the raw event for now
+              event.created_at * 1000
+            );
+            
+            if (wasUpdated) {
+              updatedCount++;
+            }
+          });
+
+          // Only invalidate React Query if we actually got NEW data
+          if (updatedCount > 0) {
+            // Use refetchType: 'none' to update cache without triggering UI loading states
+            queryClient.invalidateQueries({ 
+              queryKey: ['geocaches'],
+              refetchType: 'none' // Don't trigger loading states
+            });
+          }
+        }
+
+        return updatedCount;
+      } catch (error) {
+        // Don't log warnings for timeout errors in background sync
+        if (!error?.message?.includes('timeout')) {
+          console.warn('Background geocache sync failed:', error);
+        }
+        return 0;
+      }
+    }, [nostr, queryClient]),
+
+    syncLogs: useCallback(async (geocacheIds: string[]) => {
+      if (geocacheIds.length === 0) return 0;
+
+      try {
+        const signal = AbortSignal.timeout(TIMEOUTS.FAST_QUERY);
+        const events = await nostr.query([{
+          kinds: [NIP_GC_KINDS.FOUND_LOG, NIP_GC_KINDS.COMMENT_LOG],
+          '#a': geocacheIds.map(id => `${NIP_GC_KINDS.GEOCACHE}:${id}`),
+          since: Math.floor(Date.now() / 1000) - 1800, // Last 30 minutes
+          limit: 100,
+        }], { signal });
+
+        let updatedCount = 0;
+        const logsByGeocache = new Map<string, any[]>();
+
+        // Only process if we actually got events
+        if (events && events.length > 0) {
+          // Group logs by geocache
+          events.forEach(event => {
+            const aTag = event.tags.find(tag => tag[0] === 'a')?.[1];
+            if (aTag) {
+              const geocacheId = aTag.split(':')[2];
+              if (!logsByGeocache.has(geocacheId)) {
+                logsByGeocache.set(geocacheId, []);
+              }
+              logsByGeocache.get(geocacheId)!.push(event);
+            }
+          });
+
+          // Update cache for each geocache
+          logsByGeocache.forEach((logs, geocacheId) => {
+            const existingLogs = cacheManager.getLogs(geocacheId) || [];
+            const newLogs = logs.filter(log => 
+              !existingLogs.some(existing => existing.id === log.id)
+            );
+
+            if (newLogs.length > 0) {
+              const allLogs = [...newLogs, ...existingLogs]
+                .sort((a, b) => b.created_at - a.created_at);
+              
+              cacheManager.setLogs(geocacheId, allLogs);
+              updatedCount += newLogs.length;
+              
+              // Only invalidate React Query if we have NEW logs
+              // Use refetchType: 'none' to update cache without triggering UI loading states
+              queryClient.invalidateQueries({ 
+                queryKey: ['geocache-logs', geocacheId],
+                refetchType: 'none' // Don't trigger loading states
+              });
+            }
+          });
+        }
+
+        return updatedCount;
+      } catch (error) {
+        // Don't log warnings for timeout errors in background sync
+        if (!error?.message?.includes('timeout')) {
+          console.warn('Background log sync failed:', error);
+        }
+        return 0;
+      }
+    }, [nostr, queryClient]),
+  };
+
   // Track successful updates and pre-populate cache
   useEffect(() => {
     if (geocachesQuery.dataUpdatedAt) {
@@ -87,63 +205,71 @@ export function useDataManager(options: DataManagerOptions = {}) {
    */
   const refreshAll = useCallback(async () => {
     try {
-      // Only invalidate main geocaches queries, not all related data
+      // Force refresh by invalidating React Query cache
       await queryClient.invalidateQueries({ 
         queryKey: ['geocaches'],
         refetchType: 'active' // Only refetch if actively being used
       });
-      await queryClient.invalidateQueries({ 
-        queryKey: ['geocaches-fast'],
-        refetchType: 'active'
-      });
       
-      // Don't invalidate logs unless specifically needed
-      // await queryClient.invalidateQueries({ queryKey: ['geocache-logs'] });
+      // Don't clear LRU cache on manual refresh - let background sync handle updates
+      // The LRU cache will be updated with fresh data when queries run
+      
+      // Trigger background sync to get latest data
+      const updatedGeocaches = await backgroundSync.syncGeocaches();
       
       // Trigger prefetch for visible data only
       if (geocachesQuery.data && geocachesQuery.data.length > 0) {
-        const topGeocacheIds = geocachesQuery.data.slice(0, 3).map((g: any) => g.id);
+        const topGeocacheIds = geocachesQuery.data.slice(0, 5).map((g: any) => g.id);
         await prefetchManager.triggerPrefetch(topGeocacheIds);
+        
+        // Sync logs for top geocaches
+        await backgroundSync.syncLogs(topGeocacheIds);
       }
-      
-      // Skip validation on manual refresh to avoid removing data
-      // await cacheInvalidation.validateCachedGeocaches();
       
       setLastUpdate(new Date());
       setErrorCount(0);
+      
+      console.log(`Manual refresh completed. Updated ${updatedGeocaches} geocaches.`);
     } catch (error) {
       console.error('Failed to refresh all data:', error);
       setErrorCount(prev => prev + 1);
     }
-  }, [queryClient, prefetchManager, geocachesQuery.data]);
+  }, [queryClient, prefetchManager, geocachesQuery.data, backgroundSync]);
 
   /**
    * Refresh specific geocache and its logs
    */
   const refreshGeocache = useCallback(async (geocacheId: string) => {
     try {
-      // Invalidate specific geocache queries
+      // Mark cache entries for background update (don't clear immediately)
+      cacheManager.markForBackgroundUpdate('geocache', geocacheId);
+      cacheManager.markForBackgroundUpdate('logs', geocacheId);
+      
+      // Invalidate React Query to trigger refetch
       await queryClient.invalidateQueries({ queryKey: ['geocache', geocacheId] });
       await queryClient.invalidateQueries({ 
         queryKey: ['geocache-logs'],
         predicate: (query) => {
-          // Invalidate logs for this geocache
           return query.queryKey.includes(geocacheId);
         }
       });
+      
+      // Trigger background sync for this specific geocache
+      await backgroundSync.syncLogs([geocacheId]);
       
       // Trigger prefetch for this geocache
       await prefetchManager.triggerPrefetch([geocacheId]);
     } catch (error) {
       console.error('Failed to refresh geocache:', geocacheId, error);
     }
-  }, [queryClient, prefetchManager]);
+  }, [queryClient, prefetchManager, backgroundSync]);
 
   /**
    * Get current data status
    */
   const getStatus = useCallback((): DataManagerStatus => {
     const prefetchStatus = prefetchManager.getPrefetchStatus();
+    const cacheStats = cacheManager.getStats();
     
     return {
       isLoading: geocachesQuery.isLoading,
@@ -151,7 +277,10 @@ export function useDataManager(options: DataManagerOptions = {}) {
       isPrefetching: enablePrefetching && isOnline,
       lastUpdate,
       errorCount,
-      prefetchStatus,
+      prefetchStatus: {
+        ...prefetchStatus,
+        cacheStats, // Include LRU cache statistics
+      },
     };
   }, [
     geocachesQuery.isLoading,
@@ -225,7 +354,39 @@ export function useDataManager(options: DataManagerOptions = {}) {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
     };
-  }, [user, isOnline]);
+  }, [user, isOnline, refreshAll, resumePolling, pausePolling]);
+
+  /**
+   * Background sync effect for LRU cache
+   */
+  useEffect(() => {
+    if (!user || !isOnline || !enablePolling) return;
+
+    const interval = setInterval(async () => {
+      try {
+        // Background sync geocaches
+        const updatedGeocaches = await backgroundSync.syncGeocaches();
+        
+        // Sync logs for visible geocaches (top 10)
+        if (geocachesQuery.data && geocachesQuery.data.length > 0) {
+          const visibleGeocacheIds = geocachesQuery.data
+            .slice(0, 10)
+            .map((g: any) => g.id);
+          
+          const updatedLogs = await backgroundSync.syncLogs(visibleGeocacheIds);
+          
+          if (updatedGeocaches > 0 || updatedLogs > 0) {
+            console.log(`Background sync: ${updatedGeocaches} geocaches, ${updatedLogs} logs updated`);
+            setLastUpdate(new Date());
+          }
+        }
+      } catch (error) {
+        console.warn('Background sync failed:', error);
+      }
+    }, POLLING_INTERVALS.BACKGROUND_SYNC);
+
+    return () => clearInterval(interval);
+  }, [user, isOnline, enablePolling, backgroundSync, geocachesQuery.data]);
 
   return {
     // Data
