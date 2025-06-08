@@ -3,9 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RelayErrorFallback } from '@/components/RelayErrorFallback';
 import { AppProvider } from '@/components/AppProvider';
 import { DEFAULT_RELAY, PRESET_RELAYS } from '@/lib/constants';
+import { vi } from 'vitest';
 
 // Mock the RelaySelector component
-jest.mock('@/components/RelaySelector', () => ({
+vi.mock('@/components/RelaySelector', () => ({
   RelaySelector: ({ className }: { className?: string }) => (
     <div data-testid="relay-selector" className={className}>
       Relay Selector Mock
@@ -41,7 +42,7 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
 describe('RelayErrorFallback', () => {
   it('renders error state with relay switcher', () => {
     const mockError = new Error('Connection failed');
-    const mockRetry = jest.fn();
+    const mockRetry = vi.fn();
 
     render(
       <TestWrapper>
@@ -59,7 +60,7 @@ describe('RelayErrorFallback', () => {
   });
 
   it('renders empty state with relay switcher', () => {
-    const mockRetry = jest.fn();
+    const mockRetry = vi.fn();
 
     render(
       <TestWrapper>
@@ -76,7 +77,7 @@ describe('RelayErrorFallback', () => {
   });
 
   it('calls onRetry when retry button is clicked', () => {
-    const mockRetry = jest.fn();
+    const mockRetry = vi.fn();
 
     render(
       <TestWrapper>
@@ -92,7 +93,7 @@ describe('RelayErrorFallback', () => {
   });
 
   it('shows retrying state when isRetrying is true', () => {
-    const mockRetry = jest.fn();
+    const mockRetry = vi.fn();
 
     render(
       <TestWrapper>

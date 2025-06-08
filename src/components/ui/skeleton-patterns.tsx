@@ -310,8 +310,8 @@ export function SmartLoadingState({
     );
   }
 
-  // Empty state
-  if (!isLoading && hasData && data?.length === 0) {
+  // Empty state - show when not loading, has attempted to load data, and no results
+  if (!isLoading && hasData && (!data || data.length === 0)) {
     if (emptyState) return <>{emptyState}</>;
     
     if (showRelayFallback) {

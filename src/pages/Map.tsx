@@ -31,6 +31,7 @@ import { SmartLoadingState } from "@/components/ui/skeleton-patterns";
 import { QUERY_LIMITS } from "@/lib/constants";
 import { useNavigate } from "react-router-dom";
 
+
 export default function Map() {
   const navigate = useNavigate();
   const { config } = useAppContext();
@@ -60,6 +61,7 @@ export default function Map() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [highlightedGeocache, setHighlightedGeocache] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("list");
+
   const mapRef = useRef<L.Map | null>(null);
   
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
@@ -415,6 +417,8 @@ export default function Map() {
                     placeholder="Search city or zip..."
                   />
                 </div>
+                
+
 
                 <div className="flex gap-2">
                   <Button 
@@ -475,12 +479,14 @@ export default function Map() {
             </div>
           </div>
 
+
+
           {/* Results */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <SmartLoadingState
               isLoading={isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading}
               isError={isProximitySearchActive ? !!error : optimisticGeocaches.isError}
-              hasData={filteredGeocaches.length > 0}
+              hasData={isProximitySearchActive ? !isLoading || filteredGeocaches.length > 0 : optimisticGeocaches.hasInitialData}
               data={filteredGeocaches}
               error={(isProximitySearchActive ? error : optimisticGeocaches.error) as Error}
               onRetry={handleRetry}
@@ -489,15 +495,7 @@ export default function Map() {
               skeletonVariant="compact"
               compact={true}
               showRelayFallback={true}
-              emptyState={
-                <div className="p-4 text-center text-muted-foreground">
-                  <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p>No geocaches found</p>
-                  <p className="text-sm mt-2">
-                    {searchLocation ? 'Try increasing the search radius or searching a different area' : 'Try adjusting your filters'}
-                  </p>
-                </div>
-              }
+
               className="h-full"
             >
               <div className="p-4">
@@ -607,6 +605,8 @@ export default function Map() {
                   placeholder="Search city or zip..."
                 />
                 
+
+                
                 <div className="flex gap-2">
                   <Button 
                     variant={showNearMe ? "default" : "outline"} 
@@ -664,6 +664,8 @@ export default function Map() {
           </div>
         </div>
         
+
+
         {/* Mobile Content Area */}
         <div className="flex-1 overflow-hidden">
           <MapViewTabs 
@@ -676,7 +678,7 @@ export default function Map() {
                 <SmartLoadingState
                   isLoading={isProximitySearchActive ? isLoading : optimisticGeocaches.isLoading}
                   isError={isProximitySearchActive ? !!error : optimisticGeocaches.isError}
-                  hasData={filteredGeocaches.length > 0}
+                  hasData={isProximitySearchActive ? !isLoading || filteredGeocaches.length > 0 : optimisticGeocaches.hasInitialData}
                   data={filteredGeocaches}
                   error={(isProximitySearchActive ? error : optimisticGeocaches.error) as Error}
                   onRetry={handleRetry}
@@ -685,17 +687,7 @@ export default function Map() {
                   skeletonVariant="compact"
                   compact={true}
                   showRelayFallback={true}
-                  emptyState={
-                    <div className="flex items-center justify-center min-h-[300px]">
-                      <div className="text-center text-muted-foreground">
-                        <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p>No geocaches found</p>
-                        <p className="text-sm mt-2">
-                          {searchLocation ? 'Try increasing the search radius or searching a different area' : 'Try adjusting your filters'}
-                        </p>
-                      </div>
-                    </div>
-                  }
+
                   className="h-full"
                 >
                 <div className="space-y-4">

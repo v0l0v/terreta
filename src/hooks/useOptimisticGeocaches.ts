@@ -116,7 +116,7 @@ export function useOptimisticGeocaches(
     staleTime: 300000, // 5 minutes - much longer for stability
     gcTime: 1800000, // 30 minutes
     refetchOnWindowFocus: false,
-    refetchInterval: enablePolling ? POLLING_INTERVALS.GEOCACHES * 3 : false, // Poll every 3 minutes
+    refetchInterval: enablePolling ? POLLING_INTERVALS.GEOCACHES : false, // Poll every 5 minutes
     refetchIntervalInBackground: false, // Don't poll in background
     // Keep data stable
     placeholderData: (previousData) => previousData,
@@ -194,21 +194,26 @@ export function useOptimisticGeocaches(
   const primaryQuery = fullQuery.data ? fullQuery : fastQuery;
   const geocaches = primaryQuery.data || [];
   
+  // Ensure we always have an array and track if we have attempted to load data
+  const hasAttemptedLoad = fastQuery.isFetched || fullQuery.isFetched;
+  
   // Smart loading states
   const isInitialLoading = fastInitialLoad 
     ? (fastQuery.isLoading && !fastQuery.data)
     : (fullQuery.isLoading && !fullQuery.data);
   
-  const isFetching = fastQuery.isFetching || fullQuery.isFetching;
+  // Only show fetching for manual refreshes, not background polling
+  const isFetching = (fastQuery.isFetching && !fastQuery.isRefetching) || 
+                     (fullQuery.isFetching && !fullQuery.isRefetching);
   const isError = primaryQuery.isError;
   const error = primaryQuery.error as Error | null;
-  const hasInitialData = !!(fastQuery.data || fullQuery.data);
+  const hasInitialData = hasAttemptedLoad; // True if we've attempted to load data, regardless of results
   
-  // Data is stale if we're showing fast data while full data loads OR if either query is fetching
+  // Data is stale only if we're showing fast data while full data loads
+  // Don't show stale state for background polling/refetching
   const isStale = staleWhileRevalidate && (
-    (fastQuery.data && fullQuery.isLoading) ||
-    (primaryQuery.isStale && !primaryQuery.isFetching) ||
-    isFetching // Show stale state when any query is fetching
+    (fastQuery.data && fullQuery.isLoading && !fullQuery.data) ||
+    (primaryQuery.isStale && !primaryQuery.isFetching && !primaryQuery.isRefetching)
   );
 
   return {

@@ -92,14 +92,14 @@ export default function Home() {
   // Auto-refresh when relay changes
   useEffect(() => {
     refresh();
-  }, [config.relayUrl, refresh]);
+  }, [config.relayUrl]); // Remove refresh from dependencies to prevent infinite loop
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40 dark:from-green-950/40 dark:via-emerald-950/30 dark:to-teal-950/20 adventure:from-amber-100/80 adventure:via-yellow-50/60 adventure:to-orange-100/70">
       <DesktopHeader />
 
       {/* Hero Section */}
-      <section className="relative pt-16 pb-20 px-4 md:py-24 overflow-hidden">
+      <section className="relative min-h-[calc(100vh-8rem)] md:min-h-0 flex items-center pt-4 pb-20 md:pt-16 md:pb-20 px-4 md:py-24 overflow-hidden">
         {/* Parchment background for adventure mode only - behind everything */}
         <div className="absolute inset-0 -z-20 hidden adventure:block" style={{
           backgroundImage: 'url(/parchment-300.jpg)',
@@ -272,7 +272,7 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="container mx-auto text-center relative">
+        <div className="container mx-auto text-center relative flex-1 flex flex-col justify-center md:block">
           <div className="mb-6 animate-fade-in">
             <Link to="/install" className="inline-flex flex-col items-center gap-0.5 bg-green-100 dark:bg-green-900 adventure:bg-[#4682B4] text-green-700 dark:text-green-300 adventure:text-white px-4 py-1.5 rounded-full text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800 adventure:hover:bg-[#4169E1] transition-colors">
               <div className="flex items-center gap-2">
@@ -442,7 +442,7 @@ export default function Home() {
             
             {/* Action buttons */}
             <div className="flex items-center justify-center gap-3 mt-6">
-              {(isLoading && !hasInitialData) || isFetching || isStale ? (
+              {(isLoading && !hasInitialData) || isRetrying ? (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-3 py-2 rounded-full">
                   <RefreshCw className="h-3 w-3 animate-spin" />
                   <span>
@@ -483,42 +483,7 @@ export default function Home() {
             skeletonCount={skeletonCount}
             skeletonVariant="featured"
             showRelayFallback={true}
-            emptyState={
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 adventure:from-stone-200 adventure:to-stone-300 flex items-center justify-center">
-                  <MapPin className="w-8 h-8 text-green-600 adventure:text-stone-700" />
-                </div>
-                <h4 className="text-lg font-semibold text-foreground mb-2">
-                  <span className="adventure:hidden">No treasures found yet</span>
-                  <span className="hidden adventure:inline">The realm awaits your legend</span>
-                </h4>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  <span className="adventure:hidden">
-                    Be the first explorer to hide a geocache and start the adventure!
-                  </span>
-                  <span className="hidden adventure:inline">
-                    Be the first legendary explorer to conceal an artifact and begin the epic quest!
-                  </span>
-                </p>
-                {user ? (
-                  <Link to="/create">
-                    <Button className="bg-green-600 hover:bg-green-700 adventure:bg-stone-700 adventure:hover:bg-stone-800 adventure:text-stone-100">
-                      <Plus className="h-4 w-4 mr-2 adventure:hidden" />
-                      <Crown className="h-4 w-4 mr-2 hidden adventure:inline" />
-                      <span className="adventure:hidden">Hide Your First Treasure</span>
-                      <span className="hidden adventure:inline">Conceal Your First Artifact</span>
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button onClick={handleLoginClick} className="bg-green-600 hover:bg-green-700 adventure:bg-stone-700 adventure:hover:bg-stone-800 adventure:text-stone-100">
-                    <Plus className="h-4 w-4 mr-2 adventure:hidden" />
-                    <Shield className="h-4 w-4 mr-2 hidden adventure:inline" />
-                    <span className="adventure:hidden">Login to Hide Treasures</span>
-                    <span className="hidden adventure:inline">Join the Guild of Explorers</span>
-                  </Button>
-                )}
-              </div>
-            }
+
           >
             {/* Featured Grid Layout */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
