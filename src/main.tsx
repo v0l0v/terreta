@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client'
+import '@fontsource/pirata-one'
 
 import App from './App.tsx'
 import './index.css'

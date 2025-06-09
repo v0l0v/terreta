@@ -98,13 +98,13 @@ export function MobileHeader() {
           {/* Side Sheet Content - Optimized for limited vertical space */}
           <SheetContent side="left" className="mobile-nav-sheet flex flex-col w-[280px] xs:w-[320px] sm:w-[400px] p-0">
             {/* Compact Header */}
-            <div className="mobile-nav-header flex items-center gap-2 px-3 py-2 pr-10 border-b bg-muted/30 shrink-0">
+            <div className="mobile-nav-header flex items-center gap-2 px-3 py-4 pr-10 border-b bg-muted/30 shrink-0">
               <img 
                 src="/icon.png" 
                 alt="Treasures" 
                 className={cn("h-6 w-6 xs:h-7 xs:w-7 transition-all duration-200", themeClasses.icon)} 
               />
-              <span className="font-bold text-sm xs:text-base">Treasures</span>
+              <span className={cn("font-bold text-sm", isAdventureTheme && "font-adventure")}>Treasures</span>
             </div>
             
             {/* Scrollable Content Area */}
@@ -216,7 +216,7 @@ export function MobileHeader() {
             alt="Treasures" 
             className={cn("h-6 w-6 xs:h-8 xs:w-8 transition-all duration-200", themeClasses.icon)} 
           />
-          <h1 className={cn("text-[10px] xs:text-xs font-bold m-0 leading-none", themeClasses.text)}>
+          <h1 className={cn("text-[10px] xs:text-xs font-bold m-0 leading-none", themeClasses.text, isAdventureTheme && "font-adventure")}>
             Treasures
           </h1>
         </Link>

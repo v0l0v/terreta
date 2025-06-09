@@ -497,7 +497,7 @@ export default function CreateCache() {
                     ) : isPending ? (
                       "Creating..."
                     ) : (
-                      "Create Geocache"
+                      "Create"
                     )}
                   </Button>
                 )}
@@ -731,7 +731,7 @@ export default function CreateCache() {
                   ) : isPending ? (
                     "Creating..."
                   ) : (
-                    "Create Geocache"
+                    "Create"
                   )}
                 </Button>
               )}

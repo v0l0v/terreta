@@ -8,6 +8,200 @@
   --adventure-grid-quaternary: rgb(180 83 9 / 0.45);
 }
 
+/* Adventure theme font styling - Pirata One for non-paragraph text */
+.adventure h1,
+.adventure h2,
+.adventure h3,
+.adventure h4,
+.adventure h5,
+.adventure h6,
+.adventure .font-heading,
+.adventure nav,
+.adventure .nav,
+.adventure .menu,
+.adventure .title,
+.adventure .label,
+.adventure .badge,
+.adventure .tag,
+.adventure .card-title,
+.adventure .dialog-title,
+.adventure .alert-title,
+.adventure .sidebar-title,
+.adventure .breadcrumb,
+.adventure .tab,
+.adventure .dropdown,
+.adventure .select,
+.adventure .input[type="submit"],
+.adventure .input[type="button"],
+.adventure .link,
+.adventure a:not(.text-content a),
+.adventure .text-lg,
+.adventure .text-xl,
+.adventure .text-2xl,
+.adventure .text-3xl,
+.adventure .text-4xl,
+.adventure .text-5xl,
+.adventure .text-6xl {
+  font-family: 'Pirata One', cursive;
+}
+
+/* Specific font size overrides for consistent scaling */
+.adventure .text-xs { font-size: 0.8rem !important; }
+.adventure .text-sm { font-size: 0.95rem !important; }
+.adventure .text-md { font-size: 1.25rem !important; }
+.adventure .text-lg { font-size: 1.25rem !important; }
+.adventure .text-xl { font-size: 1.375rem !important; }
+.adventure .text-2xl { font-size: 1.875rem !important; }
+.adventure .text-3xl { font-size: 2.25rem !important; }
+.adventure .text-4xl { font-size: 3.5rem !important; }
+.adventure .text-5xl { font-size: 4.5rem !important; }
+.adventure .text-6xl { font-size: 5.5rem !important; }
+.adventure .text-7xl { font-size: 7rem !important; }
+
+/* Navigation and UI element sizing */
+.adventure nav,
+.adventure .nav,
+.adventure .menu {
+  font-size: 1.02rem !important;
+}
+
+/* Heading overrides to ensure consistent sizing */
+.adventure h2 { font-size: 2rem !important; }
+.adventure h3 { font-size: 1.75rem !important; }
+.adventure h4 { font-size: 1.5rem !important; }
+.adventure h5 { font-size: 1.25rem !important; }
+.adventure h6 { font-size: 1.125rem !important; }
+
+/* Common UI elements */
+.adventure .label,
+.adventure .badge,
+.adventure .tag {
+  font-size: 0.95rem !important;
+}
+
+/* Responsive adjustments for mobile devices */
+@media (max-width: 640px) {
+  .adventure .text-2xl { font-size: 1.625rem !important; }
+  .adventure .text-3xl { font-size: 2rem !important; }
+  .adventure .text-4xl { font-size: 3rem !important; }
+  .adventure .text-5xl { font-size: 4rem !important; }
+  .adventure .text-6xl { font-size: 5rem !important; }
+  .adventure .text-7xl { font-size: 6rem !important; }
+}
+
+/* Very small screens - more conservative sizing */
+@media (max-width: 375px) {
+  .adventure .text-xl { font-size: 1.25rem !important; }
+  .adventure .text-2xl { font-size: 1.5rem !important; }
+  .adventure .text-3xl { font-size: 1.875rem !important; }
+  .adventure .text-4xl { font-size: 2.5rem !important; }
+  .adventure .text-5xl { font-size: 3.5rem !important; }
+  .adventure .text-6xl { font-size: 4.5rem !important; }
+  .adventure .text-7xl { font-size: 5rem !important; }
+}
+
+/* Keep paragraphs and body text with default font */
+.adventure p,
+.adventure .text-content,
+.adventure .prose,
+.adventure .description,
+.adventure .content {
+  font-family: inherit;
+}
+
+/* Override for text size classes that should NOT use Pirata One */
+.adventure p.text-sm,
+.adventure p.text-xs,
+.adventure p.text-base,
+.adventure .text-content .text-sm,
+.adventure .text-content .text-xs,
+.adventure .text-content .text-base,
+.adventure .prose .text-sm,
+.adventure .prose .text-xs,
+.adventure .prose .text-base {
+  font-family: inherit !important;
+}
+
+/* Utility classes for explicit font control */
+.font-adventure {
+  font-family: 'Pirata One', cursive;
+  font-size: 1.1rem !important;
+  letter-spacing: 0.02em; /* Slight letter spacing for better readability */
+}
+
+.font-body {
+  font-family: inherit;
+}
+
+/* Adventure theme specific overrides for common UI elements */
+.adventure .font-adventure {
+  font-family: 'Pirata One', cursive;
+  font-size: 1.1rem !important;
+  letter-spacing: 0.02em;
+}
+
+/* Specific override for the main hero heading - target the first section's h2 specifically */
+.adventure section:first-of-type h2 {
+  font-size: 2.25rem !important;
+}
+
+/* Responsive overrides for the hero section h2 heading */
+@media (min-width: 475px) {
+  .adventure section:first-of-type h2 {
+    font-size: 2.75rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .adventure section:first-of-type h2 {
+    font-size: 3.5rem !important;
+  }
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  .adventure section:first-of-type h2 {
+    font-size: 2rem !important;
+  }
+}
+
+@media (max-width: 375px) {
+  .adventure section:first-of-type h2 {
+    font-size: 1.75rem !important;
+  }
+}
+
+/* Enhanced styling for Pirata One font in adventure theme */
+.adventure h1,
+.adventure h2,
+.adventure h3,
+.adventure h4,
+.adventure h5,
+.adventure h6,
+.adventure .font-heading,
+.adventure nav,
+.adventure .nav,
+.adventure .menu,
+.adventure .title,
+.adventure .label,
+.adventure .badge,
+.adventure .tag,
+.adventure .card-title,
+.adventure .dialog-title,
+.adventure .alert-title,
+.adventure .sidebar-title,
+.adventure .breadcrumb,
+.adventure .tab,
+.adventure .dropdown,
+.adventure .select,
+.adventure .input[type="submit"],
+.adventure .input[type="button"],
+.adventure .link,
+.adventure a:not(.text-content a) {
+  letter-spacing: 0.02em; /* Improved readability */
+  font-weight: 400; /* Ensure consistent weight */
+}
+
 /* Adventure navigation bar styling */
 .adventure .bg-adventure-nav {
   background-color: rgb(var(--adventure-nav-bg));

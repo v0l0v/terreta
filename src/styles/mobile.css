@@ -275,21 +275,9 @@
 
 /* Most specific selector for the close button */
 .mobile-nav-sheet > button:last-child {
-  top: 0.25rem !important;
-  right: 0.5rem !important;
+  top: 0.45rem !important;
+  right: -0.5rem !important;
   /* Hide the large focus ring/click box */
-  outline: none !important;
-  box-shadow: none !important;
-  ring: none !important;
-  border: none !important;
-  background: transparent !important;
-}
-
-/* Target the actual Radix close button */
-.mobile-nav-sheet button:has(svg) {
-  top: 0.25rem !important;
-  right: 0.5rem !important;
-  /* Hide focus indicators */
   outline: none !important;
   box-shadow: none !important;
   ring: none !important;
