@@ -18,7 +18,7 @@ import { generateVerificationKeyPair } from '@/lib/verification';
 
 import type { VerificationKeyPair } from '@/lib/verification';
 
-export function useCreateGeocache(onCacheCreated?: (result: { event: any; verificationKeyPair: VerificationKeyPair; naddr: string }) => void) {
+export function useCreateGeocache() {
   const queryClient = useQueryClient();
   const { mutateAsync: publishEvent } = useNostrPublish();
   const { toast } = useToast();
@@ -108,18 +108,6 @@ export function useCreateGeocache(onCacheCreated?: (result: { event: any; verifi
       
       // Also update the geocaches list
       queryClient.invalidateQueries({ queryKey: ['geocaches'] });
-      
-      // Generate naddr for the created cache
-      const dTag = event.tags.find(t => t[0] === 'd')?.[1];
-      if (dTag) {
-        const relays = event.tags.filter(t => t[0] === 'relay').map(t => t[1]);
-        const naddr = geocacheToNaddr(event.pubkey, dTag, relays);
-        
-        // Call the callback if provided (for showing QR dialog)
-        if (onCacheCreated) {
-          onCacheCreated({ event, verificationKeyPair, naddr });
-        }
-      }
       
       // Background refresh after a delay to ensure data consistency
       setTimeout(() => {

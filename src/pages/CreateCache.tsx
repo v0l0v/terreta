@@ -81,12 +81,7 @@ export default function CreateCache() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { isOfflineMode } = useOfflineMode();
-  const { mutate: createGeocache, isPending } = useCreateGeocache(({ event, verificationKeyPair, naddr }) => {
-    // Show the QR dialog when cache is created
-    setCreatedNaddr(naddr);
-    setVerificationKeyPair(verificationKeyPair);
-    setShowQRDialog(true);
-  });
+  const { mutateAsync: createGeocache, isPending } = useCreateGeocache();
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<GeocacheFormData>(createDefaultGeocacheFormData());
@@ -181,22 +176,43 @@ export default function CreateCache() {
       return;
     }
 
-    // Location should already be verified from step 1, so just show confirmation
-    setShowConfirmDialog(true);
+    try {
+      // Location was already confirmed on step 1, so create directly
+      const { event, verificationKeyPair } = await createGeocache({
+        ...formData,
+        location,
+        images,
+        difficulty: parseInt(formData.difficulty),
+        terrain: parseInt(formData.terrain),
+      });
+
+      // Generate naddr for the created cache
+      const dTag = event.tags.find((t: string[]) => t[0] === 'd')?.[1];
+      if (dTag) {
+        const relays = event.tags.filter((t: string[]) => t[0] === 'relay').map((t: string[]) => t[1]);
+        // Import is already available at the top of the file
+        const naddr = geocacheToNaddr(event.pubkey, dTag, relays);
+        
+        // Show the QR dialog after successful creation
+        setCreatedNaddr(naddr);
+        setVerificationKeyPair(verificationKeyPair);
+        setShowQRDialog(true);
+      }
+    } catch (error) {
+      // Error handling is already done in the mutation
+      console.error('Failed to create geocache:', error);
+    }
   };
 
-  const handleConfirmSubmit = () => {
+  const handleLocationConfirm = () => {
     setShowConfirmDialog(false);
-    
-    if (!location) return;
-    
-    createGeocache({
-      ...formData,
-      location,
-      images,
-      difficulty: parseInt(formData.difficulty),
-      terrain: parseInt(formData.terrain),
-    });
+    // Move to next step after confirming location
+    setCurrentStep(2);
+  };
+
+  const handleLocationReview = () => {
+    setShowConfirmDialog(false);
+    // User stays on step 1 to modify the location
   };
 
   if (!user) {
@@ -446,6 +462,11 @@ export default function CreateCache() {
                         });
                         return;
                       }
+                      if (currentStep === 1 && location && locationVerification) {
+                        // Show confirmation dialog for step 1
+                        setShowConfirmDialog(true);
+                        return;
+                      }
                       if (currentStep === 2 && (!formData.name.trim() || !formData.description.trim())) {
                         toast({
                           title: "Please complete required fields",
@@ -676,6 +697,11 @@ export default function CreateCache() {
                       });
                       return;
                     }
+                    if (currentStep === 1 && location && locationVerification) {
+                      // Show confirmation dialog for step 1
+                      setShowConfirmDialog(true);
+                      return;
+                    }
                     if (currentStep === 2 && (!formData.name.trim() || !formData.description.trim())) {
                       toast({
                         title: "Please complete required fields",
@@ -763,7 +789,7 @@ export default function CreateCache() {
                     {/* Confirmation */}
                     <div className="flex items-center">
                       <div className="text-sm">
-                        <div className="font-medium mb-2 text-foreground">By submitting, you confirm:</div>
+                        <div className="font-medium mb-2 text-foreground">Please confirm:</div>
                         <div className="space-y-1 text-xs text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <Check className="h-4 w-4 text-green-600" />
@@ -801,9 +827,9 @@ export default function CreateCache() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel>Review Location</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleLocationReview}>Review Location</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={handleConfirmSubmit}
+              onClick={handleLocationConfirm}
               className={`flex items-center gap-2 ${
                 locationVerification && getVerificationSummary(locationVerification).status === 'restricted'
                   ? 'bg-yellow-600 hover:bg-yellow-700'
@@ -813,12 +839,12 @@ export default function CreateCache() {
               {locationVerification && getVerificationSummary(locationVerification).status === 'restricted' ? (
                 <>
                   <AlertTriangle className="h-4 w-4" />
-                  Create Despite Warnings
+                  Use Despite Warnings
                 </>
               ) : (
                 <>
                   <CheckCircle className="h-4 w-4" />
-                  Create Geocache
+                  Use This Location
                 </>
               )}
             </AlertDialogAction>
