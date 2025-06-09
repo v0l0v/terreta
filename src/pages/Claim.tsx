@@ -226,7 +226,7 @@ export default function Claim() {
 
             {/* Pro Tips */}
             <div className="bg-muted/30 p-4 rounded-lg">
-              <p className="font-medium text-sm mb-2">💡 Pro Tips:</p>
+              <p className="font-medium text-sm mb-2">Pro Tips:</p>
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>• Hold your phone steady about 6-12 inches from the QR code</li>
                 <li>• Make sure there's good lighting (avoid shadows and glare)</li>
@@ -246,7 +246,7 @@ export default function Claim() {
             </CardTitle>
             <CardDescription>
               {isMobile 
-                ? "If the QR scan didn't work, paste the treasure link here"
+                ? "You can open the link from your phone's camera directly, or paste the URL provided here"
                 : "After scanning with your phone, paste the treasure link here"
               }
             </CardDescription>
@@ -334,43 +334,7 @@ export default function Claim() {
             </AlertDescription>
           </Alert>
         )}
-
-        {/* Instructions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>How to Claim</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium mt-0.5">
-                1
-              </div>
-              <p className="text-sm">Find the QR code inside the treasure container</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium mt-0.5">
-                2
-              </div>
-              <p className="text-sm">
-                {isMobile 
-                  ? "Point your camera at the QR code - it will detect it automatically"
-                  : "Use your phone's camera to scan the QR code"
-                }
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium mt-0.5">
-                3
-              </div>
-              <p className="text-sm">
-                {isMobile 
-                  ? "Tap the popup to open the treasure page automatically"
-                  : "Copy the treasure link and paste it above to claim your find"
-                }
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      
       </div>
     </div>
   );
