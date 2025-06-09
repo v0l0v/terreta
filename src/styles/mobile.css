@@ -340,6 +340,64 @@
   touch-action: pan-x pan-y;
 }
 
+/* Dropdown menu collision detection for mobile nav */
+@media (max-width: 768px) {
+  /* Ensure dropdown menus have proper z-index above mobile nav */
+  [data-radix-popper-content-wrapper] {
+    z-index: 9999 !important;
+  }
+  
+  /* Ensure dropdown content is above mobile nav */
+  [data-radix-dropdown-menu-content] {
+    z-index: 9999 !important;
+  }
+  
+  /* Prevent dropdowns from being clipped by mobile nav */
+  [data-radix-popper-content-wrapper][data-side="bottom"] {
+    /* Add extra margin to prevent overlap with mobile nav */
+    margin-bottom: 1rem;
+  }
+  
+  /* For dropdowns that are positioned near the bottom of the screen */
+  [data-radix-dropdown-menu-content][data-side="top"] {
+    /* Ensure upward dropdowns have enough space */
+    margin-top: 0.5rem;
+  }
+}
+
+/* Progress indicator mobile fixes */
+@media (max-width: 375px) {
+  /* Ensure progress indicators don't overflow on very small screens */
+  .progress-indicator {
+    padding: 0 0.5rem;
+    overflow: hidden;
+  }
+  
+  .progress-step {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+  
+  .progress-connector {
+    min-width: 0.25rem;
+    margin: 0 0.125rem;
+    flex: 1;
+  }
+  
+  /* Prevent any horizontal overflow in create cache form */
+  .create-cache-container {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  .create-cache-progress {
+    max-width: calc(100vw - 2rem);
+    overflow: hidden;
+  }
+}
+
 /* Better mobile card spacing */
 @media (max-width: 768px) {
   .card-mobile {

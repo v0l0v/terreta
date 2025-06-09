@@ -56,6 +56,10 @@ export function CacheMenu({ geocache, variant = 'default', className }: CacheMen
         <DropdownMenuContent 
           align="end" 
           className="w-48"
+          side="bottom"
+          sideOffset={8}
+          avoidCollisions={true}
+          collisionPadding={{ bottom: 80 }} // Account for mobile nav bar (64px) + padding
           onCloseAutoFocus={(e) => {
             // Prevent focus trap issues on mobile
             e.preventDefault();

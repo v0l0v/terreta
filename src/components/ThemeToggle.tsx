@@ -99,7 +99,13 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
             {getThemeDisplayName()}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent 
+          align="end"
+          side="bottom"
+          sideOffset={8}
+          avoidCollisions={true}
+          collisionPadding={{ bottom: 80 }}
+        >
           <DropdownMenuItem onClick={() => setTheme("light")}>
             <Sun className="mr-2 h-4 w-4" />
             Light
@@ -142,7 +148,13 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent 
+          align="end"
+          side="bottom"
+          sideOffset={8}
+          avoidCollisions={true}
+          collisionPadding={{ bottom: 80 }}
+        >
           <DropdownMenuItem onClick={() => setTheme("light")}>
             <Sun className="mr-2 h-4 w-4" />
             Light
@@ -178,7 +190,13 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent 
+        align="end"
+        side="bottom"
+        sideOffset={8}
+        avoidCollisions={true}
+        collisionPadding={{ bottom: 80 }}
+      >
         <DropdownMenuItem onClick={() => setTheme("light")}>
           <Sun className="mr-2 h-4 w-4" />
           Light

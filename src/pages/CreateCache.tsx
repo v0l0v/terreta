@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, AlertTriangle, CheckCircle, Check, WifiOff } from "lucide-react";
 import { CompassSpinner } from "@/components/ui/loading";
@@ -258,7 +258,7 @@ export default function CreateCache() {
   return (
     <PageLayout maxWidth="2xl" background="muted" className="pb-4 md:pb-0">
       {/* Mobile: No card wrapper, desktop: Card wrapper */}
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto create-cache-container">
         {/* Header - mobile only */}
         <div className="md:hidden px-4 py-6">
           <h1 className="text-2xl font-bold">Hide a New Treasure</h1>
@@ -280,23 +280,25 @@ export default function CreateCache() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Progress Indicator */}
-              <div className="flex items-center justify-center mb-4 max-w-md mx-auto">
-                {[1, 2, 3, 4].map((step) => (
-                  <div key={step} className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      step < currentStep ? 'bg-green-500 text-white' :
-                      step === currentStep ? 'bg-blue-500 text-white' :
-                      'bg-gray-200 text-gray-500'
-                    }`}>
-                      {step < currentStep ? '✓' : step}
-                    </div>
-                    {step < totalSteps && (
-                      <div className={`h-1 mx-3 ${
-                        step < currentStep ? 'bg-green-500' : 'bg-gray-200'
-                      } w-16 md:w-24`} />
-                    )}
-                  </div>
-                ))}
+              <div className="flex items-center justify-center mb-4 px-4 overflow-hidden create-cache-progress">
+                <div className="flex items-center w-full max-w-xs min-w-0">
+                  {[1, 2, 3, 4].map((step, index) => (
+                    <React.Fragment key={step}>
+                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs xs:text-sm font-medium shrink-0 ${
+                        step < currentStep ? 'bg-green-500 text-white' :
+                        step === currentStep ? 'bg-primary dark:text-black text-white' :
+                        'bg-secondary text-gray-500'
+                      }`}>
+                        {step < currentStep ? '✓' : step}
+                      </div>
+                      {index < totalSteps - 1 && (
+                        <div className={`h-0.5 xs:h-1 mx-0.5 xs:mx-1 sm:mx-2 flex-1 min-w-[0.5rem] ${
+                          step < currentStep ? 'bg-green-500' : 'bg-secondary'
+                        }`} />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
               </div>
 
               {/* Step Content */}
@@ -514,23 +516,25 @@ export default function CreateCache() {
         <div className="md:hidden px-4 pb-4">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Progress Indicator */}
-            <div className="flex items-center justify-center mb-4 max-w-md mx-auto">
-              {[1, 2, 3, 4].map((step) => (
-                <div key={step} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    step < currentStep ? 'bg-green-500 text-white' :
-                    step === currentStep ? 'bg-blue-500 text-white' :
-                    'bg-gray-200 text-gray-500'
-                  }`}>
-                    {step < currentStep ? '✓' : step}
-                  </div>
-                  {step < totalSteps && (
-                    <div className={`h-1 mx-3 ${
-                      step < currentStep ? 'bg-green-500' : 'bg-gray-200'
-                    } w-16 md:w-24`} />
-                  )}
-                </div>
-              ))}
+            <div className="flex items-center justify-center mb-4 px-2 overflow-hidden create-cache-progress">
+              <div className="flex items-center w-full max-w-xs min-w-0">
+                {[1, 2, 3, 4].map((step, index) => (
+                  <React.Fragment key={step}>
+                    <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs xs:text-sm font-medium shrink-0 ${
+                      step < currentStep ? 'bg-green-500 text-white' :
+                      step === currentStep ? 'bg-primary dark:text-black text-white' :
+                      'bg-secondary text-gray-500'
+                    }`}>
+                      {step < currentStep ? '✓' : step}
+                    </div>
+                    {index < totalSteps - 1 && (
+                      <div className={`h-0.5 xs:h-1 mx-0.5 xs:mx-1 sm:mx-2 flex-1 min-w-[0.5rem] ${
+                        step < currentStep ? 'bg-green-500' : 'bg-secondary'
+                      }`} />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
 
             {/* Step Content */}

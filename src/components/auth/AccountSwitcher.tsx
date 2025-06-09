@@ -33,7 +33,13 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className='w-56 p-2 animate-scale-in'>
+      <DropdownMenuContent 
+        className='w-56 p-2 animate-scale-in'
+        side="bottom"
+        sideOffset={8}
+        avoidCollisions={true}
+        collisionPadding={{ bottom: 80 }}
+      >
         {otherUsers.length > 0 && (
           <>
             <div className='font-medium text-sm px-2 py-1.5'>Switch Account</div>

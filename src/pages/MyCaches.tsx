@@ -131,7 +131,13 @@ export default function MyCaches() {
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent 
+                align="end"
+                side="bottom"
+                sideOffset={8}
+                avoidCollisions={true}
+                collisionPadding={{ bottom: 80 }}
+              >
                 <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
                   <AlertDialogTrigger asChild>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-700">

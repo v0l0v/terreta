@@ -225,7 +225,13 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent 
+                    align="end"
+                    side="bottom"
+                    sideOffset={8}
+                    avoidCollisions={true}
+                    collisionPadding={{ bottom: 80 }} // Account for mobile nav bar
+                  >
                     <DropdownMenuItem onClick={handleCopyEventId} className="focus:outline-none">
                       <Copy className="h-4 w-4 mr-2" />
                       Copy Event ID
