@@ -146,9 +146,12 @@ export default function CreateCache() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Prevent default form submission - we handle creation in handleCreateGeocache
+  };
 
+  const handleCreateGeocache = async () => {
     if (!formData.name.trim()) {
       toast({
         title: "Cache name required",
@@ -190,7 +193,7 @@ export default function CreateCache() {
       const dTag = event.tags.find((t: string[]) => t[0] === 'd')?.[1];
       if (dTag) {
         const relays = event.tags.filter((t: string[]) => t[0] === 'relay').map((t: string[]) => t[1]);
-        // Import is already available at the top of the file
+        const { geocacheToNaddr } = await import('@/lib/naddr-utils');
         const naddr = geocacheToNaddr(event.pubkey, dTag, relays);
         
         // Show the QR dialog after successful creation
@@ -483,7 +486,8 @@ export default function CreateCache() {
                   </Button>
                 ) : (
                   <Button 
-                    type="submit" 
+                    type="button" 
+                    onClick={handleCreateGeocache}
                     disabled={isPending || isVerifying} 
                     className="flex-1"
                   >
@@ -718,7 +722,8 @@ export default function CreateCache() {
                 </Button>
               ) : (
                 <Button 
-                  type="submit" 
+                  type="button" 
+                  onClick={handleCreateGeocache}
                   disabled={isPending || isVerifying} 
                   className="flex-1"
                 >
