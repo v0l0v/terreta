@@ -532,14 +532,14 @@ export function CacheTerrainField({ value, onChange, fieldId = "terrain" }: Omit
     { 
       level: 3, 
       name: "Moderate Hike", 
-      icon: Mountain,
+      icon: TreesForestIcon,
       description: "Not suitable for all, some climbing",
       example: "Uneven terrain, hills, some scrambling"
     },
     { 
       level: 4, 
       name: "Difficult Hike", 
-      icon: TreesForestIcon,
+      icon: Mountain,
       description: "Experienced hikers, special equipment",
       example: "Steep climbs, rough terrain, may need gear"
     },

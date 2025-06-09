@@ -154,54 +154,57 @@ export function MobileHeader() {
             
             {/* Footer */}
             <div className="mt-auto p-2">
-              {currentUser ? (
-                <div className="space-y-3">
-                  {/* User Info */}
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/50">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={currentUser.metadata.picture} alt={currentUser.metadata.name} />
-                      <AvatarFallback>
-                        {currentUser.metadata.name?.charAt(0) || <User className="w-4 h-4" />}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {currentUser.metadata.name || `${currentUser.pubkey.slice(0, 8)}...`}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Logged in</p>
-                    </div>
+              <div className="space-y-3">
+                {/* Settings - Always visible */}
+                <div className="px-3 py-2 space-y-3">
+                  <OfflineIndicator showDetails={false} />
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground shrink-0">Theme</span>
+                    <ThemeToggle variant="mobile-sheet" />
                   </div>
-                  
-                  {/* Settings */}
-                  <div className="px-3 py-2 space-y-3">
-                    <OfflineIndicator showDetails={false} />
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground shrink-0">Theme</span>
-                      <ThemeToggle variant="mobile-sheet" />
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground shrink-0">Relay</span>
-                      <RelaySelector className="flex-1" />
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground shrink-0">Relay</span>
+                    <RelaySelector className="flex-1" />
                   </div>
-                  
-                  {/* Logout Button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      removeLogin(currentUser.id);
-                      closeSheet();
-                    }}
-                    className="w-full flex items-center gap-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Log out
-                  </Button>
                 </div>
-              ) : (
-                <LoginArea />
-              )}
+
+                {/* User-specific content */}
+                {currentUser ? (
+                  <div className="space-y-3">
+                    {/* User Info */}
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/50">
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={currentUser.metadata.picture} alt={currentUser.metadata.name} />
+                        <AvatarFallback>
+                          {currentUser.metadata.name?.charAt(0) || <User className="w-4 h-4" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {currentUser.metadata.name || `${currentUser.pubkey.slice(0, 8)}...`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Logged in</p>
+                      </div>
+                    </div>
+                    
+                    {/* Logout Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        removeLogin(currentUser.id);
+                        closeSheet();
+                      }}
+                      className="w-full flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Log out
+                    </Button>
+                  </div>
+                ) : (
+                  <LoginArea />
+                )}
+              </div>
             </div>
           </SheetContent>
         </Sheet>
