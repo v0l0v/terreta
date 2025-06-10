@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Navigation, Calendar, User, Edit, Trash2, RefreshCw, Save, RotateCcw, Eye, EyeOff, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TabsContent } from "@/components/ui/tabs";
-import { CacheDetailTabs } from "@/components/ui/mobile-button-patterns";
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { DesktopHeader } from "@/components/DesktopHeader";
@@ -43,7 +42,7 @@ import type { Geocache } from "@/types/geocache";
 export default function CacheDetail() {
   const { naddr } = useParams<{ naddr: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+
   const { user } = useCurrentUser();
   
   // Early validation of naddr parameter
@@ -126,12 +125,7 @@ export default function CacheDetail() {
   const [verificationKey, setVerificationKey] = useState<string | null>(null);
   const [isVerificationValid, setIsVerificationValid] = useState(false);
   
-  // Mobile detection state
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  
-  // Determine default tab based on URL params and screen size
-  const fromMap = searchParams.get('fromMap') === 'true';
-  const defaultTab = fromMap && isMobile ? 'map' : 'logs';
+
   
   // Initialize edit form when geocache loads
   useEffect(() => {
@@ -178,15 +172,7 @@ export default function CacheDetail() {
     }
   }, [editLocation, isEditing]);
 
-  // Handle window resize for mobile detection
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Check for verification key in URL hash
   useEffect(() => {
@@ -604,19 +590,12 @@ export default function CacheDetail() {
               </CardContent>
             </Card>
 
-            <CacheDetailTabs logCount={logs?.length || 0} defaultTab={defaultTab}>
-              <TabsContent value="logs" className="space-y-4" data-logs-section>
-                <LogsSection 
-                  logs={logs}
-                  geocache={typedGeocache}
-                  onProfileClick={handleProfileClick}
-                  isOwner={isOwner}
-                  verificationKey={verificationKey || undefined}
-                  isVerificationValid={isVerificationValid}
-                />
-              </TabsContent>
-              
-              <TabsContent value="map">
+            {/* Map Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Map</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="h-96 rounded-lg overflow-hidden">
                   <GeocacheMap 
                     geocaches={[{
@@ -627,8 +606,20 @@ export default function CacheDetail() {
                     zoom={15}
                   />
                 </div>
-              </TabsContent>
-            </CacheDetailTabs>
+              </CardContent>
+            </Card>
+
+            {/* Logs Section */}
+            <div className="space-y-4" data-logs-section>
+              <LogsSection 
+                logs={logs}
+                geocache={typedGeocache}
+                onProfileClick={handleProfileClick}
+                isOwner={isOwner}
+                verificationKey={verificationKey || undefined}
+                isVerificationValid={isVerificationValid}
+              />
+            </div>
           </div>
 
           {/* Sidebar */}
