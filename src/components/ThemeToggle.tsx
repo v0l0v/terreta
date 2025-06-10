@@ -16,7 +16,7 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
-  const { setTheme, theme } = useTheme()
+  const { setTheme, theme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   // Prevent hydration mismatch
@@ -24,18 +24,12 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
     setMounted(true)
   }, [])
 
-  // Get adventure theme styling based on variant - matching combobox styling
+  // Adventure theme styling - matches the navigation bar brown
+  const adventureClasses = "adventure:bg-[rgb(74,64,61)] adventure:border-[rgb(60,50,47)] adventure:text-stone-200 adventure:hover:bg-[rgb(60,50,47)]";
+  
   const getAdventureClasses = () => {
-    if (variant === 'mobile-sheet') {
-      // Mobile sheet has light background, needs dark text
-      return "adventure:bg-transparent adventure:border-stone-400 adventure:text-stone-700 adventure:hover:bg-stone-700/50 adventure:hover:text-stone-100";
-    } else if (variant === 'compact-icon') {
-      // Compact icon for mobile footer
-      return "adventure:bg-transparent adventure:border-stone-400 adventure:text-stone-700 adventure:hover:bg-stone-700/50 adventure:hover:text-stone-100";
-    } else {
-      // Desktop header - match combobox styling exactly
-      return "adventure:!bg-stone-700 adventure:!border-stone-600 adventure:!text-stone-200 adventure:hover:!bg-stone-600 adventure:hover:!text-stone-100";
-    }
+    // Mobile sheet doesn't need special adventure styling
+    return variant === 'mobile-sheet' ? "" : adventureClasses;
   };
 
   // Get theme display name
@@ -86,6 +80,37 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
     }
   };
 
+  // Shared dropdown menu configuration
+  const dropdownMenuProps = {
+    align: "end" as const,
+    side: "bottom" as const,
+    sideOffset: 8,
+    avoidCollisions: true,
+    collisionPadding: { bottom: 80 }
+  };
+
+  // Shared dropdown menu items
+  const dropdownMenuItems = (
+    <>
+      <DropdownMenuItem onClick={() => setTheme("light")}>
+        <Sun className="mr-2 h-4 w-4" />
+        Light
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => setTheme("dark")}>
+        <Moon className="mr-2 h-4 w-4" />
+        Dark
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => setTheme("adventure")}>
+        <Sword className="mr-2 h-4 w-4" />
+        Adventure
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => setTheme("system")}>
+        <Monitor className="mr-2 h-4 w-4" />
+        System
+      </DropdownMenuItem>
+    </>
+  );
+
   if (variant === 'mobile-sheet') {
     return (
       <DropdownMenu>
@@ -99,29 +124,8 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
             {getThemeDisplayName()}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="end"
-          side="bottom"
-          sideOffset={8}
-          avoidCollisions={true}
-          collisionPadding={{ bottom: 80 }}
-        >
-          <DropdownMenuItem onClick={() => setTheme("light")}>
-            <Sun className="mr-2 h-4 w-4" />
-            Light
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("dark")}>
-            <Moon className="mr-2 h-4 w-4" />
-            Dark
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("adventure")}>
-            <Sword className="mr-2 h-4 w-4" />
-            Adventure
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("system")}>
-            <Monitor className="mr-2 h-4 w-4" />
-            System
-          </DropdownMenuItem>
+        <DropdownMenuContent {...dropdownMenuProps}>
+          {dropdownMenuItems}
         </DropdownMenuContent>
       </DropdownMenu>
     )
@@ -139,38 +143,26 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
           >
             {mounted ? (
               <>
-                <Sun className="h-3 w-3 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 adventure:-rotate-90 adventure:scale-0" />
-                <Moon className="absolute h-3 w-3 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 adventure:rotate-90 adventure:scale-0" />
-                <Sword className="absolute h-3 w-3 rotate-90 scale-0 transition-all adventure:rotate-0 adventure:scale-100" />
+                <Sun className={cn(
+                  "h-3 w-3 transition-all",
+                  resolvedTheme === 'light' ? "rotate-0 scale-100" : "-rotate-90 scale-0"
+                )} />
+                <Moon className={cn(
+                  "absolute h-3 w-3 transition-all",
+                  resolvedTheme === 'dark' ? "rotate-0 scale-100" : "rotate-90 scale-0"
+                )} />
+                <Sword className={cn(
+                  "absolute h-3 w-3 transition-all",
+                  resolvedTheme === 'adventure' ? "rotate-0 scale-100" : "rotate-90 scale-0"
+                )} />
               </>
             ) : (
               <Monitor className="h-3 w-3" />
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="end"
-          side="bottom"
-          sideOffset={8}
-          avoidCollisions={true}
-          collisionPadding={{ bottom: 80 }}
-        >
-          <DropdownMenuItem onClick={() => setTheme("light")}>
-            <Sun className="mr-2 h-4 w-4" />
-            Light
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("dark")}>
-            <Moon className="mr-2 h-4 w-4" />
-            Dark
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("adventure")}>
-            <Sword className="mr-2 h-4 w-4" />
-            Adventure
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("system")}>
-            <Monitor className="mr-2 h-4 w-4" />
-            System
-          </DropdownMenuItem>
+        <DropdownMenuContent {...dropdownMenuProps}>
+          {dropdownMenuItems}
         </DropdownMenuContent>
       </DropdownMenu>
     )
@@ -184,35 +176,23 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
           size="icon"
           className={cn(getAdventureClasses())}
         >
-          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 adventure:-rotate-90 adventure:scale-0" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 adventure:rotate-90 adventure:scale-0" />
-          <Sword className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all adventure:rotate-0 adventure:scale-100" />
+          <Sun className={cn(
+            "h-[1.2rem] w-[1.2rem] transition-all",
+            resolvedTheme === 'light' ? "rotate-0 scale-100" : "-rotate-90 scale-0"
+          )} />
+          <Moon className={cn(
+            "absolute h-[1.2rem] w-[1.2rem] transition-all",
+            resolvedTheme === 'dark' ? "rotate-0 scale-100" : "rotate-90 scale-0"
+          )} />
+          <Sword className={cn(
+            "absolute h-[1.2rem] w-[1.2rem] transition-all",
+            resolvedTheme === 'adventure' ? "rotate-0 scale-100" : "rotate-90 scale-0"
+          )} />
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="end"
-        side="bottom"
-        sideOffset={8}
-        avoidCollisions={true}
-        collisionPadding={{ bottom: 80 }}
-      >
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          <Sun className="mr-2 h-4 w-4" />
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          <Moon className="mr-2 h-4 w-4" />
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("adventure")}>
-          <Sword className="mr-2 h-4 w-4" />
-          Adventure
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          <Monitor className="mr-2 h-4 w-4" />
-          System
-        </DropdownMenuItem>
+      <DropdownMenuContent {...dropdownMenuProps}>
+        {dropdownMenuItems}
       </DropdownMenuContent>
     </DropdownMenu>
   )

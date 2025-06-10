@@ -210,7 +210,6 @@ export function MobileHeader() {
                   <OfflineIndicator showDetails={false} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <ThemeToggle variant="compact-icon" />
                   <RelaySelector className="flex-1 min-w-[80px]" />
                 </div>
               </div>
@@ -230,8 +229,9 @@ export function MobileHeader() {
           </h1>
         </Link>
         
-        {/* Right Side Login */}
-        <div className="-mr-2">
+        {/* Right Side - Theme Toggle and Login */}
+        <div className="flex items-center gap-2 -mr-2">
+          <ThemeToggle variant="compact-icon" />
           <LoginArea compact />
         </div>
       </div>
