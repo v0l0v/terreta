@@ -29,7 +29,7 @@ export function WelcomeModal({ isOpen, onClose, isNewUser = false }: WelcomeModa
       description={
         <div className="text-center text-muted-foreground">
           {isNewUser 
-            ? 'Your adventure begins now!' 
+            ? 'Your quest begins now!' 
             : 'Ready to continue your quest?'
           }
         </div>
@@ -53,10 +53,10 @@ export function WelcomeModal({ isOpen, onClose, isNewUser = false }: WelcomeModa
               <Sparkles className='w-6 h-6' />
               {isNewUser ? 'Welcome, Adventurer!' : 'Welcome Back!'}
             </h3>
-            <p className='text-muted-foreground'>
+            <p className='text-muted-foreground px-5'>
               {isNewUser 
                 ? 'Go forth, epic quests and hidden treasures await your discovery!' 
-                : 'Your treasures and quests are waiting for you!'
+                : 'Your treasures and quests await you!'
               }
             </p>
           </div>

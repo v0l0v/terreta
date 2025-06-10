@@ -197,8 +197,8 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
       isOpen={isOpen} 
       onOpenChange={onClose}
       size="auth"
-      title={<span className='font-semibold text-center'>Welcome Back!</span>}
-      description={<div className='text-center text-muted-foreground'>Choose your login method or start your treasure hunting adventure</div>}
+      title={<span className='font-semibold text-center'>Welcome, Traveler!</span>}
+      description={<div className='text-center text-muted-foreground'>Start your quest, or login to return to your adventure</div>}
       headerClassName='px-6 pt-6 pb-1 relative'
       contentClassName='flex flex-col max-h-[90vh]'
     >
@@ -223,7 +223,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
             
             <p className='text-sm text-green-700 dark:text-green-300 adventure:text-amber-700 adventure:dark:text-amber-300 mb-3'>
               <span className='adventure:hidden'>
-                Join thousands of adventurers discovering hidden treasures worldwide!
+                Join the guild of adventurers discovering hidden treasures worldwide!
               </span>
               <span className='hidden adventure:inline'>
                 Join the ancient guild of treasure seekers on legendary quests!
@@ -248,8 +248,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
           </div>
           <div className='relative flex justify-center text-sm'>
             <span className='px-3 bg-background text-muted-foreground'>
-              <span className='adventure:hidden'>Or log in to your existing account</span>
-              <span className='hidden adventure:inline'>Or return to your adventure</span>
+              <span>Or return to your adventure</span>
             </span>
           </div>
         </div>
@@ -339,7 +338,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                     disabled={isLoading}
                   >
                     <Upload className='w-4 h-4 mr-2' />
-                    Upload Key File
+                    Upload Your Key File
                   </Button>
                   {errors.file && (
                     <p className="text-sm text-red-500 mt-2">{errors.file}</p>

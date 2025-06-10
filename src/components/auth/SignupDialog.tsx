@@ -2,13 +2,11 @@
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Key, AlertTriangle, Compass, Scroll, Shield, Crown, Sparkles, MapPin, Gem, Sword, Map, Star, Zap, Lock, CheckCircle, Copy, FileText, Eye, EyeOff, Upload } from 'lucide-react';
-import { ComponentLoading } from '@/components/ui/loading';
+import { Download, Key, Compass, Scroll, Shield, Crown, Sparkles, MapPin, Gem, Map, Star, Zap, Lock, CheckCircle, Copy, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { BaseDialog } from '@/components/ui/base-dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/useToast.ts';
 import { useLoginActions } from '@/hooks/useLoginActions';
@@ -375,7 +373,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
             </div>
 
             <div className='space-y-3'>
-              <p className='text-muted-foreground'>
+              <p className='text-muted-foreground px-5'>
                 Join adventurers exploring the world through treasure hunting. 
                 Your quest begins with forging your very own treasure key.
               </p>
@@ -442,8 +440,10 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                       <p className='text-lg font-semibold'>
                         Ready to forge your treasure key?
                       </p>
-                      <p className='text-sm text-muted-foreground'>
+                      <p className='text-sm text-muted-foreground px-5'>
                         This magical key will be your passport to the world of Treasures. 
+                      </p>
+                      <p className='text-sm text-muted-foreground px-5'>
                         It's completely unique and secure - keep it secret, keep it safe!
                       </p>
                     </div>
@@ -725,7 +725,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
 
               <div className='space-y-2'>
                 <label htmlFor='profile-picture' className='text-sm font-medium'>
-                  Avatar URL
+                  Avatar
                 </label>
                 <div className='flex gap-2'>
                   <Input
