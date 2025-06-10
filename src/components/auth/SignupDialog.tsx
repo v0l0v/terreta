@@ -35,7 +35,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
     picture: ''
   });
   const login = useLoginActions();
-  const { mutateAsync: publishEvent } = useNostrPublish();
+  const { mutateAsync: publishEvent, isPending: isPublishing } = useNostrPublish();
   const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -118,8 +118,16 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
   };
 
   const finishKeySetup = () => {
-    login.nsec(nsec);
-    setStep('profile');
+    try {
+      login.nsec(nsec);
+      setStep('profile');
+    } catch (error) {
+      toast({
+        title: 'Login Failed',
+        description: 'Failed to login with the generated key. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,6 +178,9 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
   };
 
   const finishSignup = async (skipProfile = false) => {
+    // Mark signup completion time for fallback welcome modal
+    localStorage.setItem('treasures_last_signup', Date.now().toString());
+    
     try {
       // Publish profile if user provided information
       if (!skipProfile && (profileData.name || profileData.about || profileData.picture)) {
@@ -192,7 +203,10 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
       // Close signup and show welcome modal
       onClose();
       if (onComplete) {
-        onComplete();
+        // Add a longer delay to ensure login state has fully propagated
+        setTimeout(() => {
+          onComplete();
+        }, 600);
       } else {
         // Fallback for when used without onComplete
         setStep('done');
@@ -214,7 +228,10 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
       // Still proceed to completion even if profile failed
       onClose();
       if (onComplete) {
-        onComplete();
+        // Add a longer delay to ensure login state has fully propagated
+        setTimeout(() => {
+          onComplete();
+        }, 600);
       } else {
         // Fallback for when used without onComplete
         setStep('done');
@@ -663,8 +680,20 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
               </div>
             </div>
 
+            {/* Publishing status indicator */}
+            {isPublishing && (
+              <div className='relative p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 adventure:from-amber-50 adventure:to-yellow-50 adventure:dark:from-amber-950/30 adventure:dark:to-yellow-950/30 border border-blue-200 dark:border-blue-800 adventure:border-amber-200 adventure:dark:border-amber-800'>
+                <div className='flex items-center justify-center gap-3'>
+                  <div className='w-5 h-5 border-2 border-blue-600 adventure:border-amber-600 border-t-transparent rounded-full animate-spin' />
+                  <span className='text-sm font-medium text-blue-700 dark:text-blue-300 adventure:text-amber-700 adventure:dark:text-amber-300'>
+                    Publishing your profile to the realm...
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Profile form */}
-            <div className='space-y-4 text-left'>
+            <div className={`space-y-4 text-left ${isPublishing ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className='space-y-2'>
                 <label htmlFor='profile-name' className='text-sm font-medium'>
                   Display Name
@@ -675,6 +704,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                   onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder='Your name'
                   className='rounded-lg'
+                  disabled={isPublishing}
                 />
               </div>
 
@@ -689,6 +719,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                   placeholder='Tell others about yourself...'
                   className='rounded-lg resize-none'
                   rows={3}
+                  disabled={isPublishing}
                 />
               </div>
 
@@ -703,6 +734,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                     onChange={(e) => setProfileData(prev => ({ ...prev, picture: e.target.value }))}
                     placeholder='https://example.com/your-avatar.jpg'
                     className='rounded-lg flex-1'
+                    disabled={isPublishing}
                   />
                   <input
                     type='file'
@@ -716,7 +748,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                     variant='outline'
                     size='icon'
                     onClick={() => avatarFileInputRef.current?.click()}
-                    disabled={isUploading}
+                    disabled={isUploading || isPublishing}
                     className='rounded-lg shrink-0'
                     title='Upload avatar image'
                   >
@@ -733,19 +765,37 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
             {/* Action buttons */}
             <div className='space-y-3'>
               <Button
-                className='w-full rounded-full py-4 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 adventure:from-amber-700 adventure:to-yellow-700 adventure:hover:from-amber-800 adventure:hover:to-yellow-800 transform transition-all duration-200 hover:scale-105 shadow-lg'
+                className='w-full rounded-full py-4 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 adventure:from-amber-700 adventure:to-yellow-700 adventure:hover:from-amber-800 adventure:hover:to-yellow-800 transform transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
                 onClick={() => finishSignup(false)}
+                disabled={isPublishing || isUploading}
               >
-                <Crown className='w-4 h-4 mr-2' />
-                Create Profile & Begin Quest!
+                {isPublishing ? (
+                  <>
+                    <div className='w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin' />
+                    Creating Profile...
+                  </>
+                ) : (
+                  <>
+                    <Crown className='w-4 h-4 mr-2' />
+                    Create Profile & Begin Quest!
+                  </>
+                )}
               </Button>
               
               <Button
                 variant='outline'
-                className='w-full rounded-full py-3'
+                className='w-full rounded-full py-3 disabled:opacity-50 disabled:cursor-not-allowed'
                 onClick={() => finishSignup(true)}
+                disabled={isPublishing || isUploading}
               >
-                Skip for now - Begin Quest!
+                {isPublishing ? (
+                  <>
+                    <div className='w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin' />
+                    Setting up account...
+                  </>
+                ) : (
+                  'Skip for now - Begin Quest!'
+                )}
               </Button>
             </div>
           </div>

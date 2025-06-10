@@ -2,16 +2,41 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SignupDialog from '@/components/auth/SignupDialog';
+import { LoginArea } from '@/components/auth/LoginArea';
 
 // Mock the hooks and dependencies
+const mockNsecLogin = vi.fn();
 vi.mock('@/hooks/useLoginActions', () => ({
   useLoginActions: () => ({
-    nsec: vi.fn(),
+    nsec: mockNsecLogin,
   }),
 }));
 
 vi.mock('@/hooks/useToast.ts', () => ({
   toast: vi.fn(),
+}));
+
+vi.mock('@/hooks/useLoggedInAccounts', () => ({
+  useLoggedInAccounts: () => ({
+    currentUser: null,
+  }),
+}));
+
+const mockPublishEvent = vi.fn().mockResolvedValue({});
+const mockIsPublishing = vi.fn().mockReturnValue(false);
+
+vi.mock('@/hooks/useNostrPublish', () => ({
+  useNostrPublish: () => ({
+    mutateAsync: mockPublishEvent,
+    isPending: mockIsPublishing(),
+  }),
+}));
+
+vi.mock('@/hooks/useUploadFile', () => ({
+  useUploadFile: () => ({
+    mutateAsync: vi.fn().mockResolvedValue([['url', 'https://example.com/image.jpg']]),
+    isPending: false,
+  }),
 }));
 
 vi.mock('@/lib/security', () => ({
@@ -47,12 +72,14 @@ describe('SignupDialog', () => {
       },
     });
     vi.clearAllMocks();
+    mockIsPublishing.mockReturnValue(false);
+    mockPublishEvent.mockResolvedValue({});
   });
 
-  const renderSignupDialog = (isOpen = true) => {
+  const renderSignupDialog = (isOpen = true, onComplete?: () => void) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <SignupDialog isOpen={isOpen} onClose={vi.fn()} />
+        <SignupDialog isOpen={isOpen} onClose={vi.fn()} onComplete={onComplete} />
       </QueryClientProvider>
     );
   };
@@ -167,5 +194,178 @@ describe('SignupDialog', () => {
     await waitFor(() => {
       expect(screen.getByText(/copied/i)).toBeInTheDocument();
     });
+  });
+
+  it('should call onComplete after successful signup', async () => {
+    const mockOnComplete = vi.fn();
+    renderSignupDialog(true, mockOnComplete);
+    
+    // Navigate through signup flow
+    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Forge My Treasure Key!'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Behold! Your magical treasure key!')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Secure the key
+    const copyButton = screen.getByText('Copy to Clipboard');
+    fireEvent.click(copyButton);
+
+    // Continue to profile step
+    await waitFor(() => {
+      const continueButton = screen.getByRole('button', { name: /my key is safe.*let the hunt begin/i });
+      fireEvent.click(continueButton);
+    });
+
+    // Should be on profile step
+    await waitFor(() => {
+      expect(screen.getByText('Almost there! Let\'s set up your profile')).toBeInTheDocument();
+    });
+
+    // Skip profile setup
+    const skipButton = screen.getByText('Skip for now - Begin Quest!');
+    fireEvent.click(skipButton);
+
+    // Should call onComplete with a delay
+    await waitFor(() => {
+      expect(mockOnComplete).toHaveBeenCalled();
+    }, { timeout: 1000 });
+  });
+
+  it('should handle login errors gracefully', async () => {
+    // Mock login to throw an error
+    mockNsecLogin.mockImplementationOnce(() => {
+      throw new Error('Login failed');
+    });
+
+    renderSignupDialog();
+    
+    // Navigate to download step
+    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Forge My Treasure Key!'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Behold! Your magical treasure key!')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Secure the key
+    const copyButton = screen.getByText('Copy to Clipboard');
+    fireEvent.click(copyButton);
+
+    // Try to continue - should handle error
+    await waitFor(() => {
+      const continueButton = screen.getByRole('button', { name: /my key is safe.*let the hunt begin/i });
+      fireEvent.click(continueButton);
+    });
+
+    // Should still be on the same step (error handled)
+    expect(screen.getByText('Behold! Your magical treasure key!')).toBeInTheDocument();
+  });
+
+  it('should show loading state and disable buttons during profile publishing', async () => {
+    // Mock publishing as pending
+    mockIsPublishing.mockReturnValue(true);
+    
+    renderSignupDialog();
+    
+    // Navigate through signup flow to profile step
+    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Forge My Treasure Key!'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Behold! Your magical treasure key!')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Secure the key
+    const copyButton = screen.getByText('Copy to Clipboard');
+    fireEvent.click(copyButton);
+
+    // Continue to profile step
+    await waitFor(() => {
+      const continueButton = screen.getByRole('button', { name: /my key is safe.*let the hunt begin/i });
+      fireEvent.click(continueButton);
+    });
+
+    // Should be on profile step
+    await waitFor(() => {
+      expect(screen.getByText('Almost there! Let\'s set up your profile')).toBeInTheDocument();
+    });
+
+    // Should show loading indicator
+    expect(screen.getByText('Publishing your profile to the realm...')).toBeInTheDocument();
+
+    // Buttons should be disabled and show loading state
+    const createProfileButton = screen.getByRole('button', { name: /creating profile/i });
+    const skipButton = screen.getByRole('button', { name: /setting up account/i });
+    
+    expect(createProfileButton).toBeDisabled();
+    expect(skipButton).toBeDisabled();
+
+    // Form fields should be disabled
+    const nameInput = screen.getByPlaceholderText('Your name');
+    const bioTextarea = screen.getByPlaceholderText('Tell others about yourself...');
+    const avatarInput = screen.getByPlaceholderText('https://example.com/your-avatar.jpg');
+    
+    expect(nameInput).toBeDisabled();
+    expect(bioTextarea).toBeDisabled();
+    expect(avatarInput).toBeDisabled();
+  });
+
+  it('should prevent multiple submissions when publishing', async () => {
+    let resolvePublish: (value: unknown) => void;
+    const publishPromise = new Promise((resolve) => {
+      resolvePublish = resolve;
+    });
+    
+    // Mock a slow publishing process
+    mockPublishEvent.mockReturnValue(publishPromise);
+    mockIsPublishing.mockReturnValue(false); // Initially not publishing
+    
+    renderSignupDialog();
+    
+    // Navigate through signup flow to profile step
+    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Forge My Treasure Key!'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Behold! Your magical treasure key!')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Secure the key
+    const copyButton = screen.getByText('Copy to Clipboard');
+    fireEvent.click(copyButton);
+
+    // Continue to profile step
+    await waitFor(() => {
+      const continueButton = screen.getByRole('button', { name: /my key is safe.*let the hunt begin/i });
+      fireEvent.click(continueButton);
+    });
+
+    // Should be on profile step
+    await waitFor(() => {
+      expect(screen.getByText('Almost there! Let\'s set up your profile')).toBeInTheDocument();
+    });
+
+    // Fill in some profile data
+    const nameInput = screen.getByPlaceholderText('Your name');
+    fireEvent.change(nameInput, { target: { value: 'Test User' } });
+
+    // Mock publishing state change
+    mockIsPublishing.mockReturnValue(true);
+
+    // Click create profile button
+    const createProfileButton = screen.getByText('Create Profile & Begin Quest!');
+    fireEvent.click(createProfileButton);
+
+    // Should only call publish once even if clicked multiple times
+    fireEvent.click(createProfileButton);
+    fireEvent.click(createProfileButton);
+
+    // Resolve the publish promise
+    resolvePublish!({});
+
+    // Should have been called only once
+    expect(mockPublishEvent).toHaveBeenCalledTimes(1);
   });
 });

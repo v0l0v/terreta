@@ -674,20 +674,56 @@ All favicon files are automatically copied from `/public` to `/dist` during buil
 
 ## Testing Your Changes
 
-Whenever you modify code, you should test your changes after you're finished by running:
+### Focused Testing Approach
+
+**Only run tests related to your immediate scope of work.** This saves time and focuses validation on what you're actually changing.
+
+#### For Component/Hook Changes
+If you're modifying a specific component or hook, run only its tests:
 
 ```bash
-npm run test
+# Test a specific file
+npx vitest run src/tests/welcome-modal.test.tsx
+
+# Test files matching a pattern
+npx vitest run src/tests/*modal*
+
+# Test a specific component
+npx vitest run --grep "WelcomeModal"
 ```
 
-This command will:
-1. Install dependencies (`npm i`)
-2. TypeScript type checking (`tsc -p tsconfig.app.json --noEmit`)
-3. Linting (`eslint`)
-4. Unit tests (`vitest run`)
-5. Production build (`vite build`)
+#### For Build/Type Issues
+If you need to check TypeScript or build issues:
 
-Your task is not considered finished until this test passes without errors.
+```bash
+# TypeScript checking only
+npx tsc -p tsconfig.app.json --noEmit
+
+# Build only
+npm run build
+
+# Linting only
+npx eslint src/
+```
+
+#### When to Run Full Test Suite
+Only run the full test suite (`npm run test`) when:
+- Making changes that affect multiple systems
+- Before final deployment
+- When explicitly requested
+- When you're unsure of the scope of impact
+
+#### Quick Validation Commands
+```bash
+# Quick syntax/type check
+npx tsc --noEmit
+
+# Quick build test
+npx vite build
+
+# Test specific functionality
+npx vitest run --grep "your-feature"
+```
 
 **Testing Philosophy:**
 - Write tests before implementing features (TDD)
@@ -696,6 +732,7 @@ Your task is not considered finished until this test passes without errors.
 - Include performance tests for data-intensive operations
 - Test offline scenarios and network failures
 - Integration tests are as important as unit tests
+- **Focus testing on your immediate scope of work**
 
 ## Common TypeScript Issues
 
