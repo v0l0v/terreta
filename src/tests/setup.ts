@@ -116,6 +116,13 @@ beforeAll(() => {
   // Mock setInterval and clearInterval for timer tests
   global.setInterval = vi.fn(global.setInterval);
   global.clearInterval = vi.fn(global.clearInterval);
+
+  // Mock ResizeObserver for Radix UI components
+  global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }));
 });
 
 // Clean up after each test

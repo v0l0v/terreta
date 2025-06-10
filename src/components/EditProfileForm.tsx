@@ -12,10 +12,19 @@ import {
   SwitchField, 
   ImageUploadField 
 } from '@/components/ui/form-fields';
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { NSchema as n, type NostrMetadata } from '@nostrify/nostrify';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import { PublishTroubleshooter } from '@/components/PublishTroubleshooter';
+import { Settings, User, Image, Globe } from 'lucide-react';
 
 interface EditProfileFormProps {
   onSuccess?: () => void;
@@ -144,79 +153,147 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <TextField
-          control={form.control}
-          name="name"
-          label="Name"
-          placeholder="Your name"
-          description="This is your display name that will be displayed to others."
-        />
+        {/* Basic Profile Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Basic Information
+            </CardTitle>
+            <CardDescription>
+              Your public profile information that others will see.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <TextField
+              control={form.control}
+              name="name"
+              label="Display Name"
+              placeholder="Your name"
+              description="This is how your name will appear to others."
+            />
 
-        <TextAreaField
-          control={form.control}
-          name="about"
-          label="Bio"
-          placeholder="Tell others about yourself"
-          description="A short description about yourself."
-        />
+            <TextAreaField
+              control={form.control}
+              name="about"
+              label="Bio"
+              placeholder="Tell others about yourself..."
+              description="A short description about yourself."
+            />
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ImageUploadField
-            control={form.control}
-            name="picture"
-            label="Profile Picture"
-            placeholder="https://example.com/profile.jpg"
-            description="URL to your profile picture. You can upload an image or provide a URL."
-            previewType="square"
-            onUpload={(file) => uploadPicture(file, 'picture')}
-          />
+        {/* Profile Images */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Image className="h-5 w-5" />
+              Profile Images
+            </CardTitle>
+            <CardDescription>
+              Upload or provide URLs for your profile picture and banner.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ImageUploadField
+                control={form.control}
+                name="picture"
+                label="Profile Picture"
+                placeholder="https://example.com/profile.jpg"
+                description="Square image that represents you."
+                previewType="square"
+                onUpload={(file) => uploadPicture(file, 'picture')}
+              />
 
-          <ImageUploadField
-            control={form.control}
-            name="banner"
-            label="Banner Image"
-            placeholder="https://example.com/banner.jpg"
-            description="URL to a wide banner image for your profile. You can upload an image or provide a URL."
-            previewType="wide"
-            onUpload={(file) => uploadPicture(file, 'banner')}
-          />
+              <ImageUploadField
+                control={form.control}
+                name="banner"
+                label="Banner Image"
+                placeholder="https://example.com/banner.jpg"
+                description="Wide banner image for your profile header."
+                previewType="wide"
+                onUpload={(file) => uploadPicture(file, 'banner')}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Advanced Options */}
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="advanced">
+            <AccordionTrigger className="text-left">
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Advanced Options
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <Card className="border-0 shadow-none">
+                <CardContent className="pt-6 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <TextField
+                      control={form.control}
+                      name="website"
+                      label="Website"
+                      placeholder="https://yourwebsite.com"
+                      description="Your personal website or blog."
+                      type="url"
+                    />
+
+                    <TextField
+                      control={form.control}
+                      name="nip05"
+                      label="NIP-05 Identifier"
+                      placeholder="you@example.com"
+                      description="Your verified Nostr address (requires domain setup)."
+                      type="email"
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Globe className="h-4 w-4" />
+                      Account Type
+                    </div>
+                    <SwitchField
+                      control={form.control}
+                      name="bot"
+                      label="Bot Account"
+                      description="Enable this if this account is automated or represents a bot/service."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+          <LoadingButton
+            type="submit" 
+            className="flex-1 sm:flex-none sm:min-w-[120px]" 
+            isLoading={isPending || isUploading}
+            loadingText="Saving..."
+          >
+            Save Profile
+          </LoadingButton>
+          
+          {onSuccess && (
+            <LoadingButton
+              type="button"
+              variant="outline"
+              onClick={onSuccess}
+              className="flex-1 sm:flex-none"
+              disabled={isPending || isUploading}
+            >
+              Cancel
+            </LoadingButton>
+          )}
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <TextField
-            control={form.control}
-            name="website"
-            label="Website"
-            placeholder="https://yourwebsite.com"
-            description="Your personal website or social media link."
-            type="url"
-          />
-
-          <TextField
-            control={form.control}
-            name="nip05"
-            label="NIP-05 Identifier"
-            placeholder="you@example.com"
-            description="Your verified Nostr identifier."
-            type="email"
-          />
-        </div>
-
-        <SwitchField
-          control={form.control}
-          name="bot"
-          label="Bot Account"
-          description="Mark this account as automated or a bot."
-        />
-
-        <LoadingButton
-          type="submit" 
-          className="w-full md:w-auto" 
-          isLoading={isPending || isUploading}
-          loadingText="Saving..."
-        >
-          Save Profile
-        </LoadingButton>
       </form>
 
       {publishError && (
