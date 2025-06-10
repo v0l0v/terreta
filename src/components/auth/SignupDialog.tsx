@@ -611,16 +611,19 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                 onClick={finishKeySetup}
                 disabled={keySecured === 'none'}
               >
-                <Compass className='w-4 h-4 mr-2' />
-                {keySecured === 'none' ? (
-                  <>
-                    Please secure your key first
-                  </>
-                ) : (
-                  <>
-                    My Key is Safe - Let the Quest Begin!
-                  </>
-                )}
+                <Compass className='w-4 h-4 mr-2 flex-shrink-0' />
+                <span className="text-center leading-tight">
+                  {keySecured === 'none' ? (
+                    <>
+                      Please secure your key first
+                    </>
+                  ) : (
+                    <>
+                      <span className="hidden sm:inline">My Key is Safe - Let the Quest Begin!</span>
+                      <span className="sm:hidden">Key Secured - Begin Quest!</span>
+                    </>
+                  )}
+                </span>
               </Button>
             </div>
           </div>

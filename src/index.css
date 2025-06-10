@@ -208,7 +208,7 @@
     pointer-events: auto;
   }
   
-  /* Fix for mobile touch scrolling */
+  /* Fix for mobile touch scrolling and modal display */
   @media (max-width: 768px) {
     body {
       -webkit-overflow-scrolling: touch;
@@ -219,6 +219,50 @@
     [data-radix-dropdown-menu-content] {
       /* Allow scroll events to pass through when not directly interacting */
       touch-action: manipulation;
+    }
+    
+    /* Ensure modals appear correctly on mobile */
+    [data-radix-dialog-overlay] {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 99998 !important;
+      /* Fix for iOS Safari viewport issues */
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      /* Ensure overlay is always visible */
+      display: block !important;
+    }
+    
+    [data-radix-dialog-content] {
+      position: fixed !important;
+      z-index: 99999 !important;
+      max-width: 95vw !important;
+      max-height: 90vh !important;
+      max-height: 90dvh !important;
+      left: 50% !important;
+      top: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      /* Ensure content is visible */
+      margin: 0 !important;
+      /* Fix for mobile browsers */
+      -webkit-transform: translate(-50%, -50%) !important;
+      /* Ensure content is always visible */
+      display: grid !important;
+      /* Prevent content from being cut off */
+      overflow: visible !important;
+    }
+    
+    /* Ensure the portal container is properly positioned */
+    [data-radix-portal] {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 99997 !important;
+      pointer-events: none !important;
+    }
+    
+    [data-radix-portal] > * {
+      pointer-events: auto !important;
     }
   }
 }
