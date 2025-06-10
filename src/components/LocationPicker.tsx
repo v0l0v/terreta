@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { LocationSearch } from "@/components/LocationSearch";
 import { useGeolocation } from "@/hooks/useGeolocation";
-import { autocorrectCoordinates } from "@/lib/coordinates";
+import { autocorrectCoordinates, getCoordinatePrecision, getGeohashPrecisionLevels } from "@/lib/coordinates";
 import { mapIcons } from "@/lib/mapIcons";
 
 import "leaflet/dist/leaflet.css";
@@ -85,10 +85,18 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
 
   useEffect(() => {
     if (value) {
-      setManualCoords({
-        lat: value.lat.toFixed(6),
-        lng: value.lng.toFixed(6),
-      });
+      // Preserve the original precision of the coordinates
+      // Only format if the current input doesn't match the value
+      const currentLat = parseFloat(manualCoords.lat);
+      const currentLng = parseFloat(manualCoords.lng);
+      
+      if (Math.abs(currentLat - value.lat) > 1e-10 || Math.abs(currentLng - value.lng) > 1e-10) {
+        setManualCoords({
+          lat: value.lat.toString(),
+          lng: value.lng.toString(),
+        });
+      }
+      
       // Only update map center if pin wasn't just dropped
       if (!pinDropped) {
         setMapCenter([value.lat, value.lng]);
@@ -96,7 +104,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
       // Reset the pin dropped flag
       setPinDropped(false);
     }
-  }, [value, pinDropped]);
+  }, [value, pinDropped, manualCoords.lat, manualCoords.lng]);
 
   // Only update location when user explicitly gets location, not automatically
   useEffect(() => {
@@ -112,8 +120,8 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
       setBeaconLocation(location);
       setMapCenter([lat, lng]);
       setManualCoords({ 
-        lat: lat.toFixed(6), 
-        lng: lng.toFixed(6) 
+        lat: lat.toString(), 
+        lng: lng.toString() 
       });
       
       // If no pin has been set yet, automatically set it at current location
@@ -142,8 +150,8 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     // Update input fields to show corrected values
     if (corrected) {
       setManualCoords({ 
-        lat: lat.toFixed(6), 
-        lng: lng.toFixed(6) 
+        lat: lat.toString(), 
+        lng: lng.toString() 
       });
     }
 
@@ -162,8 +170,8 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     setMapCenter([lat, lng]);
     // Update manual coords to show corrected values
     setManualCoords({ 
-      lat: lat.toFixed(6), 
-      lng: lng.toFixed(6) 
+      lat: lat.toString(), 
+      lng: lng.toString() 
     });
     
     // Don't automatically set the cache location - user must click on map
@@ -247,7 +255,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
                       placeholder="Latitude"
                       value={manualCoords.lat}
                       onChange={(e) => setManualCoords({ ...manualCoords, lat: e.target.value })}
-                      step="0.000001"
+                      step="any"
                       min="-90"
                       max="90"
                     />
@@ -258,7 +266,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
                       placeholder="Longitude"
                       value={manualCoords.lng}
                       onChange={(e) => setManualCoords({ ...manualCoords, lng: e.target.value })}
-                      step="0.000001"
+                      step="any"
                       min="-180"
                       max="180"
                     />
@@ -280,15 +288,52 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
       </Card>
 
       {value && (
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 space-y-2">
           <p>
-            <strong>Selected location:</strong> {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
+            <strong>Selected location:</strong> {value.lat}, {value.lng}
           </p>
+          
+          {/* Precision indicator */}
+          {(() => {
+            const latPrecision = getCoordinatePrecision(value.lat);
+            const lngPrecision = getCoordinatePrecision(value.lng);
+            const maxPrecision = Math.max(latPrecision, lngPrecision);
+            const precisionLevels = getGeohashPrecisionLevels(value.lat, value.lng);
+            
+            let precisionDescription = "";
+            if (maxPrecision === 0) {
+              precisionDescription = "City/region level (~100km)";
+            } else if (maxPrecision === 1) {
+              precisionDescription = "City level (~11km)";
+            } else if (maxPrecision === 2) {
+              precisionDescription = "Neighborhood level (~1.1km)";
+            } else if (maxPrecision === 3) {
+              precisionDescription = "Block level (~110m)";
+            } else if (maxPrecision === 4) {
+              precisionDescription = "Building level (~11m)";
+            } else if (maxPrecision === 5) {
+              precisionDescription = "Room level (~1.1m)";
+            } else {
+              precisionDescription = "Exact location (~0.1m or better)";
+            }
+            
+            return (
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md p-2">
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <strong>Coordinate precision:</strong> {maxPrecision} decimal place{maxPrecision !== 1 ? 's' : ''} ({precisionDescription})
+                </p>
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  This will generate {precisionLevels.length} geohash precision level{precisionLevels.length !== 1 ? 's' : ''} for optimal search performance
+                </p>
+              </div>
+            );
+          })()}
+          
           <a
             href={`https://www.openstreetmap.org/?mlat=${value.lat}&mlon=${value.lng}#map=15/${value.lat}/${value.lng}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline inline-block"
           >
             View on OpenStreetMap →
           </a>

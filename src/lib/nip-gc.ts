@@ -5,6 +5,7 @@
 
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { Geocache, GeocacheLog } from '@/types/geocache';
+import { getGeohashPrecisionLevels } from '@/lib/coordinates';
 
 // ===== CONSTANTS =====
 
@@ -376,13 +377,15 @@ export function buildGeocacheTags(data: {
     ['size', data.size],
   ];
 
-  // Add multiple geohash tags at different precision levels for proximity search
-  // This enables efficient filtering at various distance ranges
+  // Add multiple geohash tags at precision levels appropriate for the coordinate specificity
+  // This enables efficient filtering while avoiding overly precise geohashes for imprecise coordinates
   const { lat, lng } = data.location;
   
-  // Add geohashes from precision 3 (metro area) to 9 (exact location)
-  // Each precision level enables different search radius capabilities
-  for (let precision = 3; precision <= 9; precision++) {
+  // Determine appropriate precision levels based on coordinate specificity
+  const precisionLevels = getGeohashPrecisionLevels(lat, lng);
+  
+  // Generate geohashes at the determined precision levels
+  for (const precision of precisionLevels) {
     const geohash = encodeGeohash(lat, lng, precision);
     tags.push(['g', geohash]);
   }

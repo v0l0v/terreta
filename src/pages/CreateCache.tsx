@@ -786,7 +786,7 @@ export default function CreateCache() {
                       </div>
                       <div className="bg-muted/50 p-2 rounded text-center">
                         <div className="font-mono text-xs">
-                          {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+                          {location.lat}, {location.lng}
                         </div>
                       </div>
                     </div>
