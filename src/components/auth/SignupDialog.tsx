@@ -1,30 +1,43 @@
 // NOTE: This file is stable and usually should not be modified.
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
-import React, { useState, useEffect } from 'react';
-import { Download, Key, AlertTriangle, Compass, Scroll, Shield, Crown, Sparkles, MapPin, Gem, Sword, Map, Star, Zap, Lock, CheckCircle, Copy, FileText, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Download, Key, AlertTriangle, Compass, Scroll, Shield, Crown, Sparkles, MapPin, Gem, Sword, Map, Star, Zap, Lock, CheckCircle, Copy, FileText, Eye, EyeOff, Upload } from 'lucide-react';
 import { ComponentLoading } from '@/components/ui/loading';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { BaseDialog } from '@/components/ui/base-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/useToast.ts';
 import { useLoginActions } from '@/hooks/useLoginActions';
+import { useNostrPublish } from '@/hooks/useNostrPublish';
+import { useUploadFile } from '@/hooks/useUploadFile';
 import { generateSecretKey, nip19 } from 'nostr-tools';
 import { sanitizeFilename } from '@/lib/security';
 
 interface SignupDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onComplete?: () => void;
 }
 
-const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
-  const [step, setStep] = useState<'welcome' | 'generate' | 'download' | 'done'>('welcome');
+const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete }) => {
+  const [step, setStep] = useState<'welcome' | 'generate' | 'download' | 'profile' | 'done'>('welcome');
   const [isLoading, setIsLoading] = useState(false);
   const [nsec, setNsec] = useState('');
   const [showSparkles, setShowSparkles] = useState(false);
   const [keySecured, setKeySecured] = useState<'none' | 'copied' | 'downloaded'>('none');
+  const [profileData, setProfileData] = useState({
+    name: '',
+    about: '',
+    picture: ''
+  });
   const login = useLoginActions();
+  const { mutateAsync: publishEvent } = useNostrPublish();
+  const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   // Generate a proper nsec key using nostr-tools
   const generateKey = () => {
@@ -104,48 +117,147 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
     });
   };
 
-  const finishSignup = () => {
+  const finishKeySetup = () => {
     login.nsec(nsec);
+    setStep('profile');
+  };
 
-    setStep('done');
-    
-    // Delay closing to show the completion animation
-    setTimeout(() => {
-      onClose();
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset file input
+    e.target.value = '';
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
       toast({
-        title: 'Welcome to the Adventure!',
-        description: 'Your treasure hunting journey begins now!',
+        title: 'Invalid file type',
+        description: 'Please select an image file for your avatar.',
+        variant: 'destructive',
       });
-    }, 1500);
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Avatar image must be smaller than 5MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const tags = await uploadFile(file);
+      // Get the URL from the first tag
+      const url = tags[0]?.[1];
+      if (url) {
+        setProfileData(prev => ({ ...prev, picture: url }));
+        toast({
+          title: 'Avatar uploaded!',
+          description: 'Your avatar has been uploaded successfully.',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Upload failed',
+        description: 'Failed to upload avatar. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const finishSignup = async (skipProfile = false) => {
+    try {
+      // Publish profile if user provided information
+      if (!skipProfile && (profileData.name || profileData.about || profileData.picture)) {
+        const metadata: Record<string, string> = {};
+        if (profileData.name) metadata.name = profileData.name;
+        if (profileData.about) metadata.about = profileData.about;
+        if (profileData.picture) metadata.picture = profileData.picture;
+
+        await publishEvent({
+          kind: 0,
+          content: JSON.stringify(metadata),
+        });
+
+        toast({
+          title: 'Profile Created!',
+          description: 'Your treasure hunter profile has been set up.',
+        });
+      }
+
+      // Close signup and show welcome modal
+      onClose();
+      if (onComplete) {
+        onComplete();
+      } else {
+        // Fallback for when used without onComplete
+        setStep('done');
+        setTimeout(() => {
+          onClose();
+          toast({
+            title: 'Welcome to the Adventure!',
+            description: 'Your quest begins now!',
+          });
+        }, 3000);
+      }
+    } catch (error) {
+      toast({
+        title: 'Profile Setup Failed',
+        description: 'Your account was created but profile setup failed. You can update it later.',
+        variant: 'destructive',
+      });
+      
+      // Still proceed to completion even if profile failed
+      onClose();
+      if (onComplete) {
+        onComplete();
+      } else {
+        // Fallback for when used without onComplete
+        setStep('done');
+        setTimeout(() => {
+          onClose();
+          toast({
+            title: 'Welcome to the Adventure!',
+            description: 'Your quest begins now!',
+          });
+        }, 3000);
+      }
+    }
   };
 
   const getTitle = () => {
     if (step === 'welcome') return (
       <span className="flex items-center justify-center gap-2">
         <Map className="w-5 h-5 text-green-600 adventure:text-amber-700" />
-        <span className="adventure:hidden">Join the Treasure Hunt</span>
-        <span className="hidden adventure:inline">Begin Your Quest</span>
+        Begin Your Quest
       </span>
     );
     if (step === 'generate') return (
       <span className="flex items-center justify-center gap-2">
         <Sparkles className="w-5 h-5 text-purple-600 adventure:text-amber-700" />
-        <span className="adventure:hidden">Forging Your Key</span>
-        <span className="hidden adventure:inline">Crafting Your Rune</span>
+        Forging Your Key
       </span>
     );
     if (step === 'download') return (
       <span className="flex items-center justify-center gap-2">
         <Lock className="w-5 h-5 text-green-600 adventure:text-amber-700" />
-        <span className="adventure:hidden">Secure Your Treasure Key</span>
-        <span className="hidden adventure:inline">Guard Your Sacred Rune</span>
+        Secure Your Treasure Key
+      </span>
+    );
+    if (step === 'profile') return (
+      <span className="flex items-center justify-center gap-2">
+        <Crown className="w-5 h-5 text-green-600 adventure:text-amber-700" />
+        Create Your Profile
       </span>
     );
     return (
       <span className="flex items-center justify-center gap-2">
         <Crown className="w-5 h-5 text-green-600 adventure:text-amber-700" />
-        <span className="adventure:hidden">Welcome, Treasure Hunter!</span>
-        <span className="hidden adventure:inline">Hail, Noble Adventurer!</span>
+        Welcome, Adventurer!
       </span>
     );
   };
@@ -153,30 +265,27 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
   const getDescription = () => {
     if (step === 'welcome') return (
       <div className="text-center">
-        <span className="adventure:hidden">
-          Ready to discover hidden treasures around the world?
-        </span>
+        Ready to discover hidden treasures around the world?
       </div>
     );
     if (step === 'generate') return (
       <div className="text-center">
-        <span className="adventure:hidden">
-          Creating your magical key to unlock the treasure hunting world
-        </span>
+        Creating your magical key to unlock the treasure quest world
       </div>
     );
     if (step === 'download') return (
       <div className="text-center">
-        <span className="adventure:hidden">
-          This key is your passport to adventure - keep it safe!
-        </span>
+        This key is your passport to adventure - keep it safe!
+      </div>
+    );
+    if (step === 'profile') return (
+      <div className="text-center">
+        Tell other adventurers about yourself (optional)
       </div>
     );
     return (
       <div className="text-center">
-        <span className="adventure:hidden">
-          Your adventure begins now!
-        </span>
+        Your adventure begins now!
       </div>
     );
   };
@@ -189,6 +298,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
       setNsec('');
       setShowSparkles(false);
       setKeySecured('none');
+      setProfileData({ name: '', about: '', picture: '' });
     }
   }, [isOpen]);
 
@@ -234,32 +344,23 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
               <div className='grid grid-cols-1 gap-2 text-sm'>
                 <div className='flex items-center justify-center gap-2 text-green-700 dark:text-green-300 adventure:text-amber-800 adventure:dark:text-amber-200'>
                   <Shield className='w-4 h-4' />
-                  <span className='adventure:hidden'>Discover hidden treasures worldwide</span>
-                  <span className='hidden adventure:inline'>Embark on legendary quests</span>
+                  Embark on legendary quests worldwide
                 </div>
                 <div className='flex items-center justify-center gap-2 text-green-700 dark:text-green-300 adventure:text-amber-800 adventure:dark:text-amber-200'>
                   <Crown className='w-4 h-4' />
-                  <span className='adventure:hidden'>Hide your own geocaches</span>
-                  <span className='hidden adventure:inline'>Conceal mystical artifacts</span>
+                  Hide your own geocaches
                 </div>
                 <div className='flex items-center justify-center gap-2 text-green-700 dark:text-green-300 adventure:text-amber-800 adventure:dark:text-amber-200'>
                   <Map className='w-4 h-4' />
-                  <span className='adventure:hidden'>Join a global community</span>
-                  <span className='hidden adventure:inline'>Unite with fellow adventurers</span>
+                  Unite with fellow adventurers
                 </div>
               </div>
             </div>
 
             <div className='space-y-3'>
               <p className='text-muted-foreground'>
-                <span className='adventure:hidden'>
-                  Join thousands of treasure hunters exploring the world through geocaching. 
-                  Your adventure starts with creating a secure account.
-                </span>
-                <span className='hidden adventure:inline'>
-                  Join the ancient guild of treasure seekers on epic quests across mystical realms. 
-                  Your legend begins with forging a magical key.
-                </span>
+                Join adventurers exploring the world through treasure hunting. 
+                Your quest begins with forging your very own treasure key.
               </p>
               
               <Button
@@ -267,13 +368,11 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
                 onClick={() => setStep('generate')}
               >
                 <Zap className='w-5 h-5 mr-2' />
-                <span className='adventure:hidden'>Start My Treasure Hunt!</span>
-                <span className='hidden adventure:inline'>Begin My Quest!</span>
+                Begin My Quest!
               </Button>
               
               <p className='text-xs text-muted-foreground'>
-                <span className='adventure:hidden'>Free forever • Decentralized • Your data, your control</span>
-                <span className='hidden adventure:inline'>Forever free • Ancient magic • Your destiny, your choice</span>
+                Free forever • Decentralized • Your data, your control
               </p>
             </div>
           </div>
@@ -312,12 +411,10 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
                     <div className='space-y-2'>
                       <p className='text-lg font-semibold text-primary flex items-center justify-center gap-2'>
                         <Sparkles className='w-5 h-5' />
-                        <span className='adventure:hidden'>Forging your magical key...</span>
-                        <span className='hidden adventure:inline'>Channeling ancient energies...</span>
+                        Forging your magical key...
                       </p>
                       <p className='text-sm text-muted-foreground'>
-                        <span className='adventure:hidden'>Weaving cryptographic spells</span>
-                        <span className='hidden adventure:inline'>Inscribing mystical runes</span>
+                        Weaving cryptographic spells
                       </p>
                     </div>
                   </div>
@@ -326,18 +423,11 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
                     <Key className='w-20 h-20 text-primary mx-auto' />
                     <div className='space-y-2'>
                       <p className='text-lg font-semibold'>
-                        <span className='adventure:hidden'>Ready to forge your treasure key?</span>
-                        <span className='hidden adventure:inline'>Ready to craft your sacred rune?</span>
+                        Ready to forge your treasure key?
                       </p>
                       <p className='text-sm text-muted-foreground'>
-                        <span className='adventure:hidden'>
-                          This magical key will be your passport to the treasure hunting world. 
-                          It's completely unique and secure.
-                        </span>
-                        <span className='hidden adventure:inline'>
-                          This sacred rune will be your gateway to legendary adventures. 
-                          It holds ancient power and is yours alone.
-                        </span>
+                        This magical key will be your passport to the treasure quest world. 
+                        It's completely unique and secure.
                       </p>
                     </div>
                   </div>
@@ -352,8 +442,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
                 disabled={isLoading}
               >
                 <Sparkles className='w-5 h-5 mr-2' />
-                <span className='adventure:hidden'>Forge My Treasure Key!</span>
-                <span className='hidden adventure:inline'>Craft My Sacred Rune!</span>
+                Forge My Treasure Key!
               </Button>
             )}
           </div>
@@ -385,8 +474,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
               
               <div className='relative z-10 space-y-2'>
                 <p className='text-base font-semibold'>
-                  <span className='adventure:hidden'>Behold! Your magical treasure key!</span>
-                  <span className='hidden adventure:inline'>Witness! Your mystical rune of power!</span>
+                  Behold! Your magical treasure key!
                 </p>
                 
                 {/* Whimsical warning with scroll design */}
@@ -395,13 +483,11 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
                     <div className='flex items-center gap-2 mb-1'>
                       <Scroll className='w-3 h-3 text-amber-700 adventure:text-orange-800' />
                       <span className='text-xs font-bold text-amber-800 dark:text-amber-200 adventure:text-orange-900 adventure:dark:text-orange-200'>
-                        <span className='adventure:hidden'>Ancient Warning</span>
-                        <span className='hidden adventure:inline'>Sacred Prophecy</span>
+                        Ancient Warning
                       </span>
                     </div>
                     <p className='text-xs text-amber-700 dark:text-amber-300 adventure:text-orange-800 adventure:dark:text-orange-300 italic'>
-                      <span className='adventure:hidden'>"Guard this key with your life, for once lost to the digital winds, it shall never return..."</span>
-                      <span className='hidden adventure:inline'>"Protect this rune with thy very soul, for if cast into the void, it cannot be summoned back..."</span>
+"Guard this key with your life, for once lost to the digital winds, it shall never return..."
                     </p>
                   </div>
                 </div>
@@ -413,8 +499,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
               <div className='flex items-center gap-2 mb-2'>
                 <Lock className='w-4 h-4 text-amber-600 adventure:text-orange-700' />
                 <span className='text-sm font-medium text-amber-800 dark:text-amber-200 adventure:text-orange-800 adventure:dark:text-orange-200'>
-                  <span className='adventure:hidden'>Your Treasure Key</span>
-                  <span className='hidden adventure:inline'>Your Sacred Rune</span>
+                  Your Treasure Key
                 </span>
               </div>
               <div className='p-2 bg-background/90 rounded-lg border border-amber-300 dark:border-amber-700 adventure:border-orange-400 adventure:dark:border-orange-600'>
@@ -426,8 +511,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
             <div className='space-y-3'>
               <div className='text-center'>
                 <p className='text-sm font-medium text-muted-foreground mb-2'>
-                  <span className='adventure:hidden'>Choose how to secure your key:</span>
-                  <span className='hidden adventure:inline'>Choose how to guard your rune:</span>
+                  Choose how to secure your key:
                 </p>
               </div>
 
@@ -458,17 +542,15 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
                         </div>
                         <div className='flex-1 text-left'>
                           <div className='font-medium text-sm'>
-                            <span className='adventure:hidden'>Copy to Clipboard</span>
-                            <span className='hidden adventure:inline'>Transcribe to Memory</span>
+                            Copy to Clipboard
                           </div>
                           <div className='text-xs text-muted-foreground'>
-                            <span className='adventure:hidden'>Save to password manager</span>
-                            <span className='hidden adventure:inline'>Store in mystical archives</span>
+                            Save to password manager
                           </div>
                         </div>
                         {keySecured === 'copied' && (
                           <div className='text-xs font-medium text-green-600 adventure:text-amber-600'>
-                            ✓ <span className='adventure:hidden'>Copied</span><span className='hidden adventure:inline'>Inscribed</span>
+                            ✓ Copied
                           </div>
                         )}
                       </div>
@@ -502,17 +584,15 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
                         </div>
                         <div className='flex-1 text-left'>
                           <div className='font-medium text-sm'>
-                            <span className='adventure:hidden'>Download as File</span>
-                            <span className='hidden adventure:inline'>Save to Grimoire</span>
+                            Download as File
                           </div>
                           <div className='text-xs text-muted-foreground'>
-                            <span className='adventure:hidden'>Save as treasure-key.txt file</span>
-                            <span className='hidden adventure:inline'>Preserve in sacred scroll</span>
+                            Save as treasure-key.txt file
                           </div>
                         </div>
                         {keySecured === 'downloaded' && (
                           <div className='text-xs font-medium text-green-600 adventure:text-amber-600'>
-                            ✓ <span className='adventure:hidden'>Downloaded</span><span className='hidden adventure:inline'>Preserved</span>
+                            ✓ Downloaded
                           </div>
                         )}
                       </div>
@@ -528,19 +608,17 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
                     ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 adventure:from-amber-700 adventure:to-orange-700 adventure:hover:from-amber-800 adventure:hover:to-orange-800 hover:scale-105'
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }`}
-                onClick={finishSignup}
+                onClick={finishKeySetup}
                 disabled={keySecured === 'none'}
               >
                 <Compass className='w-4 h-4 mr-2' />
                 {keySecured === 'none' ? (
                   <>
-                    <span className='adventure:hidden'>Please secure your key first</span>
-                    <span className='hidden adventure:inline'>Please guard your rune first</span>
+                    Please secure your key first
                   </>
                 ) : (
                   <>
-                    <span className='adventure:hidden'>My Key is Safe - Let the Hunt Begin!</span>
-                    <span className='hidden adventure:inline'>My Rune is Secured - Let the Quest Commence!</span>
+                    My Key is Safe - Let the Quest Begin!
                   </>
                 )}
               </Button>
@@ -548,10 +626,132 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
           </div>
         )}
 
+        {/* Profile Step - Optional profile setup */}
+        {step === 'profile' && (
+          <div className='text-center space-y-4'>
+            {/* Profile setup illustration */}
+            <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 adventure:from-amber-50 adventure:to-yellow-100 adventure:dark:from-amber-950/50 adventure:dark:to-yellow-950/50 overflow-hidden'>
+              {/* Magical sparkles */}
+              <div className='absolute inset-0 pointer-events-none'>
+                <Sparkles className='absolute top-3 left-4 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '0s'}} />
+                <Star className='absolute top-6 right-6 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '0.5s'}} />
+                <Crown className='absolute bottom-4 left-6 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '1s'}} />
+              </div>
+              
+              <div className='relative z-10 flex justify-center items-center mb-3'>
+                <div className='relative'>
+                  <div className='w-16 h-16 bg-gradient-to-br from-blue-200 to-indigo-300 adventure:from-amber-200 adventure:to-yellow-300 rounded-full flex items-center justify-center shadow-lg'>
+                    <Crown className='w-8 h-8 text-blue-800 adventure:text-amber-800' />
+                  </div>
+                  <div className='absolute -top-1 -right-1 w-5 h-5 bg-blue-500 adventure:bg-amber-500 rounded-full flex items-center justify-center animate-bounce'>
+                    <Sparkles className='w-3 h-3 text-white' />
+                  </div>
+                </div>
+              </div>
+              
+              <div className='relative z-10 space-y-2'>
+                <p className='text-base font-semibold'>
+                  Almost there! Let's set up your profile
+                </p>
+                
+                <p className='text-sm text-muted-foreground'>
+                  Help other adventurers recognize you on your quests
+                </p>
+              </div>
+            </div>
+
+            {/* Profile form */}
+            <div className='space-y-4 text-left'>
+              <div className='space-y-2'>
+                <label htmlFor='profile-name' className='text-sm font-medium'>
+                  Display Name
+                </label>
+                <Input
+                  id='profile-name'
+                  value={profileData.name}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder='Your name'
+                  className='rounded-lg'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <label htmlFor='profile-about' className='text-sm font-medium'>
+                  Bio
+                </label>
+                <Textarea
+                  id='profile-about'
+                  value={profileData.about}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, about: e.target.value }))}
+                  placeholder='Tell others about yourself...'
+                  className='rounded-lg resize-none'
+                  rows={3}
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <label htmlFor='profile-picture' className='text-sm font-medium'>
+                  Avatar URL
+                </label>
+                <div className='flex gap-2'>
+                  <Input
+                    id='profile-picture'
+                    value={profileData.picture}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, picture: e.target.value }))}
+                    placeholder='https://example.com/your-avatar.jpg'
+                    className='rounded-lg flex-1'
+                  />
+                  <input
+                    type='file'
+                    accept='image/*'
+                    className='hidden'
+                    ref={avatarFileInputRef}
+                    onChange={handleAvatarUpload}
+                  />
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='icon'
+                    onClick={() => avatarFileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className='rounded-lg shrink-0'
+                    title='Upload avatar image'
+                  >
+                    {isUploading ? (
+                      <div className='w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin' />
+                    ) : (
+                      <Upload className='w-4 h-4' />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className='space-y-3'>
+              <Button
+                className='w-full rounded-full py-4 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 adventure:from-amber-700 adventure:to-yellow-700 adventure:hover:from-amber-800 adventure:hover:to-yellow-800 transform transition-all duration-200 hover:scale-105 shadow-lg'
+                onClick={() => finishSignup(false)}
+              >
+                <Crown className='w-4 h-4 mr-2' />
+                Create Profile & Begin Quest!
+              </Button>
+              
+              <Button
+                variant='outline'
+                className='w-full rounded-full py-3'
+                onClick={() => finishSignup(true)}
+              >
+                Skip for now - Begin Quest!
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Done Step - Celebration */}
         {step === 'done' && (
-          <div className='text-center py-6 space-y-4'>
-            <div className='relative'>
+          <div className='text-center py-8 space-y-4'>
+            <div className='relative pt-4'>
               <div className='w-24 h-24 mx-auto bg-gradient-to-br from-green-400 to-emerald-500 adventure:from-amber-400 adventure:to-orange-500 rounded-full flex items-center justify-center'>
                 <Crown className='w-12 h-12 text-white' />
               </div>
@@ -563,17 +763,15 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
             <div className='space-y-2'>
               <h3 className='text-2xl font-bold text-green-700 adventure:text-amber-700 flex items-center justify-center gap-2'>
                 <Sparkles className='w-6 h-6' />
-                <span className='adventure:hidden'>Welcome, Treasure Hunter!</span>
-                <span className='hidden adventure:inline'>Hail, Noble Adventurer!</span>
+                Welcome, Adventurer!
               </h3>
               <p className='text-muted-foreground'>
-                <span className='adventure:hidden'>Your adventure begins now. The world of hidden treasures awaits!</span>
-                <span className='hidden adventure:inline'>Your legend starts here. Epic quests and ancient treasures await your discovery!</span>
+                Your adventure begins now. Epic quests and hidden treasures await your discovery!
               </p>
             </div>
             
             <ComponentLoading size="sm" title={
-              <span className='adventure:hidden'>Preparing your treasure map...</span>
+              "Preparing your treasure map..."
             } />
           </div>
         )}

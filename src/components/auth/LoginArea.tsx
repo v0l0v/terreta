@@ -6,6 +6,7 @@ import { User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LoginDialog from './LoginDialog';
 import SignupDialog from './SignupDialog';
+import { WelcomeModal } from './WelcomeModal';
 import { useLoggedInAccounts } from '@/hooks/useLoggedInAccounts';
 import { AccountSwitcher } from './AccountSwitcher';
 
@@ -17,10 +18,14 @@ export function LoginArea({ compact = false }: LoginAreaProps) {
   const { currentUser } = useLoggedInAccounts();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = (isNewUserLogin = false) => {
     setLoginDialogOpen(false);
     setSignupDialogOpen(false);
+    setIsNewUser(isNewUserLogin);
+    setWelcomeModalOpen(true);
   };
 
   return (
@@ -50,6 +55,13 @@ export function LoginArea({ compact = false }: LoginAreaProps) {
       <SignupDialog
         isOpen={signupDialogOpen}
         onClose={() => setSignupDialogOpen(false)}
+        onComplete={() => handleLogin(true)}
+      />
+
+      <WelcomeModal
+        isOpen={welcomeModalOpen}
+        onClose={() => setWelcomeModalOpen(false)}
+        isNewUser={isNewUser}
       />
     </>
   );
