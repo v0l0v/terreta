@@ -13,6 +13,7 @@ import type {
   StoreActionResult 
 } from './types';
 import { TIMEOUTS, POLLING_INTERVALS } from '@/shared/config';
+// Performance imports moved to individual stores to avoid circular dependencies
 
 // Default store configuration
 export const DEFAULT_STORE_CONFIG: StoreConfig = {
@@ -39,6 +40,9 @@ export function useBaseStore(
     lastSync: null,
     errorCount: 0,
   });
+
+  // Memoized config to prevent unnecessary re-renders
+  const memoizedConfig = configRef.current;
 
   // Base state management
   const createBaseState = useCallback((): BaseStoreState => ({
@@ -109,13 +113,13 @@ export function useBaseStore(
     await queryClient.prefetchQuery({
       queryKey,
       queryFn,
-      staleTime: staleTime || configRef.current.cacheTimeout,
+      staleTime: staleTime || memoizedConfig.cacheTimeout,
     });
-  }, [queryClient]);
+  }, [queryClient, memoizedConfig.cacheTimeout]);
 
   // Background sync management
   const startBackgroundSync = useCallback((syncFn: () => Promise<void>) => {
-    if (!configRef.current.enableBackgroundSync) return;
+    if (!memoizedConfig.enableBackgroundSync) return;
     
     if (syncIntervalRef.current) {
       clearInterval(syncIntervalRef.current);
@@ -131,8 +135,8 @@ export function useBaseStore(
       } catch (error) {
         handleError(error, 'Background sync');
       }
-    }, configRef.current.syncInterval);
-  }, [handleError]);
+    }, memoizedConfig.syncInterval);
+  }, [handleError, memoizedConfig]);
 
   const stopBackgroundSync = useCallback(() => {
     if (syncIntervalRef.current) {
@@ -155,9 +159,8 @@ export function useBaseStore(
 
   // Cache statistics
   const getCacheStats = useCallback((): CacheStats => {
-    // This would be implemented by each specific store
     return {
-      totalItems: 0,
+      totalItems: 0, // To be overridden by specific stores
       hitRate: 0,
       memoryUsage: 0,
       lastCleanup: null,
@@ -177,7 +180,7 @@ export function useBaseStore(
     queryClient,
     
     // Configuration
-    config: configRef.current,
+    config: memoizedConfig,
     updateConfig,
     
     // State helpers

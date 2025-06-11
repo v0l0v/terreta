@@ -73,6 +73,39 @@ export {
   useDataManager,
 } from './migrationHelpers';
 
+// Performance monitoring and optimization
+export {
+  usePerformanceMonitor,
+  useMemoryMonitor,
+  QueryOptimizer
+} from './performanceMonitor';
+
+export {
+  useMemoizedValue,
+  useDeepMemo,
+  useOptimizedCallback,
+  useSelector,
+  useLRUMemo,
+  useComputedValue,
+  useBatchMemo,
+  useMemoizedArray,
+  useStableReference,
+  MemoUtils
+} from './memoization';
+
+export {
+  useBackgroundSyncScheduler,
+  useSimpleBackgroundSync
+} from './backgroundSync';
+
+export {
+  QueryPatternAnalyzer,
+  useOptimizedQuery,
+  useBatchQueryOptimizer,
+  useIntelligentPrefetch,
+  queryPatternAnalyzer
+} from './queryOptimizer';
+
 // Convenience re-exports for common patterns
 export {
   // Direct store access (for components that don't need context)

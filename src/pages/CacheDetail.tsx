@@ -10,16 +10,16 @@ import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog"
 import { DesktopHeader } from "@/components/DesktopHeader";
 import { FullPageLoading, ErrorState } from "@/components/ui/loading";
 import { SaveButton } from "@/components/SaveButton";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useGeocacheByNaddr } from "@/hooks/useGeocacheByNaddr";
-import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
+import { useGeocacheLogs } from "@/features/geocache/hooks/useGeocacheLogs";
 import { useGeocachePrefetch } from "@/hooks/usePrefetchManager";
 import { useDeleteWithConfirmation } from "@/hooks/useDeleteWithConfirmation";
-import { useEditGeocache } from "@/hooks/useEditGeocache";
+import { useEditGeocache } from "@/features/geocache/hooks/useEditGeocache";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { LogsSection } from "@/components/LogsSection";
-import { useAuthor } from "@/hooks/useAuthor";
-import { useToast } from "@/hooks/useToast";
+import { useAuthor } from "@/features/auth/hooks/useAuthor";
+import { useToast } from "@/shared/hooks/useToast";
 import { formatDistanceToNow } from "@/lib/date";
 
 import { LocationWarnings } from "@/components/LocationWarnings";

@@ -562,14 +562,31 @@ function MapStyleControl({
     
     // Cleanup
     return () => {
-      if (rootRef.current) {
-        rootRef.current.unmount();
-        rootRef.current = null;
-      }
+      // Remove control first to prevent further interactions
       if (controlRef.current) {
         map.removeControl(controlRef.current);
         controlRef.current = null;
       }
+      
+      // Unmount React root asynchronously to avoid synchronous unmount during render
+      if (rootRef.current) {
+        const root = rootRef.current;
+        rootRef.current = null;
+        
+        // Use setTimeout to defer unmounting until after current render cycle
+        setTimeout(() => {
+          try {
+            // Double-check that the root is still valid before unmounting
+            if (root && typeof root.unmount === 'function') {
+              root.unmount();
+            }
+          } catch (error) {
+            // Silently handle unmount errors - component may already be unmounted
+            console.debug('MapStyleControl unmount:', error);
+          }
+        }, 0);
+      }
+      
       isInitializedRef.current = false;
     };
   }, [map]); // Only depend on map, not on currentStyle or onStyleChange
@@ -1058,7 +1075,6 @@ export function GeocacheMap({
       <PopupController 
         highlightedGeocache={highlightedGeocache}
         geocaches={geocaches}
-        onMarkerClick={onMarkerClick}
       />
       
       {/* Map Style Control - properly integrated with Leaflet */}

@@ -12,6 +12,8 @@ import {
   batchOperations,
   createOptimisticUpdate 
 } from './baseStore';
+import { useMemoizedArray, useOptimizedCallback } from './memoization';
+import { QueryOptimizer } from './performanceMonitor';
 import type { 
   GeocacheStore, 
   GeocacheStoreState, 
@@ -47,10 +49,18 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
     setState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Main geocaches query
+  // Main geocaches query with performance optimization
   const geocachesQuery = useQuery({
     queryKey: createQueryKey('geocache', 'list'),
     queryFn: async () => {
+      const cacheKey = `geocaches-${user?.pubkey || 'anonymous'}`;
+      
+      // Check query optimizer cache first
+      const cached = QueryOptimizer.getCachedResult<Geocache[]>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
       const events = await baseStore.nostr.query([{
         kinds: [NIP_GC_KINDS.GEOCACHE],
@@ -67,6 +77,9 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
         })
         .sort((a, b) => b.createdAt - a.createdAt);
 
+      // Cache the result
+      QueryOptimizer.setCachedResult(cacheKey, geocaches);
+      
       return geocaches;
     },
     staleTime: baseStore.config.cacheTimeout,
@@ -87,17 +100,15 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
     }
   }, [geocachesQuery.data, geocachesQuery.isLoading, geocachesQuery.isError, geocachesQuery.error, geocachesQuery.dataUpdatedAt, updateState]);
 
-  // Data fetching actions
-  const fetchGeocaches = useCallback(async (): Promise<StoreActionResult<Geocache[]>> => {
-    try {
+  // Optimized data fetching actions
+  const fetchGeocaches = useOptimizedCallback(async (): Promise<StoreActionResult<Geocache[]>> => {
+    return baseStore.safeAsyncOperation(async () => {
       await geocachesQuery.refetch();
-      return baseStore.createSuccessResult(state.geocaches);
-    } catch (error) {
-      return baseStore.createErrorResult(baseStore.handleError(error, 'fetchGeocaches'));
-    }
+      return state.geocaches;
+    }, 'fetchGeocaches');
   }, [geocachesQuery, baseStore, state.geocaches]);
 
-  const fetchGeocache = useCallback(async (id: string): Promise<StoreActionResult<Geocache>> => {
+  const fetchGeocache = useOptimizedCallback(async (id: string): Promise<StoreActionResult<Geocache>> => {
     return baseStore.safeAsyncOperation(async () => {
       // Check if already in cache
       const cached = state.geocaches.find(g => g.id === id);
@@ -335,10 +346,14 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
     return () => stopBackgroundSync();
   }, [baseStore.config.enableBackgroundSync, startBackgroundSync, stopBackgroundSync]);
 
-  // Memoized store object
+  // Memoized geocaches array for performance
+  const memoizedGeocaches = useMemoizedArray(state.geocaches, (geocache) => geocache.id);
+
+  // Memoized store object with performance optimizations
   const store = useMemo((): GeocacheStore => ({
-    // State
+    // State with memoized arrays
     ...state,
+    geocaches: memoizedGeocaches,
     
     // Data fetching
     fetchGeocaches,
@@ -372,6 +387,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
     getStats,
   }), [
     state,
+    memoizedGeocaches,
     fetchGeocaches,
     fetchGeocache,
     fetchUserGeocaches,

@@ -35,6 +35,8 @@ export interface CacheStats {
   hitRate: number;
   memoryUsage: number;
   lastCleanup: Date | null;
+  performanceStats?: any; // From performance monitor
+  syncStatus?: any; // From sync scheduler
 }
 
 // Store configuration
