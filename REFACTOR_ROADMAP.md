@@ -49,11 +49,13 @@ This roadmap outlines the step-by-step transformation of the Treasures project f
 ## Phase 2: Core Infrastructure 🔴
 **Goal**: Migrate shared utilities and establish new patterns.
 
-### 2.1 Migrate Shared Components 🔴
-- [ ] Move `src/components/ui/` to `src/shared/components/ui/`
-- [ ] Move layout components to `src/shared/components/layout/`
-- [ ] Update all imports across codebase
-- [ ] Verify no functionality breaks
+### 2.1 Migrate Shared Components 🟢
+- [x] Move `src/components/ui/` to `src/shared/components/ui/`
+- [x] Move layout components to `src/shared/components/layout/`
+- [x] Move common components to `src/shared/components/common/`
+- [x] Update barrel exports for all shared directories
+- [x] Maintain backward compatibility through re-exports
+- [x] Verify build and TypeScript checks pass
 
 **Estimated Time**: 1 session
 **Dependencies**: 1.1
@@ -348,4 +350,4 @@ This roadmap outlines the step-by-step transformation of the Treasures project f
 
 **Last Updated**: Current Session
 **Current Phase**: Phase 2 (Core Infrastructure) 
-**Next Session Focus**: Phase 2.1 - Migrate Shared Components
+**Next Session Focus**: Phase 2.2 - Consolidate Constants

@@ -3,7 +3,7 @@
  * Using a single relay configuration for simplicity
  */
 
-import { DEFAULT_RELAY, DEFAULT_RELAYS } from './constants';
+import { DEFAULT_RELAY, DEFAULT_RELAYS } from '@/shared/config';
 
 // Re-export for convenience
 export { DEFAULT_RELAYS };
