@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
-import { useLoggedInAccounts } from '@/hooks/useLoggedInAccounts';
+import { useLoggedInAccounts } from '@/features/geocache/hooks/useLoggedInAccounts';
 import { useNavigate } from 'react-router-dom';
 
 interface AccountSwitcherProps {

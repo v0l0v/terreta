@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { LocationPicker } from '@/components/LocationPicker';
 import { LocationWarnings } from '@/components/LocationWarnings';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { LocationVerification } from '@/lib/osmVerification';
+import type { LocationVerification } from '@/features/geocache/utils/osmVerification';
 
 // Mock Leaflet components
 vi.mock('react-leaflet', () => ({

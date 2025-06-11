@@ -44,7 +44,7 @@ const TreesForestIcon = ({ className, ...props }: { className?: string }) => (
     })}
   </svg>
 );
-import { getCacheIcon } from '@/lib/cacheIcons';
+import { getCacheIcon } from '@/features/geocache/utils/cacheIcons';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,10 +53,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BlurredImage } from '@/components/BlurredImage';
 import { DifficultyTerrainRating } from '@/components/ui/difficulty-terrain-rating';
-import { useUploadFile } from '@/hooks/useUploadFile';
-import { useToast } from '@/hooks/useToast';
-import { cn } from '@/lib/utils';
-import { DIFFICULTY_TERRAIN_OPTIONS, CACHE_SIZE_OPTIONS, CACHE_TYPE_OPTIONS, getDefaultCacheValues } from '@/lib/geocache-constants';
+import { useUploadFile } from '@/shared/hooks/useUploadFile';
+import { useToast } from '@/shared/hooks/useToast';
+import { cn } from '@/shared/utils/utils';
+import { DIFFICULTY_TERRAIN_OPTIONS, CACHE_SIZE_OPTIONS, CACHE_TYPE_OPTIONS, getDefaultCacheValues } from '@/features/geocache/utils/geocache-constants';
 
 // === GEOCACHE FORM TYPES ===
 

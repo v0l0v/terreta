@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { TIMEOUTS } from '@/lib/constants';
-import { getUserRelays } from '@/lib/relayConfig';
+import { TIMEOUTS } from '@/shared/config';
+import { getUserRelays } from '@/shared/utils/relays';
 
 interface RelayStatus {
   url: string;

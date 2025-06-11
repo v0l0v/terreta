@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/useToast';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
-import { useOfflineSync, useOfflineMode } from '@/hooks/useOfflineStorage';
+import { useToast } from '@/shared/hooks/useToast';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
+import { useOfflineSync, useOfflineMode } from '@/features/offline/hooks/useOfflineStorage';
 import type { CreateLogData } from '@/types/geocache';
 import { 
   NIP_GC_KINDS, 
@@ -9,7 +9,7 @@ import {
   buildCommentLogTags, 
   validateCommentLogType,
   type ValidCommentLogType
-} from '@/lib/nip-gc';
+} from '@/features/geocache/utils/nip-gc';
 
 export function useCreateLog() {
   const queryClient = useQueryClient();

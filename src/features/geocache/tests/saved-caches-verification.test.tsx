@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest';
 describe('Saved Caches Functionality - Verification', () => {
   describe('Hook Exports', () => {
     it('should export useSavedCaches hook', async () => {
-      const { useSavedCaches } = await import('@/hooks/useSavedCaches');
+      const { useSavedCaches } = await import('@/features/geocache/hooks/useSavedCaches');
       expect(useSavedCaches).toBeDefined();
       expect(typeof useSavedCaches).toBe('function');
     });
@@ -42,7 +42,7 @@ describe('Saved Caches Functionality - Verification', () => {
     it('should have correct useSavedCaches hook structure', async () => {
       // This test verifies the hook exports the expected interface
       // without actually calling it (which would require providers)
-      const hookModule = await import('@/hooks/useSavedCaches');
+      const hookModule = await import('@/features/geocache/hooks/useSavedCaches');
       expect(hookModule).toHaveProperty('useSavedCaches');
       
       // Verify it re-exports from useNostrSavedCaches
@@ -59,7 +59,7 @@ describe('Saved Caches Functionality - Verification', () => {
     });
 
     it('should have required constants', async () => {
-      const constants = await import('@/lib/constants');
+      const constants = await import('@/shared/config');
       expect(constants).toHaveProperty('TIMEOUTS');
       expect(constants.TIMEOUTS).toHaveProperty('QUERY');
     });
@@ -67,7 +67,7 @@ describe('Saved Caches Functionality - Verification', () => {
 
   describe('Nostr Integration', () => {
     it('should have NIP-GC utilities', async () => {
-      const nipGc = await import('@/lib/nip-gc');
+      const nipGc = await import('@/features/geocache/utils/nip-gc');
       expect(nipGc).toHaveProperty('NIP_GC_KINDS');
       expect(nipGc).toHaveProperty('parseGeocacheEvent');
       expect(nipGc).toHaveProperty('createGeocacheCoordinate');
@@ -78,12 +78,12 @@ describe('Saved Caches Functionality - Verification', () => {
     it('should have all required saved caches files', async () => {
       // Test that all the key files exist and can be imported
       const files = [
-        '@/hooks/useSavedCaches',
+        '@/features/geocache/hooks/useSavedCaches',
         '@/hooks/useNostrSavedCaches',
         '@/pages/MyCaches',
         '@/components/ui/geocache-card',
         '@/types/geocache',
-        '@/lib/constants',
+        '@/shared/config',
       ];
 
       for (const file of files) {

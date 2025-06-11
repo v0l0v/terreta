@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import LoginDialog from './LoginDialog';
 import SignupDialog from './SignupDialog';
 import { WelcomeModal } from './WelcomeModal';
-import { useLoggedInAccounts } from '@/hooks/useLoggedInAccounts';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useLoggedInAccounts } from '@/features/geocache/hooks/useLoggedInAccounts';
+import { useCurrentUser } from '@/shared/stores/simpleStores';
 import { AccountSwitcher } from './AccountSwitcher';
 
 interface LoginAreaProps {

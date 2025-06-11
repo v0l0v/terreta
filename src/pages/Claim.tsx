@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/useToast';
-import { parseVerificationFromHash } from '@/lib/verification';
+import { useToast } from '@/shared/hooks/useToast';
+import { parseVerificationFromHash } from '@/features/geocache/utils/verification';
 import { DesktopHeader } from '@/components/DesktopHeader';
 
 export default function Claim() {

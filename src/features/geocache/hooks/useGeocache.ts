@@ -1,16 +1,16 @@
 import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import type { Geocache } from '@/types/geocache';
-import { TIMEOUTS, QUERY_LIMITS } from '@/lib/constants';
-import { useOfflineMode } from '@/hooks/useOfflineStorage';
+import { TIMEOUTS, QUERY_LIMITS } from '@/shared/config';
+import { useOfflineMode } from '@/features/offline/hooks/useOfflineStorage';
 import { useCacheInvalidation } from '@/hooks/useCacheInvalidation';
-import { offlineStorage, type CachedGeocache } from '@/lib/offlineStorage';
+import { offlineStorage, type CachedGeocache } from '@/features/offline/utils/offlineStorage';
 import { 
   NIP_GC_KINDS, 
   parseGeocacheEvent, 
   parseLogEvent, 
   createGeocacheCoordinate 
-} from '@/lib/nip-gc';
+} from '@/features/geocache/utils/nip-gc';
 
 export function useGeocache(id: string) {
   const { nostr } = useNostr();

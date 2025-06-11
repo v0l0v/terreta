@@ -1,4 +1,4 @@
-import { useAppContext } from '@/hooks/useAppContext';
+import { useAppContext } from '@/shared/hooks/useAppContext';
 
 /**
  * Hook to get and set the current relay configuration

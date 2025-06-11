@@ -19,7 +19,7 @@ import type {
   StoreActionResult 
 } from './types';
 import type { GeocacheLog } from '@/types/geocache-log';
-import { NIP_GC_KINDS, parseLogEvent } from '@/lib/nip-gc';
+import { NIP_GC_KINDS, parseLogEvent } from '@/features/geocache/utils/nip-gc';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { QUERY_LIMITS, TIMEOUTS } from '@/shared/config';
 

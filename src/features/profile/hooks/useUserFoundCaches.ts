@@ -4,7 +4,7 @@ import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 // Note: Deletion filtering functionality has been simplified
 import { TIMEOUTS } from '@/shared/config';
 import type { Geocache } from '@/types/geocache';
-import { NIP_GC_KINDS, parseLogEvent, parseGeocacheEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
+import { NIP_GC_KINDS, parseLogEvent, parseGeocacheEvent, createGeocacheCoordinate } from '@/features/geocache/utils/nip-gc';
 import type { FoundCache } from '../types';
 
 export function useUserFoundCaches(targetPubkey?: string) {

@@ -2,16 +2,16 @@ import { useNostr } from '@nostrify/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/shared/types';
-import { parseNaddr } from '@/lib/naddr-utils';
+import { parseNaddr } from '@/shared/utils/naddr';
 import { TIMEOUTS, QUERY_LIMITS } from '@/shared/config';
-import { useOfflineMode } from '@/hooks/useOfflineStorage';
-import { offlineStorage, type CachedGeocache } from '@/lib/offlineStorage';
+import { useOfflineMode } from '@/features/offline/hooks/useOfflineStorage';
+import { offlineStorage, type CachedGeocache } from '@/features/offline/utils/offlineStorage';
 import { 
   NIP_GC_KINDS, 
   parseGeocacheEvent, 
   parseLogEvent,
   createGeocacheCoordinate 
-} from '@/lib/nip-gc';
+} from '@/features/geocache/utils/nip-gc';
 
 export function useGeocacheByNaddr(naddr: string) {
   const { nostr } = useNostr();

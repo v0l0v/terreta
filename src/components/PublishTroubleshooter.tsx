@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { RelayStatusIndicator } from './RelayStatusIndicator';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useRelayHealth } from '@/hooks/useRelayStatus';
+import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useRelayHealth } from '@/shared/hooks/useRelayStatus';
 import { AlertTriangle, CheckCircle, HelpCircle, RefreshCw, Wifi } from 'lucide-react';
 
 interface PublishTroubleshooterProps {

@@ -6,7 +6,7 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { geocacheToNaddr } from '@/lib/naddr-utils';
+import { geocacheToNaddr } from '@/shared/utils/naddr';
 import type { Geocache } from '@/types/geocache';
 
 export function useGeocacheNavigation() {

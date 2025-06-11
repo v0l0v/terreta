@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
-import { useToast } from '@/hooks/useToast';
-import { getGeocachingRelays } from '@/lib/relays';
-import { geocacheToNaddr } from '@/lib/naddr-utils';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
+import { useToast } from '@/shared/hooks/useToast';
+import { getGeocachingRelays } from '@/shared/utils/naddrrelays';
+import { geocacheToNaddr } from '@/shared/utils/naddr-utils';
 import type { CreateGeocacheData } from '@/types/geocache';
 import { 
   NIP_GC_KINDS, 
@@ -13,10 +13,10 @@ import {
   parseGeocacheEvent,
   type ValidCacheType,
   type ValidCacheSize
-} from '@/lib/nip-gc';
-import { generateVerificationKeyPair } from '@/lib/verification';
+} from '@/features/geocache/utils/nip-gc';
+import { generateVerificationKeyPair } from '@/features/geocache/utils/verification';
 
-import type { VerificationKeyPair } from '@/lib/verification';
+import type { VerificationKeyPair } from '@/features/geocache/utils/verification';
 
 export function useCreateGeocache() {
   const queryClient = useQueryClient();
@@ -142,4 +142,4 @@ export function useCreateGeocache() {
   });
 }
 
-// Geohash functions are now imported from @/lib/nip-gc
+// Geohash functions are now imported from @/features/geocache/utils/nip-gc

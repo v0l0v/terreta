@@ -9,8 +9,8 @@ import { BaseDialog } from '@/components/ui/base-dialog';
 import { TabsContent } from '@/components/ui/tabs';
 import { LoginMethodTabs } from '@/components/ui/mobile-button-patterns';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useLoginActions } from '@/hooks/useLoginActions';
-import { validateNsec, validateBunkerUri, validateFileContent } from '@/lib/security';
+import { useLoginActions } from '@/features/auth/hooks/useLoginActions';
+import { validateNsec, validateBunkerUri, validateFileContent } from '@/shared/utils/security';
 
 interface LoginDialogProps {
   isOpen: boolean;

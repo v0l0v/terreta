@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { LocationSearch } from "@/components/LocationSearch";
 import { MapStyleSelector, MAP_STYLES } from "@/components/MapStyleSelector";
-import { useGeolocation } from "@/hooks/useGeolocation";
+import { useGeolocation } from "@/features/map/hooks/useGeolocation";
 import { useTheme } from "next-themes";
-import { autocorrectCoordinates, getCoordinatePrecision, getGeohashPrecisionLevels, parseCoordinate, formatCoordinateForInput } from "@/lib/coordinates";
-import { mapIcons } from "@/lib/mapIcons";
+import { autocorrectCoordinates, getCoordinatePrecision, getGeohashPrecisionLevels, parseCoordinate, formatCoordinateForInput } from "@/features/map/utils/coordinates";
+import { mapIcons } from "@/features/map/utils/mapIcons";
 
 import "leaflet/dist/leaflet.css";
 

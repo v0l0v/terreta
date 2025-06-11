@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
-import { useToast } from '@/hooks/useToast';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
+import { useToast } from '@/shared/hooks/useToast';
 import type { Geocache } from '@/types/geocache';
 import { 
   NIP_GC_KINDS, 
@@ -10,7 +10,7 @@ import {
   parseGeocacheEvent,
   type ValidCacheType,
   type ValidCacheSize
-} from '@/lib/nip-gc';
+} from '@/features/geocache/utils/nip-gc';
 
 interface EditGeocacheData {
   name: string;
@@ -178,4 +178,4 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
 }
 
 
-// Geohash functions are now imported from @/lib/nip-gc
+// Geohash functions are now imported from @/features/geocache/utils/nip-gc

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { GeocacheCard } from "@/components/ui/geocache-card";
-import { geocacheToNaddr } from "@/lib/naddr-utils";
+import { geocacheToNaddr } from "@/shared/utils/naddr-utils";
 import { cn } from "@/lib/utils";
 import type { Geocache } from "@/types/geocache";
 

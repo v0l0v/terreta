@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/shared/hooks/useToast';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
 import type { CreateLogData } from '@/types/geocache';
 import { 
   NIP_GC_KINDS, 
   buildFoundLogTags
-} from '@/lib/nip-gc';
-import { createVerificationEvent } from '@/lib/verification';
+} from '@/features/geocache/utils/nip-gc';
+import { createVerificationEvent } from '@/features/geocache/utils/verification';
 
 interface CreateVerifiedLogData extends CreateLogData {
   verificationKey: string; // nsec for signing

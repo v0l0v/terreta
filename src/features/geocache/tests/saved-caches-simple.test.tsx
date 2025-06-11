@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { NostrProvider } from '@nostrify/react';
 
 // Mock all the hooks we need
-vi.mock('@/hooks/useCurrentUser', () => ({
+vi.mock('@/shared/stores/simpleStores', () => ({
   useCurrentUser: () => ({
     user: {
       pubkey: 'test-pubkey-123',
@@ -28,7 +28,7 @@ vi.mock('@/hooks/useGeolocation', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useOfflineStorage', () => ({
+vi.mock('@/features/offline/hooks/useOfflineStorage', () => ({
   useOfflineMode: () => ({
     isOnline: true,
     isOfflineMode: false,
@@ -59,7 +59,7 @@ vi.mock('@/hooks/useAuthor', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useNostrPublish', () => ({
+vi.mock('@/shared/hooks/useNostrPublish', () => ({
   useNostrPublish: () => ({
     mutateAsync: vi.fn().mockResolvedValue({}),
   }),
@@ -74,7 +74,7 @@ const mockSavedCachesHook = {
   isLoading: false,
 };
 
-vi.mock('@/hooks/useSavedCaches', () => ({
+vi.mock('@/features/geocache/hooks/useSavedCaches', () => ({
   useSavedCaches: () => mockSavedCachesHook,
 }));
 
@@ -293,7 +293,7 @@ describe('Saved Caches Functionality - Simple Tests', () => {
 
   describe('Saved Caches Hook Integration', () => {
     it('should provide the correct interface', () => {
-      const { useSavedCaches } = require('@/hooks/useSavedCaches');
+      const { useSavedCaches } = require('@/features/geocache/hooks/useSavedCaches');
       const result = useSavedCaches();
 
       expect(result).toHaveProperty('savedCaches');
@@ -366,7 +366,7 @@ describe('Saved Caches Functionality - Simple Tests', () => {
   describe('User Authentication', () => {
     it('should show login required when user is not logged in', async () => {
       // Mock no user
-      vi.mocked(require('@/hooks/useCurrentUser').useCurrentUser).mockReturnValue({
+      vi.mocked(require('@/shared/stores/simpleStores').useCurrentUser).mockReturnValue({
         user: null,
       });
       

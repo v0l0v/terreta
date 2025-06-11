@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useToast } from '@/hooks/useToast';
-import { offlineStorage } from '@/lib/offlineStorage';
-import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/lib/nip-gc';
-import { TIMEOUTS } from '@/lib/constants';
+import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useToast } from '@/shared/hooks/useToast';
+import { offlineStorage } from '@/features/offline/utils/offlineStorage';
+import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/features/geocache/utils/nip-gc';
+import { TIMEOUTS } from '@/shared/config';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface BatchDeleteParams {

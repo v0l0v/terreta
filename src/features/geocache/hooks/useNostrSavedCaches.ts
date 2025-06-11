@@ -1,13 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { useNostr } from '@nostrify/react';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
+import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Geocache } from '@/types/geocache';
 import { 
   parseGeocacheEvent 
-} from '@/lib/nip-gc';
-import { TIMEOUTS } from '@/lib/constants';
+} from '@/features/geocache/utils/nip-gc';
+import { TIMEOUTS } from '@/shared/config';
 
 interface SavedCache {
   id: string;

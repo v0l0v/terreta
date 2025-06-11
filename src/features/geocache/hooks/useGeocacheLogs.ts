@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { NostrEvent } from '@nostrify/nostrify';
 import type { GeocacheLog } from '@/types/geocache';
-import { NIP_GC_KINDS, parseLogEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
-import { verifyEmbeddedVerification, getEmbeddedVerification } from '@/lib/verification';
-import { TIMEOUTS, POLLING_INTERVALS, QUERY_LIMITS } from '@/lib/constants';
+import { NIP_GC_KINDS, parseLogEvent, createGeocacheCoordinate } from '@/features/geocache/utils/nip-gc';
+import { verifyEmbeddedVerification, getEmbeddedVerification } from '@/features/geocache/utils/verification';
+import { TIMEOUTS, POLLING_INTERVALS, QUERY_LIMITS } from '@/shared/config';
 import { filterDeletedEvents } from '@/shared/utils/deletionFilter';
-import { cacheManager } from '@/lib/cacheManager';
+import { cacheManager } from '@/features/geocache/utils/cacheManager';
 
 export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geocachePubkey?: string, preferredRelays?: string[], verificationPubkey?: string) {
   const { nostr } = useNostr();
@@ -199,4 +199,4 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
   });
 }
 
-// parseLogEvent is now imported from @/lib/nip-gc
+// parseLogEvent is now imported from @/features/geocache/utils/nip-gc

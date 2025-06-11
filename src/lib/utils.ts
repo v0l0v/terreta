@@ -1,8 +1,6 @@
-/**
- * DEPRECATED: This file is maintained for backward compatibility.
- * New code should import from @/shared/utils directly.
- * 
- * TODO: Update all imports to use @/shared/utils and remove this file.
- */
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
-export * from '@/shared/utils/utils';
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}

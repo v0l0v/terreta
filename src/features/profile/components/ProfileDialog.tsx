@@ -9,7 +9,7 @@ import { useUserFoundCaches } from "../hooks/useUserFoundCaches";
 import { ProfileHeader } from "./ProfileHeader";
 import { MobileTabs } from "@/shared/components/ui/mobile-button-patterns";
 import { useNavigate } from "react-router-dom";
-import { geocacheToNaddr } from "@/lib/naddr-utils";
+import { geocacheToNaddr } from "@/shared/utils/naddr";
 import { GeocacheCard } from "@/features/geocache/components/geocache-card";
 import type { ProfileDialogProps } from "../types";
 

@@ -1,6 +1,6 @@
 import { Calendar, MapPin, User, CheckCircle, ShieldCheck, Copy, Check, AlertCircle, Clock, Bookmark } from "lucide-react";
 import { CompassSpinner } from "@/shared/components/ui/loading";
-import { formatDistanceToNow } from "@/lib/date";
+import { formatDistanceToNow } from "@/shared/utils/date";
 import { useNip05Status } from "../hooks/useNip05Verification";
 import { useState } from "react";
 import type { ProfileHeaderProps } from "../types";

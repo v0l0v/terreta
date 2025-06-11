@@ -11,21 +11,21 @@ import { DesktopHeader } from "@/components/DesktopHeader";
 import { FullPageLoading, ErrorState } from "@/components/ui/loading";
 import { SaveButton } from "@/components/SaveButton";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
-import { useGeocacheByNaddr } from "@/hooks/useGeocacheByNaddr";
+import { useGeocacheByNaddr } from "@/features/geocache/hooks/useGeocacheByNaddr";
 import { useGeocacheLogs } from "@/features/geocache/hooks/useGeocacheLogs";
 // Note: useGeocachePrefetch has been removed as part of the data layer migration
-import { useDeleteWithConfirmation } from "@/hooks/useDeleteWithConfirmation";
+import { useDeleteWithConfirmation } from "@/shared/hooks/useDeleteWithConfirmation";
 import { useEditGeocache } from "@/features/geocache/hooks/useEditGeocache";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { LogsSection } from "@/features/logging/components/LogsSection";
 import { useAuthor } from "@/features/auth/hooks/useAuthor";
 import { useToast } from "@/shared/hooks/useToast";
-import { formatDistanceToNow } from "@/lib/date";
+import { formatDistanceToNow } from "@/shared/utils/date";
 
 import { LocationWarnings } from "@/components/LocationWarnings";
-import { verifyLocation, type LocationVerification } from "@/lib/osmVerification";
-import { getTypeLabel, getSizeLabel } from "@/lib/geocache-utils";
-import { getDefaultCacheValues } from "@/lib/geocache-constants";
+import { verifyLocation, type LocationVerification } from "@/features/geocache/utils/osmVerification";
+import { getTypeLabel, getSizeLabel } from "@/features/geocache/utils/geocache-utils";
+import { getDefaultCacheValues } from "@/features/geocache/utils/geocache-constants";
 import { DifficultyTerrainRating } from "@/components/ui/difficulty-terrain-rating";
 import { GeocacheForm, type GeocacheFormData } from "@/components/ui/geocache-form";
 import { LocationPicker } from "@/components/LocationPicker";
@@ -36,7 +36,7 @@ import { BlurredImage } from "@/components/BlurredImage";
 import { ProfileDialog } from "@/components/ProfileDialog";
 import { RegenerateQRDialog } from "@/components/RegenerateQRDialog";
 import { CacheMenu } from "@/components/CacheMenu";
-import { parseVerificationFromHash, verifyKeyPair } from "@/lib/verification";
+import { parseVerificationFromHash, verifyKeyPair } from "@/features/geocache/utils/verification";
 import type { Geocache } from "@/types/geocache";
 
 export default function CacheDetail() {

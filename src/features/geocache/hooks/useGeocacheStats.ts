@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/lib/nip-gc';
-import { TIMEOUTS, POLLING_INTERVALS } from '@/lib/constants';
+import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/features/geocache/utils/nip-gc';
+import { TIMEOUTS, POLLING_INTERVALS } from '@/shared/config';
 // Note: Deletion filtering functionality has been simplified
 
 export interface GeocacheStats {

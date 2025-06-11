@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { CacheManagerClass } from '@/lib/cacheManager';
+import { CacheManagerClass } from '@/features/geocache/utils/cacheManager';
 
 describe('CacheManager', () => {
   let cacheManager: CacheManagerClass;

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useAppContext } from "@/hooks/useAppContext";
+import { useAppContext } from "@/shared/hooks/useAppContext";
 import { useTheme } from "next-themes";
 import { RelayCombobox } from "@/components/RelayCombobox";
 

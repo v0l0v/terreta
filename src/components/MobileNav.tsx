@@ -7,11 +7,11 @@ import { LoginArea } from '@/components/auth/LoginArea';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { RelaySelector } from '@/components/RelaySelector';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useLoggedInAccounts } from '@/hooks/useLoggedInAccounts';
+import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useLoggedInAccounts } from '@/features/geocache/hooks/useLoggedInAccounts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Home },

@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
-import { useToast } from '@/hooks/useToast';
-import { generateVerificationKeyPair } from '@/lib/verification';
-import { geocacheToNaddr } from '@/lib/naddr-utils';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
+import { useToast } from '@/shared/hooks/useToast';
+import { generateVerificationKeyPair } from '@/features/geocache/utils/verification';
+import { geocacheToNaddr } from '@/shared/utils/naddr';
 import type { Geocache } from '@/types/geocache';
 import { 
   NIP_GC_KINDS, 
@@ -10,7 +10,7 @@ import {
   parseGeocacheEvent,
   type ValidCacheType,
   type ValidCacheSize
-} from '@/lib/nip-gc';
+} from '@/features/geocache/utils/nip-gc';
 
 export function useRegenerateVerificationKey(geocache: Geocache | null) {
   const queryClient = useQueryClient();

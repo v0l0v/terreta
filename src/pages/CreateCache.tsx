@@ -18,11 +18,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageLayout } from "@/components/layout";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useCreateGeocache } from "@/hooks/useCreateGeocache";
+import { useCurrentUser } from "@/shared/stores/simpleStores";
+import { useCreateGeocache } from "@/features/geocache/hooks/useCreateGeocache";
 import { LocationPicker } from "@/components/LocationPicker";
-import { useToast } from "@/hooks/useToast";
-import { verifyLocation, getVerificationSummary, type LocationVerification } from "@/lib/osmVerification";
+import { useToast } from "@/features/geocache/hooks/useToast";
+import { verifyLocation, getVerificationSummary, type LocationVerification } from "@/features/geocache/utils/osmVerification";
 import { LocationWarnings } from "@/components/LocationWarnings";
 import { 
   GeocacheForm, 
@@ -39,13 +39,13 @@ import {
   CacheHiddenField
 } from "@/components/ui/geocache-form";
 import { DifficultyTerrainRating } from "@/components/ui/difficulty-terrain-rating";
-import { mapIcons } from "@/lib/mapIcons";
+import { mapIcons } from "@/features/map/utils/mapIcons";
 
 import "leaflet/dist/leaflet.css";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { VerificationQRDialog } from "@/components/VerificationQRDialog";
-import type { VerificationKeyPair } from "@/lib/verification";
-import { useOfflineMode } from "@/hooks/useOfflineStorage";
+import type { VerificationKeyPair } from "@/features/geocache/utils/verification";
+import { useOfflineMode } from "@/features/geocache/hooks/useOfflineStorage";
 
 // CSS override for confirmation map
 const confirmMapStyles = `
@@ -193,7 +193,7 @@ export default function CreateCache() {
       const dTag = event.tags.find((t: string[]) => t[0] === 'd')?.[1];
       if (dTag) {
         const relays = event.tags.filter((t: string[]) => t[0] === 'relay').map((t: string[]) => t[1]);
-        const { geocacheToNaddr } = await import('@/lib/naddr-utils');
+        const { geocacheToNaddr } = await import('@/shared/utils/naddr-utils');
         const naddr = geocacheToNaddr(event.pubkey, dTag, relays);
         
         // Show the QR dialog after successful creation

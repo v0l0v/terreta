@@ -7,10 +7,10 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 're
 import { LatLngBounds } from 'leaflet';
 import { Badge } from '@/shared/components/ui/badge';
 import { Download, WifiOff } from 'lucide-react';
-import { useOfflineMode, useOfflineGeocaches, useOfflineSettings } from '@/hooks/useOfflineStorage';
-import { useToast } from '@/hooks/useToast';
-import { CACHE_NAMES } from '@/lib/cacheConstants';
-import { getCacheEntryCount, clearCache, cacheMapTile } from '@/lib/cacheUtils';
+import { useOfflineMode, useOfflineGeocaches, useOfflineSettings } from '@/features/offline/hooks/useOfflineStorage';
+import { useToast } from '@/shared/hooks/useToast';
+import { CACHE_NAMES } from '@/shared/config/cacheConstants';
+import { getCacheEntryCount, clearCache, cacheMapTile } from '@/shared/utils/cacheUtils';
 import 'leaflet/dist/leaflet.css';
 
 interface OfflineMapProps {

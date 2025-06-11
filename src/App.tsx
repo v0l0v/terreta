@@ -13,10 +13,10 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { AppProvider } from '@/components/AppProvider';
 import { AppConfig } from '@/contexts/AppContext';
 import { SimpleStoreProvider } from '@/shared/stores/simpleStores';
-import { offlineStorage } from '@/lib/offlineStorage';
-import { connectivityChecker } from '@/lib/connectivityChecker';
-import { initializeCacheCleanup } from '@/lib/cacheCleanup';
-import { DEFAULT_RELAY, PRESET_RELAYS } from '@/lib/constants';
+import { offlineStorage } from '@/features/offline/utils/offlineStorage';
+import { connectivityChecker } from '@/shared/utils/connectivityChecker';
+import { initializeCacheCleanup } from '@/features/geocache/utils/cacheCleanup';
+import { DEFAULT_RELAY, PRESET_RELAYS } from '@/shared/config/relays';
 import { useEffect } from 'react';
 import './styles/leaflet-overrides.css';
 

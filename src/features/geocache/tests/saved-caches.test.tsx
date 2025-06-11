@@ -3,13 +3,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { NostrProvider } from '@nostrify/react';
-import { useNostrSavedCaches } from '@/hooks/useNostrSavedCaches';
+import { useNostrSavedCaches } from '@/features/geocache/hooks/useNostrSavedCaches';
 import MyCaches from '@/pages/MyCaches';
 import { DetailedGeocacheCard } from '@/components/ui/geocache-card';
 import type { Geocache } from '@/types/geocache';
 
 // Mock the hooks
-vi.mock('@/hooks/useCurrentUser', () => ({
+vi.mock('@/shared/stores/simpleStores', () => ({
   useCurrentUser: () => ({
     user: {
       pubkey: 'test-pubkey-123',
@@ -32,7 +32,7 @@ vi.mock('@/hooks/useGeolocation', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useOfflineStorage', () => ({
+vi.mock('@/features/offline/hooks/useOfflineStorage', () => ({
   useOfflineMode: () => ({
     isOnline: true,
     isOfflineMode: false,
@@ -63,7 +63,7 @@ vi.mock('@/hooks/useAuthor', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useNostrPublish', () => ({
+vi.mock('@/shared/hooks/useNostrPublish', () => ({
   useNostrPublish: () => ({
     mutateAsync: vi.fn().mockResolvedValue({}),
   }),
@@ -237,7 +237,7 @@ describe('Saved Caches Functionality', () => {
     it('should save a cache to Nostr', async () => {
       const publishMock = vi.fn().mockResolvedValue({});
       
-      vi.mocked(require('@/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
+      vi.mocked(require('@/shared/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
         mutateAsync: publishMock,
       });
 
@@ -283,7 +283,7 @@ describe('Saved Caches Functionality', () => {
     it('should unsave a cache from Nostr', async () => {
       const publishMock = vi.fn().mockResolvedValue({});
       
-      vi.mocked(require('@/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
+      vi.mocked(require('@/shared/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
         mutateAsync: publishMock,
       });
 
@@ -342,7 +342,7 @@ describe('Saved Caches Functionality', () => {
     it('should clear all saved caches', async () => {
       const publishMock = vi.fn().mockResolvedValue({});
       
-      vi.mocked(require('@/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
+      vi.mocked(require('@/shared/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
         mutateAsync: publishMock,
       });
 
@@ -461,7 +461,7 @@ describe('Saved Caches Functionality', () => {
   describe('MyCaches Page', () => {
     beforeEach(() => {
       // Mock the saved caches hook to return test data
-      vi.mocked(require('@/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
+      vi.mocked(require('@/features/geocache/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
         savedCaches: [sampleSavedCache],
         unsaveCache: vi.fn(),
         clearAllSaved: vi.fn(),
@@ -483,7 +483,7 @@ describe('Saved Caches Functionality', () => {
     });
 
     it('should show empty state when no caches are saved', async () => {
-      vi.mocked(require('@/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
+      vi.mocked(require('@/features/geocache/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
         savedCaches: [],
         unsaveCache: vi.fn(),
         clearAllSaved: vi.fn(),
@@ -502,7 +502,7 @@ describe('Saved Caches Functionality', () => {
     });
 
     it('should show loading state', async () => {
-      vi.mocked(require('@/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
+      vi.mocked(require('@/features/geocache/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
         savedCaches: [],
         unsaveCache: vi.fn(),
         clearAllSaved: vi.fn(),
@@ -522,7 +522,7 @@ describe('Saved Caches Functionality', () => {
     it('should handle unsaving a cache', async () => {
       const unsaveMock = vi.fn();
       
-      vi.mocked(require('@/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
+      vi.mocked(require('@/features/geocache/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
         savedCaches: [sampleSavedCache],
         unsaveCache: unsaveMock,
         clearAllSaved: vi.fn(),
@@ -545,7 +545,7 @@ describe('Saved Caches Functionality', () => {
     it('should handle clearing all saved caches', async () => {
       const clearAllMock = vi.fn();
       
-      vi.mocked(require('@/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
+      vi.mocked(require('@/features/geocache/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
         savedCaches: [sampleSavedCache],
         unsaveCache: vi.fn(),
         clearAllSaved: clearAllMock,
@@ -651,7 +651,7 @@ describe('Saved Caches Functionality', () => {
     it('should handle publish errors gracefully', async () => {
       const publishMock = vi.fn().mockRejectedValue(new Error('Publish failed'));
       
-      vi.mocked(require('@/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
+      vi.mocked(require('@/shared/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
         mutateAsync: publishMock,
       });
 
@@ -698,7 +698,7 @@ describe('Saved Caches Functionality', () => {
         name: `Test Geocache ${i}`,
       }));
 
-      vi.mocked(require('@/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
+      vi.mocked(require('@/features/geocache/hooks/useSavedCaches').useSavedCaches).mockReturnValue({
         savedCaches: largeCacheList,
         unsaveCache: vi.fn(),
         clearAllSaved: vi.fn(),
@@ -719,7 +719,7 @@ describe('Saved Caches Functionality', () => {
     it('should handle duplicate save attempts', async () => {
       const publishMock = vi.fn().mockResolvedValue({});
       
-      vi.mocked(require('@/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
+      vi.mocked(require('@/shared/hooks/useNostrPublish').useNostrPublish).mockReturnValue({
         mutateAsync: publishMock,
       });
 

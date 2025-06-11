@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/shared/hooks/useToast';
 import { getIPLocation } from '../utils/ipGeolocation';
 
 interface GeolocationState {

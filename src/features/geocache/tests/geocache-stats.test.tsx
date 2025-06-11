@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useGeocacheStats } from '@/hooks/useGeocacheStats';
+import { useGeocacheStats } from '@/features/geocache/hooks/useGeocacheStats';
 import { NostrProvider } from '@nostrify/react';
-import { NIP_GC_KINDS } from '@/lib/nip-gc';
+import { NIP_GC_KINDS } from '@/features/geocache/utils/nip-gc';
 
 // Mock the nostr hook
 const mockQuery = vi.fn();

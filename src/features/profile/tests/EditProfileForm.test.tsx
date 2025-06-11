@@ -3,15 +3,15 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EditProfileForm } from '../components/EditProfileForm';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
-import { useUploadFile } from '@/hooks/useUploadFile';
-import { useToast } from '@/hooks/useToast';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
+import { useUploadFile } from '@/shared/hooks/useUploadFile';
+import { useToast } from '@/shared/hooks/useToast';
 
 // Mock the hooks
 vi.mock('@/features/auth/hooks/useCurrentUser');
-vi.mock('@/hooks/useNostrPublish');
+vi.mock('@/shared/hooks/useNostrPublish');
 vi.mock('@/hooks/useUploadFile');
-vi.mock('@/hooks/useToast');
+vi.mock('@/shared/hooks/useToast');
 
 const mockUseCurrentUser = vi.mocked(useCurrentUser);
 const mockUseNostrPublish = vi.mocked(useNostrPublish);

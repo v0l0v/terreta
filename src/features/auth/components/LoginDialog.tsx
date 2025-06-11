@@ -10,7 +10,7 @@ import { TabsContent } from '@/shared/components/ui/tabs';
 import { LoginMethodTabs } from '@/shared/components/ui/mobile-button-patterns';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { useLoginActions } from '../hooks/useLoginActions';
-import { validateNsec, validateBunkerUri, validateFileContent } from '@/lib/security';
+import { validateNsec, validateBunkerUri, validateFileContent } from '@/shared/utils/security';
 
 interface LoginDialogProps {
   isOpen: boolean;

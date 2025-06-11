@@ -4,7 +4,7 @@
 
 import { ReactNode } from 'react';
 import { DesktopHeader } from '@/components/DesktopHeader';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 
 interface PageLayoutProps {
   children: ReactNode;

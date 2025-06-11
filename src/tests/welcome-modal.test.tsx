@@ -11,7 +11,7 @@ vi.mock('@/hooks/useLoggedInAccounts', () => ({
   })),
 }));
 
-vi.mock('@/hooks/useCurrentUser', () => ({
+vi.mock('@/shared/stores/simpleStores', () => ({
   useCurrentUser: vi.fn(() => ({
     user: null,
   })),
@@ -26,7 +26,7 @@ vi.mock('@/hooks/useLoginActions', () => ({
   })),
 }));
 
-vi.mock('@/hooks/useNostrPublish', () => ({
+vi.mock('@/shared/hooks/useNostrPublish', () => ({
   useNostrPublish: vi.fn(() => ({
     mutateAsync: vi.fn(),
     isPending: false,
@@ -113,7 +113,7 @@ describe('Welcome Modal', () => {
     
     // Mock a logged in user appearing after some time
     const { useLoggedInAccounts } = await import('@/hooks/useLoggedInAccounts');
-    const { useCurrentUser } = await import('@/hooks/useCurrentUser');
+    const { useCurrentUser } = await import('@/shared/stores/simpleStores');
     
     // Initially no user
     vi.mocked(useLoggedInAccounts).mockReturnValue({
@@ -189,7 +189,7 @@ describe('Welcome Modal', () => {
   it('should handle signup completion timing correctly', async () => {
     // Test the primary mechanism (not fallback)
     const { useLoggedInAccounts } = await import('@/hooks/useLoggedInAccounts');
-    const { useCurrentUser } = await import('@/hooks/useCurrentUser');
+    const { useCurrentUser } = await import('@/shared/stores/simpleStores');
     
     // Start with no user
     vi.mocked(useLoggedInAccounts).mockReturnValue({

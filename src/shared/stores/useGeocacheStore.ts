@@ -21,7 +21,7 @@ import type {
   StoreActionResult 
 } from './types';
 import type { Geocache } from '@/types/geocache';
-import { NIP_GC_KINDS, parseGeocacheEvent } from '@/lib/nip-gc';
+import { NIP_GC_KINDS, parseGeocacheEvent } from '@/features/geocache/utils/nip-gc';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { QUERY_LIMITS, TIMEOUTS } from '@/shared/config';
 import { calculateDistance } from '@/features/map/utils/geo';

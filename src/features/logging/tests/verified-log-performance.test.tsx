@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useCreateVerifiedLog } from '@/features/logging/hooks/useCreateVerifiedLog';
-import { TIMEOUTS } from '@/shared/config/constants';
+import { TIMEOUTS } from '@/shared/config';
 
 // Mock the dependencies
 vi.mock('@/features/auth/hooks/useCurrentUser', () => ({

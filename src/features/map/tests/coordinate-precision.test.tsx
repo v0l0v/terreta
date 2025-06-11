@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCoordinateForInput } from '@/lib/coordinates';
+import { formatCoordinateForInput } from '@/features/map/utils/coordinates';
 
 describe('formatCoordinateForInput', () => {
   it('should limit precision to 5 decimal places for automatic sources', () => {

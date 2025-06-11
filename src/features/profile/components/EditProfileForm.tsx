@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
-import { useToast } from '@/hooks/useToast';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
+import { useToast } from '@/shared/hooks/useToast';
 import { Form } from '@/shared/components/ui/form';
 import { LoadingButton } from '@/shared/components/ui/button-extensions';
 import { 
@@ -22,7 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Separator } from '@/shared/components/ui/separator';
 import { NSchema as n, type NostrMetadata } from '@nostrify/nostrify';
 import { useQueryClient } from '@tanstack/react-query';
-import { useUploadFile } from '@/hooks/useUploadFile';
+import { useUploadFile } from '@/shared/hooks/useUploadFile';
 import { PublishTroubleshooter } from '@/components/PublishTroubleshooter';
 import { Settings, User, Image, Globe } from 'lucide-react';
 import type { EditProfileFormProps } from '../types';

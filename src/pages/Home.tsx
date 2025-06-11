@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAppContext } from "@/hooks/useAppContext";
+import { useAppContext } from "@/shared/hooks/useAppContext";
 import { Link } from "react-router-dom";
 import { MapPin, Plus, Search, Compass, QrCode, RefreshCw, Scroll, Crown, Shield, Users, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,8 @@ import { FeatureCard } from "@/components/ui/card-patterns";
 import { DesktopHeader } from "@/components/DesktopHeader";
 import LoginDialog from "@/components/auth/LoginDialog";
 import SignupDialog from "@/components/auth/SignupDialog";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useHomePageGeocaches } from "@/hooks/useOptimisticGeocaches";
+import { useCurrentUser } from "@/shared/stores/simpleStores";
+import { useHomePageGeocaches } from "@/features/geocache/hooks/useOptimisticGeocaches";
 import { GeocacheCard } from "@/components/ui/geocache-card";
 import { SmartLoadingState } from "@/components/ui/skeleton-patterns";
 

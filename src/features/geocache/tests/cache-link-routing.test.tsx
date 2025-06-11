@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseNaddr, geocacheToNaddr, isValidNaddr } from '@/lib/naddr-utils';
+import { parseNaddr, geocacheToNaddr, isValidNaddr } from '@/shared/utils/naddr';
 
 // Focus on testing the core naddr parsing functionality
 

@@ -22,8 +22,8 @@ import {
 import { useAuthor } from "@/features/auth/hooks/useAuthor";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useDeleteLog } from "@/features/logging/hooks/useDeleteLog";
-import { useToast } from "@/hooks/useToast";
-import { formatDistanceToNow } from "@/lib/date";
+import { useToast } from "@/shared/hooks/useToast";
+import { formatDistanceToNow } from "@/shared/utils/date";
 import { BlurredImage } from "@/components/BlurredImage";
 
 import type { GeocacheLog } from "@/types/geocache";

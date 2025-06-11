@@ -8,16 +8,16 @@ import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCurrentUser } from '@/shared/stores/simpleStores';
 // Note: Deletion filtering functionality has been simplified
-import { TIMEOUTS, QUERY_LIMITS, POLLING_INTERVALS } from '@/lib/constants';
+import { TIMEOUTS, QUERY_LIMITS, POLLING_INTERVALS } from '@/shared/config';
 import type { ComparisonOperator } from '@/components/ui/comparison-filter';
 import { 
   NIP_GC_KINDS, 
   parseGeocacheEvent,
   encodeGeohash
-} from '@/lib/nip-gc';
-import { calculateDistance as calculateGeoDistance } from '@/lib/geo';
+} from '@/features/geocache/utils/nip-gc';
+import { calculateDistance as calculateGeoDistance } from '@/shared/utils/naddrgeo';
 
 interface UseReliableProximitySearchOptions {
   limit?: number;

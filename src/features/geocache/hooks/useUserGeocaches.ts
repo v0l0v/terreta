@@ -1,9 +1,9 @@
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCurrentUser } from '@/shared/stores/simpleStores';
 // Note: Deletion filtering functionality has been simplified
 import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
-import { NIP_GC_KINDS, parseGeocacheEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
-import { TIMEOUTS } from '@/lib/constants';
+import { NIP_GC_KINDS, parseGeocacheEvent, createGeocacheCoordinate } from '@/features/geocache/utils/nip-gc';
+import { TIMEOUTS } from '@/shared/config';
 
 export function useUserGeocaches(targetPubkey?: string) {
   const { nostr } = useNostr();

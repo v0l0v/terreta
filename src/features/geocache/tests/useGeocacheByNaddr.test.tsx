@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useGeocacheByNaddr } from '@/hooks/useGeocacheByNaddr';
-import { geocacheToNaddr } from '@/lib/naddr-utils';
+import { useGeocacheByNaddr } from '@/features/geocache/hooks/useGeocacheByNaddr';
+import { geocacheToNaddr } from '@/shared/utils/naddr';
 import type { Geocache } from '@/types/geocache';
 
 // Mock the dependencies
@@ -14,7 +14,7 @@ vi.mock('@nostrify/react', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useOfflineStorage', () => ({
+vi.mock('@/features/offline/hooks/useOfflineStorage', () => ({
   useOfflineMode: () => ({
     isOnline: true,
     isConnected: true,
@@ -22,7 +22,7 @@ vi.mock('@/hooks/useOfflineStorage', () => ({
   }),
 }));
 
-vi.mock('@/lib/offlineStorage', () => ({
+vi.mock('@/features/offline/utils/offlineStorage', () => ({
   offlineStorage: {
     init: vi.fn().mockResolvedValue(undefined),
     getAllGeocaches: vi.fn().mockResolvedValue([]),

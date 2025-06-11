@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getCacheIcon } from "@/lib/cacheIcons";
+import { getCacheIcon } from "@/features/geocache/utils/cacheIcons";
 
 export default function About() {
   return (

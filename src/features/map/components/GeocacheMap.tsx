@@ -8,17 +8,17 @@ import { Navigation, Trophy, MessageSquare, Bookmark, BookmarkCheck } from "luci
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { MapStyleSelector, MAP_STYLES, type MapStyle } from "./MapStyleSelector";
-import { useSavedCaches } from "@/hooks/useSavedCaches";
-import { useToast } from "@/hooks/useToast";
+import { useSavedCaches } from "@/features/geocache/hooks/useSavedCaches";
+import { useToast } from "@/shared/hooks/useToast";
 
-import { useGeocacheNavigation } from "@/hooks/useGeocacheNavigation";
+import { useGeocacheNavigation } from "@/features/geocache/hooks/useGeocacheNavigation";
 import type { Geocache } from "@/shared/types";
-import { getTypeLabel, getSizeLabel } from "@/lib/geocache-utils";
+import { getTypeLabel, getSizeLabel } from "@/features/geocache/utils/geocache-utils";
 
-import { getCacheIconSvg, getCacheColor } from "@/lib/cacheIcons";
-import { useOfflineMode, useOfflineSettings } from "@/hooks/useOfflineStorage";
-import { getCacheEntryCount, cacheMapTile } from "@/lib/cacheUtils";
-import { CACHE_NAMES } from "@/lib/cacheConstants";
+import { getCacheIconSvg, getCacheColor } from "@/features/geocache/utils/cacheIcons";
+import { useOfflineMode, useOfflineSettings } from "@/features/offline/hooks/useOfflineStorage";
+import { getCacheEntryCount, cacheMapTile } from "@/features/geocache/utils/cacheUtils";
+import { CACHE_NAMES } from "@/shared/config";
 
 // Import Leaflet CSS and adventure theme
 import "leaflet/dist/leaflet.css";
@@ -632,7 +632,7 @@ function AutoOfflineTileManager({
   // Check storage limits before caching
   const checkStorageBeforeCaching = async (): Promise<boolean> => {
     try {
-      const { isStorageNearLimit } = await import('@/lib/storageConfig');
+      const { isStorageNearLimit } = await import('@/shared/utils/storageConfig');
       const nearLimit = await isStorageNearLimit();
       if (nearLimit) {
         console.log('Storage near limit, skipping map caching');

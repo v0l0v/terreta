@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
 import { LucideIcon } from 'lucide-react';
 import { CompassSpinner } from '@/components/ui/loading';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 
 interface LoadingButtonProps extends Omit<ButtonProps, 'children'> {
   isLoading?: boolean;

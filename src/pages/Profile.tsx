@@ -23,11 +23,11 @@ import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useAuthor } from '@/features/auth/hooks/useAuthor';
 import { useUserGeocaches } from '@/features/geocache/hooks/useUserGeocaches';
 import { useUserFoundCaches } from '@/features/profile/hooks/useUserFoundCaches';
-import { useSavedCaches } from '@/hooks/useSavedCaches';
+import { useSavedCaches } from '@/features/geocache/hooks/useSavedCaches';
 import { useNip05Status } from '@/features/profile/hooks/useNip05Verification';
-import { formatDistanceToNow } from '@/lib/date';
-import { useGeolocation } from '@/hooks/useGeolocation';
-import { useToast } from '@/hooks/useToast';
+import { formatDistanceToNow } from '@/shared/utils/date';
+import { useGeolocation } from '@/features/map/hooks/useGeolocation';
+import { useToast } from '@/shared/hooks/useToast';
 
 export default function Profile() {
   const { pubkey } = useParams<{ pubkey: string }>();

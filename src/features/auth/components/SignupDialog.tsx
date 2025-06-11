@@ -8,12 +8,12 @@ import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { BaseDialog } from '@/shared/components/ui/base-dialog';
 import { Card, CardContent } from '@/shared/components/ui/card';
-import { toast } from '@/hooks/useToast.ts';
+import { toast } from '@/shared/hooks/useToast';
 import { useLoginActions } from '../hooks/useLoginActions';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
-import { useUploadFile } from '@/hooks/useUploadFile';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
+import { useUploadFile } from '@/shared/hooks/useUploadFile';
 import { generateSecretKey, nip19 } from 'nostr-tools';
-import { sanitizeFilename } from '@/lib/security';
+import { sanitizeFilename } from '@/shared/utils/security';
 
 interface SignupDialogProps {
   isOpen: boolean;
