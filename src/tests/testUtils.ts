@@ -311,14 +311,7 @@ export function setupStandardMocks() {
   vi.mock('@/features/geocache/utils/nip-gc', () => commonMocks.nipGc);
   vi.mock('@/features/offline/utils/offlineStorage', () => ({ offlineStorage: commonMocks.storage }));
   
-  vi.mock('@/shared/stores/simpleStores', () => ({
-    useCurrentUser: () => ({ 
-      user: { 
-        pubkey: 'test-user-pubkey',
-        name: 'Test User',
-      } 
-    }),
-  }));
+  // Note: simpleStores removed - use direct store mocks instead
   
   vi.mock('@/hooks/useConnectivity', () => ({
     useOnlineStatus: () => ({ isOnline: true, isConnected: true }),

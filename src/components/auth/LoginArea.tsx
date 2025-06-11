@@ -38,10 +38,7 @@ export function LoginArea({ compact = false }: LoginAreaProps) {
     // Set pending welcome state to show modal once user is logged in
     setPendingWelcome({ isNewUser: isNewUserLogin });
     
-    // Debug logging in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('LoginArea: handleLogin called', { isNewUserLogin, currentUser: !!currentUser });
-    }
+
   };
 
   // Show welcome modal when user logs in and we have pending welcome
@@ -49,15 +46,7 @@ export function LoginArea({ compact = false }: LoginAreaProps) {
     const loggedInUser = currentUser;
     
     if (loggedInUser && pendingWelcome) {
-      // Debug logging in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('LoginArea: About to show welcome modal', { 
-          currentUser: !!currentUser,
-          loggedInUser: !!loggedInUser,
-          pendingWelcome, 
-          isNewUser: pendingWelcome.isNewUser 
-        });
-      }
+
       
       // Add a longer delay to ensure all state updates have settled
       // This accounts for the time needed for login state to fully propagate
@@ -66,10 +55,7 @@ export function LoginArea({ compact = false }: LoginAreaProps) {
         setWelcomeModalOpen(true);
         setPendingWelcome(null);
         
-        // Debug logging in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log('LoginArea: Welcome modal should now be open');
-        }
+
       }, 500);
       
       return () => clearTimeout(timer);
@@ -89,9 +75,7 @@ export function LoginArea({ compact = false }: LoginAreaProps) {
       
       // If signup happened in the last 10 seconds, show welcome modal
       if (lastSignupTime && (now - parseInt(lastSignupTime)) < 10000) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('LoginArea: Fallback welcome modal trigger');
-        }
+
         
         setIsNewUser(true);
         setWelcomeModalOpen(true);

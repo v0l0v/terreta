@@ -238,8 +238,7 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
         state.pendingActions,
         async (action) => {
           try {
-            // This would integrate with the actual sync logic
-            // For now, we'll just simulate the sync
+            // Simulate sync operation
             console.log(`Syncing pending action: ${action.type} ${action.entity}`, action.data);
             
             // Mark as completed

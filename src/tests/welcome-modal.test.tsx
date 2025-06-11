@@ -11,11 +11,7 @@ vi.mock('@/features/geocache/hooks/useLoggedInAccounts', () => ({
   })),
 }));
 
-vi.mock('@/shared/stores/simpleStores', () => ({
-  useCurrentUser: vi.fn(() => ({
-    user: null,
-  })),
-}));
+// Note: simpleStores removed - using direct mocks instead
 
 vi.mock('@/features/auth/hooks/useLoginActions', () => ({
   useLoginActions: vi.fn(() => ({
@@ -113,7 +109,6 @@ describe('Welcome Modal', () => {
     
     // Mock a logged in user appearing after some time
     const { useLoggedInAccounts } = await import('@/features/geocache/hooks/useLoggedInAccounts');
-    const { useCurrentUser } = await import('@/shared/stores/simpleStores');
     
     // Initially no user
     vi.mocked(useLoggedInAccounts).mockReturnValue({
@@ -124,10 +119,7 @@ describe('Welcome Modal', () => {
       removeLogin: vi.fn(),
     });
     
-    vi.mocked(useCurrentUser).mockReturnValue({
-      user: null,
-      users: [],
-    });
+
 
     const { rerender } = renderWithProviders(<LoginArea />);
 
@@ -143,10 +135,7 @@ describe('Welcome Modal', () => {
       removeLogin: vi.fn(),
     });
     
-    vi.mocked(useCurrentUser).mockReturnValue({
-      user: { pubkey: 'testpubkey' } as any,
-      users: [{ pubkey: 'testpubkey' } as any],
-    });
+
 
     // Re-render with the new user state
     rerender(
@@ -189,7 +178,6 @@ describe('Welcome Modal', () => {
   it('should handle signup completion timing correctly', async () => {
     // Test the primary mechanism (not fallback)
     const { useLoggedInAccounts } = await import('@/features/geocache/hooks/useLoggedInAccounts');
-    const { useCurrentUser } = await import('@/shared/stores/simpleStores');
     
     // Start with no user
     vi.mocked(useLoggedInAccounts).mockReturnValue({
@@ -200,10 +188,7 @@ describe('Welcome Modal', () => {
       removeLogin: vi.fn(),
     });
     
-    vi.mocked(useCurrentUser).mockReturnValue({
-      user: null,
-      users: [],
-    });
+
 
     const { rerender } = renderWithProviders(<LoginArea />);
 
@@ -216,10 +201,7 @@ describe('Welcome Modal', () => {
       removeLogin: vi.fn(),
     });
     
-    vi.mocked(useCurrentUser).mockReturnValue({
-      user: { pubkey: 'testpubkey' } as any,
-      users: [{ pubkey: 'testpubkey' } as any],
-    });
+
 
     // Re-render to trigger the user detection
     rerender(

@@ -3,7 +3,7 @@
  */
 
 import { useCallback, useRef, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, QueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { 
   BaseStoreState, 
@@ -255,7 +255,7 @@ export async function batchOperations<T, R>(
 export function createOptimisticUpdate<T>(
   queryKey: unknown[],
   updateFn: (oldData: T | undefined) => T,
-  queryClient: any
+  queryClient: QueryClient
 ) {
   const previousData = queryClient.getQueryData(queryKey);
   

@@ -60,18 +60,7 @@ export {
   withStores,
 } from './StoreProvider';
 
-// Migration helpers for backward compatibility
-export {
-  useGeocaches,
-  useGeocache,
-  useUserGeocaches,
-  useGeocacheLogs,
-  useCreateLog,
-  useAuthor,
-  useCurrentUser,
-  useGeocachePrefetch,
-  useDataManager,
-} from './migrationHelpers';
+// Note: Migration helpers removed - use direct store access or context hooks
 
 // Performance monitoring and optimization
 export {
