@@ -8,7 +8,6 @@ import LoginDialog from './LoginDialog';
 import SignupDialog from './SignupDialog';
 import { WelcomeModal } from './WelcomeModal';
 import { useLoggedInAccounts } from '@/features/geocache/hooks/useLoggedInAccounts';
-import { useCurrentUser } from '@/shared/stores/simpleStores';
 import { AccountSwitcher } from './AccountSwitcher';
 
 interface LoginAreaProps {
@@ -17,7 +16,6 @@ interface LoginAreaProps {
 
 export function LoginArea({ compact = false }: LoginAreaProps) {
   const { currentUser } = useLoggedInAccounts();
-  const { user } = useCurrentUser(); // Alternative user detection
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
@@ -48,15 +46,13 @@ export function LoginArea({ compact = false }: LoginAreaProps) {
 
   // Show welcome modal when user logs in and we have pending welcome
   useEffect(() => {
-    // Use either currentUser or user - whichever is available first
-    const loggedInUser = currentUser || user;
+    const loggedInUser = currentUser;
     
     if (loggedInUser && pendingWelcome) {
       // Debug logging in development
       if (process.env.NODE_ENV === 'development') {
         console.log('LoginArea: About to show welcome modal', { 
           currentUser: !!currentUser,
-          user: !!user,
           loggedInUser: !!loggedInUser,
           pendingWelcome, 
           isNewUser: pendingWelcome.isNewUser 
@@ -78,12 +74,12 @@ export function LoginArea({ compact = false }: LoginAreaProps) {
       
       return () => clearTimeout(timer);
     }
-  }, [currentUser, user, pendingWelcome]);
+  }, [currentUser, pendingWelcome]);
 
   // Fallback effect: if we have a user but no welcome modal has been shown for a new user
   // This handles edge cases where the timing doesn't work perfectly
   useEffect(() => {
-    const loggedInUser = currentUser || user;
+    const loggedInUser = currentUser;
     
     // If we have a user, no pending welcome, no modal open, and this might be a new signup
     if (loggedInUser && !pendingWelcome && !welcomeModalOpen && !loginDialogOpen && !signupDialogOpen) {
@@ -102,11 +98,11 @@ export function LoginArea({ compact = false }: LoginAreaProps) {
         localStorage.removeItem('treasures_last_signup'); // Clean up
       }
     }
-  }, [currentUser, user, pendingWelcome, welcomeModalOpen, loginDialogOpen, signupDialogOpen]);
+  }, [currentUser, pendingWelcome, welcomeModalOpen, loginDialogOpen, signupDialogOpen]);
 
   return (
     <>
-      {(currentUser || user) ? (
+      {currentUser ? (
         <AccountSwitcher onAddAccountClick={() => setLoginDialogOpen(true)} />
       ) : (
         <Button

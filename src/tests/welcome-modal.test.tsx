@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { LoginArea } from '@/components/auth/LoginArea';
 
 // Mock the hooks
-vi.mock('@/hooks/useLoggedInAccounts', () => ({
+vi.mock('@/features/geocache/hooks/useLoggedInAccounts', () => ({
   useLoggedInAccounts: vi.fn(() => ({
     currentUser: null,
   })),
@@ -17,7 +17,7 @@ vi.mock('@/shared/stores/simpleStores', () => ({
   })),
 }));
 
-vi.mock('@/hooks/useLoginActions', () => ({
+vi.mock('@/features/auth/hooks/useLoginActions', () => ({
   useLoginActions: vi.fn(() => ({
     nsec: vi.fn(),
     extension: vi.fn(),
@@ -112,7 +112,7 @@ describe('Welcome Modal', () => {
     localStorage.setItem('treasures_last_signup', Date.now().toString());
     
     // Mock a logged in user appearing after some time
-    const { useLoggedInAccounts } = await import('@/hooks/useLoggedInAccounts');
+    const { useLoggedInAccounts } = await import('@/features/geocache/hooks/useLoggedInAccounts');
     const { useCurrentUser } = await import('@/shared/stores/simpleStores');
     
     // Initially no user
@@ -166,7 +166,7 @@ describe('Welcome Modal', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       // Use getAllByText since "Welcome, Adventurer!" appears in both title and content
       expect(screen.getAllByText('Welcome, Adventurer!')).toHaveLength(2);
-      expect(screen.getByText('Your adventure begins now!')).toBeInTheDocument();
+      expect(screen.getByText('Your quest begins now!')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
@@ -188,7 +188,7 @@ describe('Welcome Modal', () => {
 
   it('should handle signup completion timing correctly', async () => {
     // Test the primary mechanism (not fallback)
-    const { useLoggedInAccounts } = await import('@/hooks/useLoggedInAccounts');
+    const { useLoggedInAccounts } = await import('@/features/geocache/hooks/useLoggedInAccounts');
     const { useCurrentUser } = await import('@/shared/stores/simpleStores');
     
     // Start with no user
