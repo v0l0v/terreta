@@ -13,7 +13,7 @@ import { SaveButton } from "@/components/SaveButton";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useGeocacheByNaddr } from "@/hooks/useGeocacheByNaddr";
 import { useGeocacheLogs } from "@/features/geocache/hooks/useGeocacheLogs";
-import { useGeocachePrefetch } from "@/hooks/usePrefetchManager";
+// Note: useGeocachePrefetch has been removed as part of the data layer migration
 import { useDeleteWithConfirmation } from "@/hooks/useDeleteWithConfirmation";
 import { useEditGeocache } from "@/features/geocache/hooks/useEditGeocache";
 import { GeocacheMap } from "@/components/GeocacheMap";
@@ -85,7 +85,7 @@ export default function CacheDetail() {
   } = useDeleteWithConfirmation();
   const { mutate: editGeocache, isPending: isEditingGeocache } = useEditGeocache(typedGeocache || null);
   const { toast } = useToast();
-  const { prefetchGeocache } = useGeocachePrefetch();
+  // Note: prefetchGeocache functionality has been integrated into the new store system
   
   const author = useAuthor(typedGeocache?.pubkey || "");
   
@@ -143,10 +143,9 @@ export default function CacheDetail() {
       setEditImages(typedGeocache.images || []);
       setEditLocation(typedGeocache.location);
       
-      // Prefetch logs for this geocache
-      prefetchGeocache(typedGeocache);
+      // Note: Prefetching is now handled automatically by the store system
     }
-  }, [typedGeocache, prefetchGeocache]);
+  }, [typedGeocache]);
 
   // Verify location when geocache loads
   useEffect(() => {

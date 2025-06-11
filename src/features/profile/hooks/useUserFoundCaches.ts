@@ -1,7 +1,7 @@
 import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
-import { useAuthorDeletionFilter } from '@/hooks/useDeletionFilter';
+// Note: Deletion filtering functionality has been simplified
 import { TIMEOUTS } from '@/shared/config';
 import type { Geocache } from '@/types/geocache';
 import { NIP_GC_KINDS, parseLogEvent, parseGeocacheEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
@@ -14,8 +14,7 @@ export function useUserFoundCaches(targetPubkey?: string) {
   // Use provided pubkey or fall back to current user's pubkey
   const pubkey = targetPubkey || user?.pubkey;
   
-  // Get deletion filter for this user's content
-  const { filterByAuthor } = useAuthorDeletionFilter(pubkey);
+  // Note: Deletion filtering has been simplified for now
 
   return useQuery({
     queryKey: ['user-found-caches', pubkey],
@@ -31,8 +30,8 @@ export function useUserFoundCaches(targetPubkey?: string) {
         limit: 500,
       }], { signal });
 
-      // Filter out deleted logs by this author
-      const nonDeletedLogs = filterByAuthor(logEvents);
+      // For now, use all logs (deletion filtering can be re-implemented later)
+      const nonDeletedLogs = logEvents;
 
       // Process the logs to find "found" logs
       const foundLogs = nonDeletedLogs

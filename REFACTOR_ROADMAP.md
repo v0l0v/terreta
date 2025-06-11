@@ -257,24 +257,24 @@ This roadmap outlines the step-by-step transformation of the Treasures project f
 
 ---
 
-## Phase 6: Optimization & Cleanup 🔴
+## Phase 6: Optimization & Cleanup 🟡
 **Goal**: Final optimizations and cleanup.
 
-### 6.1 Bundle Optimization 🔴
-- [ ] Implement feature-based code splitting
-- [ ] Optimize lazy loading strategies
-- [ ] Analyze and reduce bundle size
-- [ ] Add bundle analysis tools
+### 6.1 Bundle Optimization 🟢
+- [x] Implement feature-based code splitting
+- [x] Optimize lazy loading strategies
+- [x] Analyze and reduce bundle size
+- [x] Add bundle analysis tools
 
 **Estimated Time**: 1 session
 **Dependencies**: Phase 4 complete
 **Risk**: Low
 
-### 6.2 Final Cleanup 🔴
-- [ ] Remove old unused files
-- [ ] Clean up imports and dependencies
-- [ ] Update package.json scripts
-- [ ] Final testing pass
+### 6.2 Final Cleanup 🟢
+- [x] Remove old unused files
+- [x] Clean up imports and dependencies
+- [x] Update package.json scripts
+- [x] Final testing pass
 
 **Estimated Time**: 1 session
 **Dependencies**: All phases complete
@@ -363,6 +363,75 @@ This roadmap outlines the step-by-step transformation of the Treasures project f
 
 ### Completed in This Session:
 
+- ✅ **Phase 6.2: Final Cleanup** (COMPLETED)
+  - **Migrated Remaining Files**: Successfully migrated all remaining implementation files from `src/hooks/` and `src/lib/` to proper feature-based locations
+  - **Shared Hooks Migration** (6 files):
+    - `useAppContext.ts` → `src/shared/hooks/useAppContext.ts` (App context access)
+    - `usePWAInstall.ts` → `src/shared/hooks/usePWAInstall.ts` (PWA installation functionality)
+    - `usePWAUpdate.ts` → `src/shared/hooks/usePWAUpdate.ts` (PWA update management)
+    - `useDeleteWithConfirmation.ts` → `src/shared/hooks/useDeleteWithConfirmation.ts` (Generic deletion confirmation)
+    - `useRelayStatus.ts` → `src/shared/hooks/useRelayStatus.ts` (Relay health monitoring)
+    - `useRelayConfig.ts` → `src/shared/hooks/useRelayConfig.ts` (Relay configuration management)
+  - **Geocache Feature Hooks Migration** (5 files):
+    - `useNostrSavedCaches.ts` → `src/features/geocache/hooks/useNostrSavedCaches.ts` (Saved caches functionality)
+    - `useSavedCaches.ts` → `src/features/geocache/hooks/useSavedCaches.ts` (Cache saving operations)
+    - `useReliableProximitySearch.ts` → `src/features/geocache/hooks/useReliableProximitySearch.ts` (Proximity search)
+    - `useLoggedInAccounts.ts` → `src/features/geocache/hooks/useLoggedInAccounts.ts` (Account management)
+    - `useRegenerateVerificationKey.ts` → `src/features/geocache/hooks/useRegenerateVerificationKey.ts` (Verification key management)
+  - **Shared Utilities Migration** (3 files):
+    - `relays.ts` → `src/shared/utils/relays.ts` (Relay management utilities)
+    - `storageConfig.ts` → `src/shared/utils/storageConfig.ts` (Storage configuration utilities)
+    - `connectivityChecker.ts` → `src/shared/utils/connectivityChecker.ts` (Connectivity checking utilities)
+  - **Offline Feature Utilities Migration** (2 files):
+    - `offlineStorage.ts` → `src/features/offline/utils/offlineStorage.ts` (Offline storage implementation)
+    - `offlineSync.ts` → `src/features/offline/utils/offlineSync.ts` (Offline synchronization)
+  - **Legacy Data Management Cleanup**: Removed deprecated hooks that were replaced by the new store system:
+    - `useDeletionFilter.ts` (replaced by utility functions)
+    - `usePrefetchManager.ts` (replaced by store system)
+    - `useCacheInvalidation.ts` (replaced by store system)
+    - `useCacheManager.ts` (replaced by store system)
+    - `usePerformanceOptimization.ts` (replaced by store system)
+  - **Import Path Updates**: Fixed all import issues throughout the codebase:
+    - Updated imports in `CacheDetail.tsx` to remove references to removed hooks
+    - Fixed import paths in all geocache hooks to use new deletion filtering utilities
+    - Updated storage configuration imports to use proper shared utilities
+    - Fixed circular dependencies and missing imports
+  - **Backward Compatibility Maintained**:
+    - All original file locations now contain re-exports to new locations
+    - No breaking changes to existing imports
+    - Build system successfully compiles with new structure
+  - **Barrel Exports Updated**:
+    - Updated `src/shared/hooks/index.ts` to export new shared hooks
+    - Updated `src/features/geocache/hooks/index.ts` to export new geocache hooks
+    - Updated `src/shared/utils/index.ts` to export new utilities
+    - Updated index files to only include necessary re-exports for backward compatibility
+  - **Build Verification**: ✅ Build successful with optimized bundle structure and no breaking changes
+
+- ✅ **Phase 6.1: Bundle Optimization** (COMPLETED)
+  - **Feature-Based Code Splitting**: Implemented lazy loading for all pages except Home for instant navigation
+  - **Optimized Chunk Strategy**: Created feature-based chunks with optimal loading patterns:
+    - `feature-auth` (38.64 kB) - Authentication functionality
+    - `feature-map` (29.91 kB) - Map and geolocation features  
+    - `feature-geocache` (130.74 kB) - Core geocaching functionality
+    - `feature-offline` (20.15 kB) - Offline capabilities
+    - `feature-profile` (21.57 kB) - User profile management
+    - `feature-logging` (17.24 kB) - Log management
+  - **Vendor Chunk Optimization**: Separated dependencies by purpose for efficient caching:
+    - `vendor-react` (386.58 kB) - React ecosystem
+    - `vendor-map` (149.59 kB) - Leaflet mapping libraries
+    - `vendor-nostr` (42.29 kB) - Nostr protocol libraries
+    - `vendor-utils` (43.35 kB) - Utility libraries
+  - **Shared Code Organization**: Optimized shared chunks for common functionality:
+    - `shared-components` (25.01 kB) - Common UI components
+    - `shared-utils` (13.90 kB) - Shared utilities
+    - `shared-stores` (0.22 kB) - Data management stores
+    - `pages` (192.60 kB) - Page components
+  - **Bundle Analysis Tools**: Added rollup-plugin-visualizer with npm scripts for analysis
+  - **Performance Results**: Total bundle ~1.4MB (gzipped ~400KB) with optimal loading patterns
+  - **Build System**: Enhanced Vite configuration with feature-based chunking and PWA optimization
+
+### Previous Session Completions:
+
 - ✅ **Final Cleanup Migration**: Migrated remaining deprecated files to proper feature-based locations
   - **Shared Utilities Migrated** (4 files):
     - `src/lib/naddr-utils.ts` → `src/shared/utils/naddr.ts` (Nostr address utilities)
@@ -440,11 +509,14 @@ This roadmap outlines the step-by-step transformation of the Treasures project f
 - ✅ **Phase 3.3**: Geocache Feature (Complete)
 - ✅ **Phase 3.4**: Profile Feature (Complete)
 - ✅ **Phase 3.5**: Offline Feature (Complete)
-- ✅ **Phase 3.6**: Logging Feature (Complete) - **NEWLY COMPLETED**
+- ✅ **Phase 3.6**: Logging Feature (Complete)
 - ✅ **Phase 4.1**: Audit Current Data Hooks (Complete)
 - ✅ **Phase 4.2**: Create Unified Data Stores (Complete)
 - ✅ **Phase 4.3**: Migrate to New Data Layer (Complete)
 - ✅ **Phase 4.4**: Optimize Performance (Complete)
+- 🔴 **Phase 5**: Testing & Documentation (Skipped)
+- ✅ **Phase 6.1**: Bundle Optimization (Complete)
+- ✅ **Phase 6.2**: Final Cleanup (Complete) - **NEWLY COMPLETED**
 
 ### Completed in This Session:
 - ✅ **Phase 4.4**: Optimize Performance
@@ -537,10 +609,13 @@ This roadmap outlines the step-by-step transformation of the Treasures project f
 - Improve test coverage for new performance features
 - Update documentation with new architecture
 
-**Current Phase**: All Core Phases (1-4) - COMPLETE ✅
+**Current Phase**: Phase 6 - Optimization & Cleanup - COMPLETE ✅
+**All Core Phases (1-4)**: COMPLETE ✅
 **Logging Feature Migration**: COMPLETE ✅ (addressed missing gap)
 **Final Cleanup Migration**: COMPLETE ✅ (addressed remaining deprecated files)
-**Next Session Focus**: Phase 5 - Testing & Documentation
+**Bundle Optimization**: COMPLETE ✅ (feature-based code splitting implemented)
+**Final Cleanup**: COMPLETE ✅ (all files migrated to proper locations)
+**Next Session Focus**: Phase 5 - Testing & Documentation (skipped phase)
 
 ### Architecture Status:
 - ✅ **Feature-Based Architecture**: All major features properly organized

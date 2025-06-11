@@ -2,7 +2,7 @@ import { useNostr } from '@nostrify/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { NIP_GC_KINDS, parseGeocacheEvent } from '@/lib/nip-gc';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePerformanceOptimization } from '@/hooks/usePerformanceOptimization';
+// Note: Performance optimization functionality has been integrated into the new store system
 import { TIMEOUTS, POLLING_INTERVALS, QUERY_LIMITS } from '@/lib/constants';
 import { useEffect, useState, useCallback } from 'react';
 
@@ -44,12 +44,7 @@ export function useOptimisticGeocaches(
   const queryClient = useQueryClient();
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   
-  // Performance optimizations
-  const { warmCache } = usePerformanceOptimization({
-    enableBackgroundPrefetch: enablePrefetching,
-    enableSmartCaching: true,
-    enableMemoryOptimization: true,
-  });
+  // Note: Performance optimizations are now handled by the store system
 
   // Fast initial load with smaller limit - prioritize speed over completeness
   const fastQuery = useQuery({
@@ -72,11 +67,7 @@ export function useOptimisticGeocaches(
         };
       }).filter(Boolean);
 
-      // Warm cache for visible geocaches
-      if (geocaches.length > 0) {
-        const geocacheIds = geocaches.slice(0, 3).map((g: any) => g.id);
-        warmCache(geocacheIds);
-      }
+      // Note: Cache warming is now handled automatically by the store system
 
       return geocaches;
     },

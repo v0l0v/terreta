@@ -1,5 +1,6 @@
 /**
- * Re-export the Nostr-based saved caches hook as the default
- * This ensures all components use the same Nostr-based implementation
+ * DEPRECATED: This file is maintained for backward compatibility.
+ * New code should import from @/features/geocache/hooks directly.
  */
-export { useNostrSavedCaches as useSavedCaches } from './useNostrSavedCaches';
+
+export * from '@/features/geocache/hooks/useSavedCaches';

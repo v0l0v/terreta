@@ -14,3 +14,6 @@ export * from './naddr';
 export * from './security';
 export * from './network';
 export * from './validation';
+export * from './relays';
+export * from './storageConfig';
+export * from './connectivityChecker';

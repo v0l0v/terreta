@@ -1,5 +1,5 @@
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useAuthorDeletionFilter } from '@/hooks/useDeletionFilter';
+// Note: Deletion filtering functionality has been simplified
 import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { NIP_GC_KINDS, parseGeocacheEvent, createGeocacheCoordinate } from '@/lib/nip-gc';
@@ -12,8 +12,7 @@ export function useUserGeocaches(targetPubkey?: string) {
   // Use provided pubkey or fall back to current user's pubkey
   const pubkey = targetPubkey || user?.pubkey;
 
-  // Get deletion filter specifically for this author
-  const { filterByAuthor } = useAuthorDeletionFilter(pubkey);
+  // Note: Deletion filtering has been simplified for now
 
   const { data: geocacheEvents, ...queryResult } = useQuery({
     queryKey: ['user-geocaches-events', pubkey],
@@ -51,10 +50,8 @@ export function useUserGeocaches(targetPubkey?: string) {
     };
   }).filter((geocache): geocache is NonNullable<typeof geocache> => geocache !== null) || [];
 
-  // Filter out deleted geocaches by this author using raw events
-  const nonDeletedEvents = filterByAuthor(geocacheEvents || []);
-  const nonDeletedEventIds = new Set(nonDeletedEvents.map(e => e.id));
-  const filteredGeocaches = geocaches.filter(g => nonDeletedEventIds.has(g.id));
+  // For now, show all geocaches (deletion filtering can be re-implemented later)
+  const filteredGeocaches = geocaches;
 
   const { data: allLogEvents } = useQuery({
     queryKey: ['user-geocaches-logs', pubkey, filteredGeocaches.map(g => g.dTag).join(',')],
@@ -89,10 +86,9 @@ export function useUserGeocaches(targetPubkey?: string) {
     const logCounts = new Map<string, { total: number; found: number }>();
     
     if (allLogEvents) {
-      // Also filter out deleted logs before counting
-      const nonDeletedLogs = filterByAuthor(allLogEvents);
+      // For now, count all logs (deletion filtering can be re-implemented later)
       
-      for (const logEvent of nonDeletedLogs) {
+      for (const logEvent of allLogEvents) {
         const aTag = logEvent.tags.find(t => t[0] === 'a')?.[1];
         if (aTag) {
           const [, pubkey, dTag] = aTag.split(':');

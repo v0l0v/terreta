@@ -10,11 +10,11 @@ export const DEFAULT_RELAYS = [DEFAULT_RELAY];
 
 // Preset relays for user selection
 export const PRESET_RELAYS = [
-  'wss://ditto.pub/relay',
-  'wss://relay.primal.net',
-  'wss://nos.lol',
-  'wss://relay.damus.io',
-  'wss://nostr.wine',
+  { name: 'Ditto Pub', url: 'wss://ditto.pub/relay' },
+  { name: 'Primal', url: 'wss://relay.primal.net' },
+  { name: 'nos.lol', url: 'wss://nos.lol' },
+  { name: 'Damus', url: 'wss://relay.damus.io' },
+  { name: 'Nostr Wine', url: 'wss://nostr.wine' },
 ];
 
 /**

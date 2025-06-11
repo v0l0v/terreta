@@ -454,7 +454,7 @@ class OfflineStorage {
   // Storage management with limits
   async checkStorageLimit(): Promise<boolean> {
     try {
-      const { getStorageUsage, isStorageNearLimit } = await import('@/shared/config/storage');
+      const { getStorageUsage, isStorageNearLimit } = await import('@/shared/utils/storageConfig');
       return await isStorageNearLimit();
     } catch (error) {
       console.warn('Failed to check storage limit:', error);
@@ -464,7 +464,7 @@ class OfflineStorage {
 
   async performCleanup(): Promise<void> {
     try {
-      const { getStorageConfig } = await import('@/shared/config/storage');
+      const { getStorageConfig } = await import('@/shared/utils/storageConfig');
       const config = await getStorageConfig();
       
       if (config.enableAutoCleanup) {

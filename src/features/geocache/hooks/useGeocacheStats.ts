@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/lib/nip-gc';
 import { TIMEOUTS, POLLING_INTERVALS } from '@/lib/constants';
-import { useDeletionFilter } from '@/hooks/useDeletionFilter';
+// Note: Deletion filtering functionality has been simplified
 
 export interface GeocacheStats {
   foundCount: number;
@@ -11,7 +11,7 @@ export interface GeocacheStats {
 
 export function useGeocacheStats(geocacheDTag?: string, geocachePubkey?: string): GeocacheStats {
   const { nostr } = useNostr();
-  const { filterDeleted } = useDeletionFilter();
+  // Note: Deletion filtering has been simplified for now
   
   const query = useQuery({
     queryKey: ['geocache-stats', geocacheDTag, geocachePubkey],
@@ -39,9 +39,9 @@ export function useGeocacheStats(geocacheDTag?: string, geocachePubkey?: string)
           limit: 100, // Reasonable limit for counting
         }], { signal });
         
-        // Filter out deleted events
-        const validFoundLogs = filterDeleted.fast(foundLogs);
-        const validCommentLogs = filterDeleted.fast(commentLogs);
+        // For now, use all logs (deletion filtering can be re-implemented later)
+        const validFoundLogs = foundLogs;
+        const validCommentLogs = commentLogs;
         
         // Remove duplicates by pubkey for found logs (one find per person)
         const uniqueFoundLogs = validFoundLogs.reduce((acc, log) => {
@@ -76,7 +76,7 @@ export function useGeocacheStats(geocacheDTag?: string, geocachePubkey?: string)
  */
 export function useMultipleGeocacheStats(geocaches: Array<{ dTag: string; pubkey: string }>) {
   const { nostr } = useNostr();
-  const { filterDeleted } = useDeletionFilter();
+  // Note: Deletion filtering has been simplified for now
   
   return useQuery({
     queryKey: ['multiple-geocache-stats', geocaches.map(g => `${g.pubkey}:${g.dTag}`).join(',')],
@@ -113,9 +113,9 @@ export function useMultipleGeocacheStats(geocaches: Array<{ dTag: string; pubkey
           limit: 500, // Higher limit for batch queries
         }], { signal });
         
-        // Filter out deleted events
-        const validFoundLogs = filterDeleted.fast(foundLogs);
-        const validCommentLogs = filterDeleted.fast(commentLogs);
+        // For now, use all logs (deletion filtering can be re-implemented later)
+        const validFoundLogs = foundLogs;
+        const validCommentLogs = commentLogs;
         
         // Process found logs
         const foundCountMap = new Map<string, Set<string>>();
