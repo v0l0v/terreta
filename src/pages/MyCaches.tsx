@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { LoginRequiredCard } from '@/components/LoginRequiredCard';
 import { useSavedCaches } from '@/features/geocache/hooks/useSavedCaches';
-import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { formatDistanceToNow } from '@/shared/utils/date';
 import { useGeolocation } from '@/features/map/hooks/useGeolocation';
 import { ComponentLoading } from '@/components/ui/loading';

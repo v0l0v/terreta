@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { BlossomUploader } from '@nostrify/nostrify/uploaders';
-import { useCurrentUser } from "@/shared/stores/simpleStores";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 
 export function useUploadFile() {
   const { user } = useCurrentUser();

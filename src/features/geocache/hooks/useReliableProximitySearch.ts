@@ -8,7 +8,7 @@ import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
-import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 // Note: Deletion filtering functionality has been simplified
 import { TIMEOUTS, QUERY_LIMITS, POLLING_INTERVALS } from '@/shared/config';
 import type { ComparisonOperator } from '@/components/ui/comparison-filter';

@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageLayout } from "@/components/layout";
-import { useCurrentUser } from "@/shared/stores/simpleStores";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useCreateGeocache } from "@/features/geocache/hooks/useCreateGeocache";
 import { LocationPicker } from "@/components/LocationPicker";
 import { useToast } from "@/features/geocache/hooks/useToast";

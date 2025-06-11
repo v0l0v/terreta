@@ -7,7 +7,7 @@ import { LoginArea } from '@/components/auth/LoginArea';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { RelaySelector } from '@/components/RelaySelector';
-import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useLoggedInAccounts } from '@/features/geocache/hooks/useLoggedInAccounts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';

@@ -9,7 +9,7 @@ import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { OfflineSettings } from "@/components/OfflineSettings";
 import { RelaySelector } from "@/components/RelaySelector";
 import { PWASettings } from "@/components/PWASettings";
-import { useCurrentUser } from "@/shared/stores/simpleStores";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useRelayConfig } from "@/features/geocache/hooks/useRelayConfig";
 
 export default function Settings() {

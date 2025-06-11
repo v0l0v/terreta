@@ -6,7 +6,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { RelaySelector } from '@/components/RelaySelector';
 import { useTheme } from 'next-themes';
 
-import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 
 interface DesktopHeaderProps {
   variant?: 'default' | 'map';

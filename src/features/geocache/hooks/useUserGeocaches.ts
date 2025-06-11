@@ -1,4 +1,4 @@
-import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 // Note: Deletion filtering functionality has been simplified
 import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';

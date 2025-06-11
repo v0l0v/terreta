@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useNostr } from '@nostrify/react';
-import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Geocache } from '@/types/geocache';

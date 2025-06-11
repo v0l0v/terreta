@@ -19,7 +19,14 @@ import type {
   StoreActionResult 
 } from './types';
 import type { GeocacheLog } from '@/types/geocache-log';
-import { NIP_GC_KINDS, parseLogEvent } from '@/features/geocache/utils/nip-gc';
+import { 
+  NIP_GC_KINDS, 
+  parseLogEvent,
+  buildFoundLogTags,
+  buildCommentLogTags,
+  validateCommentLogType,
+  type ValidCommentLogType
+} from '@/features/geocache/utils/nip-gc';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { QUERY_LIMITS, TIMEOUTS } from '@/shared/config';
 
@@ -187,20 +194,75 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
     }, 'fetchUserLogs');
   }, [baseStore, user?.pubkey, updateState]);
 
-  // CRUD operations
+  // CRUD operations - Real implementations
   const createLogMutation = useMutation({
     mutationFn: async (logData: Partial<GeocacheLog>) => {
-      // This would integrate with the existing useCreateLog logic
-      throw new Error('Create log not implemented yet');
+      if (!user?.signer) {
+        throw new Error('You must be logged in to create logs');
+      }
+
+      // Validate data
+      if (!logData.geocacheId) {
+        throw new Error('Geocache ID is required');
+      }
+      if (!logData.text?.trim()) {
+        throw new Error('Log text is required');
+      }
+      if (!logData.geocachePubkey || !logData.geocacheDTag) {
+        throw new Error('Geocache pubkey and dTag are required');
+      }
+      
+      // Determine event kind and build tags based on log type
+      let eventKind: number;
+      let tags: string[][];
+      
+      if (logData.type === 'found') {
+        // Found logs use kind 7516
+        eventKind = NIP_GC_KINDS.FOUND_LOG;
+        tags = buildFoundLogTags({
+          geocachePubkey: logData.geocachePubkey,
+          geocacheDTag: logData.geocacheDTag,
+          images: logData.images,
+          verificationEvent: logData.verificationEvent,
+        });
+      } else {
+        // All other log types use kind 1111 (comment logs)
+        if (logData.type !== 'note' && !validateCommentLogType(logData.type)) {
+          throw new Error(`Invalid comment log type: ${logData.type}`);
+        }
+        
+        eventKind = NIP_GC_KINDS.COMMENT_LOG;
+        tags = buildCommentLogTags({
+          geocachePubkey: logData.geocachePubkey,
+          geocacheDTag: logData.geocacheDTag,
+          logType: logData.type as ValidCommentLogType | 'note',
+          images: logData.images,
+        });
+      }
+
+      const event = {
+        kind: eventKind,
+        content: logData.text.trim(),
+        tags,
+        created_at: Math.floor(Date.now() / 1000),
+      };
+
+      const signedEvent = await user.signer.signEvent(event);
+      
+      // Publish to relay
+      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
+      await baseStore.nostr.event(signedEvent, { signal });
+
+      return signedEvent;
     },
-    onSuccess: (newLog) => {
-      // Update relevant caches
-      const geocacheId = newLog.geocacheId;
-      if (geocacheId) {
+    onSuccess: (event, logData) => {
+      // Parse the new log from the event
+      const newLog = parseLogEvent(event);
+      if (newLog && logData.geocacheId) {
         updateState({
           logsByGeocache: {
             ...state.logsByGeocache,
-            [geocacheId]: [newLog, ...(state.logsByGeocache[geocacheId] || [])],
+            [logData.geocacheId]: [newLog, ...(state.logsByGeocache[logData.geocacheId] || [])],
           },
           recentLogs: [newLog, ...state.recentLogs].slice(0, 20),
           userLogs: newLog.pubkey === user?.pubkey 
@@ -213,10 +275,59 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
 
   const deleteLogMutation = useMutation({
     mutationFn: async (logId: string) => {
-      // This would integrate with the existing useDeleteLog logic
-      throw new Error('Delete log not implemented yet');
+      if (!user?.signer) {
+        throw new Error('You must be logged in to delete logs');
+      }
+
+      // Find the log to delete
+      let logToDelete: GeocacheLog | undefined;
+      let geocacheId: string | undefined;
+      
+      // Search through all logs to find the one to delete
+      for (const [gId, logs] of Object.entries(state.logsByGeocache)) {
+        const log = logs.find(l => l.id === logId);
+        if (log) {
+          logToDelete = log;
+          geocacheId = gId;
+          break;
+        }
+      }
+
+      if (!logToDelete) {
+        throw new Error('Log not found');
+      }
+
+      // Create deletion event
+      const deletionEvent = {
+        kind: 5,
+        content: 'Log deleted by author',
+        tags: [
+          ['e', logId],
+          ['k', logToDelete.kind?.toString() || '1111'],
+          ['client', 'treasures'],
+        ],
+        created_at: Math.floor(Date.now() / 1000),
+      };
+
+      const signedEvent = await user.signer.signEvent(deletionEvent);
+
+      // Fire-and-forget deletion
+      try {
+        await baseStore.nostr.event(signedEvent, { 
+          signal: AbortSignal.timeout(TIMEOUTS.DELETE_OPERATION) 
+        });
+      } catch (publishError) {
+        console.warn('Deletion event publish warning (continuing optimistically):', publishError);
+      }
+
+      return signedEvent;
     },
     onMutate: (logId) => {
+      // Store previous state for rollback
+      const previousLogsByGeocache = { ...state.logsByGeocache };
+      const previousRecentLogs = [...state.recentLogs];
+      const previousUserLogs = [...state.userLogs];
+      
       // Optimistic update - remove from all caches
       const newLogsByGeocache = { ...state.logsByGeocache };
       Object.keys(newLogsByGeocache).forEach(geocacheId => {
@@ -239,26 +350,54 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
         userLogs: state.userLogs.filter(log => log.id !== logId),
       });
       
-      return { rollback };
+      return { 
+        rollback, 
+        previousLogsByGeocache, 
+        previousRecentLogs, 
+        previousUserLogs 
+      };
     },
-    onError: (error, variables, context) => {
-      context?.rollback();
+    onError: (error, logId, context) => {
+      const errorObj = error as { message?: string };
+      const isSigningError = errorObj.message?.includes('User rejected') || 
+                            errorObj.message?.includes('cancelled') ||
+                            errorObj.message?.includes('No signer');
+      
+      if (isSigningError && context) {
+        // Only rollback for user cancellation or signer issues
+        context.rollback();
+        updateState({
+          logsByGeocache: context.previousLogsByGeocache,
+          recentLogs: context.previousRecentLogs,
+          userLogs: context.previousUserLogs,
+        });
+      }
+      // For network/relay errors, keep the optimistic update
     },
   });
 
   // Action implementations
   const createLog = useCallback(async (log: Partial<GeocacheLog>): Promise<StoreActionResult<GeocacheLog>> => {
     try {
-      const result = await createLogMutation.mutateAsync(log);
-      return baseStore.createSuccessResult(result);
+      const event = await createLogMutation.mutateAsync(log);
+      const newLog = parseLogEvent(event);
+      if (!newLog) {
+        throw new Error('Failed to parse created log');
+      }
+      return baseStore.createSuccessResult(newLog);
     } catch (error) {
       return baseStore.createErrorResult(baseStore.handleError(error, 'createLog'));
     }
   }, [createLogMutation, baseStore]);
 
   const createVerifiedLog = useCallback(async (log: Partial<GeocacheLog>): Promise<StoreActionResult<GeocacheLog>> => {
-    // This would add verification logic before creating
-    return createLog({ ...log, verified: true });
+    // Add verification logic before creating
+    const verifiedLogData = { 
+      ...log, 
+      verified: true,
+      type: log.type || 'found' // Default to found log for verification
+    };
+    return createLog(verifiedLogData);
   }, [createLog]);
 
   const deleteLog = useCallback(async (logId: string): Promise<StoreActionResult<void>> => {

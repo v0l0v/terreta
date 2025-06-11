@@ -12,7 +12,7 @@ import { PWAUpdateNotification } from '@/components/PWAUpdateNotification';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { AppProvider } from '@/components/AppProvider';
 import { AppConfig } from '@/contexts/AppContext';
-import { SimpleStoreProvider } from '@/shared/stores/simpleStores';
+import { StoreProvider } from '@/shared/stores/StoreProvider';
 import { offlineStorage } from '@/features/offline/utils/offlineStorage';
 import { connectivityChecker } from '@/shared/utils/connectivityChecker';
 import { initializeCacheCleanup } from '@/features/geocache/utils/cacheCleanup';
@@ -78,7 +78,7 @@ export function App() {
         <QueryClientProvider client={queryClient}>
           <NostrLoginProvider storageKey='nostr:login'>
             <NostrProvider>
-              <SimpleStoreProvider>
+              <StoreProvider>
                 <TooltipProvider>
                   <div className="min-h-screen flex flex-col">
                     <AppRouter />
@@ -87,7 +87,7 @@ export function App() {
                   <Toaster />
                   <Sonner />
                 </TooltipProvider>
-              </SimpleStoreProvider>
+              </StoreProvider>
             </NostrProvider>
           </NostrLoginProvider>
         </QueryClientProvider>

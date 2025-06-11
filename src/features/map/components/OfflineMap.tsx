@@ -9,7 +9,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Download, WifiOff } from 'lucide-react';
 import { useOfflineMode, useOfflineGeocaches, useOfflineSettings } from '@/features/offline/hooks/useOfflineStorage';
 import { useToast } from '@/shared/hooks/useToast';
-import { CACHE_NAMES } from '@/shared/config/cacheConstants';
+import { CACHE_NAMES } from '@/shared/config';
 import { getCacheEntryCount, clearCache, cacheMapTile } from '@/shared/utils/cacheUtils';
 import 'leaflet/dist/leaflet.css';
 

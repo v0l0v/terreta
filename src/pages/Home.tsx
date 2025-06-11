@@ -7,7 +7,7 @@ import { FeatureCard } from "@/components/ui/card-patterns";
 import { DesktopHeader } from "@/components/DesktopHeader";
 import LoginDialog from "@/components/auth/LoginDialog";
 import SignupDialog from "@/components/auth/SignupDialog";
-import { useCurrentUser } from "@/shared/stores/simpleStores";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useHomePageGeocaches } from "@/features/geocache/hooks/useOptimisticGeocaches";
 import { GeocacheCard } from "@/components/ui/geocache-card";
 import { SmartLoadingState } from "@/components/ui/skeleton-patterns";

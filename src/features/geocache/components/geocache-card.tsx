@@ -11,7 +11,7 @@ import { useGeocacheStats } from '@/features/geocache/hooks/useGeocacheStats';
 import { formatDistanceToNow } from '@/shared/utils/date';
 import { formatDistance } from '@/features/map/utils/geo';
 import { getCacheIcon } from '@/features/geocache/utils/cacheIcons';
-import { useCurrentUser } from '@/shared/stores/simpleStores';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useTheme } from 'next-themes';
 import type { Geocache } from '@/types/geocache';
 

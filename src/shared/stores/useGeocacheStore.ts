@@ -21,7 +21,19 @@ import type {
   StoreActionResult 
 } from './types';
 import type { Geocache } from '@/types/geocache';
-import { NIP_GC_KINDS, parseGeocacheEvent } from '@/features/geocache/utils/nip-gc';
+import { 
+  NIP_GC_KINDS, 
+  parseGeocacheEvent,
+  buildGeocacheTags,
+  validateCacheType,
+  validateCacheSize,
+  validateCoordinates,
+  createGeocacheCoordinate,
+  type ValidCacheType,
+  type ValidCacheSize
+} from '@/features/geocache/utils/nip-gc';
+import { generateVerificationKeyPair } from '@/features/geocache/utils/verification';
+import { getGeocachingRelays } from '@/shared/utils/naddrrelays';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { QUERY_LIMITS, TIMEOUTS } from '@/shared/config';
 import { calculateDistance } from '@/features/map/utils/geo';
@@ -174,26 +186,171 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
     }, 'fetchNearbyGeocaches');
   }, [baseStore, state.geocaches, updateState]);
 
-  // CRUD operations (placeholder implementations)
+  // CRUD operations - Real implementations
   const createGeocacheMutation = useMutation({
     mutationFn: async (geocacheData: Partial<Geocache>) => {
-      // This would integrate with the existing useCreateGeocache logic
-      throw new Error('Create geocache not implemented yet');
-    },
-    onSuccess: (newGeocache) => {
-      updateState({
-        geocaches: [newGeocache, ...state.geocaches],
-        userGeocaches: user?.pubkey === newGeocache.pubkey 
-          ? [newGeocache, ...state.userGeocaches] 
-          : state.userGeocaches,
+      if (!user?.signer) {
+        throw new Error('You must be logged in to create geocaches');
+      }
+
+      // Validate data
+      if (!geocacheData.name?.trim()) {
+        throw new Error("Cache name is required");
+      }
+      if (!geocacheData.description?.trim()) {
+        throw new Error("Cache description is required");
+      }
+      if (!geocacheData.location || typeof geocacheData.location.lat !== 'number' || typeof geocacheData.location.lng !== 'number') {
+        throw new Error("Valid location coordinates are required");
+      }
+      if (!geocacheData.difficulty || geocacheData.difficulty < 1 || geocacheData.difficulty > 5) {
+        throw new Error("Difficulty must be between 1 and 5");
+      }
+      if (!geocacheData.terrain || geocacheData.terrain < 1 || geocacheData.terrain > 5) {
+        throw new Error("Terrain must be between 1 and 5");
+      }
+
+      // Validate inputs according to NIP-GC
+      if (!validateCacheType(geocacheData.type)) {
+        throw new Error(`Invalid cache type: ${geocacheData.type}`);
+      }
+      if (!validateCacheSize(geocacheData.size)) {
+        throw new Error(`Invalid cache size: ${geocacheData.size}`);
+      }
+      if (!validateCoordinates(geocacheData.location.lat, geocacheData.location.lng)) {
+        throw new Error(`Invalid coordinates: ${geocacheData.location.lat}, ${geocacheData.location.lng}`);
+      }
+
+      // Create the geocache event according to NIP-GC
+      const dTag = `cache-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      const relayPreferences = getGeocachingRelays();
+
+      // Generate verification key pair
+      const verificationKeyPair = await generateVerificationKeyPair();
+
+      // Build tags using consolidated utility
+      const tags = buildGeocacheTags({
+        dTag,
+        name: geocacheData.name.trim(),
+        location: geocacheData.location,
+        difficulty: geocacheData.difficulty,
+        terrain: geocacheData.terrain,
+        size: geocacheData.size as ValidCacheSize,
+        type: geocacheData.type as ValidCacheType,
+        hint: geocacheData.hint,
+        images: geocacheData.images,
+        relays: relayPreferences,
+        verificationPubkey: verificationKeyPair.publicKey,
+        hidden: geocacheData.hidden,
       });
+
+      const event = {
+        kind: NIP_GC_KINDS.GEOCACHE,
+        content: geocacheData.description.trim(),
+        tags,
+        created_at: Math.floor(Date.now() / 1000),
+      };
+
+      const signedEvent = await user.signer.signEvent(event);
+      
+      // Publish to relay
+      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
+      await baseStore.nostr.event(signedEvent, { signal });
+
+      return { event: signedEvent, verificationKeyPair };
+    },
+    onSuccess: ({ event, verificationKeyPair }) => {
+      // Parse the new geocache from the event
+      const newGeocache = parseGeocacheEvent(event);
+      if (newGeocache) {
+        updateState({
+          geocaches: [newGeocache, ...state.geocaches],
+          userGeocaches: user?.pubkey === newGeocache.pubkey 
+            ? [newGeocache, ...state.userGeocaches] 
+            : state.userGeocaches,
+        });
+      }
     },
   });
 
   const updateGeocacheMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Geocache> }) => {
-      // This would integrate with the existing useEditGeocache logic
-      throw new Error('Update geocache not implemented yet');
+      if (!user?.signer) {
+        throw new Error('You must be logged in to update geocaches');
+      }
+
+      // Find the original geocache
+      const originalGeocache = state.geocaches.find(g => g.id === id);
+      if (!originalGeocache) {
+        throw new Error("Geocache not found");
+      }
+
+      // Validate data according to NIP-GC
+      if (updates.name !== undefined && !updates.name?.trim()) {
+        throw new Error("Cache name is required");
+      }
+      if (updates.description !== undefined && !updates.description?.trim()) {
+        throw new Error("Cache description is required");
+      }
+      if (updates.difficulty !== undefined && (updates.difficulty < 1 || updates.difficulty > 5)) {
+        throw new Error("Difficulty must be between 1 and 5");
+      }
+      if (updates.terrain !== undefined && (updates.terrain < 1 || updates.terrain > 5)) {
+        throw new Error("Terrain must be between 1 and 5");
+      }
+
+      // Validate inputs according to NIP-GC
+      if (updates.type !== undefined && !validateCacheType(updates.type)) {
+        throw new Error(`Invalid cache type: ${updates.type}`);
+      }
+      if (updates.size !== undefined && !validateCacheSize(updates.size)) {
+        throw new Error(`Invalid cache size: ${updates.size}`);
+      }
+
+      // Merge updates with original data
+      const updatedData = {
+        name: updates.name?.trim() || originalGeocache.name,
+        description: updates.description?.trim() || originalGeocache.description,
+        location: updates.location || originalGeocache.location,
+        difficulty: updates.difficulty || originalGeocache.difficulty,
+        terrain: updates.terrain || originalGeocache.terrain,
+        size: updates.size || originalGeocache.size,
+        type: updates.type || originalGeocache.type,
+        hint: updates.hint !== undefined ? updates.hint : originalGeocache.hint,
+        images: updates.images !== undefined ? updates.images : originalGeocache.images,
+        hidden: updates.hidden !== undefined ? updates.hidden : originalGeocache.hidden,
+      };
+
+      // Build tags using consolidated utility
+      const tags = buildGeocacheTags({
+        dTag: originalGeocache.dTag, // Use original d-tag for replacement
+        name: updatedData.name,
+        location: updatedData.location,
+        difficulty: updatedData.difficulty,
+        terrain: updatedData.terrain,
+        size: updatedData.size as ValidCacheSize,
+        type: updatedData.type as ValidCacheType,
+        hint: updatedData.hint,
+        images: updatedData.images,
+        relays: originalGeocache.relays,
+        verificationPubkey: originalGeocache.verificationPubkey, // Preserve verification key
+        hidden: updatedData.hidden,
+      });
+
+      const event = {
+        kind: NIP_GC_KINDS.GEOCACHE,
+        content: updatedData.description,
+        tags,
+        created_at: Math.floor(Date.now() / 1000),
+      };
+
+      const signedEvent = await user.signer.signEvent(event);
+      
+      // Publish to relay
+      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
+      await baseStore.nostr.event(signedEvent, { signal });
+
+      return signedEvent;
     },
     onMutate: ({ id, updates }) => {
       // Optimistic update
@@ -205,19 +362,84 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
         },
         baseStore.queryClient
       );
+      
+      // Also update local state optimistically
+      updateState({
+        geocaches: state.geocaches.map(g => g.id === id ? { ...g, ...updates } : g),
+        userGeocaches: state.userGeocaches.map(g => g.id === id ? { ...g, ...updates } : g),
+      });
+      
       return { rollback };
+    },
+    onSuccess: (event, { id }) => {
+      // Parse the updated geocache from the event
+      const updatedGeocache = parseGeocacheEvent(event);
+      if (updatedGeocache) {
+        updateState({
+          geocaches: state.geocaches.map(g => g.id === id ? updatedGeocache : g),
+          userGeocaches: state.userGeocaches.map(g => g.id === id ? updatedGeocache : g),
+        });
+      }
     },
     onError: (error, variables, context) => {
       context?.rollback();
+      // Revert optimistic state update
+      updateState({
+        geocaches: state.geocaches,
+        userGeocaches: state.userGeocaches,
+      });
     },
   });
 
   const deleteGeocacheMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // This would integrate with the existing useDeleteGeocache logic
-      throw new Error('Delete geocache not implemented yet');
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      if (!user?.signer) {
+        throw new Error('You must be logged in to delete geocaches');
+      }
+
+      // Find the geocache to delete
+      const geocacheToDelete = state.geocaches.find(g => g.id === id);
+      if (!geocacheToDelete) {
+        throw new Error("Geocache not found");
+      }
+
+      // Create deletion event
+      const deletionTags: string[][] = [
+        ['e', id],
+        ['k', NIP_GC_KINDS.GEOCACHE.toString()],
+        ['client', 'treasures'],
+      ];
+
+      // Add coordinate tag for replaceable events
+      if (geocacheToDelete.dTag) {
+        const coordinate = createGeocacheCoordinate(geocacheToDelete.pubkey, geocacheToDelete.dTag);
+        deletionTags.push(['a', coordinate]);
+      }
+
+      const deletionEvent = {
+        kind: 5,
+        content: reason || 'Geocache deleted by author',
+        tags: deletionTags,
+        created_at: Math.floor(Date.now() / 1000),
+      };
+
+      const signedEvent = await user.signer.signEvent(deletionEvent);
+
+      // Fire-and-forget deletion: send to relays without strict verification
+      try {
+        await baseStore.nostr.event(signedEvent, { 
+          signal: AbortSignal.timeout(TIMEOUTS.DELETE_OPERATION) 
+        });
+      } catch (publishError) {
+        // Don't throw here - the event was signed and some relays might have received it
+        console.warn('Deletion event publish warning (continuing optimistically):', publishError);
+      }
+
+      return signedEvent;
     },
-    onMutate: (id) => {
+    onMutate: (variables) => {
+      const id = typeof variables === 'string' ? variables : variables.id;
+      
       // Optimistic update
       const rollback = createOptimisticUpdate(
         createQueryKey('geocache', 'list'),
@@ -227,18 +449,46 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
         },
         baseStore.queryClient
       );
-      return { rollback };
+      
+      // Store previous state for rollback
+      const previousGeocaches = [...state.geocaches];
+      const previousUserGeocaches = [...state.userGeocaches];
+      
+      // Update local state optimistically
+      updateState({
+        geocaches: state.geocaches.filter(g => g.id !== id),
+        userGeocaches: state.userGeocaches.filter(g => g.id !== id),
+      });
+      
+      return { rollback, previousGeocaches, previousUserGeocaches };
     },
     onError: (error, variables, context) => {
-      context?.rollback();
+      const errorObj = error as { message?: string };
+      const isSigningError = errorObj.message?.includes('User rejected') || 
+                            errorObj.message?.includes('cancelled') ||
+                            errorObj.message?.includes('No signer');
+      
+      if (isSigningError && context) {
+        // Only rollback for user cancellation or signer issues
+        context.rollback();
+        updateState({
+          geocaches: context.previousGeocaches,
+          userGeocaches: context.previousUserGeocaches,
+        });
+      }
+      // For network/relay errors, keep the optimistic update
     },
   });
 
   // Action implementations
   const createGeocache = useCallback(async (geocache: Partial<Geocache>): Promise<StoreActionResult<Geocache>> => {
     try {
-      const result = await createGeocacheMutation.mutateAsync(geocache);
-      return baseStore.createSuccessResult(result);
+      const { event } = await createGeocacheMutation.mutateAsync(geocache);
+      const newGeocache = parseGeocacheEvent(event);
+      if (!newGeocache) {
+        throw new Error('Failed to parse created geocache');
+      }
+      return baseStore.createSuccessResult(newGeocache);
     } catch (error) {
       return baseStore.createErrorResult(baseStore.handleError(error, 'createGeocache'));
     }
@@ -246,25 +496,38 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
   const updateGeocache = useCallback(async (id: string, updates: Partial<Geocache>): Promise<StoreActionResult<Geocache>> => {
     try {
-      const result = await updateGeocacheMutation.mutateAsync({ id, updates });
-      return baseStore.createSuccessResult(result);
+      const event = await updateGeocacheMutation.mutateAsync({ id, updates });
+      const updatedGeocache = parseGeocacheEvent(event);
+      if (!updatedGeocache) {
+        throw new Error('Failed to parse updated geocache');
+      }
+      return baseStore.createSuccessResult(updatedGeocache);
     } catch (error) {
       return baseStore.createErrorResult(baseStore.handleError(error, 'updateGeocache'));
     }
   }, [updateGeocacheMutation, baseStore]);
 
-  const deleteGeocache = useCallback(async (id: string): Promise<StoreActionResult<void>> => {
+  const deleteGeocache = useCallback(async (id: string, reason?: string): Promise<StoreActionResult<void>> => {
     try {
-      await deleteGeocacheMutation.mutateAsync(id);
+      await deleteGeocacheMutation.mutateAsync({ id, reason });
       return baseStore.createSuccessResult(undefined);
     } catch (error) {
       return baseStore.createErrorResult(baseStore.handleError(error, 'deleteGeocache'));
     }
   }, [deleteGeocacheMutation, baseStore]);
 
-  const batchDeleteGeocaches = useCallback(async (ids: string[]): Promise<StoreActionResult<void>> => {
+  const batchDeleteGeocaches = useCallback(async (ids: string[], reason?: string): Promise<StoreActionResult<void>> => {
     try {
-      await batchOperations(ids, deleteGeocache, 3);
+      await batchOperations(
+        ids, 
+        async (id) => {
+          const result = await deleteGeocache(id, reason);
+          if (!result.success) {
+            throw result.error || new Error(`Failed to delete geocache ${id}`);
+          }
+        }, 
+        3 // Batch size
+      );
       return baseStore.createSuccessResult(undefined);
     } catch (error) {
       return baseStore.createErrorResult(baseStore.handleError(error, 'batchDeleteGeocaches'));
