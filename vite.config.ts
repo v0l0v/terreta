@@ -3,16 +3,101 @@ import path from "node:path";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vitest/config";
 import { VitePWA } from 'vite-plugin-pwa';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
-export default defineConfig(() => ({
+export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
     https: false, // Set to true for production testing
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Vendor chunks - separate large dependencies
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'vendor-ui';
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'vendor-query';
+            }
+            if (id.includes('@nostrify') || id.includes('nostr-tools')) {
+              return 'vendor-nostr';
+            }
+            if (id.includes('leaflet')) {
+              return 'vendor-map';
+            }
+            if (id.includes('date-fns') || id.includes('qrcode') || id.includes('clsx') || id.includes('tailwind-merge')) {
+              return 'vendor-utils';
+            }
+            // All other node_modules go to vendor
+            return 'vendor';
+          }
+          
+          // Feature-based chunks
+          if (id.includes('src/features/auth')) {
+            return 'feature-auth';
+          }
+          if (id.includes('src/features/map')) {
+            return 'feature-map';
+          }
+          if (id.includes('src/features/geocache')) {
+            return 'feature-geocache';
+          }
+          if (id.includes('src/features/offline')) {
+            return 'feature-offline';
+          }
+          if (id.includes('src/features/profile')) {
+            return 'feature-profile';
+          }
+          if (id.includes('src/features/logging')) {
+            return 'feature-logging';
+          }
+          
+          // Shared chunks
+          if (id.includes('src/shared/components')) {
+            return 'shared-components';
+          }
+          if (id.includes('src/shared/stores')) {
+            return 'shared-stores';
+          }
+          if (id.includes('src/shared')) {
+            return 'shared-utils';
+          }
+          
+          // Pages
+          if (id.includes('src/pages')) {
+            return 'pages';
+          }
+        }
+      }
+    },
+    // Increase chunk size warning limit since we're optimizing
+    chunkSizeWarningLimit: 1000,
+    // Enable source maps for better debugging
+    sourcemap: false, // Disable in production for smaller builds
+    // Optimize dependencies
+    commonjsOptions: {
+      include: [/node_modules/]
+    }
+  },
   plugins: [
     react(),
+    // Add bundle analyzer in analyze mode
+    ...(mode === 'analyze' ? [
+      visualizer({
+        filename: 'dist/stats.html',
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+      })
+    ] : []),
     VitePWA({
       registerType: 'prompt',
       workbox: {
