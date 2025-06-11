@@ -11,3 +11,4 @@ export * from './ui';
 export * from './storage';
 export * from './map';
 export * from './relays';
+export * from './cache';

@@ -9,3 +9,4 @@ export * from './errorUtils';
 export * from './performance';
 export * from './lruCache';
 export * from './deletionFilter';
+export * from './cacheUtils';

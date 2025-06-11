@@ -155,15 +155,15 @@ This roadmap outlines the step-by-step transformation of the Treasures project f
 **Dependencies**: 3.1
 **Risk**: Low
 
-### 3.5 Offline Feature 🔴
+### 3.5 Offline Feature 🟢
 **Priority**: Medium
-- [ ] Create `src/features/offline/` structure
-- [ ] Move offline components (`OfflineSettings`, `OfflineIndicator`, etc.)
-- [ ] Move offline hooks (`useOfflineStorage`, `useConnectivity`, etc.)
-- [ ] Move offline utilities (`offlineStorage.ts`, `offlineSync.ts`, etc.)
-- [ ] Create offline types and constants
-- [ ] Update imports and test offline functionality
-- [ ] Migrate offline tests
+- [x] Create `src/features/offline/` structure
+- [x] Move offline components (`OfflineSettings`, `OfflineIndicator`, etc.)
+- [x] Move offline hooks (`useOfflineStorage`, `useConnectivity`, etc.)
+- [x] Move offline utilities (`offlineStorage.ts`, `offlineSync.ts`, etc.)
+- [x] Create offline types and constants
+- [x] Update imports and test offline functionality
+- [x] Migrate offline tests
 
 **Estimated Time**: 2 sessions
 **Dependencies**: 2.1, 2.2
@@ -358,24 +358,26 @@ This roadmap outlines the step-by-step transformation of the Treasures project f
 ## Session Summary
 
 ### Completed in This Session:
-- ✅ **Phase 3.4**: Profile Feature Migration
-  - Created complete `src/features/profile/` structure with components, hooks, types, tests
-  - Migrated 3 profile components (ProfileDialog, EditProfileForm, ProfileHeader)
-  - Migrated 2 profile hooks (useNip05Verification, useUserFoundCaches)
-  - Created comprehensive profile type definitions
+- ✅ **Phase 3.5**: Offline Feature Migration
+  - Created complete `src/features/offline/` structure with components, hooks, utils, types, tests
+  - Migrated 2 offline components (OfflineIndicator, OfflineSettings)
+  - Migrated 3 offline hooks (useOfflineStorage, useConnectivity, useOfflineStorageInfo)
+  - Migrated 3 offline utilities (offlineStorage, offlineSync, connectivityChecker)
+  - Created comprehensive offline type definitions
   - Created backward compatibility re-exports for all moved files
-  - Updated Profile page to use new feature structure
-  - Migrated profile tests to new feature location
-  - Fixed import paths for shared config and geocache components
-  - Verified build passes with all profile feature changes
-  - All profile tests passing (7/7 tests)
+  - Moved shared cache utilities to `src/shared/utils/cacheUtils.ts`
+  - Moved storage configuration to `src/shared/config/storage.ts`
+  - Created comprehensive offline tests (storage and connectivity)
+  - Verified build passes with all offline feature changes
+  - Updated OfflineMap component to use new feature structure
 
 ### Key Achievements:
 - **Zero Breaking Changes**: All existing imports continue to work through re-exports
-- **Feature Isolation**: Profile functionality is now properly isolated in its own feature directory
-- **Type Safety**: Comprehensive type definitions for all profile-related interfaces
+- **Feature Isolation**: Offline functionality is now properly isolated in its own feature directory
+- **Shared Utilities**: Cache utilities and storage config moved to shared for reuse
+- **Type Safety**: Comprehensive type definitions for all offline-related interfaces
 - **Maintainability**: Clear separation of concerns with proper barrel exports
-- **Test Coverage**: All profile tests migrated and passing
+- **Test Coverage**: Comprehensive offline tests for storage and connectivity
 - **Build Stability**: All changes maintain build integrity and functionality
 - **Import Consistency**: Updated to use new shared config and feature structure
 
@@ -386,12 +388,14 @@ This roadmap outlines the step-by-step transformation of the Treasures project f
 - ✅ **Phase 3.2**: Map Feature (Complete)
 - ✅ **Phase 3.3**: Geocache Feature (Complete)
 - ✅ **Phase 3.4**: Profile Feature (Complete)
-- 🔴 **Phase 3.5**: Offline Feature (Next)
+- ✅ **Phase 3.5**: Offline Feature (Complete)
+- 🔴 **Phase 4**: Data Layer Simplification (Next)
 
 ### Next Steps:
-- **Phase 3.5**: Offline Feature Migration (next session focus)
-- **Phase 4**: Data Layer Simplification
+- **Phase 4**: Data Layer Simplification (next session focus)
+- Audit current data hooks and identify overlapping functionality
+- Create unified data stores for each feature
 - Eventually consolidate data layer and remove redundant hooks
 
-**Current Phase**: Phase 3 (Feature Migration) 
-**Next Session Focus**: Phase 3.5 - Offline Feature Migration
+**Current Phase**: Phase 3 (Feature Migration) - COMPLETE!
+**Next Session Focus**: Phase 4.1 - Audit Current Data Hooks
