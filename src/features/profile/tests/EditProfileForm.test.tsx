@@ -1,14 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { EditProfileForm } from '@/components/EditProfileForm';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { EditProfileForm } from '../components/EditProfileForm';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import { useToast } from '@/hooks/useToast';
 
 // Mock the hooks
-vi.mock('@/hooks/useCurrentUser');
+vi.mock('@/features/auth/hooks/useCurrentUser');
 vi.mock('@/hooks/useNostrPublish');
 vi.mock('@/hooks/useUploadFile');
 vi.mock('@/hooks/useToast');
