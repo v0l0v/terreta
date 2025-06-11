@@ -189,7 +189,8 @@ export function useDataManager(options: DataManagerOptions = {}) {
       if (geocachesQuery.isSuccess && geocachesQuery.data) {
         setErrorCount(0);
         // Pre-populate individual geocache caches for faster navigation
-        prePopulateGeocaches(geocachesQuery.data);
+        const geocaches = Array.isArray(geocachesQuery.data) ? geocachesQuery.data : [];
+        prePopulateGeocaches(geocaches);
       }
     }
   }, [geocachesQuery.dataUpdatedAt, geocachesQuery.isSuccess, geocachesQuery.data, prePopulateGeocaches]);
@@ -219,8 +220,9 @@ export function useDataManager(options: DataManagerOptions = {}) {
       const updatedGeocaches = await backgroundSync.syncGeocaches();
       
       // Trigger prefetch for visible data only
-      if (geocachesQuery.data && geocachesQuery.data.length > 0) {
-        const topGeocacheIds = geocachesQuery.data.slice(0, 5).map((g: any) => g.id);
+      const geocaches = Array.isArray(geocachesQuery.data) ? geocachesQuery.data : [];
+      if (geocaches.length > 0) {
+        const topGeocacheIds = geocaches.slice(0, 5).map((g: any) => g.id);
         await prefetchManager.triggerPrefetch(topGeocacheIds);
         
         // Sync logs for top geocaches
@@ -369,8 +371,9 @@ export function useDataManager(options: DataManagerOptions = {}) {
         const updatedGeocaches = await backgroundSync.syncGeocaches();
         
         // Sync logs for visible geocaches (top 10)
-        if (geocachesQuery.data && geocachesQuery.data.length > 0) {
-          const visibleGeocacheIds = geocachesQuery.data
+        const geocaches = Array.isArray(geocachesQuery.data) ? geocachesQuery.data : [];
+        if (geocaches.length > 0) {
+          const visibleGeocacheIds = geocaches
             .slice(0, 10)
             .map((g: any) => g.id);
           
@@ -391,7 +394,7 @@ export function useDataManager(options: DataManagerOptions = {}) {
 
   return {
     // Data
-    geocaches: geocachesQuery.data || [],
+    geocaches: Array.isArray(geocachesQuery.data) ? geocachesQuery.data : [],
     isLoading: geocachesQuery.isLoading,
     isError: geocachesQuery.isError,
     error: geocachesQuery.error,

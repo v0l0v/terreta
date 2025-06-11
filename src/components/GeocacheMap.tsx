@@ -7,12 +7,12 @@ import { useTheme } from "next-themes";
 import { Navigation, Trophy, MessageSquare, Bookmark, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapStyleSelector, MAP_STYLES } from "@/components/MapStyleSelector";
+import { MapStyleSelector, MAP_STYLES, type MapStyle } from "@/components/MapStyleSelector";
 import { useSavedCaches } from "@/hooks/useSavedCaches";
 import { useToast } from "@/hooks/useToast";
-import { useNavigate } from "react-router-dom";
+
 import { useGeocacheNavigation } from "@/hooks/useGeocacheNavigation";
-import type { Geocache } from "@/types/geocache";
+import type { Geocache } from "@/shared/types";
 import { getTypeLabel, getSizeLabel } from "@/lib/geocache-utils";
 
 import { getCacheIconSvg, getCacheColor } from "@/lib/cacheIcons";
@@ -304,7 +304,8 @@ function MapController({
   useEffect(() => {
     if (center) {
       // Create a key to track if the center has actually changed
-      const centerKey = `${center[0]},${center[1]},${zoom}`;
+      const centerArray = Array.isArray(center) ? center : [(center as { lat: number; lng: number }).lat, (center as { lat: number; lng: number }).lng];
+      const centerKey = `${centerArray[0]},${centerArray[1]},${zoom}`;
       const now = Date.now();
       
       // NEVER update if user is currently interacting or has interacted recently
@@ -400,12 +401,10 @@ function ThemeController({
 // Component to handle popup opening for highlighted geocache
 function PopupController({ 
   highlightedGeocache,
-  geocaches,
-  onMarkerClick
+  geocaches
 }: { 
   highlightedGeocache?: string;
   geocaches: Geocache[];
-  onMarkerClick?: (geocache: Geocache) => void;
 }) {
   const map = useMap();
   const lastHighlightedRef = useRef<string | null>(null);
@@ -428,12 +427,12 @@ function PopupController({
         // Small delay to ensure map has centered, then trigger popup on the marker
         popupTimeoutRef.current = setTimeout(() => {
           // Find all markers and open the popup for the matching one
-          map.eachLayer((layer: any) => {
-            if (layer instanceof L.Marker && layer.getLatLng) {
-              const markerLatLng = layer.getLatLng();
+          map.eachLayer((layer: L.Layer) => {
+            if (layer instanceof L.Marker && 'getLatLng' in layer) {
+              const markerLatLng = (layer as L.Marker).getLatLng();
               if (Math.abs(markerLatLng.lat - geocache.location.lat) < 0.0001 && 
                   Math.abs(markerLatLng.lng - geocache.location.lng) < 0.0001) {
-                layer.openPopup();
+                (layer as L.Marker).openPopup();
               }
             }
           });
@@ -497,8 +496,8 @@ function MapRefController({
   
   useEffect(() => {
     // Expose map reference immediately
-    if (mapRef) {
-      mapRef.current = map;
+    if (mapRef && 'current' in mapRef) {
+      (mapRef as React.MutableRefObject<L.Map | null>).current = map;
     }
     
     // Mark map as ready almost immediately - just a tiny delay for DOM
@@ -521,7 +520,7 @@ function MapStyleControl({
   onStyleChange: (style: string) => void; 
 }) {
   const map = useMap();
-  const rootRef = useRef<any>(null);
+  const rootRef = useRef<ReturnType<typeof createRoot> | null>(null);
   const controlRef = useRef<L.Control | null>(null);
   const isInitializedRef = useRef(false);
   
@@ -602,15 +601,14 @@ function AutoOfflineTileManager({
   searchLocation?: { lat: number; lng: number } | null;
   searchRadius?: number;
   isNearMeActive?: boolean;
-  mapStyle: any;
+  mapStyle: MapStyle;
 }) {
   const map = useMap();
   const { isOnline, isOfflineMode } = useOfflineMode();
   const { settings } = useOfflineSettings();
-  const [cachedTiles, setCachedTiles] = useState(0);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [, setCachedTiles] = useState(0);
+  const [, setIsDownloading] = useState(false);
   const [lastCachedLocation, setLastCachedLocation] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const autoCacheMaps = (settings.autoCacheMaps as boolean) ?? true;
 
@@ -630,7 +628,7 @@ function AutoOfflineTileManager({
     }
   };
 
-  const downloadTilesForBounds = async (bounds: LatLngBounds, minZoom: number, maxZoom: number, silent: boolean = false) => {
+  const downloadTilesForBounds = async (bounds: LatLngBounds, minZoom: number, maxZoom: number) => {
     if (!isOnline || isOfflineMode) return 0;
     
     // Check storage limits before starting download
@@ -715,8 +713,7 @@ function AutoOfflineTileManager({
       await downloadTilesForBounds(
         bounds, 
         Math.max(currentZoom - 1, 8), 
-        Math.min(currentZoom + 1, 16),
-        true // Silent for initial load
+        Math.min(currentZoom + 1, 16)
       );
     };
 
@@ -755,8 +752,7 @@ function AutoOfflineTileManager({
       const downloadedCount = await downloadTilesForBounds(
         bounds,
         10, // Start from zoom level 10
-        15, // Go up to zoom level 15
-        true // Silent caching
+        15 // Go up to zoom level 15
       );
 
       if (downloadedCount > 0) {
@@ -782,8 +778,7 @@ function AutoOfflineTileManager({
 }
 
 // Custom tile layer that works offline with optimizations
-function OfflineTileLayer({ mapStyle }: { mapStyle: any }) {
-  const { isOnline, isOfflineMode } = useOfflineMode();
+function OfflineTileLayer({ mapStyle }: { mapStyle: MapStyle }) {
 
   return (
     <TileLayer
@@ -816,10 +811,8 @@ export function GeocacheMap({
   mapRef,
   isMapCenterLocked = false
 }: GeocacheMapProps) {
-  const navigate = useNavigate();
   const { navigateToGeocache } = useGeocacheNavigation();
   const { theme, systemTheme } = useTheme();
-  const { isOnline, isOfflineMode } = useOfflineMode();
   const [isMapReady, setIsMapReady] = useState(false);
   const [isMapInitialized, setIsMapInitialized] = useState(false);
   
@@ -1019,7 +1012,7 @@ export function GeocacheMap({
         touchZoom={true}
         attributionControl={false}
         // Optimize for fastest loading
-        whenReady={(mapInstance) => {
+        whenReady={(mapInstance: L.Map) => {
           // Mark map as initialized immediately
           setIsMapInitialized(true);
           

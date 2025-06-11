@@ -21,7 +21,8 @@ interface ProfileDialogProps {
 export function ProfileDialog({ pubkey, isOpen, onOpenChange }: ProfileDialogProps) {
   const navigate = useNavigate();
   const author = useAuthor(pubkey || "");
-  const { data: geocaches = [] } = useGeocaches();
+  const { data: geocachesData = [] } = useGeocaches();
+  const geocaches = Array.isArray(geocachesData) ? geocachesData : [];
   const { data: foundCaches = [] } = useUserFoundCaches(pubkey || "");
   
   // Early return after all hooks

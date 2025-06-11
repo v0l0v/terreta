@@ -9,7 +9,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { CacheDetailTabs } from "@/components/ui/mobile-button-patterns";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+
 import { useAuthor } from "@/hooks/useAuthor";
 import { LogsSection } from "@/components/LogsSection";
 import { formatDistanceToNow } from "@/lib/date";
@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { geocacheToNaddr } from "@/lib/naddr-utils";
 import { getTypeLabel, getSizeLabel } from "@/lib/geocache-utils";
 import { DifficultyTerrainRating } from "@/components/ui/difficulty-terrain-rating";
-import type { Geocache } from "@/types/geocache";
+import type { Geocache, GeocacheLog } from "@/shared/types";
 
 interface GeocacheDialogProps {
   geocache: Geocache | null;
@@ -32,14 +32,16 @@ import { ProfileDialog } from "@/components/ProfileDialog";
 export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialogProps) {
   // All hooks must be called before any conditional logic
   const navigate = useNavigate();
-  const { user } = useCurrentUser();
-  const { data: logs = [], refetch: refetchLogs } = useGeocacheLogs(
+  const { data: logsData = {} } = useGeocacheLogs(
     geocache ? `${geocache.pubkey}:${geocache.dTag}` : '', 
     geocache?.dTag,
     geocache?.pubkey,
     geocache?.relays,
     geocache?.verificationPubkey
   );
+  
+  // Safely handle logs data
+  const logs: GeocacheLog[] = Array.isArray(logsData) ? logsData : [];
   const author = useAuthor(geocache?.pubkey || "");
   
   // Image gallery state
@@ -143,7 +145,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
             </div>
 
             {/* Tabs */}
-            <CacheDetailTabs logCount={logs?.length || 0}>
+            <CacheDetailTabs logCount={logs.length}>
               <TabsContent value="logs" className="space-y-4 max-h-60 overflow-y-auto">
                 <LogsSection 
                   logs={logs}
@@ -190,15 +192,15 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
               stats={[
                 {
                   label: "Total Finds",
-                  value: logs?.filter(log => log.type === "found").length || 0
+                  value: logs.filter(log => log.type === "found").length
                 },
                 {
                   label: "DNFs",
-                  value: logs?.filter(log => log.type === "dnf").length || 0
+                  value: logs.filter(log => log.type === "dnf").length
                 },
                 {
                   label: "Total Logs",
-                  value: logs?.length || 0
+                  value: logs.length
                 }
               ]}
             />
