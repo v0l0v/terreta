@@ -16,72 +16,21 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Critical: Keep React and all React-dependent libraries together
-          // This prevents timing issues with React context creation
+          // Simplified chunking: Only separate truly large, independent libraries
           if (id.includes('node_modules')) {
-            // PRIORITY 1: React core and anything that creates contexts
-            // These MUST be in the main vendor chunk to prevent timing issues
-            const reactCoreLibraries = [
-              'react', 'react-dom', 'react-router', 'react-hook-form', 
-              'react-day-picker', 'react-leaflet', 'react-zoom-pan-pinch',
-              '@radix-ui', '@tanstack', '@hookform', '@nostrify/react', 
-              'next-themes', 'class-variance-authority', 'clsx', 'tailwind-merge'
-            ];
-            
-            if (reactCoreLibraries.some(lib => id.includes(lib))) {
-              return 'vendor';
-            }
-            
-            // PRIORITY 2: Separate large non-React dependencies that don't create contexts
-            if (id.includes('@nostrify/nostrify') || id.includes('nostr-tools')) {
-              return 'vendor-nostr';
-            }
+            // Only separate the largest libraries that are completely independent
             if (id.includes('leaflet') && !id.includes('react-leaflet')) {
               return 'vendor-map';
             }
-            if (id.includes('date-fns') || id.includes('qrcode')) {
-              return 'vendor-utils';
-            }
             
-            // PRIORITY 3: All other node_modules (utilities, etc.)
-            return 'vendor-misc';
+            // Everything else goes in the main vendor chunk
+            // This prevents all module loading order issues
+            return 'vendor';
           }
           
-          // Feature-based chunks for application code only
-          if (id.includes('src/features/auth')) {
-            return 'feature-auth';
-          }
-          if (id.includes('src/features/map')) {
-            return 'feature-map';
-          }
-          if (id.includes('src/features/geocache')) {
-            return 'feature-geocache';
-          }
-          if (id.includes('src/features/offline')) {
-            return 'feature-offline';
-          }
-          if (id.includes('src/features/profile')) {
-            return 'feature-profile';
-          }
-          if (id.includes('src/features/logging')) {
-            return 'feature-logging';
-          }
-          
-          // Shared chunks
-          if (id.includes('src/shared/components')) {
-            return 'shared-components';
-          }
-          if (id.includes('src/shared/stores')) {
-            return 'shared-stores';
-          }
-          if (id.includes('src/shared')) {
-            return 'shared-utils';
-          }
-          
-          // Pages
-          if (id.includes('src/pages')) {
-            return 'pages';
-          }
+          // No application code chunking - keep everything together
+          // This eliminates internal module dependency issues
+          return undefined;
         }
       }
     },
