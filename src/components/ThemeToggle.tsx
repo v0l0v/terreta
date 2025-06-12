@@ -142,7 +142,7 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
               getAdventureClasses(), 
               "h-6 w-6 p-0",
               // Ensure proper contrast in light mode - stronger borders and text
-              "border-gray-400 dark:border-border text-gray-800 dark:text-foreground hover:bg-gray-100 dark:hover:bg-accent hover:text-gray-900 dark:hover:text-accent-foreground bg-white dark:bg-background"
+              "border-border text-gray-800 dark:text-foreground hover:bg-gray-100 dark:hover:bg-accent hover:text-gray-900 dark:hover:text-accent-foreground bg-transparent"
             )}
             title={`Theme: ${getThemeDisplayName()}`}
           >

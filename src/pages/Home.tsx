@@ -294,7 +294,7 @@ export default function Home() {
             </span>
           </h2>
           
-          <p className="text-md xs:text-sm md:text-xl adventure:text-lg adventure:xs:text-sm text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto animate-slide-up-delay">
+          <p className="text-md xs:text-sm md:text-xl text-stone-600 dark:text-stone-400 mb-6 md:mb-8 max-w-2xl mx-auto animate-slide-up-delay">
             <span className="adventure:hidden">
               Join the decentralized geocaching adventure powered by Nostr. 
               Hide caches, find treasures, and connect with explorers worldwide.
