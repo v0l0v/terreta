@@ -27,7 +27,7 @@ export function MobileTabs({ items, defaultValue, children, className }: MobileT
   return (
     <Tabs defaultValue={defaultValue} className={cn("w-full", className)}>
       <TabsList className={cn(
-        "grid w-full h-auto",
+        "grid w-full h-auto bg-accent",
         cols === 2 && "grid-cols-2",
         cols === 3 && "grid-cols-3",
         cols === 4 && "grid-cols-4",
@@ -86,7 +86,7 @@ export function MobileButtonGroup({
 }: MobileButtonGroupProps) {
   return (
     <div className={cn(
-      "grid gap-1 sm:gap-2",
+      "grid gap-1 sm:gap-2 bg-accent",
       cols === 2 && "grid-cols-2",
       cols === 3 && "grid-cols-3", 
       cols === 4 && "grid-cols-4",

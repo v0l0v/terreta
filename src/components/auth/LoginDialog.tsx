@@ -345,7 +345,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
 
         {/* Login Methods */}
         <LoginMethodTabs defaultMethod='key'>
-            <TabsContent value='extension' className='space-y-3'>
+            <TabsContent value='extension' className='space-y-3 bg-muted'>
               {errors.extension && (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
@@ -369,7 +369,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
               </div>
             </TabsContent>
 
-            <TabsContent value='key' className='space-y-4'>
+            <TabsContent value='key' className='space-y-4 bg-muted'>
               <div className='space-y-4'>
                 <div className='space-y-2'>
                   <label htmlFor='nsec' className='text-sm font-medium'>
@@ -438,14 +438,11 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                   {errors.file && (
                     <p className="text-sm text-red-500 mt-2">{errors.file}</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Select a .txt file containing your nsec key
-                  </p>
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value='bunker' className='space-y-3'>
+            <TabsContent value='bunker' className='space-y-3 bg-muted'>
               <div className='space-y-2'>
                 <label htmlFor='bunkerUri' className='text-sm font-medium text-gray-700 dark:text-gray-400'>
                   Bunker URI
