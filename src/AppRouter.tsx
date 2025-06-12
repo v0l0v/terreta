@@ -6,13 +6,13 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Import only the most critical page for instant navigation
 import Home from "./pages/Home";
+import Map from "./pages/Map";
+import CacheDetail from "./pages/CacheDetail";
 
-// Lazy load all other pages for optimal code splitting
+// Lazy load all other pages for optimal code splitting - except for Map and Details
 // Group by feature for better chunk organization
-const Map = lazy(() => import("./pages/Map"));
 const MyCaches = lazy(() => import("./pages/MyCaches"));
 const CreateCache = lazy(() => import("./pages/CreateCache"));
-const CacheDetail = lazy(() => import("./pages/CacheDetail"));
 
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));

@@ -1,50 +1,46 @@
-import { useNostr } from '@nostrify/react';
 import { useNostrLogin } from '@nostrify/react/login';
-import { useQuery } from '@tanstack/react-query';
-import { NSchema as n, NostrEvent, NostrMetadata } from '@nostrify/nostrify';
+import { NostrMetadata } from '@nostrify/nostrify';
+import { useAuthor } from '@/features/auth/hooks/useAuthor';
 
 export interface Account {
   id: string;
   pubkey: string;
-  event?: NostrEvent;
   metadata: NostrMetadata;
 }
 
 export function useLoggedInAccounts() {
-  const { nostr } = useNostr();
   const { logins, setLogin, removeLogin } = useNostrLogin();
 
-  const { data: authors = [] } = useQuery({
-    queryKey: ['logins', logins.map((l) => l.id).join(';')],
-    queryFn: async ({ signal }) => {
-      const events = await nostr.query(
-        [{ kinds: [0], authors: logins.map((l) => l.pubkey) }],
-        { signal: AbortSignal.any([signal, AbortSignal.timeout(1500)]) },
-      );
+  // Get author data for the current user (first login)
+  const currentLogin = logins[0];
+  const currentUserAuthor = useAuthor(currentLogin?.pubkey);
 
-      return logins.map(({ id, pubkey }): Account => {
-        const event = events.find((e) => e.pubkey === pubkey);
-        try {
-          const metadata = n.json().pipe(n.metadata()).parse(event?.content);
-          return { id, pubkey, metadata, event };
-        } catch {
-          return { id, pubkey, metadata: {}, event };
-        }
-      });
-    },
-    retry: 3,
-  });
+  // Get author data for other users
+  const otherLogins = logins.slice(1);
+  const otherUsersAuthors = otherLogins.map(login => ({
+    login,
+    author: useAuthor(login.pubkey)
+  }));
 
-  // Current user is the first login
-  const currentUser: Account | undefined = (() => {
-    const login = logins[0];
-    if (!login) return undefined;
-    const author = authors.find((a) => a.id === login.id);
-    return { metadata: {}, ...author, id: login.id, pubkey: login.pubkey };
-  })();
+  // Build current user account
+  const currentUser: Account | undefined = currentLogin ? {
+    id: currentLogin.id,
+    pubkey: currentLogin.pubkey,
+    metadata: currentUserAuthor.data?.metadata || {},
+  } : undefined;
 
-  // Other users are all logins except the current one
-  const otherUsers = (authors || []).slice(1) as Account[];
+  // Build other users accounts
+  const otherUsers: Account[] = otherUsersAuthors.map(({ login, author }) => ({
+    id: login.id,
+    pubkey: login.pubkey,
+    metadata: author.data?.metadata || {},
+  }));
+
+  // Build all authors array for backward compatibility
+  const authors: Account[] = [
+    ...(currentUser ? [currentUser] : []),
+    ...otherUsers
+  ];
 
   return {
     authors,

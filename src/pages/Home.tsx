@@ -317,8 +317,8 @@ export default function Home() {
                   <span className="xs:hidden">Explore</span>
                 </span>
                 <span className="hidden adventure:inline">
-                  <span className="hidden xs:inline">Begin Your Quest</span>
-                  <span className="xs:hidden">Quest</span>
+                  <span className="hidden xs:inline">Find Artifacts</span>
+                  <span className="xs:hidden">Find</span>
                 </span>
               </Button>
             </Link>
