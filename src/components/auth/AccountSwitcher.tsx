@@ -18,7 +18,7 @@ interface AccountSwitcherProps {
 }
 
 export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
-  const { currentUser, otherUsers, setLogin, removeLogin } = useLoggedInAccounts();
+  const { currentUser, otherUsers, setLogin, removeLogin, isLoadingCurrentUser } = useLoggedInAccounts();
   const navigate = useNavigate();
 
   if (!currentUser) return null;
@@ -28,8 +28,19 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
       <DropdownMenuTrigger asChild>
         <button className='flex items-center gap-3 p-2 rounded-full hover:bg-accent adventure:hover:bg-stone-200 transition-all text-foreground'>
           <Avatar className='w-8 h-8'>
-            <AvatarImage src={currentUser.metadata.picture} alt={currentUser.metadata.name} />
-            <AvatarFallback>{currentUser.metadata.name?.charAt(0) || <UserIcon />}</AvatarFallback>
+            {/* Show loading state for avatar to prevent layout shift */}
+            {isLoadingCurrentUser ? (
+              <AvatarFallback>
+                <div className="animate-pulse bg-muted rounded-full w-full h-full flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </AvatarFallback>
+            ) : (
+              <>
+                <AvatarImage src={currentUser.metadata.picture} alt={currentUser.metadata.name} />
+                <AvatarFallback>{currentUser.metadata.name?.charAt(0) || <UserIcon />}</AvatarFallback>
+              </>
+            )}
           </Avatar>
         </button>
       </DropdownMenuTrigger>
@@ -50,11 +61,27 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
                 className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
               >
                 <Avatar className='w-8 h-8'>
-                  <AvatarImage src={user.metadata.picture} alt={user.metadata.name} />
-                  <AvatarFallback>{user.metadata.name?.charAt(0) || <UserIcon />}</AvatarFallback>
+                  {user.isLoadingMetadata ? (
+                    <AvatarFallback>
+                      <div className="animate-pulse bg-muted rounded-full w-full h-full flex items-center justify-center">
+                        <UserIcon className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    </AvatarFallback>
+                  ) : (
+                    <>
+                      <AvatarImage src={user.metadata.picture} alt={user.metadata.name} />
+                      <AvatarFallback>{user.metadata.name?.charAt(0) || <UserIcon />}</AvatarFallback>
+                    </>
+                  )}
                 </Avatar>
                 <div className='flex-1 truncate'>
-                  <p className='text-sm font-medium'>{user.metadata.name || user.pubkey}</p>
+                  <p className='text-sm font-medium'>
+                    {user.isLoadingMetadata ? (
+                      <span className="animate-pulse bg-muted rounded w-20 h-4 inline-block"></span>
+                    ) : (
+                      user.metadata.name || user.pubkey
+                    )}
+                  </p>
                 </div>
                 {user.id === currentUser.id && <div className='w-2 h-2 rounded-full bg-primary'></div>}
               </DropdownMenuItem>

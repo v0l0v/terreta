@@ -14,7 +14,8 @@ export function useAuthor(pubkey: string | undefined) {
       }
 
       try {
-        const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
+        // Use FAST_QUERY timeout for author data to prevent blocking UI
+        const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.FAST_QUERY)]);
         const events = await nostr.query(
           [{ kinds: [0], authors: [pubkey], limit: 1 }],
           { signal }
@@ -51,7 +52,7 @@ export function useAuthor(pubkey: string | undefined) {
       // Retry network errors up to 2 times
       return failureCount < 2;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff, max 5s
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Faster backoff, max 3s
     staleTime: 5 * 60 * 1000, // 5 minutes - cache author data longer
     gcTime: 15 * 60 * 1000, // 15 minutes - keep in memory longer
     // Return cached data while refetching in background
@@ -60,5 +61,9 @@ export function useAuthor(pubkey: string | undefined) {
     // Add a network timeout to prevent hanging
     networkMode: 'online',
     enabled: !!pubkey, // Only run if we have a pubkey
+    // Use background refetch to avoid blocking UI
+    refetchOnMount: false,
+    // Reduce initial loading impact
+    placeholderData: { hasProfile: false }, // Provide immediate placeholder
   });
 }
