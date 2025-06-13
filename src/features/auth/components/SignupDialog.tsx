@@ -194,7 +194,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
 
         toast({
           title: 'Profile Created!',
-          description: 'Your treasure hunter profile has been set up.',
+          description: 'Your adventurer profile has been set up.',
         });
       }
 
@@ -280,12 +280,12 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
   const getDescription = () => {
     if (step === 'welcome') return (
       <div className="text-center">
-        Ready to discover hidden treasures around the world?
+        Ready to discover hidden geocaches around the world?
       </div>
     );
     if (step === 'generate') return (
       <div className="text-center">
-        Creating your magical key to unlock treasures
+        Creating your magical key to unlock Treasures
       </div>
     );
     if (step === 'download') return (
@@ -374,7 +374,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
 
             <div className='space-y-3'>
               <p className='text-muted-foreground px-5'>
-                Join adventurers exploring the world through treasure hunting. 
+                Join adventurers exploring the world through geocaching. 
                 Your quest begins with forging your very own treasure key.
               </p>
               

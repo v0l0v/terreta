@@ -1,6 +1,6 @@
 # Treasures
 
-A decentralized geocaching platform built on the Nostr protocol. Discover hidden treasures, share locations, and connect with explorers worldwide through a censorship-resistant, open network.
+A decentralized geocaching platform built on the Nostr protocol. Discover hidden geocaches, share locations, and connect with explorers worldwide through a censorship-resistant, open network.
 
 **Live at: [treasures.to](https://treasures.to)**
 
@@ -10,7 +10,7 @@ A decentralized geocaching platform built on the Nostr protocol. Discover hidden
 
 ### Core Geocaching
 - **Hide Geocaches**: Create and publish geocaches with GPS coordinates, descriptions, and difficulty ratings
-- **Find Treasures**: Discover geocaches hidden by other users around the world
+- **Find Geocaches**: Discover geocaches hidden by other users around the world
 - **Interactive Map**: Explore locations on a detailed map with custom markers and search functionality
 - **Log Adventures**: Record your finds, DNFs (Did Not Find), and notes about each cache
 - **Verification System**: QR code verification for cache finds with cryptographic proof
@@ -170,7 +170,7 @@ public/                 # Static assets and PWA files
 - Click on **map markers** or **list items** to view cache details
 
 ### Hiding Geocaches
-1. Click **"Hide a Treasure"** or the **+** icon in navigation
+1. Click **"Hide a Geocache"** or the **+** icon in navigation
 2. Fill out cache details: name, description, difficulty, terrain
 3. **Click on the map** to set GPS coordinates with OSM verification
 4. Add optional **hint** and **images**
@@ -285,4 +285,4 @@ This project is licensed under the GNU Affero General Public License v3.0 - see 
 
 ---
 
-**Start your adventure today!** Hide caches, find treasures, and explore the world through Treasures.
+**Start your adventure today!** Hide geocaches, find them, and explore the world through Treasures.

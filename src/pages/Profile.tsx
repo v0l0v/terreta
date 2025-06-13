@@ -240,7 +240,7 @@ export default function Profile() {
               <EmptyStateCard
                 icon={MapPin}
                 title={isOwnProfile ? "No caches created yet" : "No caches found"}
-                description={isOwnProfile ? "Start your geocaching journey by hiding your first treasure!" : `${displayName} hasn't created any caches yet.`}
+                description={isOwnProfile ? "Start your geocaching journey by hiding your first one!" : `${displayName} hasn't created any geocaches yet.`}
                 action={
                   isOwnProfile ? (
                     <Link to="/create">

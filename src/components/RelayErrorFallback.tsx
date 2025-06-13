@@ -38,7 +38,7 @@ export function RelayErrorFallback({
   // Default titles and descriptions
   const defaultTitle = isError 
     ? "Connection Failed"
-    : "No Treasures Found";
+    : "No Geocaches Found";
     
   const defaultDescription = isError
     ? "Unable to connect to the current relay. Try switching to a different relay or check your connection."

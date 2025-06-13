@@ -306,17 +306,17 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
             <div className='flex justify-center items-center gap-2 mb-2'>
               <Crown className='w-5 h-5 text-green-600 adventure:text-amber-700' />
               <span className='font-semibold text-green-800 dark:text-green-200 adventure:text-amber-800 adventure:dark:text-amber-200'>
-                <span className='adventure:hidden'>New to Treasure Hunting?</span>
+                <span className='adventure:hidden'>New to Geocaching?</span>
                 <span className='hidden adventure:inline'>New to the Quest?</span>
               </span>
             </div>
             
             <p className='text-sm text-green-700 dark:text-green-300 adventure:text-amber-700 adventure:dark:text-amber-300 mb-3'>
               <span className='adventure:hidden'>
-                Join the guild of adventurers discovering hidden treasures worldwide!
+                Join the guild of adventurers discovering hidden geocaches worldwide!
               </span>
               <span className='hidden adventure:inline'>
-                Join the ancient guild of treasure seekers on legendary quests!
+                Join the ancient guild of geocache seekers on legendary quests!
               </span>
             </p>
             
@@ -325,7 +325,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
               className='w-full rounded-full py-3 text-base font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 adventure:from-amber-700 adventure:to-orange-700 adventure:hover:from-amber-800 adventure:hover:to-orange-800 transform transition-all duration-200 hover:scale-105 shadow-lg border-0'
             >
               <Sparkles className='w-4 h-4 mr-2' />
-              <span className='adventure:hidden'>Start Your Treasure Hunt!</span>
+              <span className='adventure:hidden'>Start Your Adventure!</span>
               <span className='hidden adventure:inline'>Begin Your Quest!</span>
             </Button>
           </div>

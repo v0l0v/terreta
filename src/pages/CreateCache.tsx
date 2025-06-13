@@ -259,7 +259,7 @@ export default function CreateCache() {
       <div className="max-w-2xl mx-auto create-cache-container">
         {/* Header - mobile only */}
         <div className="md:hidden px-4 py-6">
-          <h1 className="text-2xl font-bold text-foreground">Hide a New Treasure</h1>
+          <h1 className="text-2xl font-bold text-foreground">Hide a New Geocache</h1>
           <p className="text-muted-foreground mt-2">
             Create a new geocache for others to discover. Choose your difficulty and terrain ratings carefully - 
             they help seekers know what to expect and prepare appropriately.
@@ -269,7 +269,7 @@ export default function CreateCache() {
         {/* Desktop Card Header */}
         <Card className="hidden md:block">
           <CardHeader>
-            <CardTitle className="text-foreground">Hide a New Treasure</CardTitle>
+            <CardTitle className="text-foreground">Hide a New Geocache</CardTitle>
             <CardDescription>
               Create a new geocache for others to discover. Choose your difficulty and terrain ratings carefully - 
               they help seekers know what to expect and prepare appropriately.
@@ -304,7 +304,7 @@ export default function CreateCache() {
                 <div className="space-y-4">
                   <div className="text-center mb-4">
                     <h3 className="text-lg font-semibold mb-1 text-foreground">Choose the location</h3>
-                    <p className="text-sm text-gray-600 dark:text-muted-foreground">Where will seekers find your treasure?</p>
+                    <p className="text-sm text-gray-600 dark:text-muted-foreground">Where will seekers find your geocache?</p>
                   </div>
                   
                   <LocationPicker
@@ -338,7 +338,7 @@ export default function CreateCache() {
                 <div className="space-y-4">
                   <div className="text-center mb-4">
                     <h3 className="text-lg font-semibold mb-1 text-foreground">Tell us about your cache</h3>
-                    <p className="text-sm text-gray-600 dark:text-muted-foreground">Give your treasure a name and description</p>
+                    <p className="text-sm text-gray-600 dark:text-muted-foreground">Give your geocache a name and description</p>
                   </div>
                   
                   <CacheNameField
@@ -536,7 +536,7 @@ export default function CreateCache() {
               <div className="space-y-4">
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-semibold mb-1 text-foreground">Choose the location</h3>
-                  <p className="text-sm text-gray-600 dark:text-muted-foreground">Where will seekers find your treasure?</p>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">Where will seekers find your geocache?</p>
                 </div>
                 
                 <LocationPicker
@@ -570,7 +570,7 @@ export default function CreateCache() {
               <div className="space-y-4">
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-semibold mb-1 text-foreground">Tell us about your cache</h3>
-                  <p className="text-sm text-gray-600 dark:text-muted-foreground">Give your treasure a name and description</p>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">Give your geocache a name and description</p>
                 </div>
                 
                 <CacheNameField

@@ -131,6 +131,6 @@ describe('Home Page Theme Support', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText(/Find Artifacts/)).toBeInTheDocument();
+    expect(screen.getByText(/Reveal Map/)).toBeInTheDocument();
   });
 });

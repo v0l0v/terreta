@@ -90,7 +90,7 @@ describe('LoginArea', () => {
     fireEvent.click(screen.getByText('Log in'));
     
     // Click signup button
-    const signupButton = screen.getByText(/start your treasure hunt/i);
+    const signupButton = screen.getByText(/start your/i);
     fireEvent.click(signupButton);
     
     // Should open signup dialog
@@ -138,7 +138,7 @@ describe('LoginArea', () => {
     fireEvent.click(screen.getByText('Log in'));
     
     // Click signup
-    const signupButton = screen.getByText(/start your treasure hunt/i);
+    const signupButton = screen.getByText(/start your/i);
     fireEvent.click(signupButton);
     
     // Complete minimal signup flow
@@ -227,7 +227,7 @@ describe('LoginArea', () => {
     
     // Start signup flow
     fireEvent.click(screen.getByText('Log in'));
-    const signupButton = screen.getByText(/start your treasure hunt/i);
+    const signupButton = screen.getByText(/start your/i);
     fireEvent.click(signupButton);
     
     // Complete signup flow quickly

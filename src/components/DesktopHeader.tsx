@@ -45,7 +45,7 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
             <Link to="/map">
               <Button variant="ghost" size={isAdventureTheme ? "default" : "sm"} className={isAdventureTheme ? "text-md text-stone-200" : ""}>
                 <Search className="h-4 w-4 mr-2" />
-                {isAdventureTheme ? "Find Artifacts" : "Explore Map"}
+                {isAdventureTheme ? "Reveal Map" : "Explore Map"}
               </Button>
             </Link>
             

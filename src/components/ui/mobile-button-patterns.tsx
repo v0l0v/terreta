@@ -27,7 +27,7 @@ export function MobileTabs({ items, defaultValue, children, className }: MobileT
   return (
     <Tabs defaultValue={defaultValue} className={cn("w-full", className)}>
       <TabsList className={cn(
-        "grid w-full h-auto bg-accent",
+        "grid w-full h-auto bg-secondary",
         cols === 2 && "grid-cols-2",
         cols === 3 && "grid-cols-3",
         cols === 4 && "grid-cols-4",
@@ -261,7 +261,7 @@ export function MapViewTabs({ children, className, value, onValueChange, default
       <Tabs
         value={value}
         onValueChange={onValueChange}
-        className={cn("w-full", className)}
+        className={cn("w-full bg-secondary", className)}
       >
         <TabsList className="grid w-full h-auto grid-cols-2 mb-0">
           {mapTabs.map((item) => {

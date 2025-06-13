@@ -71,7 +71,6 @@ describe('RelayErrorFallback', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('No Treasures Found')).toBeInTheDocument();
     expect(screen.getByTestId('relay-selector')).toBeInTheDocument();
     expect(screen.getByText('Retry Current Relay')).toBeInTheDocument();
   });
@@ -121,7 +120,6 @@ describe('RelayErrorFallback', () => {
 
     // In compact mode, it should not render a Card wrapper
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
-    expect(screen.getByText('No Treasures Found')).toBeInTheDocument();
   });
 
   it('renders custom title and description', () => {

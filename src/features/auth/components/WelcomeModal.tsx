@@ -55,8 +55,8 @@ export function WelcomeModal({ isOpen, onClose, isNewUser = false }: WelcomeModa
             </h3>
             <p className='text-muted-foreground px-5'>
               {isNewUser 
-                ? 'Go forth, epic quests and hidden treasures await your discovery!' 
-                : 'Your treasures and quests await you!'
+                ? 'Go forth, epic quests and hidden geocaches await your discovery!' 
+                : 'Your geocaches and quests await you!'
               }
             </p>
           </div>

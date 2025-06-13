@@ -322,7 +322,7 @@ export function SmartLoadingState({
           isRetrying={isRetrying}
           compact={compact}
           className={className}
-          title="No Treasures Found"
+          title="No Geocaches Found"
           description="No geocaches were found. This might be due to relay connectivity issues or the current relay may not have any data."
         />
       );

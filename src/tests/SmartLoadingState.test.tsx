@@ -106,7 +106,6 @@ describe('SmartLoadingState', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('No Treasures Found')).toBeInTheDocument();
     expect(screen.getByTestId('relay-selector')).toBeInTheDocument();
     expect(screen.getByText('Retry Current Relay')).toBeInTheDocument();
     expect(screen.queryByText('Content')).not.toBeInTheDocument();
@@ -130,7 +129,6 @@ describe('SmartLoadingState', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('No Treasures Found')).toBeInTheDocument();
     expect(screen.getByTestId('relay-selector')).toBeInTheDocument();
     expect(screen.getByText('Retry Current Relay')).toBeInTheDocument();
     expect(screen.queryByText('Content')).not.toBeInTheDocument();

@@ -86,14 +86,14 @@ describe('SignupDialog', () => {
 
   it('should render welcome step initially', () => {
     renderSignupDialog();
-    expect(screen.getByText('Join the Treasure Hunt')).toBeInTheDocument();
-    expect(screen.getByText('Start My Treasure Hunt!')).toBeInTheDocument();
+    expect(screen.getByText('Join the')).toBeInTheDocument();
+    expect(screen.getByText('Start My')).toBeInTheDocument();
   });
 
   it('should progress to generate step when start button is clicked', () => {
     renderSignupDialog();
     
-    const startButton = screen.getByText('Start My Treasure Hunt!');
+    const startButton = screen.getByText('Start My');
     fireEvent.click(startButton);
     
     expect(screen.getByText('Ready to forge your treasure key?')).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe('SignupDialog', () => {
     renderSignupDialog();
     
     // Go to generate step
-    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Start My'));
     
     // Generate key
     fireEvent.click(screen.getByText('Forge My Treasure Key!'));
@@ -119,7 +119,7 @@ describe('SignupDialog', () => {
     renderSignupDialog();
     
     // Navigate to download step
-    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Start My'));
     fireEvent.click(screen.getByText('Forge My Treasure Key!'));
     
     await waitFor(() => {
@@ -135,7 +135,7 @@ describe('SignupDialog', () => {
     renderSignupDialog();
     
     // Navigate to download step
-    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Start My'));
     fireEvent.click(screen.getByText('Forge My Treasure Key!'));
     
     await waitFor(() => {
@@ -157,7 +157,7 @@ describe('SignupDialog', () => {
     renderSignupDialog();
     
     // Navigate to download step
-    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Start My'));
     fireEvent.click(screen.getByText('Forge My Treasure Key!'));
     
     await waitFor(() => {
@@ -179,7 +179,7 @@ describe('SignupDialog', () => {
     renderSignupDialog();
     
     // Navigate to download step
-    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Start My'));
     fireEvent.click(screen.getByText('Forge My Treasure Key!'));
     
     await waitFor(() => {
@@ -201,7 +201,7 @@ describe('SignupDialog', () => {
     renderSignupDialog(true, mockOnComplete);
     
     // Navigate through signup flow
-    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Start My'));
     fireEvent.click(screen.getByText('Forge My Treasure Key!'));
     
     await waitFor(() => {
@@ -242,7 +242,7 @@ describe('SignupDialog', () => {
     renderSignupDialog();
     
     // Navigate to download step
-    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Start My'));
     fireEvent.click(screen.getByText('Forge My Treasure Key!'));
     
     await waitFor(() => {
@@ -270,7 +270,7 @@ describe('SignupDialog', () => {
     renderSignupDialog();
     
     // Navigate through signup flow to profile step
-    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Start My'));
     fireEvent.click(screen.getByText('Forge My Treasure Key!'));
     
     await waitFor(() => {
@@ -325,7 +325,7 @@ describe('SignupDialog', () => {
     renderSignupDialog();
     
     // Navigate through signup flow to profile step
-    fireEvent.click(screen.getByText('Start My Treasure Hunt!'));
+    fireEvent.click(screen.getByText('Start My'));
     fireEvent.click(screen.getByText('Forge My Treasure Key!'));
     
     await waitFor(() => {

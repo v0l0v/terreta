@@ -130,8 +130,11 @@ export default function Claim() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2 text-foreground">Claim Treasure</h1>
         <p className="text-muted-foreground">
+          To claim a treasure (log a verified find), you can use the QR code that may exist within the geocache.
+        </p>
+        <p className="text-muted-foreground">
           {isMobile 
-            ? "Use your camera to scan the QR code - it will automatically detect it!"
+            ? "Use your camera to scan the QR code - it will should automatically detect it!"
             : "Use your phone's camera to scan the QR code, then enter the link below"
           }
         </p>
@@ -147,7 +150,7 @@ export default function Claim() {
             </CardTitle>
             <CardDescription>
               {isMobile 
-                ? "Your camera app can automatically detect QR codes"
+                ? "Most camera apps can automatically detect QR codes or include a 'QR Scan' mode"
                 : "Use your mobile device to scan the QR code"
               }
             </CardDescription>

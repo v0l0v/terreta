@@ -89,7 +89,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: 'Treasures - Decentralized Geocaching',
         short_name: 'Treasures',
-        description: 'Discover and hide geocaches on the decentralized Nostr network. Share locations, find treasures, and explore the world!',
+        description: 'Discover and hide geocaches on the decentralized Nostr network. Share locations, find geocaches, and explore the world!',
         theme_color: '#10b981',
         background_color: '#ffffff',
         display: 'standalone',

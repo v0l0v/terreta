@@ -58,10 +58,7 @@ export default function Home() {
   const handleLoginSuccess = () => {
     setLoginDialogOpen(false);
     // Small delay to let the dialog close gracefully before showing the new button
-    setTimeout(() => {
-      // The user state will automatically update and show "Hide a Treasure" button
-      // with the animate-fade-in class for a smooth transition
-    }, 100);
+    setTimeout(() => {}, 100);
   };
 
   const handleLoginClick = () => {
@@ -297,11 +294,11 @@ export default function Home() {
           <p className="text-md xs:text-sm md:text-xl text-stone-600 dark:text-stone-400 mb-6 md:mb-8 max-w-2xl mx-auto animate-slide-up-delay">
             <span className="adventure:hidden">
               Join the decentralized geocaching adventure powered by Nostr. 
-              Hide caches, find treasures, and connect with explorers worldwide.
+              Hide geocaches, find them, and connect with explorers worldwide.
             </span>
             <span className="hidden adventure:inline">
-              Join a fellowship of treasure hunters on an ancient quest powered by mystical networks. 
-              Conceal artifacts, discover legendary treasures, and forge bonds with fellow adventurers across the realm.
+              Join a fellowship of geocachers on an ancient quest powered by mystical networks. 
+              Conceal geocaches, discover legendary geocaches, and forge bonds with fellow adventurers across the realm.
             </span>
           </p>
           
@@ -315,7 +312,7 @@ export default function Home() {
                   <span className="xs:hidden">Explore</span>
                 </span>
                 <span className="hidden adventure:inline">
-                  <span className="hidden xs:inline">Find Artifacts</span>
+                  <span className="hidden xs:inline">Reveal Map</span>
                   <span className="xs:hidden">Find</span>
                 </span>
               </Button>
@@ -340,11 +337,11 @@ export default function Home() {
                   <Plus className="h-5 w-5 mr-1 xs:mr-2 transition-transform group-hover:rotate-90 adventure:hidden" />
                   <Crown className="h-5 w-5 mr-1 xs:mr-2 transition-transform group-hover:rotate-12 hidden adventure:inline" />
                   <span className="adventure:hidden">
-                    <span className="hidden xs:inline">Hide a Treasure</span>
+                    <span className="hidden xs:inline">Hide a Geocache</span>
                     <span className="xs:hidden">Hide</span>
                   </span>
                   <span className="hidden adventure:inline">
-                    <span className="hidden xs:inline">Conceal an Artifact</span>
+                    <span className="hidden xs:inline">Conceal a Geocache</span>
                     <span className="xs:hidden">Conceal</span>
                   </span>
                 </Button>
@@ -359,7 +356,7 @@ export default function Home() {
                 <Plus className="h-4 w-4 xs:h-5 xs:w-5 mr-1 xs:mr-2 transition-transform group-hover:rotate-12 adventure:hidden" />
                 <Shield className="h-4 w-4 xs:h-5 xs:w-5 mr-1 xs:mr-2 transition-transform group-hover:rotate-12 hidden adventure:inline" />
                 <span className="adventure:hidden">
-                  <span className="hidden xs:inline">Login to Hide Treasures</span>
+                  <span className="hidden xs:inline">Login to Hide Geocaches</span>
                   <span className="xs:hidden">Login</span>
                 </span>
                 <span className="hidden adventure:inline">
@@ -391,7 +388,7 @@ export default function Home() {
               description={
                 <span>
                   <span className="adventure:hidden">Your geocaches are stored on the Nostr network, ensuring they're always accessible and censorship-resistant.</span>
-                  <span className="hidden adventure:inline">Your artifacts are safeguarded by mystical networks, ensuring they remain eternal and beyond the reach of dark forces.</span>
+                  <span className="hidden adventure:inline">Your geocaches are safeguarded by mystical networks, ensuring they remain eternal and beyond the reach of dark forces.</span>
                 </span>
               }
               iconColor="text-green-600 adventure:text-stone-700"
@@ -408,7 +405,7 @@ export default function Home() {
               description={
                 <span>
                   <span className="adventure:hidden">Connect with fellow geocachers, share experiences, and build lasting friendships through adventure.</span>
-                  <span className="hidden adventure:inline">Unite with fellow treasure hunters, share tales of glory, and forge unbreakable bonds through epic quests.</span>
+                  <span className="hidden adventure:inline">Unite with fellow adventurers, share tales of glory, and forge unbreakable bonds through epic quests.</span>
                 </span>
               }
               iconColor="text-green-600 adventure:text-stone-700"
@@ -425,7 +422,7 @@ export default function Home() {
               description={
                 <span>
                   <span className="adventure:hidden">Discover caches hidden by explorers from around the world, each with its own unique story and challenge.</span>
-                  <span className="hidden adventure:inline">Uncover artifacts concealed by legendary explorers across distant lands, each bearing ancient secrets and trials.</span>
+                  <span className="hidden adventure:inline">Uncover geocaches concealed by legendary explorers across distant lands, each bearing ancient secrets and trials.</span>
                 </span>
               }
               iconColor="text-green-600 adventure:text-stone-700"
@@ -441,15 +438,15 @@ export default function Home() {
           {/* Section Header */}
           <div className="text-center mb-8 md:mb-12">
             <h3 className="text-2xl md:text-3xl adventure:text-3xl adventure:md:text-4xl font-bold text-foreground mb-3">
-              <span className="adventure:hidden">Recently Hidden Treasures</span>
-              <span className="hidden adventure:inline">Newly Concealed Artifacts</span>
+              <span className="adventure:hidden">Recently Hidden Geocaches</span>
+              <span className="hidden adventure:inline">Newly Concealed Geocaches</span>
             </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               <span className="adventure:hidden">
                 Discover the newest geocaches hidden by adventurers around the world. Each one waiting for you to find it.
               </span>
               <span className="hidden adventure:inline">
-                Uncover the latest artifacts concealed by legendary explorers across the realm. Each one holds ancient secrets awaiting discovery.
+                Uncover the latest geocaches concealed by legendary explorers across the realm. Each one holds ancient secrets awaiting discovery.
               </span>
             </p>
             
@@ -497,8 +494,8 @@ export default function Home() {
                   <Button variant="outline" size="lg" className="group">
                     <Search className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform adventure:hidden" />
                     <Compass className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform hidden adventure:inline" />
-                    <span className="adventure:hidden">Discover {geocaches.length - 6} More Treasures</span>
-                    <span className="hidden adventure:inline">Uncover {geocaches.length - 6} More Artifacts</span>
+                    <span className="adventure:hidden">Discover {geocaches.length - 6} More Geocaches</span>
+                    <span className="hidden adventure:inline">Uncover {geocaches.length - 6} More Geocaches</span>
                   </Button>
                 </Link>
               </div>
@@ -511,7 +508,7 @@ export default function Home() {
                   <Search className="h-4 w-4 mr-2 adventure:hidden" />
                   <Compass className="h-4 w-4 mr-2 hidden adventure:inline" />
                   <span className="adventure:hidden">View All Geocaches</span>
-                  <span className="hidden adventure:inline">Survey All Artifacts</span>
+                  <span className="hidden adventure:inline">Survey All Geocaches</span>
                 </Button>
               </Link>
             </div>
