@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
@@ -84,7 +84,7 @@ describe('DesktopHeader Dark Mode', () => {
     expect(header).toHaveClass('text-stone-200');
   });
 
-  it('should render all navigation elements', () => {
+  it('should render all navigation elements', async () => {
     render(
       <TestWrapper>
         <DesktopHeader />
@@ -93,11 +93,18 @@ describe('DesktopHeader Dark Mode', () => {
 
     // Check that main elements are present
     expect(screen.getByText('Treasures')).toBeInTheDocument();
-    expect(screen.getByText('Explore Map')).toBeInTheDocument();
-    expect(screen.getByText('About')).toBeInTheDocument();
     expect(screen.getByTestId('login-area')).toBeInTheDocument();
     expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
     expect(screen.getByTestId('relay-selector')).toBeInTheDocument();
+
+    // Click the dropdown trigger to reveal the menu items
+    fireEvent.click(screen.getByRole('button', { name: /explore/i }));
+
+    // Now check for the presence of the menu items using findByText
+    await waitFor(async () => {
+      expect(await screen.findByText('Explore Map')).toBeInTheDocument();
+      expect(await screen.findByText('About')).toBeInTheDocument();
+    });
   });
 
   it('should have proper contrast and visibility in dark mode', () => {

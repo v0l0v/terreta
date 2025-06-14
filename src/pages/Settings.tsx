@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { MapPin, Palette, Sun, Moon, Monitor, Wifi, Compass, Settings as SettingsIcon, Smartphone } from "lucide-react";
+import { Palette, Sun, Moon, Monitor, Wifi, Compass, Settings as SettingsIcon, Smartphone } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageLayout } from "@/components/layout";
 import { Label } from "@/components/ui/label";
-import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { OfflineSettings } from "@/components/OfflineSettings";
 import { RelaySelector } from "@/components/RelaySelector";
 import { PWASettings } from "@/components/PWASettings";
@@ -13,7 +12,6 @@ import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useRelayConfig } from "@/features/geocache/hooks/useRelayConfig";
 
 export default function Settings() {
-  const { user } = useCurrentUser();
   const { setTheme, theme } = useTheme();
   const { relayUrl } = useRelayConfig();
   const [mounted, setMounted] = useState(false);
@@ -22,18 +20,6 @@ export default function Settings() {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  if (!user) {
-    return (
-      <PageLayout maxWidth="md" className="py-16">
-        <LoginRequiredCard
-          icon={MapPin}
-          description="You need to be logged in to access settings."
-          className="max-w-md mx-auto"
-        />
-      </PageLayout>
-    );
-  }
 
   return (
     <PageLayout maxWidth="2xl" background="muted">
