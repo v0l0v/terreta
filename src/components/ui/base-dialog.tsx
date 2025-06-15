@@ -7,6 +7,7 @@ export interface BaseDialogProps {
   onOpenChange: (open: boolean) => void;
   title?: string | ReactNode;
   description?: string | ReactNode;
+  descriptionAs?: 'p' | 'div';
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'auth';
   className?: string;
@@ -29,6 +30,7 @@ export function BaseDialog({
   onOpenChange,
   title,
   description,
+  descriptionAs = 'p',
   children,
   size = 'md',
   className,
@@ -38,6 +40,7 @@ export function BaseDialog({
   ...props
 }: BaseDialogProps) {
   const sizeClass = sizeClasses[size];
+  const DescriptionComponent = descriptionAs === 'div' ? 'div' : DialogDescription;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -53,9 +56,9 @@ export function BaseDialog({
               </DialogTitle>
             )}
             {description && (
-              <DialogDescription className="text-center">
+              <DescriptionComponent className="text-center">
                 {description}
-              </DialogDescription>
+              </DescriptionComponent>
             )}
           </DialogHeader>
         )}

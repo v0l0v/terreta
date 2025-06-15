@@ -29,7 +29,7 @@ export function BlogPostDetail({
   const publishedDate = new Date(post.publishedAt * 1000);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Back button */}
       <div className="mb-6">
         <Link to="/blog">

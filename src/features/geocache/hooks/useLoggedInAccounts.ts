@@ -1,6 +1,6 @@
 import { useNostrLogin } from '@nostrify/react/login';
 import { NostrMetadata } from '@nostrify/nostrify';
-import { useAuthor } from '@/features/auth/hooks/useAuthor';
+import { useAuthors } from '@/features/auth/hooks/useAuthors';
 
 export interface Account {
   id: string;
@@ -12,47 +12,29 @@ export interface Account {
 export function useLoggedInAccounts() {
   const { logins, setLogin, removeLogin } = useNostrLogin();
 
-  // Get author data for the current user (first login)
-  const currentLogin = logins[0];
-  const currentUserAuthor = useAuthor(currentLogin?.pubkey);
+  const allPubkeys = logins.map(login => login.pubkey);
+  const authorQueries = useAuthors(allPubkeys);
 
-  // Get author data for other users
-  const otherLogins = logins.slice(1);
-  const otherUsersAuthors = otherLogins.map(login => ({
-    login,
-    author: useAuthor(login.pubkey)
-  }));
+  const accounts = logins.map((login, index) => {
+    const authorQuery = authorQueries[index];
+    return {
+      id: login.id,
+      pubkey: login.pubkey,
+      metadata: (authorQuery.data as any)?.metadata || {},
+      isLoadingMetadata: authorQuery.isLoading,
+    };
+  });
 
-  // Build current user account with loading state
-  const currentUser: Account | undefined = currentLogin ? {
-    id: currentLogin.id,
-    pubkey: currentLogin.pubkey,
-    metadata: currentUserAuthor.data?.metadata || {},
-    isLoadingMetadata: currentUserAuthor.isLoading,
-  } : undefined;
-
-  // Build other users accounts with loading states
-  const otherUsers: Account[] = otherUsersAuthors.map(({ login, author }) => ({
-    id: login.id,
-    pubkey: login.pubkey,
-    metadata: author.data?.metadata || {},
-    isLoadingMetadata: author.isLoading,
-  }));
-
-  // Build all authors array for backward compatibility
-  const authors: Account[] = [
-    ...(currentUser ? [currentUser] : []),
-    ...otherUsers
-  ];
+  const currentUser = accounts[0];
+  const otherUsers = accounts.slice(1);
 
   return {
-    authors,
+    authors: accounts,
     currentUser,
     otherUsers,
     setLogin,
     removeLogin,
-    // Expose loading states for better UX
-    isLoadingCurrentUser: currentUserAuthor.isLoading,
-    isLoadingAnyUser: currentUserAuthor.isLoading || otherUsersAuthors.some(({ author }) => author.isLoading),
+    isLoadingCurrentUser: currentUser?.isLoadingMetadata ?? false,
+    isLoadingAnyUser: accounts.some(account => account.isLoadingMetadata),
   };
 }

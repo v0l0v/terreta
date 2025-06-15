@@ -21,6 +21,7 @@ export function WelcomeModal({ isOpen, onClose, isNewUser = false }: WelcomeModa
           {isNewUser ? 'Welcome, Adventurer!' : 'Welcome Back!'}
         </span>
       }
+      descriptionAs="div"
       description={
         <div className="text-center text-muted-foreground">
           {isNewUser 

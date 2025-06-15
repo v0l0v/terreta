@@ -115,7 +115,7 @@ export default function BlogPost() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout maxWidth='2xl'>
       <div className="container mx-auto px-4 py-8">
         {isEditing ? (
           <BlogPostEditor
