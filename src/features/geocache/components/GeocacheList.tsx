@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { GeocacheCard } from "@/components/ui/geocache-card";
+import { GeocacheCard } from "@/features/geocache/components/geocache-card";
 import { geocacheToNaddr } from "@/shared/utils/naddr-utils";
 import { cn } from "@/lib/utils";
 import type { Geocache } from "@/types/geocache";
 
 interface GeocacheWithDistance extends Geocache {
   distance?: number;
+  isOffline?: boolean;
 }
 
 interface GeocacheListProps {
@@ -15,11 +16,11 @@ interface GeocacheListProps {
   className?: string;
 }
 
-export function GeocacheList({ 
-  geocaches, 
-  compact = false, 
+export function GeocacheList({
+  geocaches,
+  compact = false,
   isLoading = false,
-  className 
+  className
 }: GeocacheListProps) {
   const navigate = useNavigate();
 
@@ -36,7 +37,7 @@ export function GeocacheList({
       {geocaches.map((geocache) => (
         <GeocacheCard
           key={geocache.id}
-          cache={geocache}
+          cache={{...geocache, isOffline: 'isOffline' in geocache ? geocache.isOffline : false}}
           distance={('distance' in geocache) ? geocache.distance : undefined}
           variant={compact ? 'compact' : 'default'}
           onClick={() => handleCacheClick(geocache)}

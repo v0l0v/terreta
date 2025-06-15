@@ -2,7 +2,7 @@
  * Base store implementation with common functionality
  */
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { useQueryClient, QueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { 
@@ -174,7 +174,7 @@ export function useBaseStore(
     };
   }, [stopBackgroundSync]);
 
-  return {
+  return useMemo(() => ({
     // Core dependencies
     nostr,
     queryClient,
@@ -205,7 +205,24 @@ export function useBaseStore(
     
     // Cache stats
     getCacheStats,
-  };
+  }), [
+    nostr,
+    queryClient,
+    memoizedConfig,
+    updateConfig,
+    createBaseState,
+    handleError,
+    createSuccessResult,
+    createErrorResult,
+    safeAsyncOperation,
+    invalidateQueries,
+    setQueryData,
+    getQueryData,
+    prefetchQuery,
+    startBackgroundSync,
+    stopBackgroundSync,
+    getCacheStats,
+  ]);
 }
 
 /**

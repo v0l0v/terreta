@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { connectivityChecker, ConnectivityStatus } from '@/features/offline/utils/connectivityChecker';
+import { useOfflineSettings } from './useOfflineStorage';
 
 export function useConnectivity() {
   const [status, setStatus] = useState<ConnectivityStatus>(() => 
@@ -33,10 +34,14 @@ export function useConnectivity() {
 // Convenience hook for simple online/offline detection
 export function useOnlineStatus() {
   const { isConnected, connectionQuality } = useConnectivity();
+  const { settings } = useOfflineSettings();
+  const { offlineOnly } = settings;
   
+  const isOnline = isConnected && connectionQuality !== 'offline' && !offlineOnly;
+
   return {
-    isOnline: isConnected && connectionQuality !== 'offline',
-    isConnected,
-    connectionQuality,
+    isOnline,
+    isConnected: isConnected && !offlineOnly,
+    connectionQuality: offlineOnly ? 'offline' : connectionQuality,
   };
 }

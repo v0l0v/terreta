@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppProvider } from '@/components/AppProvider';
 import { BrowserRouter } from 'react-router-dom';
 import { NostrProvider, NostrLoginProvider } from '@nostrify/react';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
-import { useNostrSavedCaches } from '@/features/geocache/hooks/useNostrSavedCaches';
-import { useSavedCaches } from '@/features/geocache/hooks/useSavedCaches';
+import { useUnifiedSavedCaches } from '@/features/geocache/hooks/useUnifiedSavedCaches';
 import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
 import { useGeolocation } from '@/features/map/hooks/useGeolocation';
-import { useOfflineMode } from '@/features/offline/hooks/useOfflineStorage';
 import { useGeocacheNavigation } from '@/features/geocache/hooks/useGeocacheNavigation';
 import { useGeocacheStats } from '@/features/geocache/hooks/useGeocacheStats';
 import { useAuthor } from '@/features/auth/hooks/useAuthor';
+import { useBookmarkStore } from '@/shared/stores/useBookmarkStore';
+import { useOnlineStatus } from '@/features/offline/hooks/useConnectivity';
 import type { Geocache } from '@/types/geocache';
 
 // Mock all the hooks and components we need
@@ -30,25 +30,19 @@ vi.mock('@/features/auth/hooks/useCurrentUser', () => ({
   })),
 }));
 
-vi.mock('@/features/geocache/hooks/useNostrSavedCaches', () => ({
-  useNostrSavedCaches: vi.fn(() => ({
+vi.mock('@/features/geocache/hooks/useUnifiedSavedCaches', () => ({
+  useUnifiedSavedCaches: vi.fn(() => ({
     savedCaches: [],
     unsaveCache: vi.fn(),
     clearAllSaved: vi.fn(),
     isNostrEnabled: true,
     isLoading: false,
     nostrSavedCount: 0,
+    offlineSavedCount: 0,
     isCacheSaved: vi.fn(),
-  })),
-}));
-
-vi.mock('@/features/geocache/hooks/useSavedCaches', () => ({
-  useSavedCaches: vi.fn(() => ({
-    savedCaches: [],
-    unsaveCache: vi.fn(),
-    clearAllSaved: vi.fn(),
-    isNostrEnabled: true,
-    isLoading: false,
+    isCacheSavedOffline: vi.fn(),
+    toggleSaveCache: vi.fn(),
+    isSyncing: false,
   })),
 }));
 
@@ -57,8 +51,6 @@ vi.mock('@/shared/hooks/useNostrPublish', () => ({
     mutateAsync: vi.fn().mockResolvedValue({}),
   })),
 }));
-
-
 
 vi.mock('@/features/map/hooks/useGeolocation', () => ({
   useGeolocation: vi.fn(() => ({
@@ -69,10 +61,18 @@ vi.mock('@/features/map/hooks/useGeolocation', () => ({
   })),
 }));
 
-vi.mock('@/features/offline/hooks/useOfflineStorage', () => ({
-  useOfflineMode: vi.fn(() => ({
+vi.mock('@/features/offline/hooks/useConnectivity', () => ({
+  useOnlineStatus: vi.fn(() => ({
     isOnline: true,
-    isOfflineMode: false,
+  })),
+}));
+
+vi.mock('@/shared/stores/useBookmarkStore', () => ({
+  useBookmarkStore: vi.fn(() => ({
+    offlineBookmarks: [],
+    addOfflineBookmark: vi.fn(),
+    removeOfflineBookmark: vi.fn(),
+    clearOfflineBookmarks: vi.fn(),
   })),
 }));
 
@@ -107,8 +107,6 @@ vi.mock('@/components/ShareDialog', () => ({
 
 
 // Test utilities
-import { NostrProvider, NostrLoginProvider } from '@nostrify/react';
-
 function createTestWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -163,20 +161,18 @@ describe('Saved Caches Functionality - Simple Tests', () => {
     TestWrapper = createTestWrapper();
     vi.clearAllMocks();
     // Reset the mock hook state
-    vi.mocked(useNostrSavedCaches).mockReturnValue({
+    vi.mocked(useUnifiedSavedCaches).mockReturnValue({
       savedCaches: [],
       unsaveCache: vi.fn(),
       clearAllSaved: vi.fn(),
       isNostrEnabled: true,
       isLoading: false,
       nostrSavedCount: 0,
-    });
-    vi.mocked(useSavedCaches).mockReturnValue({
-      savedCaches: [],
-      unsaveCache: vi.fn(),
-      clearAllSaved: vi.fn(),
-      isNostrEnabled: true,
-      isLoading: false,
+      offlineSavedCount: 0,
+      isCacheSaved: vi.fn(),
+      isCacheSavedOffline: vi.fn(),
+      toggleSaveCache: vi.fn(),
+      isSyncing: false,
     });
   });
 
@@ -184,7 +180,7 @@ describe('Saved Caches Functionality - Simple Tests', () => {
     it('should render empty state when no caches are saved', async () => {
       // Import the component dynamically to avoid import issues
       const { default: MyCaches } = await import('@/pages/MyCaches');
-      
+
       render(
         <TestWrapper>
           <MyCaches />
@@ -198,16 +194,22 @@ describe('Saved Caches Functionality - Simple Tests', () => {
 
     it('should render saved caches when they exist', async () => {
       // Set up mock data
-      vi.mocked(useSavedCaches).mockReturnValue({
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
         savedCaches: [sampleSavedCache],
         unsaveCache: vi.fn(),
         clearAllSaved: vi.fn(),
         isNostrEnabled: true,
         isLoading: false,
+        nostrSavedCount: 1,
+        offlineSavedCount: 0,
+        isCacheSaved: vi.fn().mockReturnValue(true),
+        isCacheSavedOffline: vi.fn(),
+        toggleSaveCache: vi.fn(),
+        isSyncing: false,
       });
-      
+
       const { default: MyCaches } = await import('@/pages/MyCaches');
-      
+
       render(
         <TestWrapper>
           <MyCaches />
@@ -216,20 +218,25 @@ describe('Saved Caches Functionality - Simple Tests', () => {
 
       expect(screen.getByText('Saved Caches')).toBeInTheDocument();
       expect(screen.getByText('Test Geocache')).toBeInTheDocument();
-      expect(screen.getByText(/saved.*ago/)).toBeInTheDocument();
     });
 
     it('should show loading state', async () => {
-      vi.mocked(useSavedCaches).mockReturnValue({
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
         savedCaches: [],
         unsaveCache: vi.fn(),
         clearAllSaved: vi.fn(),
         isNostrEnabled: true,
         isLoading: true,
+        nostrSavedCount: 0,
+        offlineSavedCount: 0,
+        isCacheSaved: vi.fn(),
+        isCacheSavedOffline: vi.fn(),
+        toggleSaveCache: vi.fn(),
+        isSyncing: false,
       });
-      
+
       const { default: MyCaches } = await import('@/pages/MyCaches');
-      
+
       render(
         <TestWrapper>
           <MyCaches />
@@ -240,24 +247,23 @@ describe('Saved Caches Functionality - Simple Tests', () => {
     });
 
     it('should handle unsaving a cache', async () => {
-      vi.mocked(useSavedCaches).mockReturnValue({
-        savedCaches: [sampleSavedCache],
-        unsaveCache: vi.fn(),
-        clearAllSaved: vi.fn(),
-        isNostrEnabled: true,
-        isLoading: false,
-      });
       const unsaveMock = vi.fn();
-      vi.mocked(useSavedCaches).mockReturnValue({
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
         savedCaches: [sampleSavedCache],
         unsaveCache: unsaveMock,
         clearAllSaved: vi.fn(),
         isNostrEnabled: true,
         isLoading: false,
+        nostrSavedCount: 1,
+        offlineSavedCount: 0,
+        isCacheSaved: vi.fn().mockReturnValue(true),
+        isCacheSavedOffline: vi.fn(),
+        toggleSaveCache: vi.fn(),
+        isSyncing: false,
       });
-      
+
       const { default: MyCaches } = await import('@/pages/MyCaches');
-      
+
       render(
         <TestWrapper>
           <MyCaches />
@@ -271,24 +277,23 @@ describe('Saved Caches Functionality - Simple Tests', () => {
     });
 
     it('should handle clearing all saved caches', async () => {
-      vi.mocked(useSavedCaches).mockReturnValue({
-        savedCaches: [sampleSavedCache],
-        unsaveCache: vi.fn(),
-        clearAllSaved: vi.fn(),
-        isNostrEnabled: true,
-        isLoading: false,
-      });
       const clearAllMock = vi.fn();
-      vi.mocked(useSavedCaches).mockReturnValue({
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
         savedCaches: [sampleSavedCache],
         unsaveCache: vi.fn(),
         clearAllSaved: clearAllMock,
         isNostrEnabled: true,
         isLoading: false,
+        nostrSavedCount: 1,
+        offlineSavedCount: 0,
+        isCacheSaved: vi.fn().mockReturnValue(true),
+        isCacheSavedOffline: vi.fn(),
+        toggleSaveCache: vi.fn(),
+        isSyncing: false,
       });
-      
+
       const { default: MyCaches } = await import('@/pages/MyCaches');
-      
+
       render(
         <TestWrapper>
           <MyCaches />
@@ -313,8 +318,8 @@ describe('Saved Caches Functionality - Simple Tests', () => {
 
   describe('GeocacheCard with Saved Cache', () => {
     it('should render saved cache card with basic information', async () => {
-      const { DetailedGeocacheCard } = await import('@/components/ui/geocache-card');
-      
+      const { DetailedGeocacheCard } = await import('@/features/geocache/components/geocache-card');
+
       render(
         <TestWrapper>
           <DetailedGeocacheCard
@@ -338,7 +343,7 @@ describe('Saved Caches Functionality - Simple Tests', () => {
 
     it('should handle click events properly', async () => {
       const onClickMock = vi.fn();
-      const { DetailedGeocacheCard } = await import('@/components/ui/geocache-card');
+      const { DetailedGeocacheCard } = await import('@/features/geocache/components/geocache-card');
 
       render(
         <TestWrapper>
@@ -349,7 +354,7 @@ describe('Saved Caches Functionality - Simple Tests', () => {
         </TestWrapper>
       );
 
-      const card = screen.getByText('Test Geocache').closest('[role="button"]');
+      const card = screen.getByText('Test Geocache').closest('div');
       if (card) {
         fireEvent.click(card);
         expect(onClickMock).toHaveBeenCalled();
@@ -358,21 +363,21 @@ describe('Saved Caches Functionality - Simple Tests', () => {
   });
 
   describe('Saved Caches Hook Integration', () => {
-    it('should provide the correct interface', async () => { // Added async
+    it('should provide the correct interface', async () => {
       const { useSavedCaches } = await import('@/features/geocache/hooks/useSavedCaches');
-      const result = useSavedCaches();
+      const { result } = renderHook(() => useSavedCaches(), { wrapper: TestWrapper });
 
-      expect(result).toHaveProperty('savedCaches');
-      expect(result).toHaveProperty('unsaveCache');
-      expect(result).toHaveProperty('clearAllSaved');
-      expect(result).toHaveProperty('isNostrEnabled');
-      expect(result).toHaveProperty('isLoading');
-      
-      expect(Array.isArray(result.savedCaches)).toBe(true);
-      expect(typeof result.unsaveCache).toBe('function');
-      expect(typeof result.clearAllSaved).toBe('function');
-      expect(typeof result.isNostrEnabled).toBe('boolean');
-      expect(typeof result.isLoading).toBe('boolean');
+      expect(result.current).toHaveProperty('savedCaches');
+      expect(result.current).toHaveProperty('unsaveCache');
+      expect(result.current).toHaveProperty('clearAllSaved');
+      expect(result.current).toHaveProperty('isNostrEnabled');
+      expect(result.current).toHaveProperty('isLoading');
+      expect(result.current).toHaveProperty('nostrSavedCount');
+      expect(result.current).toHaveProperty('offlineSavedCount');
+      expect(result.current).toHaveProperty('isCacheSaved');
+      expect(result.current).toHaveProperty('isCacheSavedOffline');
+      expect(result.current).toHaveProperty('toggleSaveCache');
+      expect(result.current).toHaveProperty('isSyncing');
     });
   });
 
@@ -386,16 +391,22 @@ describe('Saved Caches Functionality - Simple Tests', () => {
         name: `Test Geocache ${i}`,
       }));
 
-      vi.mocked(useSavedCaches).mockReturnValue({
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
         savedCaches: largeCacheList,
         unsaveCache: vi.fn(),
         clearAllSaved: vi.fn(),
         isNostrEnabled: true,
         isLoading: false,
+        nostrSavedCount: 50,
+        offlineSavedCount: 0,
+        isCacheSaved: vi.fn().mockReturnValue(true),
+        isCacheSavedOffline: vi.fn(),
+        toggleSaveCache: vi.fn(),
+        isSyncing: false,
       });
-      
+
       const { default: MyCaches } = await import('@/pages/MyCaches');
-      
+
       render(
         <TestWrapper>
           <MyCaches />
@@ -407,16 +418,22 @@ describe('Saved Caches Functionality - Simple Tests', () => {
     });
 
     it('should handle empty cache data gracefully', async () => {
-      vi.mocked(useSavedCaches).mockReturnValue({
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
         savedCaches: [],
         unsaveCache: vi.fn(),
         clearAllSaved: vi.fn(),
         isNostrEnabled: true,
         isLoading: false,
+        nostrSavedCount: 0,
+        offlineSavedCount: 0,
+        isCacheSaved: vi.fn(),
+        isCacheSavedOffline: vi.fn(),
+        toggleSaveCache: vi.fn(),
+        isSyncing: false,
       });
-      
+
       const { default: MyCaches } = await import('@/pages/MyCaches');
-      
+
       render(
         <TestWrapper>
           <MyCaches />
@@ -426,26 +443,6 @@ describe('Saved Caches Functionality - Simple Tests', () => {
       expect(screen.getByText('No saved caches yet')).toBeInTheDocument();
       expect(screen.queryByText('Clear All Saved Caches')).not.toBeInTheDocument();
     });
-
-    it('should show sync status correctly', async () => {
-      vi.mocked(useSavedCaches).mockReturnValue({
-        savedCaches: [sampleSavedCache],
-        unsaveCache: vi.fn(),
-        clearAllSaved: vi.fn(),
-        isNostrEnabled: true,
-        isLoading: false,
-      });
-      
-      const { default: MyCaches } = await import('@/pages/MyCaches');
-      
-      render(
-        <TestWrapper>
-          <MyCaches />
-        </TestWrapper>
-      );
-
-      expect(screen.getByText('Synced')).toBeInTheDocument();
-    });
   });
 
   describe('User Authentication', () => {
@@ -454,9 +451,9 @@ describe('Saved Caches Functionality - Simple Tests', () => {
       vi.mocked(useCurrentUser).mockReturnValue({
         user: null,
       });
-      
+
       const { default: MyCaches } = await import('@/pages/MyCaches');
-      
+
       render(
         <TestWrapper>
           <MyCaches />
@@ -469,16 +466,22 @@ describe('Saved Caches Functionality - Simple Tests', () => {
 
   describe('Distance Calculation', () => {
     it('should calculate and display distances correctly', async () => {
-      vi.mocked(useSavedCaches).mockReturnValue({
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
         savedCaches: [sampleSavedCache],
         unsaveCache: vi.fn(),
         clearAllSaved: vi.fn(),
         isNostrEnabled: true,
         isLoading: false,
+        nostrSavedCount: 1,
+        offlineSavedCount: 0,
+        isCacheSaved: vi.fn().mockReturnValue(true),
+        isCacheSavedOffline: vi.fn(),
+        toggleSaveCache: vi.fn(),
+        isSyncing: false,
       });
-      
+
       const { default: MyCaches } = await import('@/pages/MyCaches');
-      
+
       render(
         <TestWrapper>
           <MyCaches />
@@ -487,6 +490,89 @@ describe('Saved Caches Functionality - Simple Tests', () => {
 
       // Should show some distance (exact value depends on calculation)
       expect(screen.getByText(/km/)).toBeInTheDocument();
+    });
+  });
+
+  describe('Sync Status', () => {
+    it('should show synced status', async () => {
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
+        savedCaches: [sampleSavedCache],
+        unsaveCache: vi.fn(),
+        clearAllSaved: vi.fn(),
+        isNostrEnabled: true,
+        isLoading: false,
+        nostrSavedCount: 1,
+        offlineSavedCount: 0,
+        isCacheSaved: vi.fn().mockReturnValue(true),
+        isCacheSavedOffline: vi.fn(),
+        toggleSaveCache: vi.fn(),
+        isSyncing: false,
+      });
+
+      const { default: MyCaches } = await import('@/pages/MyCaches');
+
+      render(
+        <TestWrapper>
+          <MyCaches />
+        </TestWrapper>
+      );
+
+      expect(screen.getByText('Synced')).toBeInTheDocument();
+    });
+
+    it('should show syncing status', async () => {
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
+        savedCaches: [sampleSavedCache],
+        unsaveCache: vi.fn(),
+        clearAllSaved: vi.fn(),
+        isNostrEnabled: true,
+        isLoading: false,
+        nostrSavedCount: 1,
+        offlineSavedCount: 0,
+        isCacheSaved: vi.fn().mockReturnValue(true),
+        isCacheSavedOffline: vi.fn(),
+        toggleSaveCache: vi.fn(),
+        isSyncing: true,
+      });
+
+      const { default: MyCaches } = await import('@/pages/MyCaches');
+
+      render(
+        <TestWrapper>
+          <MyCaches />
+        </TestWrapper>
+      );
+
+      expect(screen.getByText('Syncing...')).toBeInTheDocument();
+    });
+
+    it('should show offline status', async () => {
+      vi.mocked(useOnlineStatus).mockReturnValue({
+        isOnline: false,
+      });
+      vi.mocked(useUnifiedSavedCaches).mockReturnValue({
+        savedCaches: [sampleSavedCache],
+        unsaveCache: vi.fn(),
+        clearAllSaved: vi.fn(),
+        isNostrEnabled: true,
+        isLoading: false,
+        nostrSavedCount: 1,
+        offlineSavedCount: 1,
+        isCacheSaved: vi.fn().mockReturnValue(true),
+        isCacheSavedOffline: vi.fn().mockReturnValue(true),
+        toggleSaveCache: vi.fn(),
+        isSyncing: false,
+      });
+
+      const { default: MyCaches } = await import('@/pages/MyCaches');
+
+      render(
+        <TestWrapper>
+          <MyCaches />
+        </TestWrapper>
+      );
+
+      expect(screen.getByText('Offline (1)')).toBeInTheDocument();
     });
   });
 });

@@ -1,10 +1,16 @@
 import { Link } from 'react-router-dom';
-import { Search, Plus, Info } from 'lucide-react';
+import { Search, Plus, Info, ChevronDown, Compass, QrCode, Scroll, Crown, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { RelaySelector } from '@/components/RelaySelector';
 import { useTheme } from 'next-themes';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 
@@ -24,8 +30,8 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
   
   const adventureClasses = isAdventureTheme 
     ? "bg-adventure-nav border-adventure-nav text-stone-200" 
-    : "bg-primary/80 backdrop-blur-sm md:bg-primary md:backdrop-blur-none border-border";
-  
+    : "bg-background/80 backdrop-blur-sm md:bg-background md:backdrop-blur-none border-border";
+
   const headerClasses = `${baseClasses} ${adventureClasses}`;
 
   return (
@@ -42,28 +48,48 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
           </Link>
           
           <nav className="flex items-center gap-4">
-            <Link to="/map">
-              <Button variant="ghost" size={isAdventureTheme ? "default" : "sm"} className={isAdventureTheme ? "text-md" : ""}>
-                <Search className="h-4 w-4 mr-2" />
-                {isAdventureTheme ? "Reveal Map" : "Explore Map"}
-              </Button>
-            </Link>
-            
-            {user && (
-              <Link to="/create">
-                <Button variant="ghost" size={isAdventureTheme ? "default" : "sm"} className={isAdventureTheme ? "text-md" : ""}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Hide a Treasure
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size={isAdventureTheme ? "default" : "sm"} className={isAdventureTheme ? "text-md text-stone-200" : ""}>
+                  <Compass className="h-4 w-4 mr-2" />
+                  Explore <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
-              </Link>
-            )}
-            
-            <Link to="/about">
-              <Button variant="ghost" size={isAdventureTheme ? "default" : "sm"} className={isAdventureTheme ? "text-md" : ""}>
-                <Info className="h-4 w-4 mr-2" />
-                About
-              </Button>
-            </Link>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/map">
+                    <Search className="h-4 w-4 mr-2" />
+                    {isAdventureTheme ? "Reveal" : "Explore"} Map
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/claim">
+                    {isAdventureTheme ? <Scroll className="h-4 w-4 mr-2" /> : <QrCode className="h-4 w-4 mr-2" />}
+                    Claim {isAdventureTheme ? "Artifact" : "Treasure"}
+                  </Link>
+                </DropdownMenuItem>
+                {user && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/create">
+                      <Plus className="h-4 w-4 mr-2" />
+                      {isAdventureTheme ? "Conceal" : "Hide"} a Geocache
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem asChild>
+                  <Link to="/settings">
+                    <Settings className="h-4 w-4 mr-2" />
+                    App Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/about">
+                    <Info className="h-4 w-4 mr-2" />
+                    About
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             <RelaySelector className="w-[200px]" />
             <ThemeToggle />

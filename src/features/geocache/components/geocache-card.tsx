@@ -1,9 +1,9 @@
 import React from 'react';
-import { Navigation, Trophy, MessageSquare, EyeOff, CheckCircle } from 'lucide-react';
+import { Navigation, Trophy, MessageSquare, EyeOff, CheckCircle, BookmarkX } from 'lucide-react';
 import { InteractiveCard } from '@/components/ui/card-patterns';
 import { CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { SaveButton } from '@/components/SaveButton';
+import { SaveButton } from '@/shared/components/common/SaveButton';
 import { CacheMenu } from '@/components/CacheMenu';
 import { useAuthor } from '@/features/auth/hooks/useAuthor';
 import { useGeocacheNavigation } from '@/features/geocache/hooks/useGeocacheNavigation';
@@ -14,6 +14,12 @@ import { getCacheIcon } from '@/features/geocache/utils/cacheIcons';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useTheme } from 'next-themes';
 import type { Geocache } from '@/types/geocache';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 // Base interface for all geocache cards
 interface BaseGeocacheCardProps {
@@ -32,6 +38,8 @@ interface BaseGeocacheCardProps {
     type: string;
     relays?: string[];
     hidden?: boolean;
+    isOffline?: boolean;
+    source?: 'synced' | 'manual';
   };
   distance?: number;
   variant?: 'compact' | 'default' | 'detailed' | 'featured';
@@ -89,10 +97,10 @@ interface FeaturedGeocacheCardProps extends BaseGeocacheCardProps {
 
 export type GeocacheCardProps = CompactGeocacheCardProps | DefaultGeocacheCardProps | DetailedGeocacheCardProps | FeaturedGeocacheCardProps;
 
-export function GeocacheCard({ 
-  cache, 
-  distance, 
-  variant = 'default', 
+export function GeocacheCard({
+  cache,
+  distance,
+  variant = 'default',
   onClick,
   actions,
   metadata,
@@ -105,13 +113,13 @@ export function GeocacheCard({
   const author = useAuthor(cache.pubkey);
   const authorName = author.data?.metadata?.name || cache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
-  
+
   // Get real-time stats for this geocache
   const stats = useGeocacheStats(cache.dTag, cache.pubkey);
 
   // Check if this cache is hidden and the current user is the creator
   const isHiddenByCreator = cache.hidden && cache.pubkey === user?.pubkey;
-  
+
   // Check if adventure theme is active
   const isAdventureTheme = theme === 'adventure';
 
@@ -132,8 +140,8 @@ export function GeocacheCard({
         <span className="shrink-0">by</span>
         <span className="truncate font-medium">{authorName}</span>
         {profilePicture && (
-          <img 
-            src={profilePicture} 
+          <img
+            src={profilePicture}
             alt={authorName}
             className="h-3 w-3 sm:h-4 sm:w-4 rounded-full object-cover shrink-0 ml-1"
           />
@@ -186,7 +194,7 @@ export function GeocacheCard({
           </Badge>
         )}
       </div>
-      
+
       {/* Stats */}
       {showStats && (
         <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground shrink-0">
@@ -207,16 +215,16 @@ export function GeocacheCard({
     <div className={`flex items-center gap-0.5 sm:gap-1 shrink-0 ${showOnHover ? 'md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-150' : ''}`}>
       {actions || (
         <>
-          <SaveButton 
-            geocache={cache as any} 
-            size="icon" 
-            showText={false} 
-            className={buttonSize} 
+          <SaveButton
+            geocache={cache as any}
+            size="icon"
+            showText={false}
+            className={buttonSize}
           />
-          <CacheMenu 
-            geocache={cache as any} 
-            variant="compact" 
-            className={buttonSize} 
+          <CacheMenu
+            geocache={cache as any}
+            variant="compact"
+            className={buttonSize}
           />
         </>
       )}
@@ -225,8 +233,8 @@ export function GeocacheCard({
 
   // Shared standard layout for default, detailed, and featured variants
   const renderStandardLayout = (buttonSize: string, showMetadata = false) => (
-    <InteractiveCard 
-      onClick={() => handleNavigate()} 
+    <InteractiveCard
+      onClick={() => handleNavigate()}
       className="group hover:shadow-md transition-shadow duration-200 bg-card border border-border h-full flex flex-col"
     >
       <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
@@ -242,45 +250,57 @@ export function GeocacheCard({
               </div>
             )}
           </div>
-          
+
           {/* Content */}
           <div className="flex-1 min-w-0 flex flex-col h-full">
             {/* Title row with action buttons */}
             <div className="flex items-start justify-between gap-2 sm:gap-3">
               <h3 className="font-semibold text-base leading-tight line-clamp-2 sm:line-clamp-1 group-hover:text-green-600 adventure:group-hover:text-red-900 transition-colors duration-150 min-w-0 flex-1">
+                {cache.isOffline && cache.source === 'manual' && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <BookmarkX className="h-4 w-4 mr-2 inline-block" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Saved offline</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
                 {cache.name}
               </h3>
               {variant !== 'detailed' && renderActionButtons(buttonSize)}
             </div>
-            
+
             {/* Creator name */}
             {renderAuthorInfo()}
-            
+
             {/* Metadata for detailed variant */}
             {showMetadata && metadata && (
               <p className="text-xs sm:text-sm text-muted-foreground/80 mb-3">
                 {metadata}
               </p>
             )}
-            
+
             {/* Created time */}
             {!showMetadata && renderCreatedTime()}
-            
+
             {/* Description */}
             {renderDescription()}
-            
+
             {/* Log text for found caches */}
             {'logText' in cache && cache.logText && (
               <p className="text-sm text-muted-foreground line-clamp-2 mb-3 italic">"{cache.logText}"</p>
             )}
-            
+
             {/* Spacer to push badges to bottom */}
             <div className="flex-1 min-h-0"></div>
-            
+
             {/* Badges and stats row */}
             {renderBadgesAndStats()}
           </div>
-          
+
           {/* Action buttons for detailed variant */}
           {variant === 'detailed' && (
             <div className="flex items-center gap-2 shrink-0">
@@ -311,17 +331,29 @@ export function GeocacheCard({
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-green-600 adventure:group-hover:text-red-900 transition-colors">
+                  {cache.isOffline && cache.source === 'manual' && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <BookmarkX className="h-4 w-4 mr-2 inline-block" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Saved offline</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                   {cache.name}
                 </h3>
-                
+
                 {/* Author and metadata */}
                 {showAuthor && (
                   <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                     <span className="flex items-center gap-1">
                       by {authorName}
                       {profilePicture && (
-                        <img 
-                          src={profilePicture} 
+                        <img
+                          src={profilePicture}
                           alt={authorName}
                           className="h-3 w-3 rounded-full object-cover"
                         />
@@ -330,16 +362,16 @@ export function GeocacheCard({
                     {metadata && <span>{metadata}</span>}
                   </p>
                 )}
-                
+
                 {/* Created time */}
                 {renderCreatedTime()}
               </div>
-              
+
               <div className="flex flex-col items-end gap-1 shrink-0">
                 {renderActionButtons("h-4 w-4 sm:h-5 sm:w-5")}
               </div>
             </div>
-            
+
             {/* Bottom row with badges and stats */}
             <div className="flex items-center justify-between gap-2 mt-3">
               <div className="flex flex-wrap gap-1 min-w-0">
@@ -365,7 +397,7 @@ export function GeocacheCard({
                   </Badge>
                 )}
               </div>
-              
+
               {/* Stats in bottom right */}
               {showStats && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">

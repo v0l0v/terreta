@@ -2,10 +2,10 @@
  * React hooks for offline storage functionality
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { NostrEvent } from '@nostrify/nostrify';
-import { offlineStorage, CachedGeocache, CachedProfile } from '@/features/offline/utils/offlineStorage';
+import { offlineStorage, CachedGeocache, CachedProfile, OfflineBookmark } from '@/features/offline/utils/offlineStorage';
 import { offlineSync, SyncStatus } from '@/features/offline/utils/offlineSync';
 
 // Hook for offline sync status
@@ -153,6 +153,7 @@ export function useOfflineEvents() {
 // Hook for offline settings
 export function useOfflineSettings() {
   const [settings, setSettings] = useState<Record<string, unknown>>({});
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   const getSetting = useCallback(async (key: string) => {
     return await offlineStorage.getSetting(key);
@@ -201,6 +202,8 @@ export function useOfflineSettings() {
         setSettings(settingsData);
       } catch (error) {
         console.error('Failed to load settings:', error);
+      } finally {
+        setHasHydrated(true);
       }
     };
 
@@ -212,6 +215,7 @@ export function useOfflineSettings() {
     getSetting,
     setSetting: setSetting.mutate,
     isSettingValue: setSetting.isPending,
+    hasHydrated,
   };
 }
 
@@ -384,7 +388,19 @@ export function useOfflineStorage() {
     console.warn('clearAll not fully implemented yet');
   }, []);
 
-  return {
+  const saveBookmark = useCallback(async (bookmark: OfflineBookmark) => {
+    await offlineStorage.storeBookmark(bookmark);
+  }, []);
+
+  const removeBookmark = useCallback(async (naddr: string) => {
+    await offlineStorage.removeBookmark(naddr);
+  }, []);
+
+  const getAllBookmarks = useCallback(async () => {
+    return await offlineStorage.getAllBookmarks();
+  }, []);
+
+  return useMemo(() => ({
     saveGeocache,
     saveLog,
     removeGeocache,
@@ -393,5 +409,20 @@ export function useOfflineStorage() {
     getAllLogs,
     getStorageStats,
     clearAll,
-  };
+    saveBookmark,
+    removeBookmark,
+    getAllBookmarks,
+  }), [
+    saveGeocache,
+    saveLog,
+    removeGeocache,
+    removeLog,
+    getAllGeocaches,
+    getAllLogs,
+    getStorageStats,
+    clearAll,
+    saveBookmark,
+    removeBookmark,
+    getAllBookmarks,
+  ]);
 }

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bookmark, MapPin, Trash2, Cloud, MoreVertical, WifiOff } from 'lucide-react';
-import { DetailedGeocacheCard } from '@/components/ui/geocache-card';
+import { Bookmark, MapPin, Trash2, Cloud, MoreVertical, WifiOff, RefreshCcw } from 'lucide-react';
+import { DetailedGeocacheCard } from '@/features/geocache/components/geocache-card';
 import { EmptyStateCard } from '@/components/ui/card-patterns';
-import { DesktopHeader } from '@/components/DesktopHeader';
+import { DesktopHeader } from '@/shared/components/layout/DesktopHeader';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -13,13 +13,13 @@ import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { formatDistanceToNow } from '@/shared/utils/date';
 import { useGeolocation } from '@/features/map/hooks/useGeolocation';
 import { ComponentLoading } from '@/components/ui/loading';
-import { useOfflineMode } from '@/features/offline/hooks/useOfflineStorage';
+import { useOnlineStatus } from '@/features/offline/hooks/useConnectivity';
 
 export default function MyCaches() {
   const { user } = useCurrentUser();
-  const { savedCaches, unsaveCache, clearAllSaved, isNostrEnabled, isLoading: isLoadingSaved } = useSavedCaches();
+  const { savedCaches, unsaveCache, clearAllSaved, isNostrEnabled, isLoading: isLoadingSaved, isSyncing, offlineSavedCount, offlineOnly, syncOfflineBookmarks } = useSavedCaches();
   const { coords } = useGeolocation();
-  const { isOnline, isOfflineMode } = useOfflineMode();
+  const { isOnline } = useOnlineStatus();
   const [showClearDialog, setShowClearDialog] = useState(false);
 
   // Calculate distances if location is available
@@ -29,11 +29,11 @@ export default function MyCaches() {
       const R = 6371; // Earth's radius in kilometers
       const dLat = (cache.location.lat - coords.latitude) * Math.PI / 180;
       const dLon = (cache.location.lng - coords.longitude) * Math.PI / 180;
-      const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(coords.latitude * Math.PI / 180) * Math.cos(cache.location.lat * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(coords.latitude * Math.PI / 180) * Math.cos(cache.location.lat * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       distance = R * c * 1000; // Convert to meters
     }
     return { ...cache, distance };
@@ -77,7 +77,7 @@ export default function MyCaches() {
         backgroundSize: '300px 300px',
         opacity: 0.25
       }}></div>
-      
+
       <DesktopHeader />
 
       <div className="container mx-auto px-4 py-8">
@@ -87,18 +87,28 @@ export default function MyCaches() {
               <Bookmark className="h-6 w-6" />
               Saved Caches
             </h1>
-            
+
             {/* Nostr sync status */}
             {isNostrEnabled && (
               <div className={`flex items-center gap-2 text-sm ${
-                isOfflineMode || !isOnline || !navigator.onLine 
-                  ? 'text-orange-600 dark:text-orange-400' 
-                  : 'text-green-600'
+                offlineOnly ? 'text-blue-600 dark:text-blue-400' :
+                !isOnline ? 'text-orange-600 dark:text-orange-400' :
+                isSyncing ? 'text-blue-600 dark:text-blue-400' : 'text-green-600'
               }`}>
-                {isOfflineMode || !isOnline || !navigator.onLine ? (
+                {offlineOnly ? (
                   <>
                     <WifiOff className="h-4 w-4" />
-                    <span>Offline</span>
+                    <span>Offline Mode</span>
+                  </>
+                ) : !isOnline ? (
+                  <>
+                    <WifiOff className="h-4 w-4" />
+                    <span>Offline ({offlineSavedCount})</span>
+                  </>
+                ) : isSyncing ? (
+                  <>
+                    <RefreshCcw className="h-4 w-4 animate-spin" />
+                    <span>Syncing...</span>
                   </>
                 ) : (
                   <>
@@ -111,9 +121,14 @@ export default function MyCaches() {
           </div>
           <p className="text-sm text-muted-foreground">
             Your saved caches are synced to your Nostr profile and available across all your devices.
-            {isOfflineMode && (
+            {offlineOnly && (
+              <span className="block mt-1 text-blue-600 dark:text-blue-400">
+                ℹ️ Offline mode is enabled. Only locally saved caches are shown.
+              </span>
+            )}
+            {!isOnline && !offlineOnly && (
               <span className="block mt-1 text-orange-600 dark:text-orange-400">
-                ⚠️ Offline mode: Showing cached data. Changes will sync when online.
+                ⚠️ You are offline. Changes will sync when you reconnect.
               </span>
             )}
           </p>
@@ -128,13 +143,17 @@ export default function MyCaches() {
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
+              <DropdownMenuContent
                 align="end"
                 side="bottom"
                 sideOffset={8}
                 avoidCollisions={true}
                 collisionPadding={{ bottom: 80 }}
               >
+                <DropdownMenuItem onSelect={() => syncOfflineBookmarks()}>
+                  <RefreshCcw className="h-4 w-4 mr-2" />
+                  Sync Offline Bookmarks
+                </DropdownMenuItem>
                 <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
                   <AlertDialogTrigger asChild>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-700">
@@ -162,12 +181,12 @@ export default function MyCaches() {
           )}
         </div>
 
-        {isLoadingSaved && savedCaches.length === 0 ? (
+        {isLoadingSaved && savedCaches.length === 0 && !offlineOnly ? (
           <div className="flex items-center justify-center py-12">
-            <ComponentLoading 
-              size="sm" 
-              title="Loading saved caches..." 
-              description="Fetching your bookmarks from Nostr relays" 
+            <ComponentLoading
+              size="sm"
+              title="Loading saved caches..."
+              description="Fetching your bookmarks from Nostr relays"
             />
           </div>
         ) : savedCaches.length === 0 ? (

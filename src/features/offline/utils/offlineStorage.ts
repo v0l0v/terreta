@@ -3,9 +3,10 @@
  */
 
 import { NostrEvent } from '@nostrify/nostrify';
+import { Geocache } from '@/types/geocache';
 
 const DB_NAME = 'TreasuresOfflineDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 // Store names
 const STORES = {
@@ -16,6 +17,7 @@ const STORES = {
   PENDING_EVENTS: 'pendingEvents',
   SETTINGS: 'settings',
   OFFLINE_ACTIONS: 'offlineActions',
+  BOOKMARKS: 'bookmarks',
 } as const;
 
 export interface OfflineAction {
@@ -25,6 +27,12 @@ export interface OfflineAction {
   timestamp: number;
   retryCount: number;
   maxRetries: number;
+}
+
+export interface OfflineBookmark {
+  naddr: string;
+  geocache: Geocache;
+  source: 'synced' | 'manual';
 }
 
 export interface CachedGeocache {
@@ -120,6 +128,11 @@ class OfflineStorage {
           const actionsStore = db.createObjectStore(STORES.OFFLINE_ACTIONS, { keyPath: 'id' });
           actionsStore.createIndex('type', 'type');
           actionsStore.createIndex('timestamp', 'timestamp');
+        }
+
+        // Bookmarks store
+        if (!db.objectStoreNames.contains(STORES.BOOKMARKS)) {
+          db.createObjectStore(STORES.BOOKMARKS, { keyPath: 'naddr' });
         }
       };
     });
@@ -274,6 +287,40 @@ class OfflineStorage {
     return new Promise((resolve, reject) => {
       const request = store.get(pubkey);
       request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  // Bookmark storage methods
+  async storeBookmark(bookmark: OfflineBookmark): Promise<void> {
+    const db = await this.ensureDB();
+    const transaction = db.transaction([STORES.BOOKMARKS], 'readwrite');
+    const store = transaction.objectStore(STORES.BOOKMARKS);
+    await new Promise<void>((resolve, reject) => {
+      const request = store.put(bookmark);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async removeBookmark(naddr: string): Promise<void> {
+    const db = await this.ensureDB();
+    const transaction = db.transaction([STORES.BOOKMARKS], 'readwrite');
+    const store = transaction.objectStore(STORES.BOOKMARKS);
+    await new Promise<void>((resolve, reject) => {
+      const request = store.delete(naddr);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async getAllBookmarks(): Promise<OfflineBookmark[]> {
+    const db = await this.ensureDB();
+    const transaction = db.transaction([STORES.BOOKMARKS], 'readonly');
+    const store = transaction.objectStore(STORES.BOOKMARKS);
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result || []);
       request.onerror = () => reject(request.error);
     });
   }

@@ -175,11 +175,18 @@ export interface AuthorStoreActions {
 }
 
 // Offline store specific types
+export interface OfflineBookmark {
+  naddr: string;
+  geocache: Geocache;
+  source: 'synced' | 'manual';
+}
+
 export interface OfflineStoreState extends BaseStoreState {
   isOnline: boolean;
   isConnected: boolean;
   offlineGeocaches: Geocache[];
   offlineLogs: Record<string, GeocacheLog[]>;
+  offlineBookmarks: OfflineBookmark[];
   pendingActions: PendingAction[];
   storageInfo: StorageInfo;
   syncStatus: SyncStatus;
@@ -211,8 +218,10 @@ export interface OfflineStoreActions {
   // Offline data management
   saveGeocacheOffline: (geocache: Geocache) => Promise<StoreActionResult<void>>;
   saveLogOffline: (log: GeocacheLog) => Promise<StoreActionResult<void>>;
+  saveBookmarkOffline: (geocache: Geocache) => Promise<StoreActionResult<void>>;
   removeOfflineGeocache: (id: string) => Promise<StoreActionResult<void>>;
   removeOfflineLog: (id: string) => Promise<StoreActionResult<void>>;
+  removeOfflineBookmark: (naddr: string) => Promise<StoreActionResult<void>>;
   
   // Sync operations
   syncPendingActions: () => Promise<StoreActionResult<void>>;
@@ -223,6 +232,7 @@ export interface OfflineStoreActions {
   getStorageInfo: () => Promise<StorageInfo>;
   cleanupStorage: () => Promise<StoreActionResult<void>>;
   clearOfflineData: () => Promise<StoreActionResult<void>>;
+  clearOfflineBookmarks: () => Promise<StoreActionResult<void>>;
   
   // Background sync
   startBackgroundSync: () => void;
