@@ -609,7 +609,7 @@ export default function Map() {
       {/* Mobile View */}
       <div className="block lg:hidden fixed inset-0 flex flex-col" style={{ top: '4rem', bottom: '4rem' }}>
         {/* Adventure Mobile Filters Header */}
-        <div className="bg-background/95 backdrop-blur-sm border-b flex-shrink-0">
+        <div className="bg-background/95 backdrop-blur-sm border-b flex-shrink-0 z-10">
           <div className="p-3">
             <div className="space-y-3">
               <div className="flex gap-2">
