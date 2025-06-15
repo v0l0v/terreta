@@ -79,7 +79,7 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <a href="https://blog.treasures.to" target="_blank" rel="noopener noreferrer">
+                  <a href="/blog">
                     <BookOpen className="h-4 w-4 mr-2" />
                     Blog
                   </a>
