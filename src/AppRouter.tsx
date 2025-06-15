@@ -17,6 +17,9 @@ const CreateCache = lazy(() => import("./pages/CreateCache"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
 
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+
 const Install = lazy(() => import("./pages/Install"));
 const Claim = lazy(() => import("./pages/Claim"));
 const About = lazy(() => import("./pages/About"));
@@ -47,6 +50,8 @@ export function AppRouter() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:pubkey" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:pubkey/:dTag" element={<BlogPost />} />
             <Route path="/install" element={<Install />} />
             <Route path="/claim" element={<Claim />} />
             <Route path="/about" element={<About />} />

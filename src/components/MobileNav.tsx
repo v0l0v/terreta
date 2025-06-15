@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Map, Plus, Menu, Settings, Bookmark, LogOut, User, QrCode, Info } from 'lucide-react';
+import { Home, Map, Plus, Menu, Settings, Bookmark, LogOut, User, QrCode, Info, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { LoginArea } from '@/components/auth/LoginArea';
@@ -133,6 +133,15 @@ export function MobileHeader() {
                     onClick={closeSheet}
                   >
                     Saved Caches
+                  </NavLink>
+                  
+                  <NavLink
+                    to="/blog"
+                    icon={BookOpen}
+                    isActive={location.pathname.startsWith('/blog')}
+                    onClick={closeSheet}
+                  >
+                    Blog
                   </NavLink>
                   
                   <NavLink

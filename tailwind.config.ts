@@ -182,6 +182,7 @@ export default {
 	},
 	plugins: [
 		tailwindcssAnimate,
+		require('@tailwindcss/typography'),
 		// Add adventure theme selector support
 		function({ addVariant }: any) {
 			addVariant('adventure', '.adventure &')
