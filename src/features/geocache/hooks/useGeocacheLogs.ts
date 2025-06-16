@@ -4,16 +4,19 @@ import { NostrEvent } from '@nostrify/nostrify';
 import type { GeocacheLog } from '@/types/geocache';
 import { NIP_GC_KINDS, parseLogEvent, createGeocacheCoordinate } from '@/features/geocache/utils/nip-gc';
 import { verifyEmbeddedVerification, getEmbeddedVerification } from '@/features/geocache/utils/verification';
+import { useWotStore } from '@/shared/stores/useWotStore';
+import { Filter as NostrFilter } from 'nostr-tools';
 import { TIMEOUTS, POLLING_INTERVALS, QUERY_LIMITS } from '@/shared/config';
 import { cacheManager } from '@/features/geocache/utils/cacheManager';
 
 export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geocachePubkey?: string, preferredRelays?: string[], verificationPubkey?: string) {
   const { nostr } = useNostr();
+  const { isWotEnabled, wotPubkeys } = useWotStore();
   
   // Note: Deletion filtering is now handled using utility functions
   
   return useQuery({
-    queryKey: ['geocache-logs', geocacheDTag, geocachePubkey, preferredRelays, verificationPubkey],
+    queryKey: ['geocache-logs', geocacheDTag, geocachePubkey, preferredRelays, verificationPubkey, isWotEnabled, Array.from(wotPubkeys).sort().join(',')],
     queryFn: async (c) => {
       if (!geocachePubkey || !geocacheDTag) {
         return [];
@@ -139,6 +142,11 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
 
           // Sort by creation date (newest first)
           logs.sort((a, b) => b.created_at - a.created_at);
+
+          if (isWotEnabled && wotPubkeys.size > 0) {
+            return logs.filter(log => wotPubkeys.has(log.pubkey));
+          }
+
 
           // Update LRU cache with fresh data ONLY if we got results
           if (logs.length > 0) {

@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/features/geocache/utils/nip-gc';
+import { useWotStore } from '@/shared/stores/useWotStore';
+import { Filter as NostrFilter } from 'nostr-tools';
 import { TIMEOUTS, POLLING_INTERVALS } from '@/shared/config';
 // Note: Deletion filtering functionality has been simplified
 
@@ -11,10 +13,11 @@ export interface GeocacheStats {
 
 export function useGeocacheStats(geocacheDTag?: string, geocachePubkey?: string): GeocacheStats {
   const { nostr } = useNostr();
+  const { isWotEnabled, wotPubkeys } = useWotStore();
   // Note: Deletion filtering has been simplified for now
   
   const query = useQuery({
-    queryKey: ['geocache-stats', geocacheDTag, geocachePubkey],
+    queryKey: ['geocache-stats', geocacheDTag, geocachePubkey, isWotEnabled, Array.from(wotPubkeys).sort().join(',')],
     queryFn: async (c) => {
       if (!geocachePubkey || !geocacheDTag) {
         return { foundCount: 0, logCount: 0 };
@@ -51,6 +54,19 @@ export function useGeocacheStats(geocacheDTag?: string, geocachePubkey?: string)
           return acc;
         }, new Map());
         
+        if (isWotEnabled && wotPubkeys.size > 0) {
+          const wotFoundLogs = new Map();
+          for (const [pubkey, log] of uniqueFoundLogs.entries()) {
+            if (wotPubkeys.has(pubkey)) {
+              wotFoundLogs.set(pubkey, log);
+            }
+          }
+          return {
+            foundCount: wotFoundLogs.size,
+            logCount: validFoundLogs.filter(log => wotPubkeys.has(log.pubkey)).length + validCommentLogs.filter(log => wotPubkeys.has(log.pubkey)).length,
+          };
+        }
+
         return {
           foundCount: uniqueFoundLogs.size,
           logCount: validFoundLogs.length + validCommentLogs.length,
@@ -76,10 +92,11 @@ export function useGeocacheStats(geocacheDTag?: string, geocachePubkey?: string)
  */
 export function useMultipleGeocacheStats(geocaches: Array<{ dTag: string; pubkey: string }>) {
   const { nostr } = useNostr();
+  const { isWotEnabled, wotPubkeys } = useWotStore();
   // Note: Deletion filtering has been simplified for now
   
   return useQuery({
-    queryKey: ['multiple-geocache-stats', geocaches.map(g => `${g.pubkey}:${g.dTag}`).join(',')],
+    queryKey: ['multiple-geocache-stats', geocaches.map(g => `${g.pubkey}:${g.dTag}`).join(','), isWotEnabled, Array.from(wotPubkeys).sort().join(',')],
     queryFn: async (c) => {
       if (geocaches.length === 0) {
         return new Map<string, GeocacheStats>();
@@ -149,6 +166,17 @@ export function useMultipleGeocacheStats(geocaches: Array<{ dTag: string; pubkey
           
           statsMap.set(key, { foundCount, logCount });
         });
+
+        if (isWotEnabled && wotPubkeys.size > 0) {
+          const wotStatsMap = new Map<string, GeocacheStats>();
+          for (const [key, stats] of statsMap.entries()) {
+            const [pubkey] = key.split(':');
+            if (wotPubkeys.has(pubkey)) {
+              wotStatsMap.set(key, stats);
+            }
+          }
+          return wotStatsMap;
+        }
         
         return statsMap;
       } catch (error) {

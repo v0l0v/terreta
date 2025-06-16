@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { NIP_GC_KINDS, parseGeocacheEvent } from '@/features/geocache/utils/nip-gc';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 // Note: Performance optimization functionality has been integrated into the new store system
+import { useWotStore } from '@/shared/stores/useWotStore';
+import { Filter as NostrFilter } from 'nostr-tools';
 import { TIMEOUTS, POLLING_INTERVALS, QUERY_LIMITS } from '@/shared/config';
 import { useEffect, useState, useCallback } from 'react';
 
@@ -42,15 +44,17 @@ export function useOptimisticGeocaches(
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
+  const { isWotEnabled, wotPubkeys } = useWotStore();
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   
   // Note: Performance optimizations are now handled by the store system
 
   // Fast initial load with smaller limit - prioritize speed over completeness
   const fastQuery = useQuery({
-    queryKey: ['geocaches-fast'],
+    queryKey: ['geocaches-fast', isWotEnabled, Array.from(wotPubkeys).sort().join(',')],
     queryFn: async (c) => {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.OPTIMISTIC_LOAD)]);
+      
       const events = await nostr.query([{
         kinds: [NIP_GC_KINDS.GEOCACHE], 
         limit: QUERY_LIMITS.FAST_LOAD_LIMIT // Load first 6 quickly
@@ -67,6 +71,11 @@ export function useOptimisticGeocaches(
         };
       }).filter(Boolean);
 
+      if (isWotEnabled && wotPubkeys.size > 0) {
+        return geocaches.filter(geocache => wotPubkeys.has(geocache.pubkey));
+      }
+
+
       // Note: Cache warming is now handled automatically by the store system
 
       return geocaches;
@@ -82,7 +91,7 @@ export function useOptimisticGeocaches(
 
   // Full query with all geocaches - run in parallel with fast query
   const fullQuery = useQuery({
-    queryKey: ['geocaches'],
+    queryKey: ['geocaches', isWotEnabled, Array.from(wotPubkeys).sort().join(',')],
     queryFn: async (c) => {
       // Use longer timeout for full load, but still reasonable
       const timeout = c.meta?.isBackground ? TIMEOUTS.QUERY : TIMEOUTS.QUERY * 0.75;
@@ -93,7 +102,7 @@ export function useOptimisticGeocaches(
         limit: QUERY_LIMITS.GEOCACHES
       }], { signal });
 
-      return events.map(event => {
+      const geocaches = events.map(event => {
         const parsed = parseGeocacheEvent(event);
         if (!parsed) return null;
         if (parsed.hidden && parsed.pubkey !== user?.pubkey) return null;
@@ -103,6 +112,12 @@ export function useOptimisticGeocaches(
           logCount: 0,
         };
       }).filter(Boolean);
+
+      if (isWotEnabled && wotPubkeys.size > 0) {
+        return geocaches.filter(geocache => wotPubkeys.has(geocache.pubkey));
+      }
+
+      return geocaches;
     },
     staleTime: 300000, // 5 minutes - much longer for stability
     gcTime: 1800000, // 30 minutes

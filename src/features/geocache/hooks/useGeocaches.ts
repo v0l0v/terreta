@@ -35,17 +35,10 @@ export function useGeocaches() {
         const timeout = getAdaptiveTimeout(baseTimeout);
         const signal = AbortSignal.any([c.signal, AbortSignal.timeout(timeout)]);
 
-        const filter: NostrFilter = {
+        const events = await nostr.query([{
           kinds: [NIP_GC_KINDS.GEOCACHE],
           limit: QUERY_LIMITS.GEOCACHES
-        };
-
-        // Apply Web of Trust filter if enabled
-        if (isWotEnabled && wotPubkeys.size > 0) {
-          filter.authors = Array.from(wotPubkeys);
-        }
-
-        const events = await nostr.query([filter], { signal });
+        }], { signal });
 
         const geocaches = events.map(event => {
           const parsed = parseGeocacheEvent(event);
@@ -54,6 +47,11 @@ export function useGeocaches() {
           if (parsed.hidden && parsed.pubkey !== user?.pubkey) return null;
           return parsed;
         }).filter(Boolean);
+
+        if (isWotEnabled && wotPubkeys.size > 0) {
+          return geocaches.filter(geocache => wotPubkeys.has(geocache.pubkey));
+        }
+
 
         // Update LRU cache with fresh data ONLY if we got results
         if (geocaches.length > 0) {
@@ -158,25 +156,24 @@ export function useNearbyGeocaches(lat?: number, lon?: number, radiusKm = 50) {
     queryFn: async (c) => {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.QUERY)]);
       
-      const filter: NostrFilter = {
+      const events = await nostr.query([{
         kinds: [NIP_GC_KINDS.GEOCACHE],
         limit: 500
-      };
+      }], { signal });
 
-      // Apply Web of Trust filter if enabled
-      if (isWotEnabled && wotPubkeys.size > 0) {
-        filter.authors = Array.from(wotPubkeys);
-      }
-
-      const events = await nostr.query([filter], { signal });
-
-      return events.map(event => {
+      const geocaches = events.map(event => {
         const parsed = parseGeocacheEvent(event);
         if (!parsed) return null;
         // Show hidden caches to their creator, filter them out for everyone else
         if (parsed.hidden && parsed.pubkey !== user?.pubkey) return null;
         return parsed;
       }).filter(Boolean);
+
+      if (isWotEnabled && wotPubkeys.size > 0) {
+        return geocaches.filter(geocache => wotPubkeys.has(geocache.pubkey));
+      }
+
+      return geocaches;
     },
     enabled: lat !== undefined && lon !== undefined,
     staleTime: 120000, // 2 minutes for location-based data
