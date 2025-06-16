@@ -4,6 +4,8 @@ import { nip19 } from 'nostr-tools';
 import { NostrClient } from '@nostrify/react';
 import { QUERY_LIMITS } from '../config/limits';
 
+const MAX_WOT_PUBKEYS = 100000;
+
 // --- Types ---
 interface WotState {
   isWotEnabled: boolean;
@@ -132,9 +134,12 @@ export const useWotStore = create<WotStore>()(
                 if (!allWotPubkeys.has(pubkey)) {
                   currentPubkeys.add(pubkey);
                   allWotPubkeys.add(pubkey);
+                  if (allWotPubkeys.size >= MAX_WOT_PUBKEYS) break;
                 }
               }
+              if (allWotPubkeys.size >= MAX_WOT_PUBKEYS) break;
             }
+             if (allWotPubkeys.size >= MAX_WOT_PUBKEYS) break;
           }
 
           set({
