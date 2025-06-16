@@ -8,7 +8,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Switch } from './ui/switch';
 import { Progress } from './ui/progress';
-import { Alert, AlertDescription } from './ui/alert';
+import { WotAuthorCard } from './WotAuthorCard';
 
 export function WotSettings() {
   const { nostr } = useNostr();
@@ -61,28 +61,28 @@ export function WotSettings() {
               variant={degrees === 1 ? 'secondary' : 'outline'}
               onClick={() => setDegrees(1)}
               disabled={!isWotEnabled || isLoading}
-              className="flex-1"
+              className="flex-1 flex-col h-auto py-2"
             >
-              <UserCheck className="mr-2 h-4 w-4" />
-              Strict
+              <UserCheck className="h-6 w-6 mb-1" />
+              <span className="text-base">Strict</span>
             </Button>
             <Button
               variant={degrees === 2 ? 'secondary' : 'outline'}
               onClick={() => setDegrees(2)}
               disabled={!isWotEnabled || isLoading}
-              className="flex-1"
+              className="flex-1 flex-col h-auto py-2"
             >
-              <Users className="mr-2 h-4 w-4" />
-              Normal
+              <Users className="h-6 w-6 mb-1" />
+              <span className="text-base">Normal</span>
             </Button>
             <Button
               variant={degrees === 3 ? 'secondary' : 'outline'}
               onClick={() => setDegrees(3)}
               disabled={!isWotEnabled || isLoading}
-              className="flex-1"
+              className="flex-1 flex-col h-auto py-2"
             >
-              <Globe className="mr-2 h-4 w-4" />
-              Lax
+              <Globe className="h-6 w-6 mb-1" />
+              <span className="text-base">Lax</span>
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -93,17 +93,28 @@ export function WotSettings() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="starting-point">Starting Point (npub or hex)</Label>
-          <Input
-            id="starting-point"
-            placeholder={user?.npub || 'Defaults to your pubkey'}
-            value={startingPoint}
-            onChange={handleStartingPointChange}
-            disabled={!isWotEnabled || isLoading}
-          />
+          <Label htmlFor="starting-point">Starting Point (pubkey or hex)</Label>
           <p className="text-sm text-muted-foreground">
             The center of your trust network. Leave blank to use your own profile.
           </p>
+          <WotAuthorCard pubkey={startingPoint || user?.pubkey || ""} />
+          <div className="flex gap-2">
+            <Input
+              id="starting-point"
+              placeholder={user?.npub || 'Defaults to your pubkey'}
+              value={startingPoint}
+              onChange={handleStartingPointChange}
+              disabled={!isWotEnabled || isLoading}
+              className="flex-1"
+            />
+            <Button
+              onClick={() => setStartingPoint(user?.pubkey || '')}
+              disabled={!isWotEnabled || isLoading}
+              variant="ghost"
+            >
+              Reset
+            </Button>
+          </div>
         </div>
 
         {isLoading && (
@@ -114,7 +125,7 @@ export function WotSettings() {
           </div>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between">
           <div>
             <p className="text-sm font-medium">
               {`Found ${wotPubkeys.size} trusted authors.`}
@@ -125,7 +136,7 @@ export function WotSettings() {
                 : 'Not calculated yet.'}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-4 sm:mt-0">
             {isLoading && (
               <Button onClick={cancelCalculation} variant="outline">
                 Cancel
