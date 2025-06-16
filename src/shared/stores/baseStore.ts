@@ -76,7 +76,7 @@ export function useBaseStore(
   const safeAsyncOperation = useCallback(async <T>(
     operation: () => Promise<T>,
     context: string,
-    timeout: number = TIMEOUTS.QUERY
+    timeout: number = TIMEOUTS.FAST_QUERY * 5
   ): Promise<StoreActionResult<T>> => {
     try {
       const signal = AbortSignal.timeout(timeout);
@@ -119,7 +119,7 @@ export function useBaseStore(
 
   // Background sync management
   const startBackgroundSync = useCallback((syncFn: () => Promise<void>) => {
-    if (!memoizedConfig.enableBackgroundSync) return;
+    if (!memoizedConfig.enableBackgroundSync || syncIntervalRef.current) return;
     
     if (syncIntervalRef.current) {
       clearInterval(syncIntervalRef.current);
