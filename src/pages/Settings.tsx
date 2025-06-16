@@ -7,7 +7,7 @@ import { PageLayout } from "@/components/layout";
 import { Label } from "@/components/ui/label";
 import { OfflineSettings } from "@/components/OfflineSettings";
 import { RelaySelector } from "@/components/RelaySelector";
-import { PWASettings } from "@/components/PWASettings";
+
 import { useRelayConfig } from "@/features/geocache/hooks/useRelayConfig";
 
 export default function Settings() {
@@ -136,21 +136,7 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* PWA Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Smartphone className="h-5 w-5" />
-              App & Updates
-            </CardTitle>
-            <CardDescription>
-              Manage app installation and updates
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PWASettings />
-          </CardContent>
-        </Card>
+
 
         {/* Offline & Sync Settings */}
         <Card>

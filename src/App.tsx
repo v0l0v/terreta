@@ -8,7 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NostrLoginProvider } from '@nostrify/react/login';
 import AppRouter from './AppRouter';
-import { PWAUpdateNotification } from '@/components/PWAUpdateNotification';
+
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { AppProvider } from '@/components/AppProvider';
 import { AppConfig } from '@/contexts/AppContext';
@@ -83,7 +83,7 @@ export function App() {
                   <div className="min-h-screen flex flex-col">
                     <AppRouter />
                   </div>
-                  <PWAUpdateNotification />
+                  
                   <Toaster />
                   <Sonner />
                 </TooltipProvider>
