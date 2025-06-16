@@ -48,8 +48,7 @@ describe('WotSettings', () => {
   it('renders the component with initial state', () => {
     renderComponent();
     expect(screen.getByText('Web of Trust Filter')).toBeInTheDocument();
-    expect(screen.getByText('Normal')).toHaveClass('btn-secondary');
-    expect(screen.getByText('Follow Limit')).toBeInTheDocument();
+    expect(screen.getByText('Normal').closest('button')).toHaveAttribute('data-variant', 'secondary');
     expect(screen.getByText(/Found 2 trusted authors/)).toBeInTheDocument();
   });
 
@@ -65,8 +64,12 @@ describe('WotSettings', () => {
     const setFollowLimit = vi.fn();
     mockUseWotStore.mockReturnValueOnce({ ...mockUseWotStore(), setFollowLimit, followLimit: 250 });
     renderComponent();
+
+    // Open the advanced settings
+    fireEvent.click(screen.getByText('Advanced Settings'));
+    
     const slider = screen.getByRole('slider');
-    fireEvent.change(slider, { target: { value: '500' } });
+    fireEvent.change(slider, { target: { value: '2' } }); // Index for 500
     expect(setFollowLimit).toHaveBeenCalledWith(500);
   });
 

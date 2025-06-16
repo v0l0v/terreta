@@ -62,38 +62,42 @@ export function WotSettings() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <Button
               variant={trustLevel === 1 ? 'secondary' : 'outline'}
+              data-variant={trustLevel === 1 ? 'secondary' : 'outline'}
               onClick={() => setTrustLevel(1)}
               disabled={isLoading}
-              className="flex-1 flex-col md:flex-row h-auto py-2"
+              className="flex-1 flex-col md:flex-row h-auto py-2 items-center"
             >
-              <UserCheck className="h-6 w-6 mb-1" />
+              <UserCheck className="h-6 w-6 mb-1 md:mb-0 md:mr-2" />
               <span className="text-base">Strict</span>
             </Button>
             <Button
               variant={trustLevel === 2 ? 'secondary' : 'outline'}
+              data-variant={trustLevel === 2 ? 'secondary' : 'outline'}
               onClick={() => setTrustLevel(2)}
               disabled={isLoading}
-              className="flex-1 flex-col md:flex-row h-auto py-2"
+              className="flex-1 flex-col md:flex-row h-auto py-2 items-center"
             >
-              <Users className="h-6 w-6 mb-1" />
+              <Users className="h-6 w-6 mb-1 md:mb-0 md:mr-2" />
               <span className="text-base">Normal</span>
             </Button>
             <Button
               variant={trustLevel === 3 ? 'secondary' : 'outline'}
+              data-variant={trustLevel === 3 ? 'secondary' : 'outline'}
               onClick={() => setTrustLevel(3)}
               disabled={isLoading}
-              className="flex-1 flex-col md:flex-row h-auto py-2"
+              className="flex-1 flex-col md:flex-row h-auto py-2 items-center"
             >
-              <Globe className="h-6 w-6 mb-1" />
+              <Globe className="h-6 w-6 mb-1 md:mb-0 md:mr-2" />
               <span className="text-base">Lax</span>
             </Button>
             <Button
               variant={trustLevel === 0 ? 'secondary' : 'outline'}
+              data-variant={trustLevel === 0 ? 'secondary' : 'outline'}
               onClick={() => setTrustLevel(0)}
               disabled={isLoading}
-              className="flex-1 flex-col md:flex-row h-auto py-2"
+              className="flex-1 flex-col md:flex-row h-auto py-2 items-center"
             >
-              <Swords className="h-6 w-6 mb-1" />
+              <Swords className="h-6 w-6 mb-1 md:mb-0 md:mr-2" />
               <span className="text-base">All</span>
             </Button>
           </div>
