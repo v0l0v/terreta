@@ -30,3 +30,6 @@ export const BLOG_CACHE_TIMES = {
   AUTHORS: 10 * 60 * 1000, // 10 minutes
   SINGLE_POST: 2 * 60 * 1000, // 2 minutes
 } as const;
+
+// Maximum number of tag suggestions to display
+export const TAG_SUGGESTION_LIMIT = 5;

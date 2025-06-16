@@ -91,22 +91,22 @@ export function BlogPostCard({
           {excerpt}
         </p>
 
-        <div className="flex items-center justify-between">
-          <div className="flex flex-wrap gap-1">
-            {post.tags.slice(0, 3).map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                #{tag}
-              </Badge>
-            ))}
-            {post.tags.length > 3 && (
-              <Badge variant="outline" className="text-xs">
-                +{post.tags.length - 3}
-              </Badge>
-            )}
-          </div>
+        <div className="flex flex-wrap gap-1">
+          {post.tags.slice(0, 3).map((tag) => (
+            <Badge key={tag} variant="secondary" className="text-xs">
+              #{tag}
+            </Badge>
+          ))}
+          {post.tags.length > 3 && (
+            <Badge variant="outline" className="text-xs">
+              +{post.tags.length - 3}
+            </Badge>
+          )}
+        </div>
 
+        <div className="mt-4 text-center">
           <Link to={`/blog/${post.pubkey}/${post.dTag}`}>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" className="w-full sm:w-auto">
               Read More
             </Button>
           </Link>
