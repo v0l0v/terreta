@@ -4,7 +4,7 @@ import { BlogConfig } from '../types';
 export const BLOG_CONFIG: BlogConfig = {
   // Add authorized author pubkeys here (hex format)
   authorizedAuthors: [
-    '86184109eae937d8d6f980b4a0b46da4ef0d983eade403ee1b4c0b6bde238b47', // npub1scvyzz02ayma34hesz62pdrd5nhsmxp74hjq8msmfs9khh3r3drsnw68d8
+    '86184109eae937d8d6f980b4a0b46da4ef0d983eade403ee1b4c0b6bde238b47', // @chad@chadwick.site
   ],
   blogTitle: 'Treasures Blog',
   blogDescription: 'Stories, updates, and adventures from the Treasures community',
