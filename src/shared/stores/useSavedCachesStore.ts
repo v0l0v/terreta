@@ -247,12 +247,7 @@ export function useSavedCachesStore() {
     }
   }, [isOnline, user, offlineBookmarks, bookmarkListEvent, updateBookmarkList]);
 
-  useEffect(() => {
-    if (hasHydrated && isOnline && user && offlineBookmarks.length > 0 && !initialSyncCompleted.current) {
-      syncOfflineBookmarks();
-      initialSyncCompleted.current = true;
-    }
-  }, [hasHydrated, isOnline, user, offlineBookmarks.length, syncOfflineBookmarks]);
+
 
   const saveCache = useCallback(
     async (geocache: Geocache) => {

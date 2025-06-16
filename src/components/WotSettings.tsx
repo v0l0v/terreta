@@ -142,7 +142,7 @@ export function WotSettings() {
                 Cancel
               </Button>
             )}
-            <Button onClick={handleCalculate} disabled={isLoading}>
+            <Button onClick={handleCalculate} disabled={!isWotEnabled || isLoading}>
               {isLoading ? 'Calculating...' : 'Recalculate Now'}
             </Button>
           </div>

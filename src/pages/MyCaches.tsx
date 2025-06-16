@@ -22,6 +22,12 @@ export default function MyCaches() {
   const { isOnline } = useOnlineStatus();
   const [showClearDialog, setShowClearDialog] = useState(false);
 
+  useEffect(() => {
+    if (isOnline && user) {
+      syncOfflineBookmarks();
+    }
+  }, [isOnline, user]);
+
   // Calculate distances if location is available
   const savedCachesWithDistance = savedCaches.map(cache => {
     let distance: number | undefined;
