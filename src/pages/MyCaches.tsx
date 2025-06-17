@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Bookmark, MapPin, Trash2, Cloud, MoreVertical, WifiOff, RefreshCcw } from 'lucide-react';
 import { DetailedGeocacheCard } from '@/features/geocache/components/geocache-card';

@@ -13,29 +13,7 @@ export default defineConfig(({ mode }) => ({
     https: false, // Set to true for production testing
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          // Simplified chunking: Only separate truly large, independent libraries
-          if (id.includes('node_modules')) {
-            // Only separate the largest libraries that are completely independent
-            if (id.includes('leaflet') && !id.includes('react-leaflet')) {
-              return 'vendor-map';
-            }
-            
-            // Everything else goes in the main vendor chunk
-            // This prevents all module loading order issues
-            return 'vendor';
-          }
-          
-          // No application code chunking - keep everything together
-          // This eliminates internal module dependency issues
-          return undefined;
-        }
-      }
-    },
-    // Increase chunk size warning limit since we're optimizing
-    chunkSizeWarningLimit: 1000,
+
     // Enable source maps for better debugging
     sourcemap: false, // Disable in production for smaller builds
     // Optimize dependencies
