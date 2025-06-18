@@ -1,10 +1,12 @@
 import React from 'react';
-import { Navigation, Trophy, MessageSquare, EyeOff, CheckCircle, BookmarkX } from 'lucide-react';
+import { useZaps } from '@/features/zaps/hooks/useZaps';
+import { Navigation, Trophy, MessageSquare, EyeOff, CheckCircle, BookmarkX, Zap } from 'lucide-react';
 import { InteractiveCard } from '@/components/ui/card-patterns';
 import { CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SaveButton } from '@/shared/components/common/SaveButton';
 import { CacheMenu } from '@/components/CacheMenu';
+import { ZapButton } from '@/components/ZapButton';
 import { useAuthor } from '@/features/auth/hooks/useAuthor';
 import { useGeocacheNavigation } from '@/features/geocache/hooks/useGeocacheNavigation';
 import { useGeocacheStats } from '@/features/geocache/hooks/useGeocacheStats';
@@ -111,6 +113,7 @@ export function GeocacheCard({
   const { theme } = useTheme();
   const { navigateToGeocache } = useGeocacheNavigation();
   const author = useAuthor(cache.pubkey);
+  const { data: zaps = [] } = useZaps(cache.id);
   const authorName = author.data?.metadata?.name || cache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
 
@@ -206,6 +209,10 @@ export function GeocacheCard({
             <MessageSquare className="h-3 w-3" />
             <span>{stats.logCount}</span>
           </span>
+          <span className="flex items-center gap-1">
+            <Zap className="h-3 w-3" />
+            <span>{zaps.length}</span>
+          </span>
         </div>
       )}
     </div>
@@ -215,6 +222,7 @@ export function GeocacheCard({
     <div className={`flex items-center gap-0.5 sm:gap-1 shrink-0 ${showOnHover ? 'md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-150' : ''}`}>
       {actions || (
         <>
+          <ZapButton geocache={cache as any} />
           <SaveButton
             geocache={cache as any}
             size="icon"

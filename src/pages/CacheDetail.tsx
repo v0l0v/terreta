@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Navigation, Calendar, User, Edit, Trash2, RefreshCw, Save, RotateCcw, Eye, EyeOff, QrCode } from "lucide-react";
+import { ZapButton } from "@/components/ZapButton";
+import { useZaps } from "@/features/zaps/hooks/useZaps";
+import { Navigation, Calendar, User, Edit, Trash2, RefreshCw, Save, RotateCcw, Eye, EyeOff, QrCode, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +76,7 @@ export default function CacheDetail() {
     typedGeocache?.relays,
     typedGeocache?.verificationPubkey
   );
+  const { data: zaps = [] } = useZaps(typedGeocache?.id || "");
   const {
     confirmSingleDeletion,
     isConfirmDialogOpen,
@@ -416,11 +419,16 @@ export default function CacheDetail() {
                           <Calendar className="h-4 w-4" />
                           {formatDistanceToNow(new Date(typedGeocache.created_at * 1000), { addSuffix: true })}
                         </span>
+                        <span className="flex items-center gap-1">
+                          <Zap className="h-4 w-4" />
+                          {zaps.length}
+                        </span>
                       </div>
                     </div>
 
                   </div>
                   <div className="flex gap-1 sm:gap-2 flex-shrink-0 ml-2">
+                    <ZapButton geocache={typedGeocache} />
                     {!isOwner && <SaveButton geocache={typedGeocache} />}
                     {isOwner && (
                       <>
