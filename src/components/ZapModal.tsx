@@ -5,7 +5,8 @@ import { useAuthor } from '@/features/auth/hooks/useAuthor';
 import type { WebLNProvider } from 'webln';
 import type { Geocache } from '@/types/geocache';
 import { nip57, Event } from 'nostr-tools';
-import { Zap, BadgeCent, Coins, HandCoins, Gem } from 'lucide-react';
+import QRCode from 'qrcode';
+import { Zap, BadgeCent, Coins, HandCoins, Gem, Copy } from 'lucide-react';
 import { chest as chestPaths } from '@lucide/lab';
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
@@ -67,11 +68,29 @@ export function ZapModal({ open, onOpenChange, geocache, webln }: ZapModalProps)
   const author = useAuthor(geocache.pubkey);
   const [amount, setAmount] = useState<number | string>(100);
   const [isZapping, setIsZapping] = useState(false);
+  const [invoice, setInvoice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const qrCodeRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (invoice && qrCodeRef.current) {
+      QRCode.toCanvas(qrCodeRef.current, invoice, { width: 256 });
+    }
+  }, [invoice]);
+
+  const handleCopy = () => {
+    if (invoice) {
+      navigator.clipboard.writeText(invoice);
+      toast({
+        title: 'Copied to clipboard!',
+      });
+    }
+  };
 
   useEffect(() => {
     if (open) {
       setAmount(100);
+      setInvoice(null);
     }
   }, [open]);
 
@@ -82,16 +101,6 @@ export function ZapModal({ open, onOpenChange, geocache, webln }: ZapModalProps)
     }
 
     setIsZapping(true);
-
-    if (!webln) {
-      toast({
-        title: 'WebLN not found',
-        description: 'Please install a WebLN compatible extension like Alby.',
-        variant: 'destructive',
-      });
-      setIsZapping(false);
-      return;
-    }
 
     if (!user) {
       toast({
@@ -151,12 +160,17 @@ export function ZapModal({ open, onOpenChange, geocache, webln }: ZapModalProps)
           try {
             const res = await fetch(`${zapEndpoint}?amount=${zapAmount}&nostr=${encodeURI(JSON.stringify(event))}`);
             const { pr: invoice } = await res.json();
-            await webln.sendPayment(invoice);
-            toast({
-              title: 'Zap successful!',
-              description: `You sent ${finalAmount} sats to the cache owner.`,
-            });
-            onOpenChange(false);
+
+            if (webln) {
+              await webln.sendPayment(invoice);
+              toast({
+                title: 'Zap successful!',
+                description: `You sent ${finalAmount} sats to the cache owner.`,
+              });
+              onOpenChange(false);
+            } else {
+              setInvoice(invoice);
+            }
           } catch (err) {
             console.error('Zap error:', err);
             toast({
@@ -168,9 +182,6 @@ export function ZapModal({ open, onOpenChange, geocache, webln }: ZapModalProps)
             setIsZapping(false);
           }
         },
-        onError: () => {
-          setIsZapping(false);
-        }
       });
     } catch (err) {
       toast({
@@ -186,60 +197,80 @@ export function ZapModal({ open, onOpenChange, geocache, webln }: ZapModalProps)
     <Dialog open={open} onOpenChange={onOpenChange} data-testid="zap-modal">
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Send a Zap</DialogTitle>
+          <DialogTitle>{invoice ? 'Manual Zap' : 'Send a Zap'}</DialogTitle>
           <DialogDescription>
-            <p>Zaps are small Bitcoin payments that support the creator of this geocache.</p>
-            <p className="mt-2">If you enjoyed this treasure, consider sending a zap!</p>
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <ToggleGroup
-            type="single"
-            value={String(amount)}
-            onValueChange={(value) => {
-              if (value) {
-                setAmount(parseInt(value, 10));
-              }
-            }}
-            className="grid grid-cols-5 gap-2"
-          >
-            {presetAmounts.map(({ amount: presetAmount, icon: Icon }) => (
-              <ToggleGroupItem
-                key={presetAmount}
-                value={String(presetAmount)}
-                className="flex flex-col h-auto"
-              >
-                <Icon className="h-6 w-6 mb-1" />
-                {presetAmount}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <div className="flex items-center gap-2">
-            <div className="h-px flex-1 bg-muted" />
-            <span className="text-xs text-muted-foreground">OR</span>
-            <div className="h-px flex-1 bg-muted" />
-          </div>
-          <Input
-            ref={inputRef}
-            id="custom-amount"
-            type="number"
-            placeholder="Custom amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-        </div>
-        <DialogFooter>
-          <Button onClick={handleZap} className="w-full" disabled={isZapping}>
-            {isZapping ? (
-              'Creating invoice...'
+            {invoice ? (
+              <p>Scan the QR code with a lightning-enabled wallet or copy the invoice below.</p>
             ) : (
               <>
-                <Zap className="h-4 w-4 mr-2" />
-                Zap {amount} sats
+                <p>Zaps are small Bitcoin payments that support the creator of this geocache.</p>
+                <p className="mt-2">If you enjoyed this treasure, consider sending a zap!</p>
               </>
             )}
-          </Button>
-        </DialogFooter>
+          </DialogDescription>
+        </DialogHeader>
+        {invoice ? (
+          <div className="flex flex-col items-center gap-4 py-4">
+            <canvas ref={qrCodeRef} />
+            <div className="flex w-full items-center gap-2">
+              <Input value={invoice} readOnly className="flex-1" />
+              <Button onClick={handleCopy} variant="outline" size="icon">
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-4 py-4">
+              <ToggleGroup
+                type="single"
+                value={String(amount)}
+                onValueChange={(value) => {
+                  if (value) {
+                    setAmount(parseInt(value, 10));
+                  }
+                }}
+                className="grid grid-cols-5 gap-2"
+              >
+                {presetAmounts.map(({ amount: presetAmount, icon: Icon }) => (
+                  <ToggleGroupItem
+                    key={presetAmount}
+                    value={String(presetAmount)}
+                    className="flex flex-col h-auto"
+                  >
+                    <Icon className="h-6 w-6 mb-1" />
+                    {presetAmount}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+              <div className="flex items-center gap-2">
+                <div className="h-px flex-1 bg-muted" />
+                <span className="text-xs text-muted-foreground">OR</span>
+                <div className="h-px flex-1 bg-muted" />
+              </div>
+              <Input
+                ref={inputRef}
+                id="custom-amount"
+                type="number"
+                placeholder="Custom amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+            <DialogFooter>
+              <Button onClick={handleZap} className="w-full" disabled={isZapping}>
+                {isZapping ? (
+                  'Creating invoice...'
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4 mr-2" />
+                    Zap {amount} sats
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
