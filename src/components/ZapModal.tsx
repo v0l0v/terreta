@@ -1,3 +1,11 @@
+import { useToast } from '@/shared/hooks/useToast';
+import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
+import { useAuthor } from '@/features/auth/hooks/useAuthor';
+import { requestProvider } from 'webln';
+import type { WebLNProvider } from 'webln';
+import type { Geocache } from '@/types/geocache';
+import { nip57, Event } from 'nostr-tools';
 import { Zap, BadgeCent, Coins, HandCoins, Gem } from 'lucide-react';
 import { chest as chestPaths } from '@lucide/lab';
 import React, { useState, useEffect, useRef } from 'react';
@@ -16,7 +24,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 interface ZapModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onZap: (amount: number) => void;
+  geocache: Geocache;
+  webln: WebLNProvider | null;
 }
 
 const Chest = React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>(
@@ -52,8 +61,13 @@ const presetAmounts = [
   { amount: 1000, icon: Chest },
 ];
 
-export function ZapModal({ open, onOpenChange, onZap }: ZapModalProps) {
-  const [amount, setAmount] = useState<number | string>('');
+export function ZapModal({ open, onOpenChange, geocache, webln }: ZapModalProps) {
+  const { toast } = useToast();
+  const { user } = useCurrentUser();
+  const { mutate: publishEvent } = useNostrPublish();
+  const author = useAuthor(geocache.pubkey);
+    const [amount, setAmount] = useState<number | string>('');
+  const [isZapping, setIsZapping] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -62,11 +76,110 @@ export function ZapModal({ open, onOpenChange, onZap }: ZapModalProps) {
     }
   }, [open]);
 
-  const handleZap = () => {
+    const handleZap = async () => {
     const finalAmount = typeof amount === 'string' ? parseInt(amount, 10) : amount;
-    if (finalAmount > 0) {
-      onZap(finalAmount);
-      onOpenChange(false);
+    if (finalAmount <= 0) {
+      return;
+    }
+
+    setIsZapping(true);
+
+    if (!webln) {
+      toast({
+        title: 'WebLN not found',
+        description: 'Please install a WebLN compatible extension like Alby.',
+        variant: 'destructive',
+      });
+      setIsZapping(false);
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: 'Login required',
+        description: 'You must be logged in to send a zap.',
+        variant: 'destructive',
+      });
+      setIsZapping(false);
+      return;
+    }
+
+    try {
+      const lud16 = author.data?.metadata?.lud16;
+      if (!lud16) {
+        toast({
+          title: 'Lightning address not found',
+          description: 'The geocache owner does not have a lightning address configured.',
+          variant: 'destructive',
+        });
+        setIsZapping(false);
+        return;
+      }
+
+      if (!author.data) {
+        toast({
+          title: 'Author not found',
+          description: 'Could not find the author of this geocache.',
+          variant: 'destructive',
+        });
+        setIsZapping(false);
+        return;
+      }
+
+      const zapEndpoint = await nip57.getZapEndpoint(author.data.event as Event);
+      if (!zapEndpoint) {
+        toast({
+          title: 'Zap endpoint not found',
+          description: 'Could not find a zap endpoint for the geocache owner.',
+          variant: 'destructive',
+        });
+        setIsZapping(false);
+        return;
+      }
+
+      const zapAmount = finalAmount * 1000; // convert to millisats
+      const relays = ['wss://relay.damus.io', 'wss://relay.primal.net', 'wss://relay.snort.social'];
+      const zapRequest = nip57.makeZapRequest({
+        profile: geocache.pubkey,
+        event: geocache.id,
+        amount: zapAmount,
+        relays,
+        comment: 'Zap for a geocache!',
+      });
+
+      publishEvent(zapRequest, {
+        onSuccess: async (event) => {
+          try {
+            const res = await fetch(`${zapEndpoint}?amount=${zapAmount}&nostr=${encodeURI(JSON.stringify(event))}`);
+            const { pr: invoice } = await res.json();
+            await webln.sendPayment(invoice);
+            toast({
+              title: 'Zap successful!',
+              description: `You sent ${finalAmount} sats to the cache owner.`,
+            });
+            onOpenChange(false);
+          } catch (err) {
+            console.error('Zap error:', err);
+            toast({
+              title: 'Zap failed',
+              description: (err as Error).message,
+              variant: 'destructive',
+            });
+          } finally {
+            setIsZapping(false);
+          }
+        },
+        onError: () => {
+          setIsZapping(false);
+        }
+      });
+    } catch (err) {
+      toast({
+        title: 'Zap failed',
+        description: (err as Error).message,
+        variant: 'destructive',
+      });
+      setIsZapping(false);
     }
   };
 
@@ -116,9 +229,15 @@ export function ZapModal({ open, onOpenChange, onZap }: ZapModalProps) {
           />
         </div>
         <DialogFooter>
-          <Button onClick={handleZap} className="w-full">
-            <Zap className="h-4 w-4 mr-2" />
-            Zap {amount} sats
+          <Button onClick={handleZap} className="w-full" disabled={isZapping}>
+            {isZapping ? (
+              'Creating invoice...'
+            ) : (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                Zap {amount} sats
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
