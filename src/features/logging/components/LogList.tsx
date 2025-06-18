@@ -64,7 +64,7 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
   const { zapsByLogId, fetchZapsForLog } = useLogStore();
 
   useEffect(() => {
-    if (log.id) {
+    if (log.id && !zapsByLogId[log.id]) {
       fetchZapsForLog(log.id);
     }
   }, [log.id, fetchZapsForLog]);
@@ -72,13 +72,9 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
   const zaps = useMemo(() => zapsByLogId[log.id] || [], [zapsByLogId, log.id]);
   const totalZapAmount = useMemo(() => {
     return zaps.reduce((total, zap) => {
-      try {
-        const zapRequest = nip57.parseZapRequest(zap);
-        if (zapRequest && zapRequest.amount) {
-          return total + zapRequest.amount;
-        }
-      } catch (e) {
-        // ignore invalid zap requests
+      const bolt11 = zap.tags.find((t) => t[0] === 'bolt11')?.[1];
+      if (bolt11) {
+        return total + nip57.getSatoshisAmountFromBolt11(bolt11);
       }
       return total;
     }, 0);
@@ -235,17 +231,16 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
                 <div className={`flex items-center gap-2 text-gray-600 mt-1 ${compact ? "text-xs" : "text-sm"}`}>
                   <Calendar className={compact ? "h-3 w-3" : "h-3 w-3"} />
                   {formatDistanceToNow(new Date(log.created_at * 1000), { addSuffix: true })}
+                  {totalZapAmount > 0 && (
+                    <>
+                      <Zap className="h-4 w-4 mr-1" />
+                      {totalZapAmount.toLocaleString()} sats
+                  )}
                 </div>
 
               </div>
               
               <div className="flex items-center gap-2">
-                {totalZapAmount > 0 && (
-                  <div className="flex items-center text-xs text-gray-600">
-                    <Zap className="h-4 w-4 mr-1 text-yellow-500" />
-                    {totalZapAmount.toLocaleString()} sats
-                  </div>
-                )}
                 <ZapButton target={log} />
                 <AlertDialog>
                   <DropdownMenu>
