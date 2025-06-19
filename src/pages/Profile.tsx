@@ -25,7 +25,7 @@ import { useUserGeocaches } from '@/features/geocache/hooks/useUserGeocaches';
 import { useUserFoundCaches } from '@/features/profile/hooks/useUserFoundCaches';
 import { useSavedCaches } from '@/features/geocache/hooks/useSavedCaches';
 import { useNip05Status } from '@/features/profile/hooks/useNip05Verification';
-import { formatDistanceToNow } from '@/shared/utils/date';
+
 import { useGeolocation } from '@/features/map/hooks/useGeolocation';
 import { useToast } from '@/shared/hooks/useToast';
 
@@ -174,7 +174,7 @@ export default function Profile() {
             <ProfileHeader
               pubkey={targetPubkey}
               metadata={metadata}
-              createdAt={authorData?.event?.created_at}
+
               hiddenCount={userCaches?.length || 0}
               foundCount={foundCaches?.length || 0}
               savedCount={isOwnProfile ? savedCaches?.length || 0 : undefined}

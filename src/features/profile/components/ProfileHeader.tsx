@@ -1,6 +1,6 @@
-import { Calendar, MapPin, User, CheckCircle, ShieldCheck, Copy, Check, AlertCircle, Clock, Bookmark } from "lucide-react";
+import { MapPin, User, CheckCircle, ShieldCheck, Copy, Check, AlertCircle, Clock, Bookmark } from "lucide-react";
 import { CompassSpinner } from "@/shared/components/ui/loading";
-import { formatDistanceToNow } from "@/shared/utils/date";
+
 import { useNip05Status } from "../hooks/useNip05Verification";
 import { useState } from "react";
 import type { ProfileHeaderProps } from "../types";
@@ -8,7 +8,7 @@ import type { ProfileHeaderProps } from "../types";
 export function ProfileHeader({
   pubkey,
   metadata,
-  createdAt,
+
   hiddenCount,
   foundCount,
   savedCount,
@@ -128,12 +128,7 @@ export function ProfileHeader({
         </div>
         
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-4 mt-2 text-xs sm:text-sm text-muted-foreground">
-          {createdAt && (
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-              Joined {formatDistanceToNow(new Date(createdAt * 1000), { addSuffix: true })}
-            </span>
-          )}
+
           <span className="flex items-center gap-1">
             <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
             {hiddenCount} Hidden
