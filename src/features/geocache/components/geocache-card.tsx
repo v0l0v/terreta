@@ -222,7 +222,6 @@ export function GeocacheCard({
     <div className={`flex items-center gap-0.5 sm:gap-1 shrink-0 ${showOnHover ? 'md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-150' : ''}`}>
       {actions || (
         <>
-          <ZapButton geocache={cache as any} />
           <SaveButton
             geocache={cache as any}
             size="icon"

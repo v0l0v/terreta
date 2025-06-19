@@ -16,8 +16,8 @@ export function ZapButton({ target }: ZapButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useCurrentUser();
 
-  useEffect(() => {
-    async function getWeblnProvider() {
+  const handleOpenModal = async () => {
+    if (!webln) {
       try {
         const provider = await requestProvider();
         setWebln(provider);
@@ -25,12 +25,12 @@ export function ZapButton({ target }: ZapButtonProps) {
         // Silently fail
       }
     }
-    getWeblnProvider();
-  }, []);
+    setIsModalOpen(true);
+  };
 
   return (
     <>
-      <Button size="sm" onClick={() => setIsModalOpen(true)} disabled={!user} className="bg-black text-white hover:bg-gray-800">
+      <Button size="sm" onClick={handleOpenModal} disabled={!user} className="bg-black text-white hover:bg-gray-800">
         <Zap className="h-4 w-4" />
       </Button>
       {isModalOpen && <ZapModal open={isModalOpen} onOpenChange={setIsModalOpen} target={target} webln={webln} />}

@@ -438,7 +438,7 @@ export default function CacheDetail() {
 
                   </div>
                   <div className="flex gap-1 sm:gap-2 flex-shrink-0 ml-2">
-                    <ZapButton geocache={typedGeocache} />
+                    <ZapButton target={{ id: typedGeocache.id, pubkey: typedGeocache.pubkey }} />
                     {!isOwner && <SaveButton geocache={typedGeocache} />}
                     {isOwner && (
                       <>
