@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 import CacheDetail from '@/pages/CacheDetail';
 import { useGeocacheByNaddr } from '@/features/geocache/hooks/useGeocacheByNaddr';
 import { useGeocacheLogs } from '@/features/geocache/hooks/useGeocacheLogs';
+import { useZapStore } from '@/shared/stores/useZapStore';
 import { useZaps } from '@/features/zaps/hooks/useZaps';
 import { useAuthor } from '@/features/auth/hooks/useAuthor';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';

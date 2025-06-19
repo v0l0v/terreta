@@ -1,5 +1,8 @@
 import React from 'react';
+import { useStore } from 'zustand';
+import { useZapStore } from '@/shared/stores/useZapStore';
 import { useZaps } from '@/features/zaps/hooks/useZaps';
+import { nip57 } from "nostr-tools";
 import { Navigation, Trophy, MessageSquare, EyeOff, CheckCircle, BookmarkX, Zap } from 'lucide-react';
 import { InteractiveCard } from '@/components/ui/card-patterns';
 import { CardContent } from '@/components/ui/card';
@@ -114,7 +117,10 @@ export function GeocacheCard({
   const { theme } = useTheme();
   const { navigateToGeocache } = useGeocacheNavigation();
   const author = useAuthor(cache.pubkey);
-  const { data: zaps = [] } = useZaps(cache.id, cache.naddr);
+  const getZapTotal = useStore(useZapStore, (state) => state.getZapTotal);
+  useZaps(cache.id, cache.naddr);
+  const totalZapAmount = getZapTotal(cache.naddr ? `naddr:${cache.naddr}` : `event:${cache.id}`);
+
   const authorName = author.data?.metadata?.name || cache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
 
@@ -212,7 +218,7 @@ export function GeocacheCard({
           </span>
           <span className="flex items-center gap-1">
             <Zap className="h-3 w-3" />
-            <span>{zaps.length}</span>
+            <span>{totalZapAmount.toLocaleString()}</span>
           </span>
         </div>
       )}
@@ -416,6 +422,10 @@ export function GeocacheCard({
                   <span className="flex items-center gap-1">
                     <MessageSquare className="h-3 w-3" />
                     <span>{stats.logCount}</span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Zap className="h-3 w-3" />
+                    <span>{totalZapAmount.toLocaleString()}</span>
                   </span>
                 </div>
               )}

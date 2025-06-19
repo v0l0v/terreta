@@ -123,6 +123,7 @@ export function useUserFoundCaches(targetPubkey?: string) {
         if (geocache) {
           const foundCacheEntry = {
             id: geocache.id,
+            naddr: geocache.naddr,
             dTag: geocache.dTag,
             pubkey: geocache.pubkey,
             name: geocache.name,

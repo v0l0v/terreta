@@ -69,6 +69,7 @@ export function useOptimisticGeocaches(
         if (parsed.hidden && parsed.pubkey !== user?.pubkey) return null;
         return {
           ...parsed,
+          naddr: parsed.naddr,
           foundCount: 0,
           logCount: 0,
         };

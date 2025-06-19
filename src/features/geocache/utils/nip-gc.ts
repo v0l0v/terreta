@@ -3,6 +3,7 @@
  * Consolidated parsing, validation, and utility functions for NIP-GC compliance
  */
 
+import { nip19 } from 'nostr-tools';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { Geocache, GeocacheLog } from '@/features/geocache/types';
 import { getGeohashPrecisionLevels } from '@/features/map/utils/coordinates';
@@ -197,8 +198,16 @@ export function parseGeocacheEvent(event: NostrEvent): Geocache | null {
     // Check if cache is hidden (has 't' tag with 'hidden' value)
     const hidden = event.tags.some(t => t[0] === 't' && t[1] === 'hidden');
 
+    const naddr = nip19.naddrEncode({
+      identifier: dTag,
+      pubkey: event.pubkey,
+      kind: NIP_GC_KINDS.GEOCACHE,
+      relays: relays,
+    });
+
     return {
       id: event.id,
+      naddr,
       pubkey: event.pubkey,
       created_at: event.created_at,
       dTag,

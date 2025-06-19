@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { nip57 } from "nostr-tools";
+
+import { useStore } from 'zustand';
+import { useZapStore } from '@/shared/stores/useZapStore';
+import { useZaps } from '@/features/zaps/hooks/useZaps';
 import { ZapButton } from "@/components/ZapButton";
-import { useZaps } from "@/features/zaps/hooks/useZaps";
+
 import { Navigation, Calendar, User, Edit, Trash2, RefreshCw, Save, RotateCcw, Eye, EyeOff, QrCode, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,6 +82,9 @@ export default function CacheDetail() {
     typedGeocache?.verificationPubkey
   );
   const { data: zaps = [] } = useZaps(typedGeocache?.id || "", typedGeocache?.naddr);
+  const getZapTotal = useStore(useZapStore, (state) => state.getZapTotal);
+  useZaps(typedGeocache?.id || "", typedGeocache?.naddr);
+  const totalZapAmount = getZapTotal(typedGeocache?.naddr ? `naddr:${typedGeocache.naddr}` : `event:${typedGeocache?.id}`);
   const {
     confirmSingleDeletion,
     isConfirmDialogOpen,
@@ -378,13 +385,7 @@ export default function CacheDetail() {
   }
 
 
-  const totalZapAmount = zaps.reduce((total, zap) => {
-    const bolt11 = zap.tags.find((t) => t[0] === 'bolt11')?.[1];
-    if (bolt11) {
-      return total + nip57.getSatoshisAmountFromBolt11(bolt11);
-    }
-    return total;
-  }, 0);
+
 
   const isOwner = user && user.pubkey === typedGeocache.pubkey;
   const authorName = author.data?.metadata?.name || typedGeocache.pubkey.slice(0, 8);
