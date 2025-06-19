@@ -181,7 +181,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:-mt-4">
             {/* Cache Details Card */}
             <DetailsCard title="Cache Details">
               <DifficultyTerrainRating 
