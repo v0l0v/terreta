@@ -1,4 +1,4 @@
-import { Geocache } from './geocache';
+import { Geocache, GeocacheLog } from './geocache';
 import { NostrEvent } from '@nostrify/nostrify';
 
-export type ZapTarget = Geocache | NostrEvent;
+export type ZapTarget = Geocache | NostrEvent | GeocacheLog;

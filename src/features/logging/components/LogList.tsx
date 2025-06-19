@@ -233,8 +233,10 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
                   {formatDistanceToNow(new Date(log.created_at * 1000), { addSuffix: true })}
                   {totalZapAmount > 0 && (
                     <>
-                      <Zap className="h-4 w-4 mr-1" />
-                      {totalZapAmount.toLocaleString()} sats
+                      <span>·</span>
+                      <Zap className="h-3 w-3" />
+                      <span>{totalZapAmount.toLocaleString()} sats</span>
+                    </>
                   )}
                 </div>
 
