@@ -158,7 +158,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
 
             {/* Tabs */}
             <CacheDetailTabs logCount={logs.length}>
-              <TabsContent value="logs" className="space-y-4 max-h-96 overflow-y-auto">
+              <TabsContent value="logs" className="space-y-4 max-h-96 lg:max-h-[26rem] overflow-y-auto border rounded-md p-2">
                 <LogsSection 
                   logs={logs}
                   geocache={geocache}
