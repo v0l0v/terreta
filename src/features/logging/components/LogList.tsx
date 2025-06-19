@@ -41,7 +41,7 @@ interface LogListProps {
 
 export function LogList({ logs, compact = false, onProfileClick }: LogListProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {logs.map((log) => (
         <LogCard key={log.id} log={log} compact={compact} onProfileClick={onProfileClick} />
       ))}
@@ -186,140 +186,295 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
   };
 
   return (
-    <Card>
-      <CardContent className={compact ? "p-3" : "p-4"}>
-        <div className="flex gap-4">
-          <div className="flex-shrink-0">
-            {authorAvatar ? (
-              <img
-                src={authorAvatar}
-                alt={authorName}
-                className={`rounded-full object-cover ${compact ? "h-8 w-8" : "h-10 w-10"}`}
-              />
-            ) : (
-              <div className={`rounded-full bg-gray-200 flex items-center justify-center ${compact ? "h-8 w-8" : "h-10 w-10"}`}>
-                <User className={`text-gray-500 ${compact ? "h-4 w-4" : "h-5 w-5"}`} />
-              </div>
+    <Card className="mobile-card-spacing">
+      <CardContent className={compact ? "p-3" : "p-3 md:p-4"}>
+        {/* Mobile layout (md:hidden) */}
+        <div className="space-y-3 md:hidden">
+          {/* Header row with avatar, name, and actions */}
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              {authorAvatar ? (
+                <img
+                  src={authorAvatar}
+                  alt={authorName}
+                  className={`rounded-full object-cover ${compact ? "h-8 w-8" : "h-9 w-9"}`}
+                />
+              ) : (
+                <div className={`rounded-full bg-gray-200 flex items-center justify-center ${compact ? "h-8 w-8" : "h-9 w-9"}`}>
+                  <User className={`text-gray-500 ${compact ? "h-4 w-4" : "h-4 w-4"}`} />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              {onProfileClick ? (
+                <button
+                  onClick={handleProfileClick}
+                  className={`font-medium hover:underline cursor-pointer truncate block ${compact ? "text-sm" : "text-sm"}`}
+                >
+                  {authorName}
+                </button>
+              ) : (
+                <span className={`font-medium truncate block ${compact ? "text-sm" : "text-sm"}`}>{authorName}</span>
+              )}
+            </div>
+            
+            {/* Actions - always visible on mobile */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <ZapButton target={log} />
+              <AlertDialog>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-9 w-9 p-0 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:shadow-none focus-visible:shadow-none active:outline-none touch-target"
+                      disabled={isDeleting}
+                      style={{ outline: 'none', boxShadow: 'none' }}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end"
+                    side="bottom"
+                    sideOffset={8}
+                    avoidCollisions={true}
+                    collisionPadding={{ bottom: 80 }} // Account for mobile nav bar
+                  >
+                    <DropdownMenuItem onClick={handleCopyEventId} className="focus:outline-none">
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy Event ID
+                    </DropdownMenuItem>
+                    {isOwnLog && (
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete log
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                {isOwnLog && (
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete log?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete your log. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDeleteLog}
+                        className="bg-red-600 hover:bg-red-700"
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                )}
+              </AlertDialog>
+            </div>
+          </div>
+
+          {/* Badges row - mobile only */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Badge variant={getLogTypeBadgeVariant()} className={`gap-1 ${compact ? "text-xs py-0.5 px-1.5 h-5" : "text-xs py-0.5 px-1.5 h-5"}`}>
+              <span className="h-3 w-3 flex items-center justify-center">
+                {getLogIcon()}
+              </span>
+              <span>{getLogTypeLabel().split(' ')[0]}</span>
+            </Badge>
+            {log.isVerified && (
+              <Badge variant="outline" className={`gap-1 border-green-500 text-green-700 ${compact ? "text-xs py-0.5 px-1.5 h-5" : "text-xs py-0.5 px-1.5 h-5"}`}>
+                <ShieldCheck className="h-3 w-3" />
+                <span>✓</span>
+              </Badge>
+            )}
+          </div>
+
+          {/* Timestamp and zap info */}
+          <div className={`flex items-center gap-2 text-gray-600 ${compact ? "text-xs" : "text-xs"}`}>
+            <Calendar className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{formatDistanceToNow(new Date(log.created_at * 1000), { addSuffix: true })}</span>
+            {totalZapAmount > 0 && (
+              <>
+                <span className="text-gray-400">·</span>
+                <Zap className="h-3 w-3 flex-shrink-0" />
+                <span className="flex-shrink-0">{totalZapAmount.toLocaleString()} sats</span>
+              </>
             )}
           </div>
           
-          <div className="flex-1 space-y-2">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  {onProfileClick ? (
-                    <button
-                      onClick={handleProfileClick}
-                      className={`font-medium hover:underline cursor-pointer ${compact ? "text-sm" : ""}`}
-                    >
-                      {authorName}
-                    </button>
-                  ) : (
-                    <span className={`font-medium ${compact ? "text-sm" : ""}`}>{authorName}</span>
-                  )}
-                  <Badge variant={getLogTypeBadgeVariant()} className={`gap-1 ${compact ? "text-xs py-0 px-2" : ""}`}>
-                    {getLogIcon()}
-                    {getLogTypeLabel()}
-                  </Badge>
-                  {log.isVerified && (
-                    <Badge variant="outline" className={`gap-1 border-green-500 text-green-700 ${compact ? "text-xs py-0 px-2" : ""}`}>
-                      <ShieldCheck className="h-3 w-3" />
-                      Verified
-                    </Badge>
-                  )}
-                </div>
-                <div className={`flex items-center gap-2 text-gray-600 mt-1 ${compact ? "text-xs" : "text-sm"}`}>
-                  <Calendar className={compact ? "h-3 w-3" : "h-3 w-3"} />
-                  {formatDistanceToNow(new Date(log.created_at * 1000), { addSuffix: true })}
-                  {totalZapAmount > 0 && (
-                    <>
-                      <span>·</span>
-                      <Zap className="h-3 w-3" />
-                      <span>{totalZapAmount.toLocaleString()} sats</span>
-                    </>
-                  )}
-                </div>
+          {/* Log text - mobile */}
+          <div className={`whitespace-pre-wrap break-words leading-relaxed ${compact ? "text-sm" : "text-sm"}`}>
+            {log.text}
+          </div>
+          
+          {/* Images - mobile */}
+          {log.images && log.images.length > 0 && (
+            <div className={`grid gap-2 mt-3 ${
+              log.images.length === 1 ? 'grid-cols-1 max-w-xs' :
+              log.images.length === 2 ? 'grid-cols-2' :
+              'grid-cols-2'
+            }`}>
+              {log.images.map((url, index) => (
+                <BlurredImage
+                  key={index}
+                  src={url}
+                  alt={`Log image ${index + 1}`}
+                  className={`rounded w-full object-cover ${
+                    compact ? "h-20" : 
+                    log.images.length === 1 ? "h-32" :
+                    "h-20"
+                  }`}
+                  onClick={() => window.open(url, "_blank")}
+                  blurIntensity="medium"
+                  defaultBlurred={true}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <ZapButton target={log} />
-                <AlertDialog>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size={compact ? "sm" : "sm"}
-                        className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:shadow-none focus-visible:shadow-none active:outline-none"
-                        disabled={isDeleting}
-                        style={{ outline: 'none', boxShadow: 'none' }}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      align="end"
-                      side="bottom"
-                      sideOffset={8}
-                      avoidCollisions={true}
-                      collisionPadding={{ bottom: 80 }} // Account for mobile nav bar
-                    >
-                      <DropdownMenuItem onClick={handleCopyEventId} className="focus:outline-none">
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy Event ID
-                      </DropdownMenuItem>
-                      {isOwnLog && (
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem className="text-red-600 focus:text-red-600">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete log
-                          </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  
-                  {isOwnLog && (
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete log?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete your log. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={handleDeleteLog}
-                          className="bg-red-600 hover:bg-red-700"
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? "Deleting..." : "Delete"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  )}
-                </AlertDialog>
-              </div>
+        {/* Desktop layout (hidden md:block) - original design */}
+        <div className="hidden md:block">
+          <div className="flex gap-4">
+            <div className="flex-shrink-0">
+              {authorAvatar ? (
+                <img
+                  src={authorAvatar}
+                  alt={authorName}
+                  className={`rounded-full object-cover ${compact ? "h-8 w-8" : "h-10 w-10"}`}
+                />
+              ) : (
+                <div className={`rounded-full bg-gray-200 flex items-center justify-center ${compact ? "h-8 w-8" : "h-10 w-10"}`}>
+                  <User className={`text-gray-500 ${compact ? "h-4 w-4" : "h-5 w-5"}`} />
+                </div>
+              )}
             </div>
             
-            <p className={`whitespace-pre-wrap ${compact ? "text-xs" : "text-sm"}`}>{log.text}</p>
-            
-            {log.images && log.images.length > 0 && (
-              <div className={`grid grid-cols-3 gap-2 mt-3`}>
-                {log.images.map((url, index) => (
-                  <BlurredImage
-                    key={index}
-                    src={url}
-                    alt={`Log image ${index + 1}`}
-                    className={`rounded w-full ${compact ? "h-16" : "h-24"}`}
-                    onClick={() => window.open(url, "_blank")}
-                    blurIntensity="medium"
-                    defaultBlurred={true}
-                  />
-                ))}
+            <div className="flex-1 space-y-2">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    {onProfileClick ? (
+                      <button
+                        onClick={handleProfileClick}
+                        className={`font-medium hover:underline cursor-pointer ${compact ? "text-sm" : ""}`}
+                      >
+                        {authorName}
+                      </button>
+                    ) : (
+                      <span className={`font-medium ${compact ? "text-sm" : ""}`}>{authorName}</span>
+                    )}
+                    <Badge variant={getLogTypeBadgeVariant()} className={`gap-1 ${compact ? "text-xs py-0 px-2" : ""}`}>
+                      {getLogIcon()}
+                      {getLogTypeLabel()}
+                    </Badge>
+                    {log.isVerified && (
+                      <Badge variant="outline" className={`gap-1 border-green-500 text-green-700 ${compact ? "text-xs py-0 px-2" : ""}`}>
+                        <ShieldCheck className="h-3 w-3" />
+                        Verified
+                      </Badge>
+                    )}
+                  </div>
+                  <div className={`flex items-center gap-2 text-gray-600 mt-1 ${compact ? "text-xs" : "text-sm"}`}>
+                    <Calendar className={compact ? "h-3 w-3" : "h-3 w-3"} />
+                    {formatDistanceToNow(new Date(log.created_at * 1000), { addSuffix: true })}
+                    {totalZapAmount > 0 && (
+                      <>
+                        <span>·</span>
+                        <Zap className="h-3 w-3" />
+                        <span>{totalZapAmount.toLocaleString()} sats</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <ZapButton target={log} />
+                  <AlertDialog>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size={compact ? "sm" : "sm"}
+                          className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:shadow-none focus-visible:shadow-none active:outline-none"
+                          disabled={isDeleting}
+                          style={{ outline: 'none', boxShadow: 'none' }}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent 
+                        align="end"
+                        side="bottom"
+                        sideOffset={8}
+                        avoidCollisions={true}
+                        collisionPadding={{ bottom: 80 }}
+                      >
+                        <DropdownMenuItem onClick={handleCopyEventId} className="focus:outline-none">
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Event ID
+                        </DropdownMenuItem>
+                        {isOwnLog && (
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete log
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    
+                    {isOwnLog && (
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete log?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete your log. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleDeleteLog}
+                            className="bg-red-600 hover:bg-red-700"
+                            disabled={isDeleting}
+                          >
+                            {isDeleting ? "Deleting..." : "Delete"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    )}
+                  </AlertDialog>
+                </div>
               </div>
-            )}
+              
+              <p className={`whitespace-pre-wrap ${compact ? "text-xs" : "text-sm"}`}>{log.text}</p>
+              
+              {log.images && log.images.length > 0 && (
+                <div className={`grid grid-cols-3 gap-2 mt-3`}>
+                  {log.images.map((url, index) => (
+                    <BlurredImage
+                      key={index}
+                      src={url}
+                      alt={`Log image ${index + 1}`}
+                      className={`rounded w-full ${compact ? "h-16" : "h-24"}`}
+                      onClick={() => window.open(url, "_blank")}
+                      blurIntensity="medium"
+                      defaultBlurred={true}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
