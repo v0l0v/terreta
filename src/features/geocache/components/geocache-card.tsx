@@ -271,7 +271,7 @@ export function GeocacheCard({
             <div className="flex items-start justify-between gap-2 sm:gap-3">
               <h3 className="font-semibold text-base leading-tight line-clamp-2 sm:line-clamp-1 group-hover:text-green-600 adventure:group-hover:text-red-900 transition-colors duration-150 min-w-0 flex-1">
                 {cache.isOffline && cache.source === 'manual' && (
-                  <TooltipProvider>
+                  <TooltipProvider key="tooltip-provider">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <BookmarkX className="h-4 w-4 mr-2 inline-block" />
@@ -346,7 +346,7 @@ export function GeocacheCard({
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-green-600 adventure:group-hover:text-red-900 transition-colors">
                   {cache.isOffline && cache.source === 'manual' && (
-                    <TooltipProvider>
+                    <TooltipProvider key="tooltip-provider-compact">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <BookmarkX className="h-4 w-4 mr-2 inline-block" />

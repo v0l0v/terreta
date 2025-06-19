@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { 
   User, 
@@ -256,9 +256,9 @@ export default function Profile() {
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {userCachesWithDistance
                   .filter(cache => cache.id && cache.dTag && cache.pubkey && cache.name && cache.location)
-                  .map((cache) => (
+                  .map((cache, index) => (
                     <GeocacheCard
-                      key={cache.id}
+                      key={`${cache.id}-${index}`}
                       cache={cache}
                       distance={cache.distance}
                       variant="featured"
@@ -297,9 +297,9 @@ export default function Profile() {
               />
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {foundCachesWithDistance.map((cache) => (
+                {foundCachesWithDistance.map((cache, index) => (
                   <GeocacheCard
-                    key={cache.logId}
+                    key={`${cache.id}-${index}`}
                     cache={cache}
                     distance={cache.distance}
                     variant="featured"
@@ -337,9 +337,9 @@ export default function Profile() {
                 />
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {savedCachesWithDistance.map((cache) => (
+                  {savedCachesWithDistance.map((cache, index) => (
                     <GeocacheCard
-                      key={cache.id}
+                      key={`${cache.id}-${index}`}
                       cache={cache}
                       distance={cache.distance}
                       variant="featured"
