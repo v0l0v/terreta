@@ -225,10 +225,8 @@ export function useSavedCachesStore() {
           created_at: Math.floor(Date.now() / 1000),
         }) as NostrEvent
       );
-      await refetchBookmarks();
-      queryClient.invalidateQueries({ queryKey: ['saved-geocaches'] });
     },
-    [user, publishEvent, refetchBookmarks, queryClient]
+    [user, publishEvent, queryClient]
   );
 
   const syncOfflineBookmarks = useCallback(async () => {
@@ -271,13 +269,28 @@ export function useSavedCachesStore() {
   const unsaveCache = useCallback(
     async (geocache: Geocache) => {
       const naddr = `${NIP_GC_KINDS.GEOCACHE}:${geocache.pubkey}:${geocache.dTag}`;
+      
+      // Optimistically update the bookmark list event
+      queryClient.setQueryData(['cache-bookmark-list', user?.pubkey], (oldData: NostrEvent | null) => {
+        if (!oldData) return null;
+        return {
+          ...oldData,
+          tags: oldData.tags.filter(tag => !(tag[0] === 'a' && tag[1] === naddr)),
+        };
+      });
+
       if (isOnline) {
-        if (!savedCacheCoords.includes(naddr)) return;
         const currentTags = bookmarkListEvent?.tags || [];
         const newTags = currentTags.filter(
           tag => !(tag[0] === 'a' && tag[1] === naddr)
         );
-        await updateBookmarkList(newTags);
+        // Publish the update without waiting for it to complete
+        updateBookmarkList(newTags).catch(error => {
+          console.error("Failed to update bookmark list:", error);
+          // Revert optimistic update on failure
+          queryClient.invalidateQueries({ queryKey: ['cache-bookmark-list', user?.pubkey] });
+        });
+        await removeOfflineBookmark(naddr);
       } else {
         await removeOfflineBookmark(naddr);
       }
