@@ -5,6 +5,7 @@ import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useAuthor } from '@/features/auth/hooks/useAuthor';
 import { requestProvider } from 'webln';
 import { Geocache } from '@/types/geocache';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 // Mock dependencies
 vi.mock('@/features/auth/hooks/useCurrentUser');
@@ -40,6 +41,14 @@ const mockGeocache: Geocache = {
   verificationPubkey: 'test-verification-pubkey',
 };
 
+const renderWithProvider = (ui: React.ReactElement) => {
+  return render(
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      {ui}
+    </ThemeProvider>
+  );
+};
+
 describe('ZapButton', () => {
   it('should open the zap modal when clicked', async () => {
     // Arrange
@@ -47,7 +56,7 @@ describe('ZapButton', () => {
     (useAuthor as jest.Mock).mockReturnValue({ data: { metadata: { lud16: 'test@lud16' } } });
     (requestProvider as jest.Mock).mockResolvedValue({});
 
-    render(<ZapButton geocache={mockGeocache} />);
+    renderWithProvider(<ZapButton geocache={mockGeocache} />);
 
     // Act
     const zapButton = await screen.findByRole('button', { name: /Zap \d+ sats/i });
