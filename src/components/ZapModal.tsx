@@ -74,12 +74,12 @@ export function ZapModal({ open, onOpenChange, target, webln }: ZapModalProps) {
     if (target) {
       if ('geocacheId' in target) {
         // This is a GeocacheLog
-        setComment(`Zap for Log on ${target.geocacheId}`);
+        setComment(`Treasures - Zap for your Log on a Geocache!`);
       } else if ('name' in target) {
         // This is a Geocache
-        setComment(`Zap for Geocache - ${target.name}`);
+        setComment(`Treasures - Zap for your Geocache: ${target.name}!`);
       } else {
-        setComment('Zap for a geocache!');
+        setComment('Zap for your geocache!');
       }
     }
   }, [target]);
