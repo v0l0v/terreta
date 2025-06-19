@@ -241,12 +241,15 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
                 <Navigation className="h-4 w-4 mr-2" />
                 Get Directions
               </Button>
-              <ZapButton
+              <Button
                 size="sm"
+                variant="secondary"
                 className="w-full"
                 onClick={() => setZapModalOpen(true)}
-                totalSats={totalSats}
-              />
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Support this geocache
+              </Button>
             </div>
           </div>
         </div>
