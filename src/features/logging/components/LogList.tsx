@@ -72,9 +72,20 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
   const zaps = useMemo(() => zapsByLogId[log.id] || [], [zapsByLogId, log.id]);
   const totalZapAmount = useMemo(() => {
     return zaps.reduce((total, zap) => {
+      const pTag = zap.tags.find((t) => t[0] === 'p')?.[1];
+      const PTag = zap.tags.find((t) => t[0] === 'P')?.[1];
+      if (pTag && PTag && pTag === PTag) {
+        return total;
+      }
+
       const bolt11 = zap.tags.find((t) => t[0] === 'bolt11')?.[1];
       if (bolt11) {
-        return total + nip57.getSatoshisAmountFromBolt11(bolt11);
+        try {
+          return total + nip57.getSatoshisAmountFromBolt11(bolt11);
+        } catch (e) {
+          console.error("Invalid bolt11 invoice", bolt11, e);
+          return total;
+        }
       }
       return total;
     }, 0);
