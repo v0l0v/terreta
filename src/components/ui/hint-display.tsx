@@ -15,7 +15,7 @@ export function HintDisplay({ hint, className = "" }: HintDisplayProps) {
       <AlertDescription className="break-words">
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1">
-            <strong>Hint:</strong>{' '}
+            <strong className="text-foreground-muted">Hint:</strong>{' '}
             <span 
               className={`transition-all duration-200 ${
                 isHintVisible ? '' : 'blur-sm'

@@ -91,7 +91,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
         title={geocache.name}
       >
         {/* Author and date info below title */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-600 mb-2 -mt-2">
+        <div className="text-gray-600 dark:text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm mb-2 -mt-2">
           <span className="flex items-center gap-1">
             <User className="h-4 w-4" />
             Hidden by{' '}
@@ -134,7 +134,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
               </div>
               
               <div className="prose max-w-none">
-                <p className="whitespace-pre-wrap text-sm">{geocache.description}</p>
+                <p className="text-foreground whitespace-pre-wrap text-sm">{geocache.description}</p>
                 
                 {geocache.hint && (
                   <HintDisplay hint={geocache.hint} className="mt-3" />

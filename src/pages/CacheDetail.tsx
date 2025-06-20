@@ -443,7 +443,7 @@ export default function CacheDetail() {
                 </div>
 
                 {/* Author and date info below title */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-600 pt-2">
+                <div className="text-gray-600 dark:text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm pt-2">
                   <span className="flex items-center gap-1">
                     <User className="h-4 w-4" />
                     Hidden by{' '}
@@ -539,7 +539,7 @@ export default function CacheDetail() {
                     </div>
                     
                     <div className="prose max-w-none">
-                      <p className="whitespace-pre-wrap break-words">{typedGeocache.description}</p>
+                      <p className="text-foreground whitespace-pre-wrap break-words">{typedGeocache.description}</p>
                       
                       {typedGeocache.hint && (
                         <Alert className="mt-4 py-2">
