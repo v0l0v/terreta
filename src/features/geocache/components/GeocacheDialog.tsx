@@ -12,7 +12,7 @@ import { GeocacheMap } from "@/features/map/components/GeocacheMap";
 import { useGeocacheLogs } from "../hooks/useGeocacheLogs";
 import { useZapStore } from "@/shared/stores/useZapStore";
 import { ZapButton } from "@/components/ZapButton";
-import { ZapModal } from "@/components/ZapModal";
+
 
 import { useAuthor } from "@/features/auth/hooks/useAuthor";
 import { LogsSection } from "@/features/logging/components/LogsSection";
@@ -50,7 +50,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
   const getZapTotal = useStore(useZapStore, (state) => state.getZapTotal);
   const naddr = geocache ? geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays) : "";
   const totalSats = getZapTotal(naddr ? `naddr:${naddr}` : `event:${geocache?.id}`);
-  const [zapModalOpen, setZapModalOpen] = useState(false);
+
   
   // Image gallery state
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -244,15 +244,12 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
                 <Navigation className="h-4 w-4 mr-2" />
                 Get Directions
               </Button>
-              <Button
-                size="sm"
-                variant="secondary"
+              <ZapButton
+                target={geocache}
                 className="w-full"
-                onClick={() => setZapModalOpen(true)}
               >
-                <Zap className="h-4 w-4 mr-2" />
                 Support this geocache
-              </Button>
+              </ZapButton>
             </div>
           </div>
         </div>
@@ -274,12 +271,7 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
         isOpen={profileDialogOpen}
         onOpenChange={setProfileDialogOpen}
       />
-      <ZapModal
-        isOpen={zapModalOpen}
-        onOpenChange={setZapModalOpen}
-        geocache={geocache}
-        author={author.data}
-      />
+
     </>
   );
 }

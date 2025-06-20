@@ -1,3 +1,4 @@
+import { geocacheToNaddr } from '@/shared/utils/naddr';
 import { useToast } from '@/shared/hooks/useToast';
 import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
@@ -172,7 +173,13 @@ export function ZapModal({ open, onOpenChange, target, webln }: ZapModalProps) {
         comment: comment,
       });
 
-      if ('naddr' in target && target.naddr) {
+      if ('dTag' in target && target.dTag) {
+        const naddr = geocacheToNaddr(target.pubkey, target.dTag, target.relays);
+        const decodedNaddr = nip19.decode(naddr).data as nip19.AddressPointer;
+        zapRequest.tags.push(["a", `${decodedNaddr.kind}:${decodedNaddr.pubkey}:${decodedNaddr.identifier}`]);
+        // remove the e tag
+        zapRequest.tags = zapRequest.tags.filter(t => t[0] !== 'e');
+      } else if ('naddr' in target && target.naddr) {
         const naddr = nip19.decode(target.naddr).data as nip19.AddressPointer;
         zapRequest.tags.push(["a", `${naddr.kind}:${naddr.pubkey}:${naddr.identifier}`]);
         // remove the e tag

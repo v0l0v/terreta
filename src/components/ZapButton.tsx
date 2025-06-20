@@ -10,9 +10,11 @@ import { useTheme } from 'next-themes';
 
 interface ZapButtonProps {
   target: ZapTarget;
+  children?: React.ReactNode;
+  className?: string;
 }
 
-export function ZapButton({ target }: ZapButtonProps) {
+export function ZapButton({ target, children, className }: ZapButtonProps) {
   const [webln, setWebln] = useState<WebLNProvider | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useCurrentUser();
@@ -30,16 +32,11 @@ export function ZapButton({ target }: ZapButtonProps) {
     setIsModalOpen(true);
   };
 
-  const buttonClasses = theme === 'adventure'
-    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-    : theme === 'dark'
-    ? "bg-white text-black hover:bg-gray-200"
-    : "bg-black text-white hover:bg-gray-800";
-
   return (
     <>
-      <Button size="sm" onClick={handleOpenModal} disabled={!user} className={buttonClasses}>
-        <Zap className="h-4 w-4" />
+      <Button size="sm" onClick={handleOpenModal} disabled={!user} className={className}>
+        <Zap className={`h-4 w-4 ${children ? 'mr-2' : ''}`} />
+        {children}
       </Button>
       {isModalOpen && <ZapModal open={isModalOpen} onOpenChange={setIsModalOpen} target={target} webln={webln} />}
     </>

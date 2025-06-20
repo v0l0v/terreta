@@ -41,13 +41,7 @@ const mockGeocache: Geocache = {
   verificationPubkey: 'test-verification-pubkey',
 };
 
-const renderWithProvider = (ui: React.ReactElement) => {
-  return render(
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      {ui}
-    </ThemeProvider>
-  );
-};
+
 
 describe('ZapButton', () => {
   it('should open the zap modal when clicked', async () => {
@@ -56,10 +50,10 @@ describe('ZapButton', () => {
     (useAuthor as jest.Mock).mockReturnValue({ data: { metadata: { lud16: 'test@lud16' } } });
     (requestProvider as jest.Mock).mockResolvedValue({});
 
-    renderWithProvider(<ZapButton geocache={mockGeocache} />);
+    render(<ZapButton target={mockGeocache} />);
 
     // Act
-    const zapButton = await screen.findByRole('button', { name: /Zap \d+ sats/i });
+    const zapButton = screen.getByRole('button');
     fireEvent.click(zapButton);
 
     // Assert
