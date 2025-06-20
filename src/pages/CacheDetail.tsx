@@ -402,42 +402,7 @@ export default function CacheDetail() {
             <Card>
               <CardHeader>
                 <div className="flex items-start gap-2 sm:gap-4">
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-2xl break-words">{typedGeocache.name}</CardTitle>
-                    
-                    <div className="space-y-1 mt-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          <span>
-                            Hidden by{' '}
-                            <button
-                              onClick={() => handleProfileClick(typedGeocache.pubkey)}
-                              className="hover:underline cursor-pointer"
-                            >
-                              {authorName}
-                            </button>
-                          </span>
-                          {profilePicture && (
-                            <img 
-                              src={profilePicture} 
-                              alt={authorName}
-                              className="h-4 w-4 rounded-full object-cover"
-                            />
-                          )}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {formatDistanceToNow(new Date(typedGeocache.created_at * 1000), { addSuffix: true })}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Zap className="h-4 w-4" />
-                          {totalZapAmount.toLocaleString()} sats
-                        </span>
-                      </div>
-                    </div>
-
-                  </div>
+                  <CardTitle className="text-2xl break-words flex-1">{typedGeocache.name}</CardTitle>
                   <div className="flex gap-1 sm:gap-2 flex-shrink-0 ml-2">
                     <ZapButton target={typedGeocache} />
                     {!isOwner && <SaveButton geocache={typedGeocache} />}
@@ -474,6 +439,37 @@ export default function CacheDetail() {
                       </>
                     )}
                     <CacheMenu geocache={typedGeocache} variant="compact" />
+                  </div>
+                </div>
+
+                {/* Author and date info below title */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-600 mt-4 space-y-1">
+                  <span className="flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    Hidden by{' '}
+                    <button
+                      onClick={() => handleProfileClick(typedGeocache.pubkey)}
+                      className="hover:underline cursor-pointer"
+                    >
+                      {authorName}
+                    </button>
+                    {profilePicture && (
+                      <img 
+                        src={profilePicture} 
+                        alt={authorName}
+                        className="h-4 w-4 rounded-full object-cover"
+                      />
+                    )}
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {formatDistanceToNow(new Date(typedGeocache.created_at * 1000), { addSuffix: true })}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Zap className="h-4 w-4" />
+                      {totalZapAmount.toLocaleString()} sats
+                    </span>
                   </div>
                 </div>
               </CardHeader>
