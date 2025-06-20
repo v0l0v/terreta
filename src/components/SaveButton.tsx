@@ -78,11 +78,6 @@ export function SaveButton({
       ) : (
         <Bookmark className="h-4 w-4" />
       )}
-      {showText && size !== 'icon' && (
-        <span className="ml-2">
-          {isLoading ? 'Saving...' : isSaved ? 'Saved' : 'Save'}
-        </span>
-      )}
     </Button>
   );
 }
