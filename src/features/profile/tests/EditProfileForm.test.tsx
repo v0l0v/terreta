@@ -113,6 +113,7 @@ describe('EditProfileForm', () => {
     // Advanced options should now be visible
     expect(screen.getByLabelText('Website')).toBeInTheDocument();
     expect(screen.getByLabelText('NIP-05 Identifier')).toBeInTheDocument();
+    expect(screen.getByLabelText('Lightning Address')).toBeInTheDocument();
     expect(screen.getByLabelText('Bot Account')).toBeInTheDocument();
   });
 

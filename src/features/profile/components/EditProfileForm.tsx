@@ -46,6 +46,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
       banner: '',
       website: '',
       nip05: '',
+      lud16: '',
       bot: false,
     },
   });
@@ -60,6 +61,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
         banner: metadata.banner || '',
         website: metadata.website || '',
         nip05: metadata.nip05 || '',
+        lud16: metadata.lud16 || '',
         bot: metadata.bot || false,
       });
     }
@@ -244,6 +246,15 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
                       label="NIP-05 Identifier"
                       placeholder="you@example.com"
                       description="Your verified Nostr address (requires domain setup)."
+                      type="email"
+                    />
+
+                    <TextField
+                      control={form.control}
+                      name="lud16"
+                      label="Lightning Address"
+                      placeholder="you@satoshi.com"
+                      description="Your Lightning address for receiving payments."
                       type="email"
                     />
                   </div>
