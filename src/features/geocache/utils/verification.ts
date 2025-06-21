@@ -201,7 +201,7 @@ async function generateCutoutQR(verificationUrl: string): Promise<string> {
 
 async function generateMicroQR(verificationUrl: string): Promise<string> {
   const dpi = 300;
-  const cardWidthInches = 1.5;
+  const cardWidthInches = 1.3;
   const cardHeightInches = 11;
   const cardWidth = cardWidthInches * dpi;
   const cardHeight = cardHeightInches * dpi;
