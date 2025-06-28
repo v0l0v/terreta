@@ -46,6 +46,8 @@ import "leaflet/dist/leaflet.css";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { VerificationQRDialog } from "@/components/VerificationQRDialog";
 import type { VerificationKeyPair } from "@/features/geocache/utils/verification";
+import { parseVerificationFromHash } from "@/features/geocache/utils/verification";
+import { naddrToGeocache } from "@/shared/utils/naddr-utils";
 import { useOfflineMode } from "@/features/geocache/hooks/useOfflineStorage";
 
 // CSS override for confirmation map
@@ -127,6 +129,59 @@ export default function CreateCache() {
       }
     }
   }, [searchParams]);
+
+  // Check for claim URL in params (from pre-generated QR code)
+  useEffect(() => {
+    const claimUrlParam = searchParams.get('claimUrl');
+    if (claimUrlParam && user) {
+      try {
+        const claimUrl = new URL(claimUrlParam);
+        const naddr = claimUrl.pathname.slice(1); // Remove leading slash
+        const verificationKey = parseVerificationFromHash(claimUrl.hash);
+        
+        if (naddr && verificationKey) {
+          try {
+            const decoded = naddrToGeocache(naddr);
+            
+            if (decoded.pubkey === user.pubkey) {
+              // Extract the dTag and create verification keypair from the nsec
+              setImportedDTag(decoded.identifier);
+              
+              // For now, we'll create a simple verification keypair object
+              // The actual public key derivation will happen in the create hook
+              setImportedVerificationKeyPair({
+                nsec: verificationKey,
+                publicKey: '', // Will be derived when needed
+              });
+              
+              toast({
+                title: "Claim URL Imported",
+                description: "Your pre-generated cache settings have been loaded. Please fill in the location and other details.",
+              });
+            } else {
+              toast({
+                title: "Invalid Claim URL",
+                description: "This claim URL doesn't belong to your account.",
+                variant: "destructive",
+              });
+            }
+          } catch (decodeError) {
+            toast({
+              title: "Invalid Claim URL",
+              description: "Unable to decode the cache identifier.",
+              variant: "destructive",
+            });
+          }
+        }
+      } catch (error) {
+        toast({
+          title: "Invalid Claim URL",
+          description: "The provided claim URL is not valid.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [searchParams, user]);
 
   const handleImportData = (data: string) => {
     try {

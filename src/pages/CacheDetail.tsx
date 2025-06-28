@@ -7,7 +7,7 @@ import { useZapStore } from '@/shared/stores/useZapStore';
 import { useZaps } from '@/features/zaps/hooks/useZaps';
 import { ZapButton } from "@/components/ZapButton";
 
-import { Navigation, Calendar, User, Edit, Trash2, RefreshCw, Save, RotateCcw, Eye, EyeOff, QrCode, Zap } from "lucide-react";
+import { Navigation, Calendar, User, Edit, Trash2, RefreshCw, Save, RotateCcw, Eye, EyeOff, QrCode, Zap, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,7 @@ import { ProfileDialog } from "@/components/ProfileDialog";
 import { RegenerateQRDialog } from "@/components/RegenerateQRDialog";
 import { CacheMenu } from "@/components/CacheMenu";
 import { parseVerificationFromHash, verifyKeyPair } from "@/features/geocache/utils/verification";
+import { naddrToGeocache } from "@/shared/utils/naddr-utils";
 import type { Geocache } from "@/types/geocache";
 
 export default function CacheDetail() {
@@ -355,6 +356,92 @@ export default function CacheDetail() {
   }
 
   if (!isLoading && !isError && !typedGeocache) {
+    // Check if this naddr belongs to the current user and offer to create it
+    const canCreateFromNaddr = (() => {
+      console.log('DEBUG: Checking canCreateFromNaddr', { 
+        user: !!user, 
+        userPubkey: user?.pubkey, 
+        naddr,
+        isLoading,
+        isError,
+        typedGeocache: !!typedGeocache
+      });
+      
+      if (!user || !naddr) {
+        console.log('DEBUG: No user or naddr', { user: !!user, naddr });
+        return false;
+      }
+      
+      try {
+        const decoded = naddrToGeocache(naddr);
+        console.log('DEBUG: Decoded naddr', { decoded, userPubkey: user.pubkey, match: decoded.pubkey === user.pubkey });
+        return decoded.pubkey === user.pubkey;
+      } catch (error) {
+        console.log('DEBUG: Error decoding naddr', error);
+        return false;
+      }
+    })();
+
+    console.log('DEBUG: canCreateFromNaddr result', canCreateFromNaddr);
+
+    if (canCreateFromNaddr) {
+      return (
+        <div className="min-h-screen bg-muted/30 dark:bg-muted">
+          <DesktopHeader />
+          <div className="container mx-auto px-4 py-16">
+            <div className="max-w-md mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    Create This Geocache
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center space-y-3">
+                    <p className="text-muted-foreground">
+                      This geocache doesn't exist yet, but the link belongs to you! 
+                      You can create it now using this pre-generated claim URL.
+                    </p>
+                    
+                    <Alert>
+                      <QrCode className="h-4 w-4" />
+                      <AlertDescription>
+                        This appears to be from a QR code you generated in advance. 
+                        Creating the geocache will make this claim URL work for finders.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={() => {
+                        // Create the full claim URL to pass to the create page
+                        const claimUrl = `${window.location.origin}${window.location.pathname}${window.location.hash}`;
+                        navigate(`/create?claimUrl=${encodeURIComponent(claimUrl)}`);
+                      }}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Geocache
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => navigate("/")} 
+                      variant="outline" 
+                      className="w-full"
+                    >
+                      Back to Home
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-muted/30 dark:bg-muted">
         <DesktopHeader />
