@@ -15,12 +15,15 @@ import {
   type ValidCacheSize
 } from '@/features/geocache/utils/nip-gc';
 import { generateVerificationKeyPair } from '@/features/geocache/utils/verification';
+import { generateDeterministicDTag, generateRandomDTag } from '@/features/geocache/utils/dTag';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 
 
 export function useCreateGeocache() {
   const queryClient = useQueryClient();
   const { mutateAsync: publishEvent } = useNostrPublish();
   const { toast } = useToast();
+  const { user } = useCurrentUser();
 
   return useMutation({
     mutationFn: async (data: CreateGeocacheData) => {
@@ -53,12 +56,13 @@ export function useCreateGeocache() {
       }
 
       // Create the geocache event according to NIP-GC
-      // Use a stable identifier that doesn't depend on the cache name
-      const dTag = `cache-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      // Use provided dTag, or generate deterministic one, or fallback to random
+      const dTag = data.dTag || 
+        (user && data.name ? generateDeterministicDTag(data.name.trim(), user.pubkey) : generateRandomDTag());
       const relayPreferences = getGeocachingRelays();
 
-      // Generate verification key pair
-      const verificationKeyPair = await generateVerificationKeyPair();
+      // Use provided verification key pair or generate a new one
+      const verificationKeyPair = data.verificationKeyPair || await generateVerificationKeyPair();
 
       // Build tags using consolidated utility
       const tags = buildGeocacheTags({

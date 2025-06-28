@@ -80,6 +80,8 @@ export interface CreateGeocacheData {
   type: string;
   images?: string[];
   hidden?: boolean;
+  dTag?: string; // Optional pre-generated dTag for matching QR codes
+  verificationKeyPair?: any; // Optional pre-generated verification keypair
   // Additional metadata from OSM verification
   accessibility?: {
     wheelchair?: boolean;

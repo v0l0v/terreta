@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { MapPin, AlertTriangle, CheckCircle, Check, WifiOff } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { MapPin, AlertTriangle, CheckCircle, Check, WifiOff, Upload, FileText } from "lucide-react";
 import { CompassSpinner } from "@/components/ui/loading";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { PageLayout } from "@/components/layout";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useCreateGeocache } from "@/features/geocache/hooks/useCreateGeocache";
@@ -75,8 +78,18 @@ function MapResizer({ location }: { location: { lat: number; lng: number } }) {
   return null;
 }
 
+interface PreGeneratedCache {
+  name: string;
+  dTag: string;
+  verificationKeyPair: any;
+  mockEvent: any;
+  naddr: string;
+  timestamp: number;
+}
+
 export default function CreateCache() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useCurrentUser();
   const { isOfflineMode } = useOfflineMode();
   const { mutateAsync: createGeocache, isPending } = useCreateGeocache();
@@ -93,6 +106,70 @@ export default function CreateCache() {
   const [showQRDialog, setShowQRDialog] = useState(false);
   const [createdNaddr, setCreatedNaddr] = useState<string>('');
   const [verificationKeyPair, setVerificationKeyPair] = useState<VerificationKeyPair | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importData, setImportData] = useState<string>('');
+  const [importedDTag, setImportedDTag] = useState<string | null>(null);
+  const [importedVerificationKeyPair, setImportedVerificationKeyPair] = useState<any>(null);
+
+  // Check for import data in URL params
+  useEffect(() => {
+    const importParam = searchParams.get('import');
+    if (importParam) {
+      try {
+        const decoded = atob(importParam);
+        handleImportData(decoded);
+      } catch (error) {
+        toast({
+          title: "Import Failed",
+          description: "Invalid import data in URL",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [searchParams]);
+
+  const handleImportData = (data: string) => {
+    try {
+      const parsed: PreGeneratedCache = JSON.parse(data);
+      
+      // Validate the structure
+      if (!parsed.name || !parsed.dTag || !parsed.verificationKeyPair || !parsed.naddr) {
+        throw new Error("Invalid cache data structure");
+      }
+
+      // Import the data - just pre-fill the name, user can fill in the rest
+      setFormData({
+        ...formData,
+        name: parsed.name
+      });
+      
+      // Store the dTag and verification keypair for later use
+      setImportedDTag(parsed.dTag);
+      setImportedVerificationKeyPair(parsed.verificationKeyPair);
+      
+      // Stay on step 1 so user can fill in location and other details
+      setCurrentStep(1);
+
+      toast({
+        title: "Cache Name Imported",
+        description: `Cache name "${parsed.name}" has been imported. Please fill in the location and other details.`,
+      });
+
+      setShowImportDialog(false);
+      setImportData('');
+    } catch (error) {
+      toast({
+        title: "Import Failed",
+        description: error instanceof Error ? error.message : "Invalid JSON data",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleImportFromDialog = () => {
+    if (!importData.trim()) return;
+    handleImportData(importData);
+  };
 
   // Handle location verification when location changes
   const handleLocationChange = async (newLocation: { lat: number; lng: number } | null) => {
@@ -185,6 +262,8 @@ export default function CreateCache() {
         images,
         difficulty: parseInt(formData.difficulty),
         terrain: parseInt(formData.terrain),
+        dTag: importedDTag || undefined, // Use imported dTag if available
+        verificationKeyPair: importedVerificationKeyPair || undefined, // Use imported verification keypair if available
       });
 
       // Generate naddr for the created cache
@@ -194,10 +273,20 @@ export default function CreateCache() {
         const { geocacheToNaddr } = await import('@/shared/utils/naddr-utils');
         const naddr = geocacheToNaddr(event.pubkey, dTag, relays);
         
-        // Show the QR dialog after successful creation
-        setCreatedNaddr(naddr);
-        setVerificationKeyPair(verificationKeyPair);
-        setShowQRDialog(true);
+        // Only show the QR dialog if we didn't import pre-generated data
+        // (since the user already has the QR code from the pre-generation)
+        if (!importedDTag) {
+          setCreatedNaddr(naddr);
+          setVerificationKeyPair(verificationKeyPair);
+          setShowQRDialog(true);
+        } else {
+          // For imported caches, just navigate directly to the cache page
+          toast({
+            title: "Cache Published Successfully!",
+            description: "Your pre-generated cache is now live. The QR code you generated earlier will work perfectly.",
+          });
+          navigate(`/${naddr}`);
+        }
       }
     } catch (error) {
       // Error handling is already done in the mutation
@@ -259,8 +348,28 @@ export default function CreateCache() {
       <div className="max-w-2xl mx-auto create-cache-container">
         {/* Header - mobile only */}
         <div className="md:hidden px-4 py-6">
-          <h1 className="text-2xl font-bold text-foreground">Hide a New Geocache</h1>
-          <p className="text-muted-foreground mt-2">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-foreground">Hide a New Geocache</h1>
+            </div>
+            <div className="flex gap-2 ml-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowImportDialog(true)}
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/generate-qr')}
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <p className="text-muted-foreground">
             Create a new geocache for others to discover. Choose your difficulty and terrain ratings carefully - 
             they help seekers know what to expect and prepare appropriately.
           </p>
@@ -269,11 +378,33 @@ export default function CreateCache() {
         {/* Desktop Card Header */}
         <Card className="hidden md:block">
           <CardHeader>
-            <CardTitle className="text-foreground">Hide a New Geocache</CardTitle>
-            <CardDescription>
-              Create a new geocache for others to discover. Choose your difficulty and terrain ratings carefully - 
-              they help seekers know what to expect and prepare appropriately.
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-foreground">Hide a New Geocache</CardTitle>
+                <CardDescription>
+                  Create a new geocache for others to discover. Choose your difficulty and terrain ratings carefully - 
+                  they help seekers know what to expect and prepare appropriately.
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowImportDialog(true)}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/generate-qr')}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Generate QR
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -865,6 +996,51 @@ export default function CreateCache() {
           cacheName={formData.name}
         />
       )}
+
+      {/* Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Import Pre-Generated Cache</DialogTitle>
+            <DialogDescription>
+              Paste the JSON data from a previously generated cache to pre-fill this form.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="import-textarea">Cache Data (JSON)</Label>
+              <Textarea
+                id="import-textarea"
+                value={importData}
+                onChange={(e) => setImportData(e.target.value)}
+                placeholder="Paste your exported cache JSON data here..."
+                rows={12}
+                className="font-mono text-xs"
+              />
+            </div>
+            
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowImportDialog(false);
+                  setImportData('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleImportFromDialog}
+                disabled={!importData.trim()}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Import Data
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </PageLayout>
   );

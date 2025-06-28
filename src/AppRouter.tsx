@@ -11,6 +11,7 @@ import CacheDetail from "./pages/CacheDetail";
 // Group by feature for better chunk organization
 import MyCaches from "./pages/MyCaches";
 import CreateCache from "./pages/CreateCache";
+import GenerateQR from "./pages/GenerateQR";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Blog from "./pages/Blog";
@@ -35,6 +36,7 @@ export function AppRouter() {
           <Route path="/" element={<Home />} />
           <Route path="/map" element={<Map />} />
           <Route path="/create" element={<CreateCache />} />
+          <Route path="/generate-qr" element={<GenerateQR />} />
           <Route path="/saved" element={<MyCaches />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:pubkey" element={<Profile />} />
