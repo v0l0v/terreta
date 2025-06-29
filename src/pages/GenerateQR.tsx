@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { QrCode, Download, Upload, CheckCircle, Copy, Trash2 } from "lucide-react";
+import { QrCode, Download, Upload, CheckCircle, Copy, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -14,9 +20,9 @@ import { useToast } from "@/shared/hooks/useToast";
 import { 
   generateVerificationKeyPair, 
   downloadQRCode,
+  generateVerificationQR,
   type VerificationKeyPair 
 } from "@/features/geocache/utils/verification";
-import QRCode from 'qrcode';
 import { buildGeocacheTags, NIP_GC_KINDS } from "@/features/geocache/utils/nip-gc";
 import { geocacheToNaddr } from "@/shared/utils/naddr-utils";
 import { generateDeterministicDTag } from "@/features/geocache/utils/dTag";
@@ -50,6 +56,7 @@ export default function GenerateQR() {
   const [mockEvent, setMockEvent] = useState<PreGeneratedCache['mockEvent'] | null>(null);
   const [naddr, setNaddr] = useState<string>('');
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [qrType, setQrType] = useState<'full' | 'cutout' | 'micro'>('full');
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [exportData, setExportData] = useState<string>('');
@@ -182,20 +189,7 @@ export default function GenerateQR() {
 
     setIsGenerating(true);
     try {
-      // Create the simple claim URL
-      const claimUrl = `https://treasures.to/${naddr}#verify=${verificationKeyPair.nsec}`;
-      
-      // Generate a simple QR code
-      const dataUrl = await QRCode.toDataURL(claimUrl, {
-        width: 512,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        },
-        errorCorrectionLevel: 'M'
-      });
-      
+      const dataUrl = await generateVerificationQR(naddr, verificationKeyPair.nsec, qrType);
       setQrDataUrl(dataUrl);
     } catch (error) {
       toast({
@@ -212,15 +206,7 @@ export default function GenerateQR() {
     if (qrDataUrl) {
       const safeCacheName = cacheName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
       const filename = `${safeCacheName}-qr-code.png`;
-      
-      // Create download link
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = qrDataUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
+      downloadQRCode(qrDataUrl, filename);
       toast({
         title: "QR Code Downloaded",
         description: "The QR code has been saved to your downloads.",
@@ -299,7 +285,7 @@ export default function GenerateQR() {
     if (naddr && verificationKeyPair) {
       generateQR();
     }
-  }, [naddr, verificationKeyPair]);
+  }, [naddr, verificationKeyPair, qrType]);
 
   if (!user) {
     return (
@@ -324,7 +310,7 @@ export default function GenerateQR() {
               Generate QR Code in Advance
             </CardTitle>
             <CardDescription>
-              Create a simple QR code that links to the treasure claim page. Just enter a name 
+              Create a QR code that links to the treasure claim page. Just enter a name 
               and get a QR code you can print and place with your cache.
             </CardDescription>
           </CardHeader>
@@ -485,7 +471,29 @@ export default function GenerateQR() {
                 </div>
 
                 {/* QR Controls */}
-                <div className="flex justify-center">
+                <div className="flex justify-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        Style
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => setQrType('full')}>
+                        Full
+                        <span className="text-xs text-muted-foreground ml-2">(Default) Full size QR code</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setQrType('cutout')}>
+                        Cutout
+                        <span className="text-xs text-muted-foreground ml-2">Smaller QR code with cut lines</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setQrType('micro')}>
+                        Micro
+                        <span className="text-xs text-muted-foreground ml-2">Log entry list for micro caches</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button
                     onClick={handleDownloadQR}
                     disabled={!qrDataUrl}
@@ -529,7 +537,7 @@ export default function GenerateQR() {
                   </AlertDescription>
                 </Alert>
 
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Button 
                     onClick={() => navigate('/create')} 
                     className="flex-1"
@@ -544,6 +552,13 @@ export default function GenerateQR() {
                     Reset
                   </Button>
                 </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowGenerated(false)}
+                  className="w-full bg-white text-black hover:bg-gray-100 border"
+                >
+                  Done
+                </Button>
               </CardContent>
             </Card>
           </div>
