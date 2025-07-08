@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAppContext } from "@/shared/hooks/useAppContext";
 import { Link } from "react-router-dom";
-import { MapPin, Plus, Search, Compass, QrCode, Scroll, Crown, Shield, Users, Globe } from "lucide-react";
+import { MapPin, Plus, Search, Compass, Scroll, Crown, Shield, Users, Globe, ScanQrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/ui/card-patterns";
 import { DesktopHeader } from "@/components/DesktopHeader";
@@ -319,7 +319,7 @@ export default function Home() {
             </Link>
             <Link to="/claim" className="flex-1 sm:flex-initial group">
               <Button size="lg" variant="outline" className="w-full sm:w-auto border-green-200 dark:border-green-800 adventure:border-stone-400 hover:border-green-300 dark:hover:border-green-700 adventure:hover:border-stone-500 hover:bg-green-50 dark:hover:bg-green-950 adventure:hover:bg-stone-200 adventure:hover:text-stone-800 transform transition-all duration-200 hover:scale-105 text-sm xs:text-base adventure:text-base adventure:xs:text-lg px-4 xs:px-6">
-                <QrCode className="h-5 w-5 mr-1 xs:mr-2 transition-transform group-hover:scale-110 adventure:hidden" />
+                <ScanQrCode className="h-5 w-5 mr-1 xs:mr-2 transition-transform group-hover:scale-110 adventure:hidden" />
                 <Scroll className="h-5 w-5 mr-1 xs:mr-2 transition-transform group-hover:scale-110 hidden adventure:inline" />
                 <span className="adventure:hidden">
                   <span className="hidden xs:inline">Claim Treasure</span>
