@@ -71,7 +71,7 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/generate-qr">
-                    <ScanQrCode className="h-4 w-4 mr-2" />
+                    <QrCode className="h-4 w-4 mr-2" />
                     Generate QR Code
                   </Link>
                 </DropdownMenuItem>

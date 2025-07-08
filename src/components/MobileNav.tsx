@@ -128,7 +128,7 @@ export function MobileHeader() {
                   
                   <NavLink
                     to="/generate-qr"
-                    icon={ScanQrCode}
+                    icon={QrCode}
                     isActive={location.pathname === '/generate-qr'}
                     onClick={closeSheet}
                   >
