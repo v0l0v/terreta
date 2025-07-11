@@ -2,7 +2,7 @@
 
 Treasures.to is a decentralized geocaching platform built on the Nostr protocol. Discover hidden geocaches, share locations, and connect with explorers worldwide through a censorship-resistant, open network.
 
-**Live at: [treasures.to](https://treasures.to)**
+## Live at: [treasures.to](https://treasures.to)
 
 ![Treasures.to](./public/og-image.png)
 
@@ -11,7 +11,7 @@ Treasures.to is a decentralized geocaching platform built on the Nostr protocol.
 - **🗺️ Interactive Map**: Explore geocaches on a detailed map with custom markers and search.
 - **✍️ Log Adventures**: Record your finds, DNFs (Did Not Find), and notes about each cache.
 - **📲 QR Code Verification**: A novel QR code verification system for cache finds with cryptographic proof.
-- ** Nostr**: Built on the decentralized Nostr network for a censorship-resistant experience.
+- **Nostr**: Built on the decentralized Nostr network for a censorship-resistant experience.
 - **🧑‍💻 Open Source**: This project is licensed under the GNU Affero General Public License v3.0.
 - **🚫 No Registration**: Login with any Nostr keypair - no email or personal data required.
 - **📍 Location Search**: Find geocaches by city, zip code, or "Near Me" functionality.
