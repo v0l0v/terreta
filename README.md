@@ -61,10 +61,6 @@ npm run preview
 - **TanStack Query**: Powerful data fetching, caching, and synchronization.
 - **Leaflet**: Open-source interactive maps.
 
-## ⚡ Zap Support
-
-Treasures.to supports [Nostr zaps](https://github.com/nostr-protocol/nips/blob/master/57.md), allowing you to send Bitcoin lightning payments to other users. To receive zaps, configure your lightning address in your Nostr profile.
-
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.

@@ -55,7 +55,7 @@ describe('useGeocacheByNaddr cache optimization', () => {
     const mockGeocache: Geocache = {
       id: 'test-id',
       dTag: 'test-dtag',
-      pubkey: 'test-pubkey',
+      pubkey: 'a'.repeat(64),
       name: 'Test Cache',
       description: 'Test description',
       location: { lat: 40.7128, lng: -74.0060 },
@@ -95,7 +95,7 @@ describe('useGeocacheByNaddr cache optimization', () => {
     const mockGeocache: Geocache = {
       id: 'test-id-2',
       dTag: 'test-dtag-2',
-      pubkey: 'test-pubkey-2',
+      pubkey: 'b'.repeat(64),
       name: 'Test Cache 2',
       description: 'Test description 2',
       location: { lat: 40.7128, lng: -74.0060 },
@@ -132,7 +132,7 @@ describe('useGeocacheByNaddr cache optimization', () => {
     const mockGeocache: Geocache = {
       id: 'test-id-3',
       dTag: 'test-dtag-3',
-      pubkey: 'test-pubkey-3',
+      pubkey: 'c'.repeat(64),
       name: 'Test Cache 3',
       description: 'Test description 3',
       location: { lat: 40.7128, lng: -74.0060 },
@@ -167,7 +167,7 @@ describe('useGeocacheByNaddr cache optimization', () => {
 
   it('should fall back to network request when no cached data is available', async () => {
     // Don't pre-populate any cache
-    const naddr = geocacheToNaddr('unknown-pubkey', 'unknown-dtag', ['wss://ditto.pub/relay']);
+        const naddr = geocacheToNaddr('a'.repeat(64), 'unknown-dtag', ['wss://ditto.pub/relay']);
 
     const { result } = renderHook(
       () => useGeocacheByNaddr(naddr),

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseLogEvent, NIP_GC_KINDS } from '@/lib/nip-gc';
+import { parseLogEvent, NIP_GC_KINDS } from '@/features/geocache/utils/nip-gc';
 
 describe('Verification Fix', () => {
   it('should not mark found logs as verified during parsing', () => {

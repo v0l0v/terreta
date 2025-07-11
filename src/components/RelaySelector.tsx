@@ -86,12 +86,12 @@ export function RelaySelector(props: RelaySelectorProps) {
   return (
     <>
       {/* Desktop: Use combobox */}
-      <div className={cn("hidden md:block", className)}>
+      <div className={cn("hidden md:block", className)} data-testid="desktop-relay-selector">
         <RelayCombobox />
       </div>
 
       {/* Mobile: Use select dropdown */}
-      <div className={cn("md:hidden space-y-2", className)}>
+      <div className={cn("md:hidden space-y-2", className)} data-testid="mobile-relay-selector">
         <div className="flex items-center gap-2">
           <Select 
             value={isCustomRelay ? "custom" : selectedRelay} 

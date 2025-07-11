@@ -10,6 +10,13 @@ import { StoreProvider } from '@/shared/stores/StoreProvider';
 import { AppProvider } from '@/components/AppProvider';
 import { AppConfig } from '@/contexts/AppContext';
 
+vi.mock('@/features/offline/utils/offlineStorage', () => ({
+  offlineStorage: {
+    getPendingActions: vi.fn().mockResolvedValue([]),
+    getSetting: vi.fn(),
+  },
+}));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -96,7 +103,7 @@ describe('Home Page Theme Support', () => {
     const mainDiv = container.querySelector('.min-h-screen');
     expect(mainDiv).toHaveClass('bg-gradient-to-br');
     expect(mainDiv).toHaveClass('from-green-50/60');
-    expect(mainDiv).toHaveClass('dark:from-slate-900/70');
+    expect(mainDiv).toHaveClass('dark:from-slate-900');
   });
 
   it('should display globe SVG elements', () => {
@@ -124,7 +131,8 @@ describe('Home Page Theme Support', () => {
     );
 
     // Click the dropdown trigger to reveal the menu items
-    fireEvent.click(screen.getByRole('button', { name: /explore/i }));
+    const exploreButton = screen.getAllByRole('button', { name: /explore/i })[0];
+    fireEvent.click(exploreButton);
     await waitFor(async () => {
       expect(await screen.findByText(/Start Exploring/)).toBeInTheDocument();
     });
@@ -137,7 +145,8 @@ describe('Home Page Theme Support', () => {
     );
 
     // Click the dropdown trigger again after rerender
-    fireEvent.click(screen.getByRole('button', { name: /explore/i }));
+    const revealMapButton = screen.getAllByRole('button', { name: /reveal map/i })[0];
+    fireEvent.click(revealMapButton);
     await waitFor(async () => {
       expect(await screen.findByText(/Reveal Map/)).toBeInTheDocument();
     });

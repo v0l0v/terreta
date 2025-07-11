@@ -61,7 +61,7 @@ describe('Offline Mode', () => {
     });
 
     // Import the hook after mocking
-    const { useOfflineMode } = await import('@/hooks/useOfflineStorage');
+    const { useOfflineMode } = await import('@/features/offline/hooks/useOfflineStorage');
     
     // Create a test component that uses the hook
     let hookResult: any;
