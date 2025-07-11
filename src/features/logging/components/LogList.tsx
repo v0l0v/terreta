@@ -323,7 +323,7 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
           </div>
           
           {/* Log text - mobile */}
-          <LogText text={log.text} />
+          <LogText text={log.text} onProfileClick={onProfileClick} />
           
           
         </div>
@@ -444,7 +444,7 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
                 </div>
               </div>
               
-              <LogText text={log.text} />
+              <LogText text={log.text} onProfileClick={onProfileClick} />
               
               
             </div>
