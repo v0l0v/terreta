@@ -139,20 +139,20 @@ export default function CreateCacheLanding() {
     <PageLayout maxWidth="lg" background="default" className="pb-4">
       <div className="max-w-md mx-auto text-center space-y-4">
         <div>
-          <h1 className="text-foreground text-2xl font-bold flex items-center justify-center gap-2 -mb-1 sm:mb-0">
+          <h1 className="text-foreground [@media(max-height:800px)]:text-xl text-2xl font-bold flex items-center justify-center gap-2 -mb-1 sm:mb-0">
             <QrCode className="text-foreground h-8 w-8" />
             Hide a New Geocache
           </h1>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 xs:space-y-4">
           <h2 className="text-lg font-semibold text-foreground">Step 1: Get Your QR Code</h2>
           <div className="flex justify-center">
             {qrDataUrl ? (
               <img
                 src={qrDataUrl}
                 alt="Verification QR Code"
-                className="w-full h-[185px] sm:h-auto rounded max-w-xs object-contain"
+                className="w-full [@media(max-height:680px)]:h-[185px] [@media(max-height:900px)]:max-w-[65vw] sm:h-auto rounded max-w-xs object-contain"
               />
             ) : (
               <div className="w-64 h-64 flex items-center justify-center bg-muted rounded">
@@ -188,29 +188,29 @@ export default function CreateCacheLanding() {
               Download
             </Button>
             <Button variant="outline" onClick={handlePrint} disabled={!qrDataUrl}>
-              <Printer className="h-4 w-4 mr-2" />
-              Print
+              <Printer className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:block">Print</span>
             </Button>
           </div>
         </div>
 
-        <div className="space-y-2 pt-4 border-t">
+        <div className="space-y-2 xs:space-y-4 pt-4 border-t">
           <h2 className="text-lg font-semibold text-foreground">Step 2: Create Your Listing</h2>
           <p className="text-sm text-muted-foreground">
             Create the online listing for your geocache now, or scan the QR code later to finish.
           </p>
-          <div className="flex gap-2 justify-center sm:flex-col">
+          <div className="flex gap-2 justify-center [@media(max-height:680px)]:flex-row flex-col">
           <Button
             onClick={handleFillOutNow}
             disabled={!qrDataUrl}
-            className="w-50 p-5"
+            className="[@media(max-height:680px)]:w-50 w-full p-5"
           >
             I'll fill it out now
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/")}
-            className="w-50 p-5"
+            className="[@media(max-height:680px)]:w-50 w-full p-5"
           >
             I'll do it later
           </Button>
