@@ -43,7 +43,7 @@ export function PageLayout({
   };
 
   return (
-    <div className={cn('min-h-screen flex flex-col', backgroundClasses[background])}>
+    <div className={cn('flex flex-col', backgroundClasses[background])}>
       <DesktopHeader />
       <div className={cn(
         'flex-1 mx-auto w-full',

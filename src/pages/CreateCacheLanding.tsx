@@ -139,24 +139,20 @@ export default function CreateCacheLanding() {
     <PageLayout maxWidth="lg" background="default" className="pb-4">
       <div className="max-w-md mx-auto text-center space-y-4">
         <div>
-          <h1 className="text-foreground text-2xl font-bold flex items-center justify-center gap-2">
+          <h1 className="text-foreground text-2xl font-bold flex items-center justify-center gap-2 -mb-1 sm:mb-0">
             <QrCode className="text-foreground h-8 w-8" />
             Hide a New Geocache
           </h1>
-
         </div>
 
-        <div className="space-y-4 pt-4 border-t">
+        <div className="space-y-2">
           <h2 className="text-lg font-semibold text-foreground">Step 1: Get Your QR Code</h2>
-          <p className="text-sm text-muted-foreground">
-            Print this QR code and place it inside your physical cache.
-          </p>
-          <div className="flex justify-center p-4 bg-white rounded-lg border shadow-sm">
+          <div className="flex justify-center">
             {qrDataUrl ? (
               <img
                 src={qrDataUrl}
                 alt="Verification QR Code"
-                className="w-full h-auto rounded max-w-xs object-contain"
+                className="w-full h-[185px] sm:h-auto rounded max-w-xs object-contain"
               />
             ) : (
               <div className="w-64 h-64 flex items-center justify-center bg-muted rounded">
@@ -164,6 +160,9 @@ export default function CreateCacheLanding() {
               </div>
             )}
           </div>
+          <p className="text-xs text-muted-foreground p-1">
+            Print this QR code and place it inside your geocache.
+          </p>
           <div className="flex justify-center gap-2 flex-wrap">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -195,25 +194,27 @@ export default function CreateCacheLanding() {
           </div>
         </div>
 
-        <div className="space-y-4 pt-4 border-t">
+        <div className="space-y-2 pt-4 border-t">
           <h2 className="text-lg font-semibold text-foreground">Step 2: Create Your Listing</h2>
           <p className="text-sm text-muted-foreground">
             Create the online listing for your geocache now, or scan the QR code later to finish.
           </p>
+          <div className="flex gap-2 justify-center sm:flex-col">
           <Button
             onClick={handleFillOutNow}
             disabled={!qrDataUrl}
-            className="w-full"
+            className="w-50 p-5"
           >
             I'll fill it out now
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/")}
-            className="w-full"
+            className="w-50 p-5"
           >
             I'll do it later
           </Button>
+          </div>
         </div>
       </div>
     </PageLayout>

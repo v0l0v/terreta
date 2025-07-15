@@ -408,16 +408,6 @@ export default function CreateCache() {
                   they help seekers know what to expect and prepare appropriately.
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/generate-qr')}
-                >
-                  <QrCode className="h-4 w-4 mr-2" />
-                  Generate QR
-                </Button>
-              </div>
             </div>
           </CardHeader>
           <CardContent>
