@@ -636,3 +636,72 @@ export function downloadQRCode(dataUrl: string, filename: string = 'geocache-ver
   link.click();
   document.body.removeChild(link);
 }
+
+/**
+ * Generate a printable 3x3 grid of QR codes.
+ */
+export async function generateQRGridImage(sheetData: {name: string, naddr: string, keyPair: VerificationKeyPair}[]): Promise<string> {
+  const dpi = 300;
+  const paperWidth = 8.5 * dpi; // 2550
+  const paperHeight = 11 * dpi; // 3300
+  const margin = 0.5 * dpi; // 150
+
+  const canvas = document.createElement('canvas');
+  canvas.width = paperWidth;
+  canvas.height = paperHeight;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('Could not get canvas context');
+  }
+
+  // White background
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, paperWidth, paperHeight);
+
+  const contentWidth = paperWidth - 2 * margin;
+  const contentHeight = paperHeight - 2 * margin;
+  const cellWidth = contentWidth / 3;
+  const cellHeight = contentHeight / 3;
+  const qrSize = Math.min(cellWidth, cellHeight) * 0.9;
+  const textHeight = 40;
+
+  ctx.fillStyle = 'black';
+  ctx.textAlign = 'center';
+  ctx.font = '32px Arial';
+
+  const qrCodePromises = sheetData.map(d => generateVerificationQR(d.naddr, d.keyPair.nsec, 'full'));
+
+  const qrCodes = await Promise.all(qrCodePromises);
+
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const qrImage = new Image();
+      await new Promise((resolve, reject) => {
+        qrImage.onload = resolve;
+        qrImage.onerror = reject;
+        qrImage.src = qrCodes[row * 3 + col];
+      });
+
+      const x = margin + col * cellWidth;
+      const y = margin + row * cellHeight;
+      
+      const qrX = x + (cellWidth - qrSize) / 2;
+      const qrY = y + (cellHeight - qrSize - textHeight) / 2;
+
+      ctx.strokeStyle = '#888888';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([15, 15]);
+      ctx.strokeRect(qrX - 10, qrY - 10, qrSize + 20, qrSize + 20);
+      ctx.setLineDash([]);
+
+      ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+      
+      const textX = x + cellWidth / 2;
+      const textY = qrY + qrSize + textHeight;
+      ctx.fillText(sheetData[row * 3 + col].name, textX, textY, cellWidth * 0.9);
+    }
+  }
+
+  return canvas.toDataURL('image/png');
+}

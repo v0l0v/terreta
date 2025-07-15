@@ -19,6 +19,7 @@ import { initializeCacheCleanup } from '@/features/geocache/utils/cacheCleanup';
 import { DEFAULT_RELAY, PRESET_RELAYS } from '@/shared/config/relays';
 import { useEffect } from 'react';
 import './styles/leaflet-overrides.css';
+import './styles/print.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
