@@ -262,8 +262,8 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
           attributionControl={false}
         >
           <TileLayer
-            attribution={mapStyle.attribution}
-            url={mapStyle.url}
+            attribution={mapStyle?.attribution ?? ''}
+            url={mapStyle?.url ?? ''}
             maxZoom={19}
           />
           <LocationSelector 

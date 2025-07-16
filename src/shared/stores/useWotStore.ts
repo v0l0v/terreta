@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { nip19 } from 'nostr-tools';
-import { NostrClient } from '@nostrify/react';
-import { QUERY_LIMITS } from '../config/limits';
+import { type NostrContextType } from '@nostrify/react';
 
 const MAX_WOT_PUBKEYS = 100000;
 
@@ -21,7 +20,7 @@ interface WotState {
 interface WotActions {
   setTrustLevel: (level: number) => void;
   setStartingPoint: (npubOrHex: string) => void;
-  calculateWot: (nostr: NostrClient, currentUserPubkey?: string) => Promise<void>;
+  calculateWot: (nostr: NostrContextType["nostr"], currentUserPubkey?: string) => Promise<void>;
   cancelCalculation: () => void;
   clearWot: () => void;
   setFollowLimit: (followLimit: number) => void;
@@ -134,7 +133,7 @@ export const useWotStore = create<WotStore>()(
                 continue;
               }
               for (const tag of pTags) {
-                const pubkey = tag[1];
+                const pubkey = tag && tag[1] ? tag[1] : '';
                 if (!allWotPubkeys.has(pubkey)) {
                   currentPubkeys.add(pubkey);
                   allWotPubkeys.add(pubkey);
@@ -152,7 +151,7 @@ export const useWotStore = create<WotStore>()(
             progress: 100,
           });
         } catch (error) {
-          if (error.name !== 'AbortError') {
+          if ((error as Error).name !== 'AbortError') {
             console.error('Error calculating Web of Trust:', error);
           }
         } finally {

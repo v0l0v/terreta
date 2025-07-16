@@ -18,7 +18,7 @@ import type {
   OfflineBookmark
 } from './types';
 import type { Geocache } from '@/types/geocache';
-import type { GeocacheLog } from '@/types/geocache-log';
+import type { GeocacheLog } from '@/types/geocache';
 import { useConnectivity } from '@/features/offline/hooks/useConnectivity';
 import { useOfflineStorage } from '@/features/offline/hooks/useOfflineStorage';
 import { STORAGE_CONFIG } from '@/shared/config/storage';

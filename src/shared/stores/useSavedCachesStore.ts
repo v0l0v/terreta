@@ -27,12 +27,13 @@ interface SavedCache {
   };
   difficulty: number;
   terrain: number;
-  size: string;
-  type: string;
+  size: "micro" | "small" | "regular" | "large" | "other";
+  type: "traditional" | "multi" | "mystery";
   foundCount?: number;
   logCount?: number;
   hidden?: boolean;
   isOffline?: boolean;
+  created_at: number;
 }
 
 const CACHE_BOOKMARK_KIND = 10003;
@@ -48,16 +49,13 @@ export function useSavedCachesStore() {
     saveBookmarkOffline,
     removeOfflineBookmark,
     clearOfflineData,
-    clearOfflineBookmarks,
   } = useOfflineStore();
-  const { settings, hasHydrated } = useOfflineSettings();
+  const { settings } = useOfflineSettings();
   const { offlineOnly } = settings;
   const [isSyncing, setIsSyncing] = useState(false);
-  const initialSyncCompleted = useRef(false);
 
   const {
     data: bookmarkListEvent,
-    refetch: refetchBookmarks,
     isLoading: isLoadingBookmarks,
   } = useQuery({
     queryKey: ['cache-bookmark-list', user?.pubkey],
@@ -100,7 +98,7 @@ export function useSavedCachesStore() {
         AbortSignal.timeout(TIMEOUTS.QUERY),
       ]);
       const filters = savedCacheCoords.map(coord => {
-        const [kind, pubkey, dTag] = coord.split(':');
+        const [kind, pubkey, dTag] = coord?.split(':') || ['', '', ''];
         return {
           kinds: [parseInt(kind || '')],
           authors: [pubkey],
@@ -108,6 +106,7 @@ export function useSavedCachesStore() {
           limit: 1,
         };
       });
+      if (!filters) return [];
       const events = await nostr.query(filters, { signal });
       return events;
     },
@@ -160,6 +159,7 @@ export function useSavedCachesStore() {
       logCount: geocache.logCount,
       hidden: geocache.hidden,
       isOffline: true,
+      created_at: geocache.created_at,
       source,
     }));
   }, [offlineBookmarks]);
@@ -181,7 +181,7 @@ export function useSavedCachesStore() {
   useEffect(() => {
     if (onlineSavedCaches.length > 0) {
       onlineSavedCaches.forEach(cache => {
-        saveBookmarkOffline(cache, 'synced');
+        saveBookmarkOffline(cache);
       });
     }
   }, [onlineSavedCaches, saveBookmarkOffline]);

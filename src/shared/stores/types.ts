@@ -4,7 +4,7 @@
 
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { Geocache } from '@/types/geocache';
-import type { GeocacheLog } from '@/types/geocache-log';
+import type { GeocacheLog } from '@/types/geocache';
 
 // Base store state interface
 export interface BaseStoreState {
