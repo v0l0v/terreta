@@ -4,7 +4,6 @@
 
 import { vi, expect } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
-import React from 'react';
 import type { Geocache, GeocacheLog } from '@/types/geocache';
 
 /**
