@@ -7,20 +7,19 @@ interface NostrPubkeyProps {
 }
 
 export function NostrPubkey({ npub, onProfileClick }: NostrPubkeyProps) {
-  // Decode the npub to get the hex pubkey
-  let pubkey: string;
+  // Decode the npub to get the hex pubkey - always attempt decoding
+  let pubkey: string | null = null;
   try {
     const decoded = nip19.decode(npub);
-    if (decoded.type !== 'npub') {
-      return <span className="text-blue-600">@{npub.slice(0, 12)}...</span>;
+    if (decoded.type === 'npub') {
+      pubkey = decoded.data;
     }
-    pubkey = decoded.data;
   } catch (error) {
-    // If decoding fails, just show the npub
-    return <span className="text-blue-600">@{npub.slice(0, 12)}...</span>;
+    // If decoding fails, pubkey remains null
   }
 
-  const author = useAuthor(pubkey);
+  // Always call useAuthor, even if pubkey is null
+  const author = useAuthor(pubkey || '');
   
   // Determine display name
   const displayName = author.data?.metadata?.name || 
@@ -28,12 +27,12 @@ export function NostrPubkey({ npub, onProfileClick }: NostrPubkeyProps) {
                      npub.slice(0, 12) + '...';
 
   const handleClick = () => {
-    if (onProfileClick) {
+    if (onProfileClick && pubkey) {
       onProfileClick(pubkey);
     }
   };
 
-  if (onProfileClick) {
+  if (onProfileClick && pubkey) {
     return (
       <button
         onClick={handleClick}
