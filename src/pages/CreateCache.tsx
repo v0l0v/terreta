@@ -120,7 +120,7 @@ export default function CreateCache() {
               const { data: privateKeyBytes } = nip19.decode(nsec);
               // Derive the public key (getPublicKey expects a hex string)
               const privateKeyHex = toHexString(privateKeyBytes as Uint8Array);
-              const publicKey = getPublicKey(privateKeyHex);
+
               
               // Store the complete, valid keypair
               setImportedVerificationKeyPair({
@@ -244,7 +244,7 @@ export default function CreateCache() {
 
     try {
       // Location was already confirmed on step 1, so create directly
-      const { event, verificationKeyPair } = await createGeocache({
+      const { event } = await createGeocache({
         ...formData,
         location,
         images,
@@ -503,21 +503,25 @@ export default function CreateCache() {
                   </div>
                   
                   <CacheTypeField
+                    fieldId="cache-type"
                     value={formData.type}
                     onChange={(value) => setFormData({...formData, type: value})}
                   />
                   
                   <CacheDifficultyField
+                    fieldId="cache-difficulty"
                     value={formData.difficulty}
                     onChange={(value) => setFormData({...formData, difficulty: value})}
                   />
                   
                   <CacheTerrainField
+                    fieldId="cache-terrain"
                     value={formData.terrain}
                     onChange={(value) => setFormData({...formData, terrain: value})}
                   />
                   
                   <CacheSizeField
+                    fieldId="cache-size"
                     value={formData.size}
                     onChange={(value) => setFormData({...formData, size: value})}
                   />
@@ -735,21 +739,25 @@ export default function CreateCache() {
                 </div>
                 
                 <CacheTypeField
+                  fieldId="cache-type-mobile"
                   value={formData.type}
                   onChange={(value) => setFormData({...formData, type: value})}
                 />
                 
                 <CacheDifficultyField
+                  fieldId="cache-difficulty-mobile"
                   value={formData.difficulty}
                   onChange={(value) => setFormData({...formData, difficulty: value})}
                 />
                 
                 <CacheTerrainField
+                  fieldId="cache-terrain-mobile"
                   value={formData.terrain}
                   onChange={(value) => setFormData({...formData, terrain: value})}
                 />
                 
                 <CacheSizeField
+                  fieldId="cache-size-mobile"
                   value={formData.size}
                   onChange={(value) => setFormData({...formData, size: value})}
                 />

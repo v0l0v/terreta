@@ -96,10 +96,4 @@ export {
 } from './queryOptimizer';
 
 // Convenience re-exports for common patterns
-export {
-  // Direct store access (for components that don't need context)
-  useGeocacheStore as useDirectGeocacheStore,
-  useLogStore as useDirectLogStore,
-  useAuthorStore as useDirectAuthorStore,
-  useOfflineStore as useDirectOfflineStore,
-};
+// Note: Direct store access removed - use context hooks instead

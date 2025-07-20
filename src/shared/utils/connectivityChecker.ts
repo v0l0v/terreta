@@ -29,6 +29,8 @@ class ConnectivityChecker {
     isInitialCheck: true,
   };
 
+
+
   private listeners: ((status: ConnectivityStatus) => void)[] = [];
   private checkInterval: number | null = null;
   private isChecking = false;

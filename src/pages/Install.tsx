@@ -9,7 +9,7 @@ import { usePWAInstall } from '@/shared/hooks/usePWAInstall';
 
 export default function Install() {
   const { installable, installing, installed, install } = usePWAInstall();
-  const isMobile = useIsMobile();
+
 
   const handleInstall = async () => {
     await install();

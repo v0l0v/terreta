@@ -22,8 +22,6 @@ export default function Home() {
     isLoading,
     isError,
     error,
-    isStale,
-    isFetching,
     hasInitialData,
     refresh
   } = useHomePageGeocaches();

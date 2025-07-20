@@ -93,11 +93,11 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
             if (!logsByGeocache[log.geocacheId]) {
               logsByGeocache[log.geocacheId] = [];
             }
-            logsByGeocache[log.geocacheId].push(log);
+            logsByGeocache[log.geocacheId]!.push(log);
           }
         });
 
-        const validGeocaches = geocaches.filter(isValidGeocache);
+        const validGeocaches = geocaches.filter(isValidGeocache) as Geocache[];
         const validLogs = logs.filter(isValidLog);
 
         setState(prev => ({
@@ -131,7 +131,7 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
   }, []);
 
   const setConnectedStatus = useCallback((connected: boolean) => {
-    setState(prev => ({ ...prev, isConnected: connected }));
+    setState(prev => ({ ...prev, isConnected: connected, isOnline: connected }));
   }, []);
 
   const checkConnectivityAction = useCallback(async (): Promise<boolean> => {

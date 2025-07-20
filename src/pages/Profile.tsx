@@ -24,7 +24,7 @@ import { useAuthor } from '@/features/auth/hooks/useAuthor';
 import { useUserGeocaches } from '@/features/geocache/hooks/useUserGeocaches';
 import { useUserFoundCaches } from '@/features/profile/hooks/useUserFoundCaches';
 import { useSavedCaches } from '@/features/geocache/hooks/useSavedCaches';
-import { useNip05Status } from '@/features/profile/hooks/useNip05Verification';
+
 
 import { useGeolocation } from '@/features/map/hooks/useGeolocation';
 import { useToast } from '@/shared/hooks/useToast';
@@ -36,6 +36,8 @@ export default function Profile() {
   const { toast } = useToast();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+
+
   // Use current user's pubkey if no pubkey in URL
   const targetPubkey = pubkey || currentUser?.pubkey;
   const isOwnProfile = targetPubkey === currentUser?.pubkey;
@@ -44,7 +46,7 @@ export default function Profile() {
   const { data: userCaches, isLoading: isLoadingUserCaches } = useUserGeocaches(targetPubkey);
   const { data: foundCaches, isLoading: isLoadingFoundCaches } = useUserFoundCaches(targetPubkey);
   const { savedCaches, isLoading: isLoadingSavedCaches } = useSavedCaches();
-  const { isVerified } = useNip05Status(authorData?.metadata?.nip05, targetPubkey);
+
 
   const metadata = authorData?.metadata;
 

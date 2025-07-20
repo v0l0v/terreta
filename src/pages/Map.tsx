@@ -22,11 +22,11 @@ import type { Geocache } from "@/types/geocache";
 import { TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { SmartLoadingState } from "@/components/ui/skeleton-patterns";
-import { useNavigate } from "react-router-dom";
+
 
 
 export default function Map() {
-  const navigate = useNavigate();
+
   const { config } = useAppContext();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,7 +48,7 @@ export default function Map() {
   const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [searchRadius, setSearchRadius] = useState(25); // km
   const [searchInView, setSearchInView] = useState(false);
-  const [viewBounds, setViewBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
+
   const [mapUpdateKey, setMapUpdateKey] = useState(0);
   const [selectedGeocache, setSelectedGeocache] = useState<Geocache | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -75,9 +75,7 @@ export default function Map() {
     refetch,
     searchStrategy,
     proximityAttempted,
-    proximitySuccessful,
-    totalFound,
-    debugInfo
+    proximitySuccessful
   } = useAdaptiveReliableGeocaches({
     search: searchQuery,
     difficulty,
@@ -156,7 +154,7 @@ export default function Map() {
 
   // Check if proximity search is active
   const isProximitySearchActive = !!(searchLocation || (showNearMe && userLocation) || searchInView);
-  const proximityCenter = searchLocation || (showNearMe ? userLocation : null);
+
 
   // Use proximity search results when active, otherwise fall back to optimistic geocaches
   // Apply client-side filtering when using optimistic geocaches
@@ -336,14 +334,14 @@ export default function Map() {
   // Pull-to-refresh handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
-      pullStartY.current = e.touches[0].clientY;
+      pullStartY.current = e.touches[0]?.clientY || 0;
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (pullStartY.current === null || e.touches.length !== 1) return;
     
-    const currentY = e.touches[0].clientY;
+    const currentY = e.touches[0]?.clientY || 0;
     const distance = currentY - pullStartY.current;
     
     // Only allow pull down when at the top of the scroll container
