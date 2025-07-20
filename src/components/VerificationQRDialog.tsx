@@ -30,7 +30,7 @@ export function VerificationQRDialog({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [qrType, setQrType] = useState<'full' | 'cutout' | 'micro'>('full');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [, setCopied] = useState(false);
+
   const { toast } = useToast();
 
   useEffect(() => {

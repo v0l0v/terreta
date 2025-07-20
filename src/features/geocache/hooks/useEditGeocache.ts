@@ -200,7 +200,7 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
       };
     },
 
-    onSuccess: (event, _data, context) => {
+    onSuccess: (event, _data, _context) => {
       toast({
         title: "Geocache updated!",
         description: "Your geocache has been successfully updated.",

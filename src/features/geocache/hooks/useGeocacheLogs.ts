@@ -9,7 +9,7 @@ import { useWotStore } from '@/shared/stores/useWotStore';
 import { TIMEOUTS, POLLING_INTERVALS, QUERY_LIMITS } from '@/shared/config';
 import { cacheManager } from '@/features/geocache/utils/cacheManager';
 
-export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geocachePubkey?: string, preferredRelays?: string[], verificationPubkey?: string) {
+export function useGeocacheLogs(_geocacheId: string, geocacheDTag?: string, geocachePubkey?: string, _preferredRelays?: string[], verificationPubkey?: string) {
   const { nostr } = useNostr();
   const isWotEnabled = useIsWotEnabled();
   const { wotPubkeys } = useWotStore();
@@ -17,7 +17,7 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
   // Note: Deletion filtering is now handled using utility functions
   
   return useQuery({
-    queryKey: ['geocache-logs', geocacheDTag, geocachePubkey, preferredRelays, verificationPubkey, isWotEnabled, Array.from(wotPubkeys).sort().join(',')],
+    queryKey: ['geocache-logs', geocacheDTag, geocachePubkey, verificationPubkey, isWotEnabled, Array.from(wotPubkeys).sort().join(',')],
     queryFn: async (c) => {
       if (!geocachePubkey || !geocacheDTag) {
         return [];
@@ -195,7 +195,7 @@ export function useGeocacheLogs(geocacheId: string, geocacheDTag?: string, geoca
       return cached && cached.length > 0 ? cached : undefined;
     },
     // Prevent clearing data on background refetch failures
-    keepPreviousData: true,
+
     // Don't retry background failures aggressively
     retry: (failureCount, error) => {
       // Don't retry timeout errors in background

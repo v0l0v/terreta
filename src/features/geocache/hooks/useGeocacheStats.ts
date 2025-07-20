@@ -93,7 +93,7 @@ export function useGeocacheStats(geocacheDTag?: string, geocachePubkey?: string)
  */
 export function useMultipleGeocacheStats(geocaches: Array<{ dTag: string; pubkey: string }>) {
   const { nostr } = useNostr();
-  const { isWotEnabled, wotPubkeys } = useWotStore();
+  const { wotPubkeys } = useWotStore();
   // Note: Deletion filtering has been simplified for now
   
   return useQuery({

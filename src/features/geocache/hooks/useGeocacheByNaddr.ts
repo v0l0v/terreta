@@ -33,54 +33,7 @@ export function useGeocacheByNaddr(naddr: string) {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
     refetchOnReconnect: true, // Refetch when connection is restored
     networkMode: 'always', // Always run queries regardless of network status
-    placeholderData: () => {
-      // Try to find the geocache in existing cache first
-      const parsed = parseNaddr(naddr);
-      if (!parsed) return undefined;
-      
-      const { pubkey, dTag } = parsed;
-      
-      // Check main geocaches cache
-      const geocachesData = queryClient.getQueryData(['geocaches']) as Geocache[] | undefined;
-      if (geocachesData && Array.isArray(geocachesData)) {
-        const cachedGeocache = geocachesData.find(cache => 
-          cache.pubkey === pubkey && cache.dTag === dTag
-        );
-        
-        if (cachedGeocache) {
-          console.log('🚀 Using cached geocache data from main query:', cachedGeocache.name);
-          return cachedGeocache;
-        }
-      }
-      
-      // Check other potential cache locations
-      const fastGeocachesData = queryClient.getQueryData(['geocaches-fast']) as Geocache[] | undefined;
-      if (fastGeocachesData && Array.isArray(fastGeocachesData)) {
-        const cachedGeocache = fastGeocachesData.find(cache => 
-          cache.pubkey === pubkey && cache.dTag === dTag
-        );
-        
-        if (cachedGeocache) {
-          console.log('🚀 Using cached geocache data from fast query:', cachedGeocache.name);
-          return cachedGeocache;
-        }
-      }
-      
-      // Check proximity geocaches cache
-      const proximityData = queryClient.getQueryData(['proximity-geocaches']) as Geocache[] | undefined;
-      if (proximityData && Array.isArray(proximityData)) {
-        const cachedGeocache = proximityData.find(cache => 
-          cache.pubkey === pubkey && cache.dTag === dTag
-        );
-        
-        if (cachedGeocache) {
-          console.log('🚀 Using cached geocache data from proximity query:', cachedGeocache.name);
-          return cachedGeocache;
-        }
-      }
-      
-      return undefined;
-    },
+
     queryFn: async (c) => {
       console.log('useGeocacheByNaddr query starting...', {
         naddr,

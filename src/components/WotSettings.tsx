@@ -39,7 +39,7 @@ export function WotSettings() {
 
   const handleFollowLimitChange = (value: number[]) => {
     if (value.length > 0 && value[0] !== undefined) {
-      setFollowLimit(followLimitPegs[value[0]]);
+      setFollowLimit(followLimitPegs[value[0]] ?? 0);
     }
   };
 

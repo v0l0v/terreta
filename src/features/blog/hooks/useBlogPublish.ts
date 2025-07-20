@@ -66,7 +66,11 @@ export function useUpdateBlogPost() {
       const eventTemplate = createBlogPostEvent(data);
       
       // Publish the event using the shared hook (handles retries and error handling)
-      const event = await publishEvent(eventTemplate);
+      const event = await publishEvent({
+        kind: eventTemplate.kind,
+        content: eventTemplate.content,
+        tags: eventTemplate.tags,
+      });
 
       return event;
     },
