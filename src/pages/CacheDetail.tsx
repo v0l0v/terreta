@@ -51,27 +51,8 @@ export default function CacheDetail() {
 
   const { user } = useCurrentUser();
   
-  // Early validation of naddr parameter
-  if (!naddr) {
-    return (
-      <div className="min-h-screen bg-muted/50 dark:bg-muted">
-        <DesktopHeader />
-        <div className="container mx-auto px-4 py-16">
-          <ErrorState
-            title="Invalid Cache Link"
-            description="No cache identifier provided in the URL."
-            primaryAction={
-              <Link to="/" className="block">
-                <Button className="w-full">Browse Caches</Button>
-              </Link>
-            }
-          />
-        </div>
-      </div>
-    );
-  }
-  
-  const { data: geocache, isLoading, error, isError, refetch } = useGeocacheByNaddr(naddr);
+  // All hooks must be called unconditionally at the top level
+  const { data: geocache, isLoading, error, isError, refetch } = useGeocacheByNaddr(naddr || "");
   const typedGeocache = geocache as unknown as Geocache | null | undefined;
   const { data: logs = [] } = useGeocacheLogs(
     typedGeocache ? `${typedGeocache.pubkey}:${typedGeocache.dTag}` : '', 
@@ -82,7 +63,7 @@ export default function CacheDetail() {
   );
   useZaps(typedGeocache?.id || "", typedGeocache?.naddr);
   const getZapTotal = useStore(useZapStore, (state) => state.getZapTotal);
-  const totalZapAmount = getZapTotal(typedGeocache?.naddr ? `naddr:${typedGeocache.naddr}` : `event:${typedGeocache?.id}`);
+  const totalZapAmount = getZapTotal(typedGeocache?.naddr ? `naddr:${typedGeocache.naddr}` : `event:${typedGeocache?.id}`) || 0;
   const {
     confirmSingleDeletion,
     isConfirmDialogOpen,
@@ -133,6 +114,8 @@ export default function CacheDetail() {
   const [verificationKey, setVerificationKey] = useState<string | null>(null);
   const [isVerificationValid, setIsVerificationValid] = useState(false);
   
+  const [isCopied, setIsCopied] = useState(false);
+
   // Initialize edit form when geocache loads
   useEffect(() => {
     if (typedGeocache) {
@@ -177,17 +160,6 @@ export default function CacheDetail() {
     }
   }, [editLocation, isEditing]);
 
-  const [isCopied, setIsCopied] = useState(false);
-
-  const handleCopyNaddr = () => {
-    if (naddr) {
-      navigator.clipboard.writeText(naddr);
-      toast({ title: "Copied!", description: "Geocache naddr copied to clipboard." });
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    }
-  };
-
   // Check for verification key in URL hash
   useEffect(() => {
     const hash = window.location.hash;
@@ -222,6 +194,26 @@ export default function CacheDetail() {
       });
     }
   }, [typedGeocache?.verificationPubkey, toast]);
+
+  // Handle invalid naddr parameter
+  if (!naddr) {
+    return (
+      <div className="min-h-screen bg-muted/50 dark:bg-muted">
+        <DesktopHeader />
+        <div className="container mx-auto px-4 py-16">
+          <ErrorState
+            title="Invalid Cache Link"
+            description="No cache identifier provided in the URL."
+            primaryAction={
+              <Link to="/" className="block">
+                <Button className="w-full">Browse Caches</Button>
+              </Link>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
 
 
   const handleDelete = () => {
