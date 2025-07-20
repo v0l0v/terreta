@@ -29,7 +29,8 @@ import { NIP_GC_KINDS } from '@/features/geocache/utils/nip-gc';
  */
 export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore {
   const baseStore = useBaseStore('offline', config);
-  const { isOnline, isConnected, forceCheck: checkConnectivity } = useConnectivity();
+  const { isOnline, isConnected, forceCheck } = useConnectivity();
+  const checkConnectivity = forceCheck;
   const { 
     saveGeocache, 
     saveLog, 
@@ -54,6 +55,24 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
     return obj && typeof obj === 'object' && 'id' in obj && 'geocacheId' in obj && 'type' in obj;
   };
   
+  // Helper to convert NostrEvent to Geocache
+  const convertNostrEventToGeocache = (event: any): Geocache | null => {
+    if (isValidGeocache(event)) {
+      return event as Geocache;
+    }
+    return null;
+  };
+  
+  // Helper to convert NostrEvent to GeocacheLog
+  const convertNostrEventToLog = (event: any): GeocacheLog | null => {
+    if (isValidLog(event)) {
+      return event as GeocacheLog;
+    }
+    return null;
+  };
+
+
+  
   const [state, setState] = useState<OfflineStoreState>(() => ({
     ...baseStore.createBaseState(),
     isOnline: false,
@@ -74,7 +93,11 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
   }));
 
   useEffect(() => {
-    setState(prev => ({ ...prev, isOnline, isConnected }));
+    setState(prev => ({ 
+      ...prev, 
+      isOnline: isOnline, 
+      isConnected: isConnected 
+    }));
   }, [isOnline, isConnected]);
 
   useEffect(() => {
@@ -97,8 +120,12 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
           }
         });
 
-        const validGeocaches = geocaches.filter(isValidGeocache);
-        const validLogs = logs.filter(isValidLog);
+        const validGeocaches = geocaches
+          .map(convertNostrEventToGeocache)
+          .filter((g): g is Geocache => g !== null);
+        const validLogs = logs
+          .map(convertNostrEventToLog)
+          .filter((l): l is GeocacheLog => l !== null);
 
         setState(prev => ({
           ...prev,
@@ -135,9 +162,10 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
   }, []);
 
   const checkConnectivityAction = useCallback(async (): Promise<boolean> => {
-    const connected = await checkConnectivity();
+    const status = await checkConnectivity();
+    const connected = status.isConnected;
     setState(prev => ({ ...prev, isConnected: connected }));
-    return !!connected;
+    return connected;
   }, [checkConnectivity]);
 
   const saveGeocacheOffline = useCallback(async (geocache: Geocache): Promise<StoreActionResult<void>> => {
