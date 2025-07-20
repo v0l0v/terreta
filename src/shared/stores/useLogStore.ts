@@ -196,7 +196,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
     }, 'fetchUserLogs');
   }, [baseStore, user?.pubkey]);
 
-  const fetchZapsForLog = useCallback(async (logId: string): Promise<StoreActionResult<NostrEvent[]>> => {
+  const fetchZapsForLog = useCallback(async (logId: string): Promise<StoreActionResult<any[]>> => {
     return baseStore.safeAsyncOperation(async () => {
       const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
       const events = await baseStore.nostr.query(
@@ -306,7 +306,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
 
       // Find the log to delete
       let logToDelete: GeocacheLog | undefined;
-      let geocacheId: string | undefined;
+
       
       // Search through all logs to find the one to delete
       for (const [gId, logs] of Object.entries(state.logsByGeocache)) {
@@ -328,7 +328,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
         content: 'Log deleted by author',
         tags: [
           ['e', logId],
-          ['k', logToDelete.kind?.toString() || NIP_GC_KINDS.COMMENT_LOG],
+          ['k', (logToDelete as any).kind?.toString() || NIP_GC_KINDS.COMMENT_LOG],
           ['client', 'treasures'],
         ],
         created_at: Math.floor(Date.now() / 1000),
@@ -356,7 +356,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
       // Optimistic update - remove from all caches
       const newLogsByGeocache = { ...state.logsByGeocache };
       Object.keys(newLogsByGeocache).forEach(geocacheId => {
-        newLogsByGeocache[geocacheId] = newLogsByGeocache[geocacheId].filter(log => log.id !== logId);
+        newLogsByGeocache[geocacheId] = (newLogsByGeocache[geocacheId] || []).filter(log => log.id !== logId);
       });
       
       const rollback = createOptimisticUpdate(
@@ -382,7 +382,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
         previousUserLogs 
       };
     },
-    onError: (error, logId, context) => {
+    onError: (error, _logId, context) => {
       const errorObj = error as { message?: string };
       const isSigningError = errorObj.message?.includes('User rejected') || 
                             errorObj.message?.includes('cancelled') ||
@@ -411,7 +411,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
       }
       return baseStore.createSuccessResult(newLog);
     } catch (error) {
-      return baseStore.createErrorResult(baseStore.handleError(error, 'createLog'));
+      return baseStore.createErrorResult(baseStore.handleError(error, 'createLog')) as StoreActionResult<GeocacheLog>;
     }
   }, [createLogMutation, baseStore]);
 
@@ -430,7 +430,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
       await deleteLogMutation.mutateAsync(logId);
       return baseStore.createSuccessResult(undefined);
     } catch (error) {
-      return baseStore.createErrorResult(baseStore.handleError(error, 'deleteLog'));
+      return baseStore.createErrorResult(baseStore.handleError(error, 'deleteLog')) as StoreActionResult<void>;
     }
   }, [deleteLogMutation, baseStore]);
 
@@ -500,7 +500,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
       await backgroundSyncFn(geocacheIds);
       return baseStore.createSuccessResult(undefined);
     } catch (error) {
-      return baseStore.createErrorResult(baseStore.handleError(error, 'triggerSync'));
+      return baseStore.createErrorResult(baseStore.handleError(error, 'triggerSync')) as StoreActionResult<void>;
     }
   }, [backgroundSyncFn, baseStore]);
 

@@ -88,7 +88,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
           if (g.hidden && g.pubkey !== user?.pubkey) return false;
           return true;
         })
-        .sort((a, b) => b.createdAt - a.createdAt);
+        .sort((a, b) => b.created_at - a.created_at);
 
       // Cache the result
       QueryOptimizer.setCachedResult(cacheKey, geocaches);
@@ -162,7 +162,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
       const userGeocaches = events
         .map(parseGeocacheEvent)
         .filter((g): g is Geocache => g !== null)
-        .sort((a, b) => b.createdAt - a.createdAt);
+        .sort((a, b) => b.created_at - a.created_at);
 
       updateState({ userGeocaches });
       return userGeocaches;
@@ -177,8 +177,8 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
     return baseStore.safeAsyncOperation(async () => {
       // Filter from existing geocaches first
       const nearby = state.geocaches.filter(geocache => {
-        if (!geocache.latitude || !geocache.longitude) return false;
-        const distance = calculateDistance(lat, lon, geocache.latitude, geocache.longitude);
+        if (!geocache.location?.lat || !geocache.location?.lng) return false;
+        const distance = calculateDistance(lat, lon, geocache.location.lat, geocache.location.lng);
         return distance <= radius;
       });
 
@@ -212,10 +212,10 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
       }
 
       // Validate inputs according to NIP-GC
-      if (!validateCacheType(geocacheData.type)) {
+      if (!geocacheData.type || !validateCacheType(geocacheData.type)) {
         throw new Error(`Invalid cache type: ${geocacheData.type}`);
       }
-      if (!validateCacheSize(geocacheData.size)) {
+      if (!geocacheData.size || !validateCacheSize(geocacheData.size)) {
         throw new Error(`Invalid cache size: ${geocacheData.size}`);
       }
       if (!validateCoordinates(geocacheData.location.lat, geocacheData.location.lng)) {
@@ -260,7 +260,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
       return { event: signedEvent, verificationKeyPair };
     },
-    onSuccess: ({ event, verificationKeyPair }) => {
+    onSuccess: ({ event }) => {
       // Parse the new geocache from the event
       const newGeocache = parseGeocacheEvent(event);
       if (newGeocache) {
@@ -382,7 +382,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
         });
       }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       context?.rollback();
       // Revert optimistic state update
       updateState({
@@ -463,7 +463,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
       
       return { rollback, previousGeocaches, previousUserGeocaches };
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       const errorObj = error as { message?: string };
       const isSigningError = errorObj.message?.includes('User rejected') || 
                             errorObj.message?.includes('cancelled') ||
@@ -491,7 +491,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
       }
       return baseStore.createSuccessResult(newGeocache);
     } catch (error) {
-      return baseStore.createErrorResult(baseStore.handleError(error, 'createGeocache'));
+      return baseStore.createErrorResult(baseStore.handleError(error, 'createGeocache')) as StoreActionResult<Geocache>;
     }
   }, [createGeocacheMutation, baseStore]);
 
@@ -504,7 +504,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
       }
       return baseStore.createSuccessResult(updatedGeocache);
     } catch (error) {
-      return baseStore.createErrorResult(baseStore.handleError(error, 'updateGeocache'));
+      return baseStore.createErrorResult(baseStore.handleError(error, 'updateGeocache')) as StoreActionResult<Geocache>;
     }
   }, [updateGeocacheMutation, baseStore]);
 
@@ -513,7 +513,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
       await deleteGeocacheMutation.mutateAsync({ id, reason });
       return baseStore.createSuccessResult(undefined);
     } catch (error) {
-      return baseStore.createErrorResult(baseStore.handleError(error, 'deleteGeocache'));
+      return baseStore.createErrorResult(baseStore.handleError(error, 'deleteGeocache')) as StoreActionResult<void>;
     }
   }, [deleteGeocacheMutation, baseStore]);
 
@@ -531,7 +531,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
       );
       return baseStore.createSuccessResult(undefined);
     } catch (error) {
-      return baseStore.createErrorResult(baseStore.handleError(error, 'batchDeleteGeocaches'));
+      return baseStore.createErrorResult(baseStore.handleError(error, 'batchDeleteGeocaches')) as StoreActionResult<void>;
     }
   }, [deleteGeocache, baseStore]);
 
@@ -541,7 +541,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
   }, [baseStore]);
 
   const invalidateAll = useCallback(() => {
-    baseStore.invalidateQueries(createQueryKey('geocache'));
+    baseStore.invalidateQueries(createQueryKey('geocache', 'list'));
   }, [baseStore]);
 
   const refreshGeocache = useCallback(async (id: string): Promise<StoreActionResult<Geocache>> => {
@@ -586,7 +586,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
       await backgroundSyncFn();
       return baseStore.createSuccessResult(undefined);
     } catch (error) {
-      return baseStore.createErrorResult(baseStore.handleError(error, 'triggerSync'));
+      return baseStore.createErrorResult(baseStore.handleError(error, 'triggerSync')) as StoreActionResult<void>;
     }
   }, [backgroundSyncFn, baseStore]);
 

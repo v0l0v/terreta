@@ -29,7 +29,7 @@ import { NIP_GC_KINDS } from '@/features/geocache/utils/nip-gc';
  */
 export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore {
   const baseStore = useBaseStore('offline', config);
-  const { isOnline, isConnected, checkConnectivity } = useConnectivity();
+  const { isOnline, isConnected, forceCheck: checkConnectivity } = useConnectivity();
   const { 
     saveGeocache, 
     saveLog, 
