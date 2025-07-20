@@ -472,7 +472,6 @@ export interface GeocacheFormData {
   tags?: string[];
   requiresVerification?: boolean;
   placedAt?: Timestamp;
-  contact?: Geocache['contact'];
 }
 
 /** Geocache log form data */

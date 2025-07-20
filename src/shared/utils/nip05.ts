@@ -26,14 +26,19 @@ export async function verifyNip05(pubkey: string, nip05: string): Promise<boolea
 
   const [localPart, domain] = parts;
   
-  // Validate local part (should only contain a-z0-9-_.)
+  // Validate both parts exist
+  if (!localPart || !domain) {
+    return false;
+  }
+  
+  // Validate local part contains only valid characters
   if (!/^[a-z0-9\-_.]+$/i.test(localPart)) {
     return false;
   }
 
   try {
     // Make request to the well-known endpoint
-    const url = `https://${domain}/.well-known/nostr.json?name=${encodeURIComponent(localPart)}`;
+    const url = `https://${domain}/.well-known/nostr.json?name=${encodeURIComponent(localPart || '')}`;
     
     const response = await fetch(url, {
       signal: AbortSignal.timeout(5000), // 5 second timeout
@@ -54,7 +59,7 @@ export async function verifyNip05(pubkey: string, nip05: string): Promise<boolea
     }
 
     // Check if the local part exists in the names mapping
-    const mappedPubkey = data.names[localPart];
+    const mappedPubkey = localPart ? data.names[localPart] : undefined;
     if (!mappedPubkey) {
       return false;
     }

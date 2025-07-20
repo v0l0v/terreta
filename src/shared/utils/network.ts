@@ -58,7 +58,7 @@ export function isSlowConnection(): boolean {
 /**
  * Get a timeout with exponential backoff for retries
  */
-export function getRetryTimeout(baseTimeout: number, attempt: number, maxAttempts: number): number {
+export function getRetryTimeout(baseTimeout: number, attempt: number, _maxAttempts: number): number {
   const adaptiveBase = getAdaptiveTimeout(baseTimeout);
   const backoffMultiplier = 1 + (attempt - 1) * 0.5; // 1x, 1.5x, 2x, etc.
   return Math.min(adaptiveBase * backoffMultiplier, adaptiveBase * 3); // Cap at 3x

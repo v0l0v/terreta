@@ -13,7 +13,7 @@ export * from './cacheUtils';
 export * from './naddr';
 export * from './security';
 export * from './network';
-export * from './validation';
+export { validateGeocacheForm, validateLogForm, combineValidations, validateRequired, validateLength, validateEmail, validateRating } from './validation';
 export * from './relays';
 export * from './storageConfig';
 export * from './connectivityChecker';

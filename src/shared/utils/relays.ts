@@ -27,7 +27,7 @@ export function getPrimaryGeocachingRelay(): string {
 // Extract relay URLs from a geocache event's relay tags
 export function getGeocacheRelays(event: { tags: string[][] }): string[] {
   const relayTags = event.tags.filter(tag => tag[0] === 'relay');
-  return relayTags.map(tag => tag[1]).filter(Boolean);
+  return relayTags.map(tag => tag[1]).filter((url): url is string => Boolean(url));
 }
 
 // Get the primary relay from a geocache event (first relay tag)

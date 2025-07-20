@@ -79,7 +79,8 @@ export function getDeletedEventIds(deletionEvent: NostrEvent): string[] {
 
   return deletionEvent.tags
     .filter(t => t[0] === 'e' && t[1])
-    .map(t => t[1]);
+    .map(t => t[1])
+    .filter(Boolean) as string[];
 }
 
 /**
@@ -94,7 +95,8 @@ export function getDeletedEventCoordinates(deletionEvent: NostrEvent): string[] 
 
   return deletionEvent.tags
     .filter(t => t[0] === 'a' && t[1])
-    .map(t => t[1]);
+    .map(t => t[1])
+    .filter(Boolean) as string[];
 }
 
 /**

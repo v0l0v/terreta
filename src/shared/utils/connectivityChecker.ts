@@ -34,6 +34,7 @@ class ConnectivityChecker {
   private isChecking = false;
   private hasCompletedInitialCheck = false;
 
+
   private options: ConnectivityOptions = {
     timeout: 3000, // Reduced timeout for faster initial check
     checkInterval: 30000, // Check every 30 seconds
@@ -156,7 +157,7 @@ class ConnectivityChecker {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), this.options.timeout);
 
-          const response = await fetch(url, {
+          await fetch(url, {
             method: 'HEAD',
             mode: 'no-cors',
             cache: 'no-cache',

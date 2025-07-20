@@ -97,16 +97,19 @@ export function useSavedCachesStore() {
         c.signal,
         AbortSignal.timeout(TIMEOUTS.QUERY),
       ]);
-      const filters = savedCacheCoords.map(coord => {
-        const [kind, pubkey, dTag] = coord?.split(':') || ['', '', ''];
-        return {
-          kinds: [parseInt(kind || '')],
-          authors: [pubkey],
-          '#d': [dTag],
-          limit: 1,
-        };
-      });
-      if (!filters) return [];
+      const filters = savedCacheCoords
+        .map(coord => {
+          const [kind, pubkey, dTag] = coord?.split(':') || ['', '', ''];
+          if (!kind || !pubkey || !dTag) return null;
+          return {
+            kinds: [parseInt(kind)],
+            authors: [pubkey],
+            '#d': [dTag],
+            limit: 1,
+          };
+        })
+        .filter(Boolean) as Array<{ kinds: number[]; authors: string[]; '#d': string[]; limit: number }>;
+      if (filters.length === 0) return [];
       const events = await nostr.query(filters, { signal });
       return events;
     },
@@ -258,9 +261,9 @@ export function useSavedCachesStore() {
         const currentTags = bookmarkListEvent?.tags || [];
         const newTags = [...currentTags, ['a', naddr]];
         await updateBookmarkList(newTags);
-        await saveBookmarkOffline(geocache, 'synced');
+        await saveBookmarkOffline(geocache);
       } else {
-        await saveBookmarkOffline(geocache, 'manual');
+        await saveBookmarkOffline(geocache);
       }
     },
     [isOnline, savedCacheCoords, bookmarkListEvent, updateBookmarkList, saveBookmarkOffline]

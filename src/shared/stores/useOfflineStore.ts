@@ -44,6 +44,16 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
     getAllBookmarks
   } = useOfflineStorage();
   
+  // Type guard to ensure we have proper Geocache objects
+  const isValidGeocache = (obj: any): obj is Geocache => {
+    return obj && typeof obj === 'object' && 'id' in obj && 'dTag' in obj && 'name' in obj;
+  };
+  
+  // Type guard to ensure we have proper GeocacheLog objects
+  const isValidLog = (obj: any): obj is GeocacheLog => {
+    return obj && typeof obj === 'object' && 'id' in obj && 'geocacheId' in obj && 'type' in obj;
+  };
+  
   const [state, setState] = useState<OfflineStoreState>(() => ({
     ...baseStore.createBaseState(),
     isOnline: false,
@@ -79,7 +89,7 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
 
         const logsByGeocache: Record<string, GeocacheLog[]> = {};
         logs.forEach(log => {
-          if (log.geocacheId) {
+          if (isValidLog(log) && log.geocacheId) {
             if (!logsByGeocache[log.geocacheId]) {
               logsByGeocache[log.geocacheId] = [];
             }
@@ -89,15 +99,15 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
 
         setState(prev => ({
           ...prev,
-          offlineGeocaches: geocaches,
+          offlineGeocaches: geocaches.filter(isValidGeocache),
           offlineLogs: logsByGeocache,
           offlineBookmarks: bookmarks,
           storageInfo: {
             ...prev.storageInfo,
             totalSize: storageStats.totalSize,
             availableSpace: storageStats.availableSpace,
-            geocacheCount: geocaches.length,
-            logCount: logs.length,
+            geocacheCount: geocaches.filter(isValidGeocache).length,
+            logCount: logs.filter(isValidLog).length,
             lastCleanup: storageStats.lastCleanup,
           },
         }));
@@ -163,10 +173,10 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
     }, 'saveLogOffline');
   }, [baseStore, saveLog]);
 
-  const saveBookmarkOffline = useCallback(async (geocache: Geocache, source: 'synced' | 'manual'): Promise<StoreActionResult<void>> => {
+  const saveBookmarkOffline = useCallback(async (geocache: Geocache): Promise<StoreActionResult<void>> => {
     return baseStore.safeAsyncOperation(async () => {
       const naddr = `${NIP_GC_KINDS.GEOCACHE}:${geocache.pubkey}:${geocache.dTag}`;
-      const bookmark: OfflineBookmark = { naddr, geocache, source };
+      const bookmark: OfflineBookmark = { naddr, geocache, source: 'manual' };
       await saveBookmark(bookmark);
       setState(prev => ({
         ...prev,
@@ -318,10 +328,10 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
     return baseStore.safeAsyncOperation(async () => {
       const cutoffDate = new Date(Date.now() - STORAGE_CONFIG.MAX_AGE_DAYS * 24 * 60 * 60 * 1000);
       setState(prev => {
-        const freshGeocaches = prev.offlineGeocaches.filter(geocache => new Date(geocache.createdAt) > cutoffDate);
+        const freshGeocaches = prev.offlineGeocaches.filter(geocache => new Date(geocache.created_at * 1000) > cutoffDate);
         const freshLogs: Record<string, GeocacheLog[]> = {};
         Object.entries(prev.offlineLogs).forEach(([geocacheId, logs]) => {
-          const freshLogsForGeocache = logs.filter(log => new Date(log.createdAt) > cutoffDate);
+          const freshLogsForGeocache = logs.filter(log => new Date(log.created_at * 1000) > cutoffDate);
           if (freshLogsForGeocache.length > 0) {
             freshLogs[geocacheId] = freshLogsForGeocache;
           }
@@ -389,7 +399,7 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
     setState(prev => ({ ...prev, syncStatus: baseStore.getSyncStatus() }));
   }, [baseStore]);
 
-  const triggerSync = useCallback(async (): Promise<StoreActionResult<void | unknown>> => {
+  const triggerSync = useCallback(async (): Promise<StoreActionResult<void>> => {
     try {
       await backgroundSyncFn();
       return baseStore.createSuccessResult(undefined);
@@ -423,6 +433,7 @@ export function useOfflineStore(config: Partial<StoreConfig> = {}): OfflineStore
       }, 2000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOnline, isConnected, state.pendingActions.length, syncPendingActions]);
 
   const store = useMemo((): OfflineStore => ({

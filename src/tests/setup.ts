@@ -97,25 +97,29 @@ beforeAll(() => {
   // Mock crypto.getRandomValues for verification key generation
   if (!global.crypto) {
     global.crypto = {
-      getRandomValues: vi.fn((array: Uint8Array) => {
-        for (let i = 0; i < array.length; i++) {
-          array[i] = Math.floor(Math.random() * 256);
+      getRandomValues: vi.fn(<T extends ArrayBufferView | null>(array: T): T => {
+        if (array instanceof Uint8Array) {
+          for (let i = 0; i < array.length; i++) {
+            array[i] = Math.floor(Math.random() * 256);
+          }
         }
         return array;
       }),
     } as any;
   } else if (!global.crypto.getRandomValues) {
-    global.crypto.getRandomValues = vi.fn((array: Uint8Array) => {
-      for (let i = 0; i < array.length; i++) {
-        array[i] = Math.floor(Math.random() * 256);
+    global.crypto.getRandomValues = vi.fn(<T extends ArrayBufferView | null>(array: T): T => {
+      if (array instanceof Uint8Array) {
+        for (let i = 0; i < array.length; i++) {
+          array[i] = Math.floor(Math.random() * 256);
+        }
       }
       return array;
     });
   }
 
   // Mock setInterval and clearInterval for timer tests
-  global.setInterval = vi.fn(global.setInterval);
-  global.clearInterval = vi.fn(global.clearInterval);
+  global.setInterval = vi.fn() as any;
+  global.clearInterval = vi.fn() as any;
 
   // Mock ResizeObserver for Radix UI components
   global.ResizeObserver = vi.fn().mockImplementation(() => ({
