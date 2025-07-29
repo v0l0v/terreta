@@ -45,7 +45,7 @@ export function ScrollToTop() {
         container.scrollTo(scrollOptions);
       }
     });
-  }, [pathname]); // Only trigger on pathname changes, not hash changes
+  }, [pathname, hash]); // Trigger on pathname and hash changes
 
   return null;
 }

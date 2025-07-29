@@ -525,6 +525,16 @@ function MapStyleControl({
   const controlRef = useRef<L.Control | null>(null);
   const isInitializedRef = useRef(false);
   
+  // Use refs to store the latest props to avoid dependency issues
+  const currentStyleRef = useRef(currentStyle);
+  const onStyleChangeRef = useRef(onStyleChange);
+  
+  // Update refs when props change
+  useEffect(() => {
+    currentStyleRef.current = currentStyle;
+    onStyleChangeRef.current = onStyleChange;
+  });
+  
   useEffect(() => {
     // Only initialize once
     if (isInitializedRef.current) return;
@@ -547,8 +557,8 @@ function MapStyleControl({
         rootRef.current = createRoot(div);
         rootRef.current.render(
           <MapStyleSelector
-            currentStyle={currentStyle}
-            onStyleChange={onStyleChange}
+            currentStyle={currentStyleRef.current}
+            onStyleChange={onStyleChangeRef.current}
           />
         );
         
@@ -590,15 +600,15 @@ function MapStyleControl({
       
       isInitializedRef.current = false;
     };
-  }, [map]); // Only depend on map, not on currentStyle or onStyleChange
+  }, [map]); // Only depend on map
   
   // Update the rendered component when props change (without recreating the control)
   useEffect(() => {
     if (rootRef.current && isInitializedRef.current) {
       rootRef.current.render(
         <MapStyleSelector
-          currentStyle={currentStyle}
-          onStyleChange={onStyleChange}
+          currentStyle={currentStyleRef.current}
+          onStyleChange={onStyleChangeRef.current}
         />
       );
     }

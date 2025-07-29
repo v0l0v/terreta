@@ -94,12 +94,12 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 
 // Higher-order component for wrapping components with error boundary
-export function withErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
-  fallback?: ReactNode,
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
+export function withErrorBoundary(
+  Component: React.ComponentType<any>,
+  fallback?: React.ReactNode,
+  onError?: (error: Error, errorInfo: any) => void
 ) {
-  const WrappedComponent = (props: P) => (
+  const WrappedComponent = (props: any) => (
     <ErrorBoundary fallback={fallback} onError={onError}>
       <Component {...props} />
     </ErrorBoundary>
@@ -115,7 +115,7 @@ export function CompactErrorBoundary({
   children, 
   message = "Something went wrong" 
 }: { 
-  children: ReactNode; 
+  children: React.ReactNode; 
   message?: string; 
 }) {
   return (

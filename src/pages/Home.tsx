@@ -84,7 +84,7 @@ export default function Home() {
   // Auto-refresh when relay changes
   useEffect(() => {
     refresh();
-  }, [config.relayUrl]); // Remove refresh from dependencies to prevent infinite loop
+  }, [config.relayUrl, refresh]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40 dark:from-slate-900 dark:via-green-950 dark:to-emerald-950 adventure:from-amber-100/80 adventure:via-yellow-50/60 adventure:to-orange-100/70">      <DesktopHeader />

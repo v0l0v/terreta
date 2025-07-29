@@ -26,7 +26,7 @@ export default function MyCaches() {
     if (isOnline && user) {
       syncOfflineBookmarks();
     }
-  }, [isOnline, user]);
+  }, [isOnline, user, syncOfflineBookmarks]);
 
   // Calculate distances if location is available
   const savedCachesWithDistance = savedCaches.map(cache => {
