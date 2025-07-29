@@ -22,7 +22,8 @@ import {
 } from 'lucide-react';
 import { useOfflineSync, useOfflineSettings, useOfflineMode } from '@/features/offline/hooks/useOfflineStorage';
 import { useConnectivity } from '@/features/offline/hooks/useConnectivity';
-import { useOfflineMapData } from '@/features/map/components/OfflineMap';
+import { clearCache } from '@/features/geocache/utils/cacheUtils';
+import { CACHE_NAMES } from '@/shared/config';
 import { useOfflineStorageInfo } from '@/features/offline/hooks/useOfflineStorageInfo';
 import { useToast } from '@/shared/hooks/useToast';
 import { offlineStorage } from '@/features/offline/utils/offlineStorage';
@@ -32,7 +33,7 @@ export function OfflineSettings() {
   const { settings, setSetting } = useOfflineSettings();
   const { isOnline, isConnected, connectionQuality, pendingActions, lastSyncTime, syncErrors, latency } = useOfflineMode();
   const { forceCheck } = useConnectivity();
-  const { clearCachedMapData } = useOfflineMapData();
+  // Removed unused clearCachedMapData - using clearCache directly
   const { storageInfo, refreshStorageInfo } = useOfflineStorageInfo();
   const { toast } = useToast();
 
@@ -115,7 +116,7 @@ export function OfflineSettings() {
       await offlineStorage.clearOldData(0); // Clear all data
       
       // Clear map tiles
-      await clearCachedMapData();
+      await clearCache(CACHE_NAMES.OSM_TILES);
       
       // Clear other caches
       if ('caches' in window) {

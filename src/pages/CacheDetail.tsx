@@ -32,7 +32,8 @@ import { verifyLocation, type LocationVerification } from "@/features/geocache/u
 import { getTypeLabel, getSizeLabel } from "@/features/geocache/utils/geocache-utils";
 import { getDefaultCacheValues } from "@/features/geocache/utils/geocache-constants";
 import { DifficultyTerrainRating } from "@/components/ui/difficulty-terrain-rating";
-import { GeocacheForm, type GeocacheFormData } from "@/components/ui/geocache-form";
+import { GeocacheForm } from "@/components/ui/geocache-form";
+import type { GeocacheFormData } from "@/components/ui/geocache-form.types";
 import { LocationPicker } from "@/components/LocationPicker";
 import { Label } from "@/components/ui/label";
 

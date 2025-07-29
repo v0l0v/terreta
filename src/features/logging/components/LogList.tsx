@@ -67,7 +67,7 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
     if (log.id && !zapsByLogId[log.id]) {
       fetchZapsForLog(log.id);
     }
-  }, [log.id, fetchZapsForLog]);
+  }, [log.id, fetchZapsForLog, zapsByLogId]);
 
   const zaps = useMemo(() => zapsByLogId[log.id] || [], [zapsByLogId, log.id]);
   const totalZapAmount = useMemo(() => {

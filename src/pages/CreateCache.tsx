@@ -23,9 +23,9 @@ import { LocationPicker } from "@/components/LocationPicker";
 import { useToast } from "@/features/geocache/hooks/useToast";
 import { verifyLocation, getVerificationSummary, type LocationVerification } from "@/features/geocache/utils/osmVerification";
 import { LocationWarnings } from "@/components/LocationWarnings";
-import { 
-  createDefaultGeocacheFormData, 
-  type GeocacheFormData,
+import { createDefaultGeocacheFormData } from "@/components/ui/geocache-form.utils";
+import type { GeocacheFormData } from "@/components/ui/geocache-form.types";
+import {
   CacheNameField,
   CacheDescriptionField,
   CacheHintField,
@@ -35,7 +35,7 @@ import {
   CacheSizeField,
   CacheImageManager,
   CacheHiddenField
-} from "@/components/ui/geocache-form";
+} from "@/components/ui/geocache-form.fields";
 import { DifficultyTerrainRating } from "@/components/ui/difficulty-terrain-rating";
 import { mapIcons } from "@/features/map/utils/mapIcons";
 

@@ -15,7 +15,7 @@ import { useGeocacheNavigation } from "@/features/geocache/hooks/useGeocacheNavi
 import type { Geocache } from "@/shared/types";
 import { getTypeLabel, getSizeLabel } from "@/features/geocache/utils/geocache-utils";
 
-import { getCacheIconSvg, getCacheColor } from "@/features/geocache/utils/cacheIcons";
+import { getCacheIconSvg, getCacheColor } from "@/features/geocache/utils/cacheIconUtils";
 import { useOfflineMode, useOfflineSettings } from "@/features/offline/hooks/useOfflineStorage";
 import { getCacheEntryCount, cacheMapTile } from "@/features/geocache/utils/cacheUtils";
 import { CACHE_NAMES } from "@/shared/config";
@@ -735,7 +735,7 @@ function AutoOfflineTileManager({
     };
 
     cacheInitialView();
-  }, [map, isOnline, isOfflineMode, autoCacheMaps]);
+  }, [map, isOnline, isOfflineMode, autoCacheMaps, downloadTilesForBounds]);
 
   // Auto-cache when Near Me is activated or search location changes
   useEffect(() => {
@@ -778,7 +778,7 @@ function AutoOfflineTileManager({
     };
 
     cacheLocationArea();
-  }, [map, userLocation, searchLocation, searchRadius, isNearMeActive, isOnline, isOfflineMode, autoCacheMaps, lastCachedLocation]);
+  }, [map, userLocation, searchLocation, searchRadius, isNearMeActive, isOnline, isOfflineMode, autoCacheMaps, lastCachedLocation, downloadTilesForBounds]);
 
   // Count cached tiles on mount
   useEffect(() => {
