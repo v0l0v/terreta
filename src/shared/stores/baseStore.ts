@@ -216,7 +216,6 @@ export function useBaseStore(
     getQueryData,
     prefetchQuery,
     batchQuery,
-
     
     // Background sync
     startBackgroundSync,
@@ -239,6 +238,7 @@ export function useBaseStore(
     setQueryData,
     getQueryData,
     prefetchQuery,
+    batchQuery,
     startBackgroundSync,
     stopBackgroundSync,
     getCacheStats,
