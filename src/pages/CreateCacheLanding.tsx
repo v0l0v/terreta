@@ -16,6 +16,7 @@ import {
   generateVerificationKeyPair,
   generateVerificationQR,
   downloadQRCode,
+  generateQRGridImage,
   type VerificationKeyPair,
 } from "@/features/geocache/utils/verification";
 import { geocacheToNaddr } from "@/shared/utils/naddr-utils";
@@ -45,18 +46,34 @@ export default function CreateCacheLanding() {
     useState<VerificationKeyPair | null>(null);
   const [naddr, setNaddr] = useState<string>("");
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const [qrType, setQrType] = useState<"full" | "cutout" | "micro">("full");
+  const [qrType, setQrType] = useState<"full" | "cutout" | "micro" | "sheet">("full");
+  const [_sheetData, setSheetData] = useState<{name: string, naddr: string, keyPair: VerificationKeyPair}[]>([]);
 
   const generateQR = useCallback(async () => {
     if (!user || !verificationKeyPair) return;
 
     try {
-      const dataUrl = await generateVerificationQR(
-        naddr,
-        verificationKeyPair.nsec,
-        qrType
-      );
-      setQrDataUrl(dataUrl);
+      if (qrType === 'sheet') {
+        const dataPromises = [];
+        for (let i = 0; i < 9; i++) {
+          const name = uniqueNamesGenerator(customConfig);
+          const dTag = generateDeterministicDTag(name, user.pubkey);
+          const naddr = geocacheToNaddr(user.pubkey, dTag);
+          dataPromises.push(generateVerificationKeyPair().then(keyPair => ({name, naddr, keyPair})));
+        }
+        const data = await Promise.all(dataPromises);
+        setSheetData(data);
+        const gridUrl = await generateQRGridImage(data);
+        setQrDataUrl(gridUrl);
+      } else {
+        setSheetData([]);
+        const dataUrl = await generateVerificationQR(
+          naddr,
+          verificationKeyPair.nsec,
+          qrType
+        );
+        setQrDataUrl(dataUrl);
+      }
     } catch (error) {
       toast({
         title: "QR Generation Failed",
@@ -95,7 +112,7 @@ export default function CreateCacheLanding() {
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
-      const filename = `${safeCacheName}-qr-code.png`;
+      const filename = qrType === 'sheet' ? `${safeCacheName}-qr-sheet.png` : `${safeCacheName}-qr-code.png`;
       downloadQRCode(qrDataUrl, filename);
       toast({
         title: "QR Code Downloaded",
@@ -161,7 +178,7 @@ export default function CreateCacheLanding() {
             )}
           </div>
           <p className="text-xs text-muted-foreground p-1">
-            Print this QR code and place it inside your geocache.
+            {qrType === 'sheet' ? 'Print this 3x3 grid of QR codes for multiple geocaches.' : 'Print this QR code and place it inside your geocache.'}
           </p>
           <div className="flex justify-center gap-2 flex-wrap">
             <DropdownMenu>
@@ -181,6 +198,9 @@ export default function CreateCacheLanding() {
                 <DropdownMenuItem onClick={() => setQrType("micro")}>
                   Micro
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setQrType("sheet")}>
+                  Sheet (3x3)
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button onClick={handleDownloadQR} disabled={!qrDataUrl}>
@@ -195,26 +215,39 @@ export default function CreateCacheLanding() {
         </div>
 
         <div className="space-y-2 xs:space-y-4 pt-4 border-t">
-          <h2 className="text-lg font-semibold text-foreground">Step 2: Create Your Listing</h2>
-          <p className="text-sm text-muted-foreground">
-            Create the online listing for your geocache now, or scan the QR code later to finish.
-          </p>
-          <div className="flex gap-2 justify-center [@media(max-height:680px)]:flex-row flex-col">
-          <Button
-            onClick={handleFillOutNow}
-            disabled={!qrDataUrl}
-            className="[@media(max-height:680px)]:w-50 w-full p-5"
-          >
-            I'll fill it out now
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/")}
-            className="[@media(max-height:680px)]:w-50 w-full p-5"
-          >
-            I'll do it later
-          </Button>
-          </div>
+          <h2 className="text-lg font-semibold text-foreground">Step 2: Create Your Listings</h2>
+          {qrType === 'sheet' ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Hide each QR code in a separate geocache location. Scan each QR code with your phone to create the individual listings.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Each QR code contains a unique verification key - scan them one at a time as you place each cache.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Create the online listing for your geocache now, or scan the QR code later to finish.
+              </p>
+              <div className="flex gap-2 justify-center [@media(max-height:680px)]:flex-row flex-col">
+                <Button
+                  onClick={handleFillOutNow}
+                  disabled={!qrDataUrl}
+                  className="[@media(max-height:680px)]:w-50 w-full p-5"
+                >
+                  I'll fill it out now
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                  className="[@media(max-height:680px)]:w-50 w-full p-5"
+                >
+                  I'll do it later
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </PageLayout>
