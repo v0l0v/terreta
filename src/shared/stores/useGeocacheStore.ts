@@ -3,14 +3,12 @@
  * Consolidates all geocache-related data management
  */
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { 
   useBaseStore, 
   createQueryKey, 
-  isDataStale, 
-  batchOperations,
-  createOptimisticUpdate 
+  batchOperations
 } from './baseStore';
 import { useMemoizedArray } from './memoization';
 import { QueryOptimizer } from './performanceMonitor';
@@ -57,9 +55,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
   }));
 
   // Update state helper - use useCallback to make it stable
-  const updateState = useCallback((updates: Partial<GeocacheStoreState>) => {
-    setState(prev => ({ ...prev, ...updates }));
-  }, []);
+
 
   // Main geocaches query with performance optimization and batching
   const geocachesQuery = useQuery({
@@ -73,20 +69,20 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
         return cached;
       }
 
-      const { data: events } = await baseStore.singleQuery({
+      const { data: events } = await baseStore.batchQuery([{
         kinds: [NIP_GC_KINDS.GEOCACHE],
         limit: QUERY_LIMITS.GEOCACHES,
-      }, 'fetchGeocaches');
+      }], 'fetchGeocaches');
 
-      const geocaches = events
+      const geocaches = (events || [])
         .map(parseGeocacheEvent)
-        .filter((g): g is Geocache => {
+        .filter((g: Geocache | null): g is Geocache => {
           if (!g) return false;
           // Show hidden caches to their creator only
           if (g.hidden && g.pubkey !== user?.pubkey) return false;
           return true;
         })
-        .sort((a, b) => b.created_at - a.created_at);
+        .sort((a: Geocache, b: Geocache) => b.created_at - a.created_at);
 
       // Cache the result
       QueryOptimizer.setCachedResult(cacheKey, geocaches);
@@ -122,13 +118,13 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
   const fetchGeocache = useCallback(async (id: string): Promise<StoreActionResult<Geocache>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const { data: events } = await baseStore.singleQuery({
+      const { data: events } = await baseStore.batchQuery([{
         ids: [id],
         kinds: [NIP_GC_KINDS.GEOCACHE],
         limit: 1,
-      }, 'fetchGeocache');
+      }], 'fetchGeocache');
 
-      const geocache = events[0] ? parseGeocacheEvent(events[0]) : null;
+      const geocache = events?.[0] ? parseGeocacheEvent(events[0]) : null;
       if (!geocache) {
         throw new Error(`Geocache not found: ${id}`);
       }
@@ -139,16 +135,16 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
   const fetchUserGeocaches = useCallback(async (pubkey: string): Promise<StoreActionResult<Geocache[]>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const { data: events } = await baseStore.singleQuery({
+      const { data: events } = await baseStore.batchQuery([{
         kinds: [NIP_GC_KINDS.GEOCACHE],
         authors: [pubkey],
         limit: QUERY_LIMITS.GEOCACHES,
-      }, 'fetchUserGeocaches');
+      }], 'fetchUserGeocaches');
 
-      const userGeocaches = events
+      const userGeocaches = (events || [])
         .map(parseGeocacheEvent)
-        .filter((g): g is Geocache => g !== null)
-        .sort((a, b) => b.created_at - a.created_at);
+        .filter((g: Geocache | null): g is Geocache => g !== null)
+        .sort((a: Geocache, b: Geocache) => b.created_at - a.created_at);
 
       return userGeocaches;
     }, 'fetchUserGeocaches');
@@ -339,7 +335,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
       return signedEvent;
     },
-    onMutate: ({ id, updates }) => {
+    onMutate: () => {
       // Optimistic update handled by React Query
       return {};
     },

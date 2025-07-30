@@ -8,7 +8,6 @@ import { useMutation } from '@tanstack/react-query';
 import { 
   useBaseStore, 
   createQueryKey, 
-  isDataStale, 
   batchOperations 
 } from './baseStore';
 import type { 
@@ -64,13 +63,13 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
   // Data fetching actions
   const fetchAuthor = useCallback(async (pubkey: string): Promise<StoreActionResult<AuthorMetadata>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const { data: events } = await baseStore.singleQuery({
+      const { data: events } = await baseStore.batchQuery([{
         kinds: [0], // Profile metadata
         authors: [pubkey],
         limit: 1,
-      }, 'fetchAuthor');
+      }], 'fetchAuthor');
 
-      const metadata = events[0] || null;
+      const metadata = events?.[0] || null;
       const authorData: AuthorMetadata = {
         pubkey,
         metadata,

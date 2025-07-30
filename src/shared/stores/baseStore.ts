@@ -12,7 +12,7 @@ import type {
   CacheStats,
   StoreActionResult 
 } from './types';
-import { NostrQueryBatcher, getQueryBatcher } from './queryBatcher';
+
 import { TIMEOUTS, POLLING_INTERVALS } from '@/shared/config';
 // Performance imports moved to individual stores to avoid circular dependencies
 
@@ -93,7 +93,7 @@ export function useBaseStore(
     }
   }, [handleError, createSuccessResult, createErrorResult]);
 
-  // Query batching system
+  // Batch query method
   const batchQuery = useCallback(async (
     filters: any[],
     context: string,
@@ -105,6 +105,8 @@ export function useBaseStore(
       return events;
     }, context);
   }, [safeAsyncOperation, nostr]);
+
+
 
   // Query client helpers
   const invalidateQueries = useCallback((queryKey: unknown[]) => {
@@ -131,28 +133,7 @@ export function useBaseStore(
     });
   }, [queryClient, memoizedConfig.cacheTimeout]);
 
-  // Batched query methods
-  const batchedQuery = useCallback(async (
-    filters: any[],
-    context: string
-  ): Promise<StoreActionResult<any[]>> => {
-    return safeAsyncOperation(async () => {
-      const batcher = getQueryBatcher(nostr);
-      const events = await batcher.batchQuery(filters);
-      return events;
-    }, context);
-  }, [safeAsyncOperation, nostr]);
 
-  const singleQuery = useCallback(async (
-    filter: any,
-    context: string
-  ): Promise<StoreActionResult<any[]>> => {
-    return safeAsyncOperation(async () => {
-      const batcher = getQueryBatcher(nostr);
-      const events = await batcher.query(filter);
-      return events;
-    }, context);
-  }, [safeAsyncOperation, nostr]);
 
   // Background sync management
   const startBackgroundSync = useCallback((syncFn: () => Promise<void>) => {
@@ -234,6 +215,8 @@ export function useBaseStore(
     setQueryData,
     getQueryData,
     prefetchQuery,
+    batchQuery,
+
     
     // Background sync
     startBackgroundSync,
@@ -333,8 +316,8 @@ export class QueryBatcher {
 
   constructor(
     private queryFn: (filters: any[]) => Promise<any[]>,
-    private maxSize = 10,
-    private delay = 50
+    maxSize = 10,
+    delay = 50
   ) {
     this.maxBatchSize = maxSize;
     this.batchDelay = delay;

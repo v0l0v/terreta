@@ -19,8 +19,8 @@ export class NostrQueryBatcher {
 
   constructor(
     private queryFn: (filters: any[]) => Promise<any[]>,
-    private maxSize = 20,
-    private delay = 50
+    maxSize = 20,
+    delay = 50
   ) {
     this.maxBatchSize = maxSize;
     this.batchDelay = delay;
@@ -56,7 +56,6 @@ export class NostrQueryBatcher {
     if (filters.length === 0) return [];
     if (filters.length === 1) return this.query(filters[0]);
 
-    const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
     const events = await this.queryFn(filters);
     return events;
   }

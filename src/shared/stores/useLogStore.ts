@@ -3,14 +3,12 @@
  * Consolidates all log-related data management
  */
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { 
   useBaseStore, 
   createQueryKey, 
-  isDataStale, 
-  batchOperations,
-  createOptimisticUpdate 
+  batchOperations
 } from './baseStore';
 import type { 
   LogStore, 
@@ -58,7 +56,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
     return baseStore.safeAsyncOperation(async () => {
       const geocacheCoordinate = `${NIP_GC_KINDS.GEOCACHE}:${geocacheId}`;
       
-      const { data: allEvents } = await baseStore.batchedQuery([
+      const { data: allEvents } = await baseStore.batchQuery([
         {
           kinds: [NIP_GC_KINDS.FOUND_LOG],
           '#a': [geocacheCoordinate],
@@ -72,10 +70,10 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
         }
       ], 'fetchLogs');
 
-      const logs = allEvents
+      const logs = (allEvents || [])
         .map(parseLogEvent)
-        .filter((log): log is GeocacheLog => log !== null)
-        .sort((a, b) => b.created_at - a.created_at);
+        .filter((log: GeocacheLog | null): log is GeocacheLog => log !== null)
+        .sort((a: GeocacheLog, b: GeocacheLog) => b.created_at - a.created_at);
 
       return logs;
     }, 'fetchLogs');
@@ -83,35 +81,35 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
 
   const fetchRecentLogs = useCallback(async (limit: number = 20): Promise<StoreActionResult<GeocacheLog[]>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
+
       
       const allEvents = [];
       
       // Fetch recent found logs
       try {
-        const foundLogs = await baseStore.batchedQuery([{
+        const { data: foundLogs } = await baseStore.batchQuery([{
           kinds: [NIP_GC_KINDS.FOUND_LOG],
           limit: limit / 2,
-        }], { signal });
-        allEvents.push(...foundLogs);
+        }], 'fetchRecentFoundLogs');
+        allEvents.push(...(foundLogs || []));
       } catch (error) {
         console.warn('Failed to fetch recent found logs:', error);
       }
 
       // Fetch recent comment logs
       try {
-        const commentLogs = await baseStore.batchedQuery([{
+        const { data: commentLogs } = await baseStore.batchQuery([{
           kinds: [NIP_GC_KINDS.COMMENT_LOG],
           limit: limit / 2,
-        }], { signal });
-        allEvents.push(...commentLogs);
+        }], 'fetchRecentCommentLogs');
+        allEvents.push(...(commentLogs || []));
       } catch (error) {
         console.warn('Failed to fetch recent comment logs:', error);
       }
 
       const recentLogs = allEvents
         .map(parseLogEvent)
-        .filter((log): log is GeocacheLog => log !== null)
+        .filter((log: GeocacheLog | null): log is GeocacheLog => log !== null)
         .sort((a, b) => b.created_at - a.created_at)
         .slice(0, limit);
 
@@ -122,30 +120,30 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
 
   const fetchUserLogs = useCallback(async (pubkey: string): Promise<StoreActionResult<GeocacheLog[]>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
+
       
       const allEvents = [];
       
       // Fetch user's found logs
       try {
-        const foundLogs = await baseStore.batchedQuery([{
+        const { data: foundLogs } = await baseStore.batchQuery([{
           kinds: [NIP_GC_KINDS.FOUND_LOG],
           authors: [pubkey],
           limit: QUERY_LIMITS.LOGS,
-        }], { signal });
-        allEvents.push(...foundLogs);
+        }], 'fetchUserFoundLogs');
+        allEvents.push(...(foundLogs || []));
       } catch (error) {
         console.warn('Failed to fetch user found logs:', error);
       }
 
       // Fetch user's comment logs
       try {
-        const commentLogs = await baseStore.batchedQuery([{
+        const { data: commentLogs } = await baseStore.batchQuery([{
           kinds: [NIP_GC_KINDS.COMMENT_LOG],
           authors: [pubkey],
           limit: QUERY_LIMITS.LOGS,
-        }], { signal });
-        allEvents.push(...commentLogs);
+        }], 'fetchUserCommentLogs');
+        allEvents.push(...(commentLogs || []));
       } catch (error) {
         console.warn('Failed to fetch user comment logs:', error);
       }
@@ -153,7 +151,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
       const userLogs = allEvents
         .map(parseLogEvent)
         .filter((log): log is GeocacheLog => log !== null)
-        .sort((a, b) => b.created_at - a.created_at);
+        .sort((a: GeocacheLog, b: GeocacheLog) => b.created_at - a.created_at);
 
       if (pubkey === user?.pubkey) {
         updateState({ userLogs });
@@ -255,7 +253,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
           ...prev,
           logsByGeocache: {
             ...prev.logsByGeocache,
-            [logData.geocacheId]: [newLog, ...(prev.logsByGeocache[logData.geocacheId] || [])],
+            [logData.geocacheId!]: [newLog, ...(prev.logsByGeocache[logData.geocacheId!] || [])],
           },
           recentLogs: [newLog, ...prev.recentLogs].slice(0, 20),
           userLogs: newLog.pubkey === user?.pubkey 
