@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { QrCode, ChevronDown, Download, Printer } from "lucide-react";
+import { QrCode, ChevronDown, Download, Printer, Settings, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ import {
 } from "@/features/geocache/utils/verification";
 import { geocacheToNaddr } from "@/shared/utils/naddr-utils";
 import { generateDeterministicDTag } from "@/features/geocache/utils/dTag";
+import { nip19 } from 'nostr-tools';
 import { ComponentLoading } from "@/components/ui/loading";
 import {
   uniqueNamesGenerator,
@@ -48,17 +49,39 @@ export default function CreateCacheLanding() {
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [qrType, setQrType] = useState<"full" | "cutout" | "micro" | "sheet">("full");
   const [_sheetData, setSheetData] = useState<{name: string, naddr: string, keyPair: VerificationKeyPair}[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+  const [customNpub, setCustomNpub] = useState<string>("");
+  const [npubError, setNpubError] = useState<string>("");
+
+  const validateNpub = (npub: string): boolean => {
+    try {
+      const decoded = nip19.decode(npub);
+      return decoded.type === 'npub';
+    } catch {
+      return false;
+    }
+  };
+
+  const getPubkeyForNaddr = (): string => {
+    if (customNpub && validateNpub(customNpub)) {
+      const decoded = nip19.decode(customNpub);
+      return decoded.data as string;
+    }
+    return user?.pubkey || '';
+  };
 
   const generateQR = useCallback(async () => {
     if (!user || !verificationKeyPair) return;
 
     try {
+      const targetPubkey = getPubkeyForNaddr();
+      
       if (qrType === 'sheet') {
         const dataPromises = [];
         for (let i = 0; i < 9; i++) {
           const name = uniqueNamesGenerator(customConfig);
-          const dTag = generateDeterministicDTag(name, user.pubkey);
-          const naddr = geocacheToNaddr(user.pubkey, dTag);
+          const dTag = generateDeterministicDTag(name, targetPubkey);
+          const naddr = geocacheToNaddr(targetPubkey, dTag);
           dataPromises.push(generateVerificationKeyPair().then(keyPair => ({name, naddr, keyPair})));
         }
         const data = await Promise.all(dataPromises);
@@ -82,15 +105,16 @@ export default function CreateCacheLanding() {
         variant: "destructive",
       });
     }
-  }, [user, qrType, toast, naddr, verificationKeyPair]);
+  }, [user, qrType, toast, naddr, verificationKeyPair, customNpub]);
 
   useEffect(() => {
     if (!user) return;
 
     const generateInitialQR = async () => {
       const finalCacheName = uniqueNamesGenerator(customConfig);
-      const dTag = generateDeterministicDTag(finalCacheName, user.pubkey);
-      const naddr = geocacheToNaddr(user.pubkey, dTag);
+      const targetPubkey = getPubkeyForNaddr();
+      const dTag = generateDeterministicDTag(finalCacheName, targetPubkey);
+      const naddr = geocacheToNaddr(targetPubkey, dTag);
       const keyPair = await generateVerificationKeyPair();
       setCacheName(finalCacheName);
       setNaddr(naddr);
@@ -98,7 +122,7 @@ export default function CreateCacheLanding() {
     };
 
     generateInitialQR();
-  }, [user]);
+  }, [user, customNpub]);
 
   useEffect(() => {
     if (naddr && verificationKeyPair) {
@@ -136,7 +160,12 @@ export default function CreateCacheLanding() {
   const handleFillOutNow = () => {
     if (verificationKeyPair) {
       const claimUrl = `https://treasures.to/${naddr}#verify=${verificationKeyPair.nsec}`;
-      navigate(`/create-cache?claimUrl=${encodeURIComponent(claimUrl)}`);
+      const params = new URLSearchParams();
+      params.set('claimUrl', claimUrl);
+      if (customNpub && validateNpub(customNpub)) {
+        params.set('giftNpub', customNpub);
+      }
+      navigate(`/create-cache?${params.toString()}`);
     }
   };
 
@@ -164,6 +193,7 @@ export default function CreateCacheLanding() {
 
         <div className="space-y-2 xs:space-y-4">
           <h2 className="text-lg font-semibold text-foreground">Step 1: Get Your QR Code</h2>
+          
           <div className="flex justify-center">
             {qrDataUrl ? (
               <img
@@ -177,6 +207,56 @@ export default function CreateCacheLanding() {
               </div>
             )}
           </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Settings className="h-3 w-3 mr-1" />
+                {showAdvanced ? 'Hide' : 'Show'} Advanced Options
+              </Button>
+            </div>
+            
+            {showAdvanced && (
+              <div className="space-y-3 p-3 bg-muted/30 rounded-lg border">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Gift className="h-4 w-4 text-primary" />
+                  <span>Create Giftable Cache</span>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">
+                    Recipient's npub (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="npub1..."
+                    value={customNpub}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCustomNpub(value);
+                      if (value && !validateNpub(value)) {
+                        setNpubError("Invalid npub format");
+                      } else {
+                        setNpubError("");
+                      }
+                    }}
+                    className="w-full px-3 py-2 text-sm border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  {npubError && (
+                    <p className="text-xs text-destructive">{npubError}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Leave blank to create a cache for yourself. Enter a friend's npub to create a giftable cache they'll own.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <p className="text-xs text-muted-foreground p-1">
             {qrType === 'sheet' ? 'Print this 3x3 grid of QR codes for multiple geocaches.' : 'Print this QR code and place it inside your geocache.'}
           </p>
