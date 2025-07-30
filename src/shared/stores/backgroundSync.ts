@@ -106,7 +106,7 @@ export function useBackgroundSyncScheduler(config: Partial<SyncSchedulerConfig> 
     }
   }, [fullConfig.enableAdaptiveScheduling]);
 
-  // Execute a single task
+  // Execute a single task - defined as a function to avoid hoisting issues
   const executeTask = useCallback(async (task: SyncTask): Promise<void> => {
     if (activeTasksRef.current.has(task.id)) {
       return; // Task already running
@@ -145,7 +145,12 @@ export function useBackgroundSyncScheduler(config: Partial<SyncSchedulerConfig> 
       
       if (fullConfig.pauseOnError) {
         console.warn(`Sync task ${task.name} failed, pausing scheduler`);
-        stopScheduler();
+        // Use a function reference that will be available at runtime
+        if (schedulerRef.current) {
+          clearInterval(schedulerRef.current);
+          schedulerRef.current = null;
+        }
+        statusRef.current.isRunning = false;
       }
     } finally {
       activeTasksRef.current.delete(task.id);

@@ -86,13 +86,13 @@ export function useDeepMemo<T>(value: T): T {
 
 /**
  * Memoized callback with dependency optimization
+ * @deprecated - Use useCallback directly instead
  */
 export function useOptimizedCallback<T extends (...args: any[]) => any>(
   callback: T,
   deps: React.DependencyList
 ): T {
-  const memoizedDeps = useDeepMemo(deps);
-  return useCallback(callback, memoizedDeps);
+  return useCallback(callback, deps);
 }
 
 /**
@@ -184,7 +184,7 @@ export function useLRUMemo<TArgs extends readonly unknown[], TReturn>(
     const result = fn(...args);
     cacheRef.current.set(key, result);
     return result;
-  }, [fn, capacity]);
+  }, [fn]); // capacity is not needed as it's only used in useRef
 }
 
 /**

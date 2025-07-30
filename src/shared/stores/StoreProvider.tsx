@@ -3,7 +3,7 @@
  * Provides all stores through React context
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import type { 
   UnifiedStores, 
   StoreProviderProps,
