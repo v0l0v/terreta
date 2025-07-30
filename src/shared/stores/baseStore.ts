@@ -12,6 +12,7 @@ import type {
   CacheStats,
   StoreActionResult 
 } from './types';
+import { NostrQueryBatcher, getQueryBatcher } from './queryBatcher';
 import { TIMEOUTS, POLLING_INTERVALS } from '@/shared/config';
 // Performance imports moved to individual stores to avoid circular dependencies
 
@@ -92,6 +93,19 @@ export function useBaseStore(
     }
   }, [handleError, createSuccessResult, createErrorResult]);
 
+  // Query batching system
+  const batchQuery = useCallback(async (
+    filters: any[],
+    context: string,
+    timeout: number = TIMEOUTS.QUERY
+  ): Promise<StoreActionResult<any[]>> => {
+    return safeAsyncOperation(async () => {
+      const signal = AbortSignal.timeout(timeout);
+      const events = await nostr.query(filters, { signal });
+      return events;
+    }, context);
+  }, [safeAsyncOperation, nostr]);
+
   // Query client helpers
   const invalidateQueries = useCallback((queryKey: unknown[]) => {
     queryClient.invalidateQueries({ queryKey });
@@ -116,6 +130,29 @@ export function useBaseStore(
       staleTime: staleTime || memoizedConfig.cacheTimeout,
     });
   }, [queryClient, memoizedConfig.cacheTimeout]);
+
+  // Batched query methods
+  const batchedQuery = useCallback(async (
+    filters: any[],
+    context: string
+  ): Promise<StoreActionResult<any[]>> => {
+    return safeAsyncOperation(async () => {
+      const batcher = getQueryBatcher(nostr);
+      const events = await batcher.batchQuery(filters);
+      return events;
+    }, context);
+  }, [safeAsyncOperation, nostr]);
+
+  const singleQuery = useCallback(async (
+    filter: any,
+    context: string
+  ): Promise<StoreActionResult<any[]>> => {
+    return safeAsyncOperation(async () => {
+      const batcher = getQueryBatcher(nostr);
+      const events = await batcher.query(filter);
+      return events;
+    }, context);
+  }, [safeAsyncOperation, nostr]);
 
   // Background sync management
   const startBackgroundSync = useCallback((syncFn: () => Promise<void>) => {
@@ -283,4 +320,97 @@ export function createOptimisticUpdate<T>(
   return () => {
     queryClient.setQueryData(queryKey, previousData);
   };
+}
+
+/**
+ * Query batching utility for efficient Nostr queries
+ */
+export class QueryBatcher {
+  private batch: any[] = [];
+  private timeout: NodeJS.Timeout | null = null;
+  private maxBatchSize = 10;
+  private batchDelay = 50; // ms
+
+  constructor(
+    private queryFn: (filters: any[]) => Promise<any[]>,
+    private maxSize = 10,
+    private delay = 50
+  ) {
+    this.maxBatchSize = maxSize;
+    this.batchDelay = delay;
+  }
+
+  async add(filter: any): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      this.batch.push({ filter, resolve, reject });
+      
+      if (this.batch.length >= this.maxBatchSize) {
+        this.execute();
+      } else if (!this.timeout) {
+        this.timeout = setTimeout(() => this.execute(), this.batchDelay);
+      }
+    });
+  }
+
+  private async execute() {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+
+    if (this.batch.length === 0) return;
+
+    const currentBatch = [...this.batch];
+    this.batch = [];
+
+    try {
+      const filters = currentBatch.map(item => item.filter);
+      const results = await this.queryFn(filters);
+      
+      // Distribute results back to individual promises
+      currentBatch.forEach((item, index) => {
+        if (index < results.length) {
+          item.resolve(results.filter(event => this.matchesFilter(event, item.filter)));
+        } else {
+          item.resolve([]);
+        }
+      });
+    } catch (error) {
+      currentBatch.forEach(item => item.reject(error));
+    }
+  }
+
+  private matchesFilter(event: any, filter: any): boolean {
+    // Basic filter matching logic
+    if (filter.kinds && !filter.kinds.includes(event.kind)) return false;
+    if (filter.authors && !filter.authors.includes(event.pubkey)) return false;
+    if (filter.ids && !filter.ids.includes(event.id)) return false;
+    return true;
+  }
+
+  clear() {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+    this.batch = [];
+  }
+}
+
+/**
+ * Batch multiple queries efficiently
+ */
+export function createBatchedQuery(filters: any[]): any[] {
+  // Group filters by similar properties to optimize batching
+  const grouped = new Map<string, any[]>();
+  
+  filters.forEach(filter => {
+    const key = `${filter.kinds?.join(',')}-${filter.authors?.join(',')}-${filter.limit || ''}`;
+    if (!grouped.has(key)) {
+      grouped.set(key, []);
+    }
+    grouped.get(key)!.push(filter);
+  });
+  
+  return Array.from(grouped.values()).flat();
 }

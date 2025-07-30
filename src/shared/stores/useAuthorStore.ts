@@ -64,12 +64,11 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
   // Data fetching actions
   const fetchAuthor = useCallback(async (pubkey: string): Promise<StoreActionResult<AuthorMetadata>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
-      const events = await baseStore.nostr.query([{
+      const { data: events } = await baseStore.singleQuery({
         kinds: [0], // Profile metadata
         authors: [pubkey],
         limit: 1,
-      }], { signal });
+      }, 'fetchAuthor');
 
       const metadata = events[0] || null;
       const authorData: AuthorMetadata = {

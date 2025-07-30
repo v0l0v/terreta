@@ -61,7 +61,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
     setState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Main geocaches query with performance optimization
+  // Main geocaches query with performance optimization and batching
   const geocachesQuery = useQuery({
     queryKey: createQueryKey('geocache', 'list'),
     queryFn: async () => {
@@ -73,11 +73,10 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
         return cached;
       }
 
-      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
-      const events = await baseStore.nostr.query([{
+      const { data: events } = await baseStore.singleQuery({
         kinds: [NIP_GC_KINDS.GEOCACHE],
         limit: QUERY_LIMITS.GEOCACHES,
-      }], { signal });
+      }, 'fetchGeocaches');
 
       const geocaches = events
         .map(parseGeocacheEvent)
@@ -123,12 +122,11 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
   const fetchGeocache = useCallback(async (id: string): Promise<StoreActionResult<Geocache>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
-      const events = await baseStore.nostr.query([{
+      const { data: events } = await baseStore.singleQuery({
         ids: [id],
         kinds: [NIP_GC_KINDS.GEOCACHE],
         limit: 1,
-      }], { signal });
+      }, 'fetchGeocache');
 
       const geocache = events[0] ? parseGeocacheEvent(events[0]) : null;
       if (!geocache) {
@@ -141,12 +139,11 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
   const fetchUserGeocaches = useCallback(async (pubkey: string): Promise<StoreActionResult<Geocache[]>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
-      const events = await baseStore.nostr.query([{
+      const { data: events } = await baseStore.singleQuery({
         kinds: [NIP_GC_KINDS.GEOCACHE],
         authors: [pubkey],
         limit: QUERY_LIMITS.GEOCACHES,
-      }], { signal });
+      }, 'fetchUserGeocaches');
 
       const userGeocaches = events
         .map(parseGeocacheEvent)

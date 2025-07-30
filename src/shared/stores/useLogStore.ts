@@ -56,38 +56,21 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
   // Data fetching actions
   const fetchLogs = useCallback(async (geocacheId: string): Promise<StoreActionResult<GeocacheLog[]>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
-      
-      // We need the geocache coordinate to query logs
-      // This is a simplified version - in practice, we'd get this from the geocache store
       const geocacheCoordinate = `${NIP_GC_KINDS.GEOCACHE}:${geocacheId}`;
       
-      const allEvents = [];
-      
-      // Fetch found logs
-      try {
-        const foundLogs = await baseStore.nostr.query([{
+      const { data: allEvents } = await baseStore.batchedQuery([
+        {
           kinds: [NIP_GC_KINDS.FOUND_LOG],
           '#a': [geocacheCoordinate],
           limit: QUERY_LIMITS.LOGS,
-        }], { signal });
-        allEvents.push(...foundLogs);
-      } catch (error) {
-        console.warn('Failed to fetch found logs:', error);
-      }
-
-      // Fetch comment logs
-      try {
-        const commentLogs = await baseStore.nostr.query([{
+        },
+        {
           kinds: [NIP_GC_KINDS.COMMENT_LOG],
           '#a': [geocacheCoordinate],
           '#A': [geocacheCoordinate],
           limit: QUERY_LIMITS.LOGS,
-        }], { signal });
-        allEvents.push(...commentLogs);
-      } catch (error) {
-        console.warn('Failed to fetch comment logs:', error);
-      }
+        }
+      ], 'fetchLogs');
 
       const logs = allEvents
         .map(parseLogEvent)
@@ -106,7 +89,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
       
       // Fetch recent found logs
       try {
-        const foundLogs = await baseStore.nostr.query([{
+        const foundLogs = await baseStore.batchedQuery([{
           kinds: [NIP_GC_KINDS.FOUND_LOG],
           limit: limit / 2,
         }], { signal });
@@ -117,7 +100,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
 
       // Fetch recent comment logs
       try {
-        const commentLogs = await baseStore.nostr.query([{
+        const commentLogs = await baseStore.batchedQuery([{
           kinds: [NIP_GC_KINDS.COMMENT_LOG],
           limit: limit / 2,
         }], { signal });
@@ -145,7 +128,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
       
       // Fetch user's found logs
       try {
-        const foundLogs = await baseStore.nostr.query([{
+        const foundLogs = await baseStore.batchedQuery([{
           kinds: [NIP_GC_KINDS.FOUND_LOG],
           authors: [pubkey],
           limit: QUERY_LIMITS.LOGS,
@@ -157,7 +140,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
 
       // Fetch user's comment logs
       try {
-        const commentLogs = await baseStore.nostr.query([{
+        const commentLogs = await baseStore.batchedQuery([{
           kinds: [NIP_GC_KINDS.COMMENT_LOG],
           authors: [pubkey],
           limit: QUERY_LIMITS.LOGS,
