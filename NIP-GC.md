@@ -54,8 +54,6 @@ The content field contains the cache description and any additional information 
 - `r` (optional) - preferred relay URLs for logs
 - `verification` (optional) - hex-encoded public key for verifying finds at this cache
 
-
-
 ## Found Log Event (Kind 7516)
 
 Found log events record successful visits to geocaches:
@@ -113,8 +111,6 @@ Owners of the cache can officially retire caches using an `archived` tag value i
 - `t` (optional) - log type: `dnf`, `note`, `maintenance`, `archived`. If omitted, assumed to be `note`
 - `image` (optional) - photos from the visit
 
-
-
 ## Geocache Verification Event (Kind 7517)
 
 Verification events provide cryptographic proof that a someone physically located a geocache. These events are signed by the cache's verification private key.
@@ -136,8 +132,6 @@ The content field must follow the static format: `"Geocache verification for <fi
 ### Tags
 
 - `a` (required) - composite identifier containing the finder's pubkey in hex format and the geocache naddr being verified
-
-
 
 ### Usage
 
