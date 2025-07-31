@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
 import { LatLngExpression, LatLngBounds } from "leaflet";
 import L from "leaflet";
@@ -22,42 +22,37 @@ import "../map.css";
 
 // Create HTML popup content for geocaches
 const createGeocachePopupHTML = (geocache: Geocache) => {
+  // Pre-escape and truncate description
+  const description = geocache.description.length > 100 
+    ? geocache.description.substring(0, 100) + '...' 
+    : geocache.description;
+  
   return `
-    <div class="p-3 min-w-[200px]">
-      <h3 class="font-semibold text-sm leading-tight mb-3">${geocache.name}</h3>
+    <div class="p-3 min-w-[200px] max-w-[280px]">
+      <h3 class="font-semibold text-sm leading-tight mb-2">${geocache.name}</h3>
       
-      <div class="flex flex-wrap gap-1 mb-3">
-        <span class="inline-flex items-center rounded-md border px-1.5 py-0 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-          D${geocache.difficulty}
-        </span>
-        <span class="inline-flex items-center rounded-md border px-1.5 py-0 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-          T${geocache.terrain}
-        </span>
-        <span class="inline-flex items-center rounded-md border px-1.5 py-0 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-          ${getSizeLabel(geocache.size)}
-        </span>
-        <span class="inline-flex items-center rounded-md border px-1.5 py-0 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-          ${getTypeLabel(geocache.type)}
-        </span>
+      <div class="flex flex-wrap gap-1 mb-2">
+        <span class="px-2 py-1 text-xs bg-secondary rounded">D${geocache.difficulty}</span>
+        <span class="px-2 py-1 text-xs bg-secondary rounded">T${geocache.terrain}</span>
+        <span class="px-2 py-1 text-xs bg-secondary rounded">${getSizeLabel(geocache.size)}</span>
+        <span class="px-2 py-1 text-xs bg-secondary rounded">${getTypeLabel(geocache.type)}</span>
       </div>
       
-      <p class="text-xs text-muted-foreground mb-3 line-clamp-2">
-        ${geocache.description}
-      </p>
+      <p class="text-xs text-gray-600 mb-3 line-clamp-2">${description}</p>
       
       <div class="flex gap-2">
         <button 
-          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 flex-1"
+          class="flex-1 bg-blue-600 text-white text-xs px-3 py-2 rounded hover:bg-blue-700 transition-colors"
           onclick="window.dispatchEvent(new CustomEvent('geocache-view-details', { detail: '${geocache.dTag}' }))"
         >
           View Details
         </button>
         <button 
-          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground px-2 h-8"
+          class="px-2 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
           onclick="window.open('https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}', '_blank')"
           title="Get directions"
         >
-          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
             <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
           </svg>
         </button>
@@ -853,13 +848,21 @@ function OfflineTileLayer({ mapStyle }: { mapStyle: MapStyle }) {
     <TileLayer
       attribution={mapStyle.attribution}
       url={mapStyle.url}
-      maxZoom={19}
+      maxZoom={18} // Reduced max zoom for better performance
+      minZoom={3} // Set minimum zoom to prevent over-zooming out
       // Optimize for fastest possible loading
-      keepBuffer={0} // Minimal buffer for faster initial load
-      updateWhenIdle={false} // Update immediately
-      updateWhenZooming={true} // Keep updating during zoom
+      keepBuffer={1} // Small buffer for smoother panning
+      updateWhenIdle={true} // Update when idle for better performance during interaction
+      updateWhenZooming={false} // Don't update during zoom for smoother experience
+      updateInterval={200} // Throttle updates for better performance
       // Add error handling for offline mode
       errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      // Additional performance optimizations
+      crossOrigin={true} // Enable CORS for better caching
+      // Reduce tile loading overhead
+      tileSize={256} // Standard tile size
+      zoomOffset={0} // No zoom offset
+      detectRetina={false} // Disable retina detection for consistency
     />
   );
 }
@@ -965,37 +968,45 @@ export function GeocacheMap({
   }, [theme, currentMapStyle, hasManuallySelectedStyle]);
 
   // Calculate center if not provided - use stable defaults to prevent jumping
-  const mapCenter: LatLngExpression = center 
-    ? [center.lat, center.lng]
-    : searchLocation
-      ? [searchLocation.lat, searchLocation.lng]
-      : userLocation
-        ? [userLocation.lat, userLocation.lng] // Use user location directly, don't snap to geocaches
-        : [40.7128, -74.0060]; // Default to NYC - stable fallback
+  const mapCenter: LatLngExpression = useMemo(() => {
+    if (center) return [center.lat, center.lng];
+    if (searchLocation) return [searchLocation.lat, searchLocation.lng];
+    if (userLocation) return [userLocation.lat, userLocation.lng];
+    return [40.7128, -74.0060]; // Default to NYC - stable fallback
+  }, [center, searchLocation, userLocation]);
 
 
 
-  const handleMarkerClick = (geocache: Geocache) => {
+  const handleMarkerClick = useCallback((geocache: Geocache) => {
     if (onMarkerClick) {
       onMarkerClick(geocache);
     } else {
       // Use optimized navigation that pre-populates cache
       navigateToGeocache(geocache, { fromMap: true });
     }
-  };
+  }, [onMarkerClick, navigateToGeocache]);
 
   // Optimized map options for fastest loading
   const mapOptions = {
     scrollWheelZoom: true,
     tap: false,
-    tapTolerance: 10,
+    tapTolerance: 15, // Increased tolerance for better touch performance
     bounceAtZoomLimits: false, // Disable for faster performance
-    maxBoundsViscosity: 0.5, // Reduce viscosity for better performance
+    maxBoundsViscosity: 0.3, // Further reduce viscosity for better performance
     preferCanvas: true, // Use canvas for better performance
     fadeAnimation: false, // Disable fade for faster tile display
     zoomAnimation: true, // Keep zoom animation but make it faster
-    zoomAnimationThreshold: 4,
+    zoomAnimationThreshold: 2, // Reduced threshold for smoother zoom
     markerZoomAnimation: false, // Disable marker zoom animation for speed
+    // Additional performance optimizations
+    trackResize: false, // Disable automatic resize tracking
+    boxZoom: false, // Disable box zoom for better performance
+    doubleClickZoom: true, // Keep double click zoom
+    keyboard: false, // Disable keyboard navigation for performance
+    inertia: true, // Enable inertia for smoother panning
+    inertiaDeceleration: 3000, // Faster deceleration
+    inertiaMaxSpeed: 1500, // Limit max speed for better control
+    worldCopyJump: false, // Disable world copy jump for performance
   };
 
   // Set up event listeners for popup buttons
@@ -1164,14 +1175,19 @@ export function GeocacheMap({
       
       {/* Geocache markers with clustering */}
       <MarkerClusterGroup
-        chunkedLoading
-        maxClusterRadius={50}
-        spiderfyOnMaxZoom={true}
+        chunkedLoading={true}
+        chunkInterval={50} // Faster chunk processing
+        chunkDelay={10} // Reduced delay between chunks
+        maxClusterRadius={40} // Smaller cluster radius for better performance
+        spiderfyOnMaxZoom={false} // Disable spiderfy for better performance
         showCoverageOnHover={false}
         zoomToBoundsOnClick={true}
         removeOutsideVisibleBounds={true}
-        animate={true}
+        animate={false} // Disable animations for better performance
         animateAddingMarkers={false}
+        // Performance optimizations
+        disableClusteringAtZoom={16} // Disable clustering at high zoom levels
+        maxZoom={18} // Match tile layer max zoom
         iconCreateFunction={(cluster: { getChildCount: () => any; }) => {
           const count = cluster.getChildCount();
           const size = count < 10 ? 'small' : count < 100 ? 'medium' : 'large';
@@ -1179,31 +1195,33 @@ export function GeocacheMap({
           return L.divIcon({
             html: `<div class="cluster-marker cluster-${size}"><span>${count}</span></div>`,
             className: 'custom-cluster-icon',
-            iconSize: L.point(40, 40, true),
+            iconSize: L.point(36, 36, true), // Slightly smaller for better performance
           });
         }}
       >
-        {geocaches.filter(g => g.location).map((geocache) => {
-          const marker = (
+        {geocaches.filter(g => g.location).slice(0, 200).map((geocache) => { // Limit to 200 markers for performance
+          return (
             <Marker
               key={geocache.dTag}
               position={[geocache.location.lat, geocache.location.lng]}
               icon={createCacheIcon(geocache.type, currentMapStyle === 'adventure')}
               eventHandlers={{
                 add: (e) => {
-                  // Bind HTML popup when marker is added
+                  // Bind HTML popup when marker is added - lazy load content
                   const marker = e.target;
-                  const popupContent = createGeocachePopupHTML(geocache);
-                  marker.bindPopup(popupContent);
-                },
-                popupclose: () => {
-                  // Dispatch custom event to clear highlighted geocache when popup is closed
-                  window.dispatchEvent(new CustomEvent('popup-closed', { detail: geocache.dTag }));
+                  marker.bindPopup(() => createGeocachePopupHTML(geocache), {
+                    maxWidth: 300,
+                    className: 'geocache-popup',
+                    closeButton: true,
+                    autoClose: true,
+                    autoPan: true,
+                    keepInView: true
+                  });
                 }
+                // Removed click handler - clicking marker should only show popup, not open modal
               }}
             />
           );
-          return marker;
         })}
       </MarkerClusterGroup>
     </MapContainer>
