@@ -407,6 +407,12 @@
   z-index: 10001;
 }
 
+/* Toast notifications - above modal overlays */
+[data-sonner-toaster],
+[data-sonner-toast] {
+  z-index: 10002 !important;
+}
+
 /* ===== UTILITY CLASSES ===== */
 .search-radius-circle {
   opacity: 0.7;
@@ -437,11 +443,15 @@
 }
 
 /* ===== MARKER CLUSTER STYLING ===== */
-.marker-cluster-small,
-.marker-cluster-medium,
-.marker-cluster-large {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  border: 4px solid white;
+.custom-cluster-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.cluster-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
   color: white;
   font-weight: bold;
@@ -449,13 +459,77 @@
   box-shadow: 
     0 4px 12px rgba(0, 0, 0, 0.25),
     0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
 }
 
-.marker-cluster-small div,
-.marker-cluster-medium div,
-.marker-cluster-large div {
-  background: transparent;
-  border-radius: 50%;
+.cluster-marker:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.cluster-small {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  border: 3px solid white;
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
+.cluster-medium {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  border: 3px solid white;
+  width: 35px;
+  height: 35px;
+  font-size: 13px;
+}
+
+.cluster-large {
+  background: linear-gradient(135deg, #7c2d12 0%, #dc2626 100%);
+  border: 4px solid white;
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+/* Adventure theme cluster styling */
+.leaflet-container.adventure-theme .cluster-marker {
+  border-color: #f5f1e8;
+  text-shadow: 0 1px 2px rgba(45, 24, 16, 0.5);
+}
+
+.leaflet-container.adventure-theme .cluster-small {
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+}
+
+.leaflet-container.adventure-theme .cluster-medium {
+  background: linear-gradient(135deg, #654321 0%, #8b4513 100%);
+}
+
+.leaflet-container.adventure-theme .cluster-large {
+  background: linear-gradient(135deg, #4a2c17 0%, #654321 100%);
+}
+
+/* Dark theme cluster styling */
+.leaflet-container.dark-theme .cluster-marker,
+.leaflet-container.system-dark-theme .cluster-marker {
+  border-color: #1f2937;
+}
+
+.leaflet-container.dark-theme .cluster-small,
+.leaflet-container.system-dark-theme .cluster-small {
+  background: linear-gradient(135deg, #065f46 0%, #059669 100%);
+}
+
+.leaflet-container.dark-theme .cluster-medium,
+.leaflet-container.system-dark-theme .cluster-medium {
+  background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+}
+
+.leaflet-container.dark-theme .cluster-large,
+.leaflet-container.system-dark-theme .cluster-large {
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
 }
 
 /* ===== RESPONSIVE DESIGN ===== */

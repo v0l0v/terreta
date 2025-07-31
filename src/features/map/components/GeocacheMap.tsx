@@ -1,17 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
 import { LatLngExpression, LatLngBounds } from "leaflet";
 import L from "leaflet";
 import { createRoot } from "react-dom/client";
 import { useTheme } from "next-themes";
-import { GeocachePopupStats } from "./GeocachePopupStats";
-import { Navigation, Bookmark, BookmarkCheck } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Badge } from "@/shared/components/ui/badge";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import { MapStyleSelector } from "./MapStyleSelector";
 import { MAP_STYLES, type MapStyle } from "@/features/map/constants/mapStyles";
-import { useSavedCaches } from "@/features/geocache/hooks/useSavedCaches";
-import { useToast } from "@/shared/hooks/useToast";
 import { useGeocacheNavigation } from "@/features/geocache/hooks/useGeocacheNavigation";
 import type { Geocache } from "@/shared/types";
 import { getTypeLabel, getSizeLabel } from "@/features/geocache/utils/geocache-utils";
@@ -24,6 +19,52 @@ import { CACHE_NAMES } from "@/shared/config";
 // Import Leaflet CSS and adventure theme
 import "leaflet/dist/leaflet.css";
 import "../map.css";
+
+// Create HTML popup content for geocaches
+const createGeocachePopupHTML = (geocache: Geocache) => {
+  return `
+    <div class="p-3 min-w-[200px]">
+      <h3 class="font-semibold text-sm leading-tight mb-3">${geocache.name}</h3>
+      
+      <div class="flex flex-wrap gap-1 mb-3">
+        <span class="inline-flex items-center rounded-md border px-1.5 py-0 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+          D${geocache.difficulty}
+        </span>
+        <span class="inline-flex items-center rounded-md border px-1.5 py-0 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+          T${geocache.terrain}
+        </span>
+        <span class="inline-flex items-center rounded-md border px-1.5 py-0 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+          ${getSizeLabel(geocache.size)}
+        </span>
+        <span class="inline-flex items-center rounded-md border px-1.5 py-0 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+          ${getTypeLabel(geocache.type)}
+        </span>
+      </div>
+      
+      <p class="text-xs text-muted-foreground mb-3 line-clamp-2">
+        ${geocache.description}
+      </p>
+      
+      <div class="flex gap-2">
+        <button 
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 flex-1"
+          onclick="window.dispatchEvent(new CustomEvent('geocache-view-details', { detail: '${geocache.dTag}' }))"
+        >
+          View Details
+        </button>
+        <button 
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground px-2 h-8"
+          onclick="window.open('https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}', '_blank')"
+          title="Get directions"
+        >
+          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `;
+};
 
 // Create cache icons with optional adventure theme styling
 const createCacheIcon = (type: string, isAdventureTheme: boolean = false) => {
@@ -868,8 +909,6 @@ export function GeocacheMap({
   const [currentMapStyle, setCurrentMapStyle] = useState(getDefaultMapStyle());
   const [hasManuallySelectedStyle, setHasManuallySelectedStyle] = useState(false);
   const mapStyle: MapStyle = (MAP_STYLES[currentMapStyle] || MAP_STYLES.original) as MapStyle;
-  const { isCacheSaved, toggleSaveCache, isNostrEnabled } = useSavedCaches();
-  const { toast } = useToast();
 
   // Handle manual style changes
   const handleStyleChange = (style: string) => {
@@ -959,17 +998,20 @@ export function GeocacheMap({
     markerZoomAnimation: false, // Disable marker zoom animation for speed
   };
 
-  // Set up event listener for popup view details button
+  // Set up event listeners for popup buttons
   useEffect(() => {
     const handleViewDetails = (event: CustomEvent) => {
       const dTag = event.detail;
       const geocache = geocaches.find(g => g.dTag === dTag);
-      if (geocache && onMarkerClick) {
-        onMarkerClick(geocache);
+      if (geocache) {
+        handleMarkerClick(geocache);
       }
     };
 
+
+
     window.addEventListener('geocache-view-details', handleViewDetails as EventListener);
+    
     return () => {
       window.removeEventListener('geocache-view-details', handleViewDetails as EventListener);
     };
@@ -1117,124 +1159,53 @@ export function GeocacheMap({
         <Marker
           position={[userLocation.lat, userLocation.lng]}
           icon={userLocationIcon}
-        >
-          <Popup>
-            <div className="text-center">
-              <p className="font-semibold">Your Location</p>
-            </div>
-          </Popup>
-        </Marker>
+        ></Marker>
       )}
       
-      {/* Geocache markers */}
-      {geocaches.filter(g => g.location).map((geocache) => (
-        <Marker
-          key={geocache.dTag}
-          position={[geocache.location.lat, geocache.location.lng]}
-          icon={createCacheIcon(geocache.type, currentMapStyle === 'adventure')}
-          eventHandlers={{
-            popupclose: () => {
-              // Dispatch custom event to clear highlighted geocache when popup is closed
-              window.dispatchEvent(new CustomEvent('popup-closed', { detail: geocache.dTag }));
-            }
-          }}
-        >
-          <Popup>
-            <div className="p-3 min-w-[200px]">
-              <h3 className="font-semibold text-sm leading-tight mb-3">{geocache.name}</h3>
-              
-              <div className="flex flex-wrap gap-1 mb-3">
-                <Badge variant="outline" className="text-xs py-0 px-1.5">
-                  D{geocache.difficulty}
-                </Badge>
-                <Badge variant="outline" className="text-xs py-0 px-1.5">
-                  T{geocache.terrain}
-                </Badge>
-                <Badge variant="secondary" className="text-xs py-0 px-1.5">
-                  {getSizeLabel(geocache.size)}
-                </Badge>
-                <Badge variant="secondary" className="text-xs py-0 px-1.5">
-                  {getTypeLabel(geocache.type)}
-                </Badge>
-              </div>
-              
-              <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                {geocache.description}
-              </p>
-              
-              <GeocachePopupStats geocache={geocache} />
-              
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="flex-1 text-xs"
-                  onClick={() => handleMarkerClick(geocache)}
-                >
-                  View Details
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="px-2"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    if (!isNostrEnabled) {
-                      toast({
-                        title: 'Login required',
-                        description: 'Please log in with your Nostr account to save caches.',
-                        variant: 'destructive',
-                      });
-                      return;
-                    }
-                    
-                    const isSaved = isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey);
-                    
-                    try {
-                      await toggleSaveCache(geocache);
-                      
-                      toast({
-                        title: isSaved ? 'Cache removed from saved list' : 'Cache saved for later',
-                        description: isSaved 
-                          ? `"${geocache.name}" has been removed from your saved caches.`
-                          : `"${geocache.name}" has been saved to your Nostr profile.`,
-                      });
-                    } catch (error) {
-                      const errorMessage = error instanceof Error ? error.message : 'Failed to save cache. Please try again.';
-                      toast({
-                        title: 'Error saving cache',
-                        description: errorMessage,
-                        variant: 'destructive',
-                      });
-                    }
-                  }}
-                  title={isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey) ? 'Remove from saved' : 'Save for later'}
-                >
-                  {isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey) ? (
-                    <BookmarkCheck className="h-3 w-3" />
-                  ) : (
-                    <Bookmark className="h-3 w-3" />
-                  )}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="px-2"
-                  onClick={() => {
-                    window.open(
-                      `https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}`,
-                      "_blank"
-                    );
-                  }}
-                >
-                  <Navigation className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {/* Geocache markers with clustering */}
+      <MarkerClusterGroup
+        chunkedLoading
+        maxClusterRadius={50}
+        spiderfyOnMaxZoom={true}
+        showCoverageOnHover={false}
+        zoomToBoundsOnClick={true}
+        removeOutsideVisibleBounds={true}
+        animate={true}
+        animateAddingMarkers={false}
+        iconCreateFunction={(cluster: { getChildCount: () => any; }) => {
+          const count = cluster.getChildCount();
+          const size = count < 10 ? 'small' : count < 100 ? 'medium' : 'large';
+          
+          return L.divIcon({
+            html: `<div class="cluster-marker cluster-${size}"><span>${count}</span></div>`,
+            className: 'custom-cluster-icon',
+            iconSize: L.point(40, 40, true),
+          });
+        }}
+      >
+        {geocaches.filter(g => g.location).map((geocache) => {
+          const marker = (
+            <Marker
+              key={geocache.dTag}
+              position={[geocache.location.lat, geocache.location.lng]}
+              icon={createCacheIcon(geocache.type, currentMapStyle === 'adventure')}
+              eventHandlers={{
+                add: (e) => {
+                  // Bind HTML popup when marker is added
+                  const marker = e.target;
+                  const popupContent = createGeocachePopupHTML(geocache);
+                  marker.bindPopup(popupContent);
+                },
+                popupclose: () => {
+                  // Dispatch custom event to clear highlighted geocache when popup is closed
+                  window.dispatchEvent(new CustomEvent('popup-closed', { detail: geocache.dTag }));
+                }
+              }}
+            />
+          );
+          return marker;
+        })}
+      </MarkerClusterGroup>
     </MapContainer>
 
   </div>

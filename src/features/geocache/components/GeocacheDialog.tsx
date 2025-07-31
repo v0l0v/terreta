@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useStore } from 'zustand';
 import { HintDisplay } from "@/components/ui/hint-display";
-import { Navigation, Calendar, User, ExternalLink, Zap } from "lucide-react";
+import { Navigation, Calendar, User, ExternalLink, Zap, Bookmark, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BaseDialog } from "@/components/ui/base-dialog";
@@ -12,7 +12,8 @@ import { GeocacheMap } from "@/features/map/components/GeocacheMap";
 import { useGeocacheLogs } from "../hooks/useGeocacheLogs";
 import { useZapStore } from "@/shared/stores/useZapStore";
 import { ZapButton } from "@/components/ZapButton";
-
+import { useSavedCaches } from "../hooks/useSavedCaches";
+import { useToast } from "@/shared/hooks/useToast";
 
 import { useAuthor } from "@/features/auth/hooks/useAuthor";
 import { LogsSection } from "@/features/logging/components/LogsSection";
@@ -50,6 +51,8 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
   const getZapTotal = useStore(useZapStore, (state) => state.getZapTotal);
   const naddr = geocache ? geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays) : "";
   const totalSats = getZapTotal(naddr ? `naddr:${naddr}` : `event:${geocache?.id}`);
+  const { isCacheSaved, toggleSaveCache, isNostrEnabled } = useSavedCaches();
+  const { toast } = useToast();
 
   
   // Image gallery state
@@ -79,6 +82,39 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
   const handleProfileClick = (pubkey: string) => {
     setSelectedProfilePubkey(pubkey);
     setProfileDialogOpen(true);
+  };
+
+  const handleSaveToggle = async () => {
+    if (!geocache) return;
+
+    if (!isNostrEnabled) {
+      toast({
+        title: 'Login required',
+        description: 'Please log in with your Nostr account to save caches.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const isSaved = isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey);
+
+    try {
+      await toggleSaveCache(geocache);
+      
+      toast({
+        title: isSaved ? 'Cache removed from saved list' : 'Cache saved for later',
+        description: isSaved 
+          ? `"${geocache.name}" has been removed from your saved caches.`
+          : `"${geocache.name}" has been saved to your Nostr profile.`,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save cache. Please try again.';
+      toast({
+        title: 'Error saving cache',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -243,6 +279,24 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
               >
                 <Navigation className="h-4 w-4 mr-2" />
                 Get Directions
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={handleSaveToggle}
+              >
+                {isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey) ? (
+                  <>
+                    <BookmarkCheck className="h-4 w-4 mr-2" />
+                    Remove from Saved
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="h-4 w-4 mr-2" />
+                    Save for Later
+                  </>
+                )}
               </Button>
               <ZapButton
                 target={geocache}
