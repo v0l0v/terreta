@@ -1,7 +1,7 @@
 // NOTE: This file is stable and usually should not be modified.
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
-import { LogOut, UserIcon, UserPlus, Settings, Bookmark } from 'lucide-react';
+import { LogOut, UserIcon, UserPlus, Settings, Bookmark, Wallet } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLoggedInAccounts } from '@/features/geocache/hooks/useLoggedInAccounts';
 import { useNavigate } from 'react-router-dom';
+import { WalletModal } from '@/components/WalletModal';
 
 interface AccountSwitcherProps {
   onAddAccountClick: () => void;
@@ -110,6 +111,15 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           <Settings className='w-4 h-4' />
           <span>App Settings</span>
         </DropdownMenuItem>
+        <WalletModal>
+          <DropdownMenuItem
+            className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
+            onSelect={(e) => e.preventDefault()}
+          >
+            <Wallet className='w-4 h-4' />
+            <span>Wallet Settings</span>
+          </DropdownMenuItem>
+        </WalletModal>
         <DropdownMenuItem
           onClick={onAddAccountClick}
           className='flex items-center gap-2 cursor-pointer p-2 rounded-md'

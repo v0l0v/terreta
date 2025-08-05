@@ -13,6 +13,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { AppProvider } from '@/components/AppProvider';
 import { AppConfig } from '@/contexts/AppContext';
 import { StoreProvider } from '@/shared/stores/StoreProvider';
+import { NWCProvider } from '@/components/NWCProvider';
 import { offlineStorage } from '@/features/offline/utils/offlineStorage';
 import { connectivityChecker } from '@/shared/utils/connectivityChecker';
 import { initializeCacheCleanup } from '@/features/geocache/utils/cacheCleanup';
@@ -79,16 +80,18 @@ export function App() {
         <QueryClientProvider client={queryClient}>
           <NostrLoginProvider storageKey='nostr:login'>
             <NostrProvider>
-              <StoreProvider>
-                <TooltipProvider>
-                  <div className="min-h-screen flex flex-col">
-                    <AppRouter />
-                  </div>
-                  
-                  <Toaster />
-                  <Sonner />
-                </TooltipProvider>
-              </StoreProvider>
+              <NWCProvider>
+                <StoreProvider>
+                  <TooltipProvider>
+                    <div className="min-h-screen flex flex-col">
+                      <AppRouter />
+                    </div>
+                    
+                    <Toaster />
+                    <Sonner />
+                  </TooltipProvider>
+                </StoreProvider>
+              </NWCProvider>
             </NostrProvider>
           </NostrLoginProvider>
         </QueryClientProvider>
