@@ -66,16 +66,16 @@ export function VerifiedLogForm({
   };
 
   return (
-    <Card className={`border-green-500 bg-green-50 dark:bg-green-950 ${className}`}>
+    <div className={`lg:rounded-lg lg:border lg:border-green-500 lg:bg-green-50 dark:lg:bg-green-950 lg:shadow-sm ${className}`}>
       {!compact && (
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-300">
+        <div className="lg:p-6 lg:pb-0 p-4 lg:pt-6 pt-2">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-green-700 dark:text-green-300">
             <ShieldCheck className="h-5 w-5 text-green-600" />
             Post a Verified Log
-          </CardTitle>
-        </CardHeader>
+          </h3>
+        </div>
       )}
-      <CardContent className={compact ? "p-4 space-y-3" : "space-y-4"}>
+      <div className={compact ? "p-4 space-y-3" : "lg:p-6 lg:pt-0 p-4 space-y-4 lg:pb-6 pb-2"}>
         <Alert>
           <ShieldCheck className="h-4 w-4" />
           <AlertDescription>
@@ -106,7 +106,7 @@ export function VerifiedLogForm({
             {postingStatus}
           </p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

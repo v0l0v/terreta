@@ -43,7 +43,7 @@ export function LogList({ logs, compact = false, onProfileClick }: LogListProps)
   // Logs received from LogsSection
   
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="px-2 space-y-3 md:space-y-4">
       {logs.map((log) => (
         <LogCard key={log.id} log={log} compact={compact} onProfileClick={onProfileClick} />
       ))}

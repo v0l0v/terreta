@@ -504,29 +504,30 @@ export default function CacheDetail() {
   const profilePicture = author.data?.metadata?.picture;
 
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-screen lg:bg-muted bg-card">
       <DesktopHeader />
 
-      <div className="container mx-auto px-2 sm:px-4 py-8">
+      <div className="sm:container mx-auto lg:px-2 sm:px-4 lg:py-8 py-0">
         <div className="grid lg:grid-cols-3 gap-4 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-4 lg:space-y-6 min-w-0">
-            <Card>
-              {/* Map Banner inside the top card */}
-              <div className="relative h-48 md:h-60 lg:h-72 mb-4 rounded-t-lg overflow-hidden bg-gray-100">
+            {/* Mobile: No card wrapper, Desktop: Card wrapper */}
+            <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:mt-4">
+              {/* Map Banner */}
+              <div className="relative h-72 lg:mb-4 lg:rounded-t-lg overflow-hidden bg-gray-100 lg:mt-0">
                 <GeocacheMap 
                   geocaches={[{
                     ...geocache,
                     location: isEditing && editLocation ? editLocation : geocache.location
                   }]} 
                   center={isEditing && editLocation ? editLocation : geocache.location}
-                  zoom={15}
+                  zoom={14}
                 />
               </div>
               
-              <CardHeader>
+              <div className="pt-6 sm:pt-0 lg:p-6 p-4 lg:pt-6">
                 <div className="flex items-start gap-2 sm:gap-4">
-                  <CardTitle className="text-2xl break-words flex-1">{geocache.name}</CardTitle>
+                  <h1 className="text-2xl break-words flex-1 font-bold">{geocache.name}</h1>
                   <div className="flex gap-1 sm:gap-2 flex-shrink-0 ml-2">
                     <ZapButton target={geocache} />
                     {!isOwner && <SaveButton geocache={geocache} />}
@@ -596,8 +597,9 @@ export default function CacheDetail() {
                     </span>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="overflow-hidden">
+              </div>
+              
+              <div className="lg:p-6 lg:pt-0 p-4 pt-0 lg:pb-6 pb-2">
                 {isEditing ? (
                   // Edit form
                   <div className="space-y-6">
@@ -632,26 +634,22 @@ export default function CacheDetail() {
 
                     {/* QR Code Management Section */}
                     {isOwner && geocache && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>QR Code Management</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            This is a creator-only tool to manage the verification QR code for this geocache. Regenerating will invalidate the previous QR code.
-                          </p>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setRegenerateQRDialogOpen(true)}
-                            disabled={isEditingGeocache}
-                            className="w-full sm:w-auto"
-                          >
-                            <QrCode className="h-4 w-4 mr-2" />
-                            Regenerate QR Code
-                          </Button>
-                        </CardContent>
-                      </Card>
+                      <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4">
+                        <h3 className="text-lg font-semibold mb-4">QR Code Management</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          This is a creator-only tool to manage the verification QR code for this geocache. Regenerating will invalidate the previous QR code.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setRegenerateQRDialogOpen(true)}
+                          disabled={isEditingGeocache}
+                          className="w-full sm:w-auto"
+                        >
+                          <QrCode className="h-4 w-4 mr-2" />
+                          Regenerate QR Code
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -716,13 +714,13 @@ export default function CacheDetail() {
                     )}
                   </>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             
 
             {/* Logs Section */}
-            <div className="space-y-4" data-logs-section>
+            <div className="space-y-4 lg:mt-0 mt-2" data-logs-section>
               {/* Render logs section */}
               <LogsSection 
                 logs={logs as GeocacheLog[]}
@@ -736,12 +734,11 @@ export default function CacheDetail() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-4 lg:space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Cache Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <div className="space-y-4 lg:space-y-6 lg:mt-4">
+            {/* Cache Details - Mobile: No card wrapper, Desktop: Card wrapper */}
+            <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4 lg:mt-0 mt-2">
+              <h3 className="text-lg font-semibold mb-4">Cache Details</h3>
+              <div className="space-y-4">
                 <DifficultyTerrainRating 
                   difficulty={geocache.difficulty}
                   terrain={geocache.terrain}
@@ -776,50 +773,43 @@ export default function CacheDetail() {
                     Get Directions
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Location Information */}
+            {/* Location Information - Mobile: No card wrapper, Desktop: Card wrapper */}
             {locationVerification && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Location Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <LocationWarnings 
-                    verification={locationVerification} 
-                    className="space-y-2"
-                    hideCreatorWarnings={true}
-                  />
-                </CardContent>
-              </Card>
+              <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4 lg:mt-0 mt-2">
+                <h3 className="text-lg font-semibold mb-4">Location Information</h3>
+                <LocationWarnings 
+                  verification={locationVerification} 
+                  className="space-y-2"
+                  hideCreatorWarnings={true}
+                />
+              </div>
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Statistics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Total Finds</span>
-                    <span className="font-medium">
-                      {(logs as GeocacheLog[])?.filter((log: GeocacheLog) => log.type === "found").length || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">DNFs</span>
-                    <span className="font-medium">
-                      {(logs as GeocacheLog[])?.filter((log: GeocacheLog) => log.type === "dnf").length || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Total Logs</span>
-                    <span className="font-medium">{(logs as GeocacheLog[])?.length || 0}</span>
-                  </div>
+            {/* Statistics - Mobile: No card wrapper, Desktop: Card wrapper */}
+            <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4 lg:mt-0 mt-2">
+              <h3 className="text-lg font-semibold mb-4">Statistics</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total Finds</span>
+                  <span className="font-medium">
+                    {(logs as GeocacheLog[])?.filter((log: GeocacheLog) => log.type === "found").length || 0}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">DNFs</span>
+                  <span className="font-medium">
+                    {(logs as GeocacheLog[])?.filter((log: GeocacheLog) => log.type === "dnf").length || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total Logs</span>
+                  <span className="font-medium">{(logs as GeocacheLog[])?.length || 0}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

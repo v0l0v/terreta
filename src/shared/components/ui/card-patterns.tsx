@@ -161,15 +161,15 @@ export function EmptyStateCard({
   className 
 }: EmptyStateCardProps) {
   return (
-    <Card className={className}>
-      <CardContent className="text-center py-12">
+    <div className={cn("lg:rounded-lg lg:border lg:bg-card lg:shadow-sm", className)}>
+      <div className="text-center lg:py-12 lg:px-6 px-4 py-4">
         {Icon && <Icon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />}
         <p className="text-lg font-medium mb-2">{title}</p>
         {description && <p className="text-muted-foreground mb-4">{description}</p>}
         {action && (
           <div className="flex justify-center">{action}</div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

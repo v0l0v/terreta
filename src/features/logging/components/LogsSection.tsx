@@ -95,13 +95,13 @@ export function LogsSection({
       
       {/* Show regular form for logged-in users (unless they have verification) */}
       {user && !(verificationKey && isVerificationValid) && !hideForm && (
-        <Card>
+        <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm">
           {!compact && (
-            <CardHeader>
-              <CardTitle>Post a Log</CardTitle>
-            </CardHeader>
+            <div className="lg:p-6 lg:pb-0 px-4 sm:p-4 lg:pt-6 sm:pt-2">
+              <h3 className="text-lg font-semibold">Post a Log</h3>
+            </div>
           )}
-          <CardContent className={compact ? "p-4 space-y-3" : "space-y-4"}>
+          <div className={compact ? "p-4 space-y-3" : "lg:p-6 lg:pt-0 p-4 space-y-4 lg:pb-6 pb-2"}>
             <LogTypeButtonGroup
               logType={logType}
               onLogTypeChange={(type) => setLogType(type as typeof logType)}
@@ -131,8 +131,8 @@ export function LogsSection({
                 {postingStatus}
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
       
       {logs && logs.length > 0 ? (
