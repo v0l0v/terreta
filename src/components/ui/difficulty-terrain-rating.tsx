@@ -31,7 +31,7 @@ export function DifficultyTerrainRating({
   return (
     <div className="space-y-2">
       <div>
-        <p className={`font-medium text-gray-600 ${textSize}`}>Difficulty</p>
+        <p className={`font-medium text-muted-foreground ${textSize}`}>Difficulty</p>
         <div className="flex items-center gap-2 mt-1">
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -48,7 +48,7 @@ export function DifficultyTerrainRating({
       </div>
       
       <div>
-        <p className={`font-medium text-gray-600 ${textSize}`}>Terrain</p>
+        <p className={`font-medium text-muted-foreground ${textSize}`}>Terrain</p>
         <div className="flex items-center gap-2 mt-1">
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -66,7 +66,7 @@ export function DifficultyTerrainRating({
       
       {cacheSize && (
         <div>
-          <p className={`font-medium text-gray-600 ${textSize}`}>Size</p>
+          <p className={`font-medium text-muted-foreground ${textSize}`}>Size</p>
           <div className="flex items-center gap-2 mt-1">
             <div className="flex gap-1 items-end">
               {[1, 2, 3, 4].map((i) => (

@@ -527,7 +527,7 @@ export default function CacheDetail() {
               
               <div className="pt-6 sm:pt-0 lg:p-6 p-4 lg:pt-6">
                 <div className="flex items-start gap-2 sm:gap-4">
-                  <h1 className="text-2xl break-words flex-1 font-bold">{geocache.name}</h1>
+                  <h1 className="text-2xl break-words flex-1 font-bold text-foreground">{geocache.name}</h1>
                   <div className="flex gap-1 sm:gap-2 flex-shrink-0 ml-2">
                     <ZapButton target={geocache} />
                     {!isOwner && <SaveButton geocache={geocache} />}
@@ -568,7 +568,7 @@ export default function CacheDetail() {
                 </div>
 
                 {/* Author and date info below title */}
-                <div className="text-gray-600 dark:text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm pt-2">
+                <div className="text-muted-foreground flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm pt-2">
                   <span className="flex items-center gap-1">
                     <User className="h-4 w-4" />
                     Hidden by{' '}
@@ -624,7 +624,7 @@ export default function CacheDetail() {
                     {/* Location Verification for Edit */}
                     {editLocationVerification && (
                       <div className="border rounded-lg p-4 bg-muted/50 dark:bg-muted">
-                        <h4 className="font-medium mb-2">Location Information</h4>
+                        <h4 className="font-medium mb-2 text-foreground">Location Information</h4>
                         <LocationWarnings 
                           verification={editLocationVerification} 
                           className="space-y-2"
@@ -635,7 +635,7 @@ export default function CacheDetail() {
                     {/* QR Code Management Section */}
                     {isOwner && geocache && (
                       <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4">
-                        <h3 className="text-lg font-semibold mb-4">QR Code Management</h3>
+                        <h3 className="text-lg font-semibold mb-4 text-card-foreground">QR Code Management</h3>
                         <p className="text-sm text-muted-foreground mb-4">
                           This is a creator-only tool to manage the verification QR code for this geocache. Regenerating will invalidate the previous QR code.
                         </p>
@@ -737,7 +737,7 @@ export default function CacheDetail() {
           <div className="space-y-4 lg:space-y-6 lg:mt-4">
             {/* Cache Details - Mobile: No card wrapper, Desktop: Card wrapper */}
             <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4 lg:mt-0 mt-2">
-              <h3 className="text-lg font-semibold mb-4">Cache Details</h3>
+              <h3 className="text-lg font-semibold mb-4 text-card-foreground">Cache Details</h3>
               <div className="space-y-4">
                 <DifficultyTerrainRating 
                   difficulty={geocache.difficulty}
@@ -751,7 +751,7 @@ export default function CacheDetail() {
                       <span className="text-orange-600 text-xs">(modified)</span>
                     )}
                   </p>
-                  <p className="text-xs md:text-sm font-mono mt-1 break-all">
+                  <p className="text-xs md:text-sm font-mono mt-1 break-all text-foreground">
                     {isEditing && editLocation ? 
                       `${editLocation.lat.toFixed(6)}, ${editLocation.lng.toFixed(6)}` :
                       `${geocache.location.lat.toFixed(6)}, ${geocache.location.lng.toFixed(6)}`
@@ -779,7 +779,7 @@ export default function CacheDetail() {
             {/* Location Information - Mobile: No card wrapper, Desktop: Card wrapper */}
             {locationVerification && (
               <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4 lg:mt-0 mt-2">
-                <h3 className="text-lg font-semibold mb-4">Location Information</h3>
+                <h3 className="text-lg font-semibold mb-4 text-card-foreground">Location Information</h3>
                 <LocationWarnings 
                   verification={locationVerification} 
                   className="space-y-2"
@@ -790,23 +790,23 @@ export default function CacheDetail() {
 
             {/* Statistics - Mobile: No card wrapper, Desktop: Card wrapper */}
             <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4 lg:mt-0 mt-2">
-              <h3 className="text-lg font-semibold mb-4">Statistics</h3>
+              <h3 className="text-lg font-semibold mb-4 text-card-foreground">Statistics</h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Total Finds</span>
-                  <span className="font-medium">
+                  <span className="font-medium text-card-foreground">
                     {(logs as GeocacheLog[])?.filter((log: GeocacheLog) => log.type === "found").length || 0}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">DNFs</span>
-                  <span className="font-medium">
+                  <span className="font-medium text-card-foreground">
                     {(logs as GeocacheLog[])?.filter((log: GeocacheLog) => log.type === "dnf").length || 0}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Total Logs</span>
-                  <span className="font-medium">{(logs as GeocacheLog[])?.length || 0}</span>
+                  <span className="font-medium text-card-foreground">{(logs as GeocacheLog[])?.length || 0}</span>
                 </div>
               </div>
             </div>

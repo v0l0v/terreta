@@ -56,7 +56,7 @@ export function InfoCard({
     <Card className={cn("text-center", className)}>
       <CardContent className="pt-6">
         {Icon && <Icon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />}
-        <p className="text-lg font-medium mb-2">{title}</p>
+        <p className="text-lg font-medium mb-2 text-foreground">{title}</p>
         {description && (
           <p className="text-muted-foreground mb-4">{description}</p>
         )}
@@ -80,7 +80,7 @@ export function DetailsCard({ title, children, className }: DetailsCardProps) {
   return (
     <Card className={className}>
       <CardContent className="p-4 space-y-3">
-        <h4 className="font-medium">{title}</h4>
+        <h4 className="font-medium text-card-foreground">{title}</h4>
         {children}
       </CardContent>
     </Card>
@@ -164,7 +164,7 @@ export function EmptyStateCard({
     <div className={cn("lg:rounded-lg lg:border lg:bg-card lg:shadow-sm", className)}>
       <div className="text-center lg:py-12 lg:px-6 px-4 py-4">
         {Icon && <Icon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />}
-        <p className="text-lg font-medium mb-2">{title}</p>
+        <p className="text-lg font-medium mb-2 text-foreground">{title}</p>
         {description && <p className="text-muted-foreground mb-4">{description}</p>}
         {action && (
           <div className="flex justify-center">{action}</div>

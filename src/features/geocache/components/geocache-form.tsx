@@ -298,7 +298,7 @@ export function CacheSizeField({ value, onChange }: Omit<CacheSelectFieldProps, 
                 size.value === 'large' ? 'h-6 w-6' :
                 'h-5 w-5'
               }`} />
-              <div className="font-medium text-xs">{size.name}</div>
+              <div className="font-medium text-xs text-foreground">{size.name}</div>
             </button>
           );
         })}
@@ -389,7 +389,7 @@ export function CacheDifficultyField({ value, onChange }: Omit<CacheSelectFieldP
                   />
                 ))}
               </div>
-              <span className="font-medium text-xs">{level.name}</span>
+              <span className="font-medium text-xs text-foreground">{level.name}</span>
             </button>
           );
         })}
@@ -778,7 +778,7 @@ export function GeocacheForm({
       {/* Basic Information */}
       <div className="space-y-4">
         <div className="border-b pb-2">
-          <h3 className="text-lg font-medium">Basic Information</h3>
+          <h3 className="text-lg font-medium text-foreground">Basic Information</h3>
           <p className="text-sm text-muted-foreground">Tell seekers about your cache</p>
         </div>
         
@@ -806,7 +806,7 @@ export function GeocacheForm({
       {/* Cache Properties */}
       <div className="space-y-4">
         <div className="border-b pb-2">
-          <h3 className="text-lg font-medium">Cache Properties</h3>
+          <h3 className="text-lg font-medium text-foreground">Cache Properties</h3>
           <p className="text-sm text-muted-foreground">Set the type, size, and challenge level</p>
         </div>
         
@@ -840,7 +840,7 @@ export function GeocacheForm({
 
         {/* Rating Preview */}
         <div className="bg-muted/20 border border-muted rounded-lg p-4">
-          <h4 className="text-sm font-medium text-muted-foreground mb-3">How your cache will appear to seekers</h4>
+          <h4 className="text-sm font-medium text-foreground mb-3">How your cache will appear to seekers</h4>
           <DifficultyTerrainRating
             difficulty={parseInt(formData.difficulty) || 1}
             terrain={parseInt(formData.terrain) || 1}
@@ -854,7 +854,7 @@ export function GeocacheForm({
       {/* Images */}
       <div className="space-y-4">
         <div className="border-b pb-2">
-          <h3 className="text-lg font-medium">Images</h3>
+          <h3 className="text-lg font-medium text-foreground">Images</h3>
           <p className="text-sm text-muted-foreground">Add photos to help seekers identify the area</p>
         </div>
         
@@ -868,7 +868,7 @@ export function GeocacheForm({
       {/* Visibility Settings */}
       <div className="space-y-4">
         <div className="border-b pb-2">
-          <h3 className="text-lg font-medium">Visibility</h3>
+          <h3 className="text-lg font-medium text-foreground">Visibility</h3>
           <p className="text-sm text-muted-foreground">Control who can find your cache</p>
         </div>
         

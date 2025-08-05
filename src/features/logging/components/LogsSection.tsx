@@ -98,7 +98,7 @@ export function LogsSection({
         <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm">
           {!compact && (
             <div className="lg:p-6 lg:pb-0 px-4 sm:p-4 lg:pt-6 sm:pt-2">
-              <h3 className="text-lg font-semibold">Post a Log</h3>
+              <h3 className="text-lg font-semibold text-card-foreground">Post a Log</h3>
             </div>
           )}
           <div className={compact ? "p-4 space-y-3" : "lg:p-6 lg:pt-0 p-4 space-y-4 lg:pb-6 pb-2"}>
@@ -127,7 +127,7 @@ export function LogsSection({
             </Button>
             
             {postingStatus && (
-              <p className={`text-gray-600 text-center ${compact ? "text-xs" : "text-sm"}`}>
+              <p className={`text-muted-foreground text-center ${compact ? "text-xs" : "text-sm"}`}>
                 {postingStatus}
               </p>
             )}
