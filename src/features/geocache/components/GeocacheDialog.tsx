@@ -49,9 +49,12 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
   // Safely handle logs data
   const logs: GeocacheLog[] = Array.isArray(logsData) ? logsData : [];
   const author = useAuthor(geocache?.pubkey || "");
-  const getZapTotal = useStore(useZapStore, (state) => state.getZapTotal);
   const naddr = geocache ? geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays, geocache.kind || 37516) : "";
-  const totalSats = getZapTotal(naddr ? `naddr:${naddr}` : `event:${geocache?.id}`);
+  const zapStoreKey = naddr ? `naddr:${naddr}` : `event:${geocache?.id}`;
+  
+  // Use memoized zap totals from store for better performance
+  const zapTotal = useStore(useZapStore, (state) => state.zapTotals[zapStoreKey] ?? 0);
+  const totalSats = geocache?.zapTotal ?? zapTotal;
   const { isCacheSaved, toggleSaveCache, isNostrEnabled } = useSavedCaches();
   const { toast } = useToast();
 

@@ -201,13 +201,7 @@ export function useGeocacheByNaddr(naddr: string) {
         const zapKey = `naddr:${correctNaddr}`;
         setZaps(zapKey, zapEvents);
         
-        console.log('DEBUG: naddr correction:', {
-          originalNaddr: naddr,
-          originalKind: parsed?.kind,
-          actualKind: geocache?.kind,
-          correctNaddr,
-          geocacheName: geocache?.name
-        });
+        
 
         const resultGeocache = {
           ...geocache,

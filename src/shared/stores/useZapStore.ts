@@ -4,6 +4,7 @@ import type { NostrEvent } from '@nostrify/nostrify';
 
 interface ZapStore {
   zaps: Record<string, NostrEvent[]>;
+  zapTotals: Record<string, number>;
   getZapTotal: (key: string) => number;
   setZaps: (key: string, zaps: NostrEvent[]) => void;
 }
@@ -32,23 +33,41 @@ function getZapAmount(event: NostrEvent): number {
 
 export const useZapStore = create<ZapStore>((set, get) => ({
   zaps: {},
+  zapTotals: {},
   getZapTotal: (key) => {
-    const zaps = get().zaps[key] || [];
-    console.log('DEBUG: ZapStore.getZapTotal:', {
-      key,
-      zapCount: zaps.length,
-      zaps: zaps.map(z => ({ id: z.id, amount: getZapAmount(z) }))
-    });
+    // Return memoized total if available, otherwise calculate and cache it
+    const currentState = get();
+    if (key in currentState.zapTotals) {
+      return currentState.zapTotals[key];
+    }
     
-    return zaps.reduce((total, zap) => {
+    const zaps = currentState.zaps[key] || [];
+    const total = zaps.reduce((total, zap) => {
       return total + getZapAmount(zap);
     }, 0);
+    
+    // Cache the calculated total
+    set((state) => ({
+      zapTotals: {
+        ...state.zapTotals,
+        [key]: total,
+      },
+    }));
+    
+    return total;
   },
   setZaps: (key, zaps) => {
+    // Calculate the new total and update both zaps and totals
+    const total = zaps.reduce((sum, zap) => sum + getZapAmount(zap), 0);
+    
     set((state) => ({
       zaps: {
         ...state.zaps,
         [key]: zaps,
+      },
+      zapTotals: {
+        ...state.zapTotals,
+        [key]: total,
       },
     }));
   },

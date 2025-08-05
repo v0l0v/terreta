@@ -121,7 +121,13 @@ export function GeocacheCard({
   const { theme } = useTheme();
   const { navigateToGeocache } = useGeocacheNavigation();
   const author = useAuthor(cache.pubkey);
-  const getZapTotal = useStore(useZapStore, (state) => state.getZapTotal);
+  const zapStoreKey = cache.naddr ? `naddr:${cache.naddr}` : `event:${cache.id}`;
+  
+  // Select the memoized zap total directly from store state
+  const zapTotal = useStore(useZapStore, (state) => state.zapTotals[zapStoreKey] ?? 0);
+  
+  // Use zap total from cache data if available, otherwise fall back to memoized store value
+  const totalZapAmount = cache.zapTotal ?? zapTotal;
 
   const authorName = author.data?.metadata?.name || cache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
@@ -138,21 +144,6 @@ export function GeocacheCard({
     foundCount: cache.foundCount || 0,
     logCount: cache.logCount || 0,
   };
-  
-  // Use zap total from cache data if available, otherwise fall back to store
-  const zapStoreKey = cache.naddr ? `naddr:${cache.naddr}` : `event:${cache.id}`;
-  const totalZapAmount = cache.zapTotal ?? getZapTotal(zapStoreKey);
-  
-  // Debug logging to see what's happening
-  console.log('DEBUG: GeocacheCard zap data:', {
-    cacheName: cache.name,
-    cacheZapTotal: cache.zapTotal,
-    zapStoreKey,
-    storeZapTotal: getZapTotal(zapStoreKey),
-    finalZapAmount: totalZapAmount,
-    cacheNaddr: cache.naddr,
-    cacheId: cache.id
-  });
 
   // Check if this cache is hidden and the current user is the creator
   const isHiddenByCreator = cache.hidden && cache.pubkey === user?.pubkey;

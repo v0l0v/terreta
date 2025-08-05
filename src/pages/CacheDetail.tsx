@@ -81,9 +81,10 @@ export default function CacheDetail() {
   );
   
   // Zap data should now be pre-populated by useGeocacheByNaddr hook
-  // No need for individual useZaps call here
-  const getZapTotal = useStore(useZapStore, (state) => state.getZapTotal);
-  const totalZapAmount = getZapTotal(naddr ? `naddr:${naddr}` : `event:${geocache?.id}`) || 0;
+  // Use memoized zap totals from store for better performance
+  const zapStoreKey = naddr ? `naddr:${naddr}` : `event:${geocache?.id}`;
+  const zapTotal = useStore(useZapStore, (state) => state.zapTotals[zapStoreKey] ?? 0);
+  const totalZapAmount = geocache?.zapTotal ?? zapTotal;
   const {
     confirmSingleDeletion,
     isConfirmDialogOpen,
@@ -395,31 +396,17 @@ export default function CacheDetail() {
   if (!isLoading && !isError && !geocache && !passedGeocacheData) {
     // Check if this naddr belongs to the current user and offer to create it
     const canCreateFromNaddr = (() => {
-      console.log('DEBUG: Checking canCreateFromNaddr', { 
-        user: !!user, 
-        userPubkey: user?.pubkey, 
-        naddr,
-        isLoading,
-        isError,
-        geocache: !!geocache
-      });
-      
       if (!user || !naddr) {
-        console.log('DEBUG: No user or naddr', { user: !!user, naddr });
         return false;
       }
       
       try {
         const decoded = naddrToGeocache(naddr);
-        console.log('DEBUG: Decoded naddr', { decoded, userPubkey: user.pubkey, match: decoded.pubkey === user.pubkey });
         return decoded.pubkey === user.pubkey;
       } catch (error) {
-        console.log('DEBUG: Error decoding naddr', error);
         return false;
       }
     })();
-
-    console.log('DEBUG: canCreateFromNaddr result', canCreateFromNaddr);
 
     if (canCreateFromNaddr) {
       return (
