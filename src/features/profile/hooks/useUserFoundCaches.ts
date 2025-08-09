@@ -82,7 +82,7 @@ export function useUserFoundCaches(targetPubkey?: string, allGeocaches?: Geocach
               console.log(`🔍 useUserFoundCaches: Geocache not found in unified data, fetching basic data: ${ref}`);
               
               // Fetch the geocache normally using the geocache store
-              const geocacheResult = await geocacheStore.fetchUserGeocaches(geocachePubkey);
+              const geocacheResult = await geocacheStore.fetchUserGeocaches(geocachePubkey || "");
               
               if (!geocacheResult.success || !geocacheResult.data) {
                 console.warn(`Failed to fetch geocaches for pubkey ${geocachePubkey}:`, geocacheResult.error);
@@ -103,9 +103,10 @@ export function useUserFoundCaches(targetPubkey?: string, allGeocaches?: Geocach
               // The stats will be 0 since we can't get them from the unified system
               geocache = {
                 ...geocache,
-                foundCount: 0,
-                logCount: 0,
-                zapTotal: 0,
+                foundCount: geocache.foundCount || 0,
+                logCount: geocache.logCount || 0,
+                zapTotal: geocache.zapTotal || 0,
+                verificationPubkey: geocache.verificationPubkey, // Preserve verification pubkey if available
               };
               
               console.warn(`🔍 useUserFoundCaches: Geocache ${geocache.name} not in unified system, using default stats`);
@@ -145,6 +146,7 @@ export function useUserFoundCaches(targetPubkey?: string, allGeocaches?: Geocach
                 foundCount: geocache.foundCount || 0,
                 logCount: geocache.logCount || 0,
                 zapTotal: geocache.zapTotal || 0,
+                verificationPubkey: geocache.verificationPubkey,
               };
 
               console.log(`🔍 useUserFoundCaches: Created foundCacheEntry for ${geocache.name}:`, foundCacheEntry);
