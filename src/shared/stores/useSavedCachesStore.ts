@@ -10,9 +10,7 @@ import {
 } from '@/features/geocache/utils/nip-gc';
 import { TIMEOUTS } from '@/shared/config';
 import { NostrEvent } from '@nostrify/nostrify';
-import { useOfflineStore } from '@/shared/stores/useOfflineStore';
-import { useOfflineSettings } from '@/features/offline/hooks/useOfflineStorage';
-import { useOnlineStatus } from '@/features/offline/hooks/useConnectivity';
+
 
 interface SavedCache {
   id: string;
@@ -32,7 +30,6 @@ interface SavedCache {
   foundCount?: number;
   logCount?: number;
   hidden?: boolean;
-  isOffline?: boolean;
   created_at: number;
 }
 
@@ -43,15 +40,6 @@ export function useSavedCachesStore() {
   const { user } = useCurrentUser();
   const { mutateAsync: publishEvent } = useNostrPublish();
   const queryClient = useQueryClient();
-  const { isOnline } = useOnlineStatus();
-  const {
-    offlineBookmarks,
-    saveBookmarkOffline,
-    removeOfflineBookmark,
-    clearOfflineData,
-  } = useOfflineStore();
-  const { settings } = useOfflineSettings();
-  const { offlineOnly } = settings;
   const [isSyncing, setIsSyncing] = useState(false);
 
   const {
@@ -77,7 +65,7 @@ export function useSavedCachesStore() {
       );
       return events.sort((a, b) => b.created_at - a.created_at)[0] || null;
     },
-    enabled: !!user?.pubkey && isOnline,
+    enabled: !!user?.pubkey,
     staleTime: 30000,
     retry: false,
   });
@@ -113,7 +101,7 @@ export function useSavedCachesStore() {
       const events = await nostr.query(filters, { signal });
       return events;
     },
-    enabled: savedCacheCoords.length > 0 && isOnline,
+    enabled: savedCacheCoords.length > 0,
     staleTime: 60000,
     retry: false,
   });
@@ -139,66 +127,24 @@ export function useSavedCachesStore() {
           foundCount: 0,
           logCount: 0,
           hidden: parsed.hidden,
-          isOffline: false,
         } as SavedCache;
       })
       .filter((cache): cache is SavedCache => cache !== null);
   }, [savedGeocacheEvents]);
 
-  const offlineSavedCaches = useMemo(() => {
-    return offlineBookmarks.map(({ geocache, source }) => ({
-      id: geocache.id,
-      dTag: geocache.dTag,
-      pubkey: geocache.pubkey,
-      name: geocache.name,
-      description: geocache.description,
-      savedAt: Date.now(),
-      location: geocache.location,
-      difficulty: geocache.difficulty,
-      terrain: geocache.terrain,
-      size: geocache.size,
-      type: geocache.type,
-      foundCount: geocache.foundCount,
-      logCount: geocache.logCount,
-      hidden: geocache.hidden,
-      isOffline: true,
-      created_at: geocache.created_at,
-      source,
-    }));
-  }, [offlineBookmarks]);
+  
 
   const savedCaches = useMemo(() => {
-    if (offlineOnly) {
-      return offlineSavedCaches.sort((a, b) => b.savedAt - a.savedAt);
-    }
-    const allCaches = [...onlineSavedCaches, ...offlineSavedCaches];
-    const uniqueMap = new Map<string, SavedCache>();
-    
-    // Use Map for O(1) lookups instead of Array.find() O(n)
-    allCaches.forEach(cache => {
-      const existing = uniqueMap.get(cache.id);
-      if (!existing || cache.savedAt > existing.savedAt) {
-        uniqueMap.set(cache.id, cache);
-      }
-    });
-    
-    const uniqueCaches = Array.from(uniqueMap.values());
-    return uniqueCaches.sort((a, b) => b.savedAt - a.savedAt);
-  }, [onlineSavedCaches, offlineSavedCaches, offlineOnly]);
+    return onlineSavedCaches.sort((a, b) => b.savedAt - a.savedAt);
+  }, [onlineSavedCaches]);
 
-  useEffect(() => {
-    if (onlineSavedCaches.length > 0) {
-      onlineSavedCaches.forEach(cache => {
-        saveBookmarkOffline(cache);
-      });
-    }
-  }, [onlineSavedCaches, saveBookmarkOffline]);
+  
 
   const isCacheSavedOffline = useCallback(
     (naddr: string) => {
-      return offlineBookmarks.some(bookmark => bookmark.naddr === naddr);
+      return false;
     },
-    [offlineBookmarks]
+    []
   );
 
   const isCacheSaved = useCallback(
@@ -206,13 +152,12 @@ export function useSavedCachesStore() {
       if (!user) return false;
       const actualKind = kind || NIP_GC_KINDS.GEOCACHE;
       const naddr = `${actualKind}:${pubkey}:${dTag}`;
-      if (isCacheSavedOffline(naddr)) return true;
       if (dTag && pubkey) {
         return savedCacheCoords.includes(naddr);
       }
-      return savedCaches.some(cache => cache.id === cacheId && !cache.isOffline);
+      return savedCaches.some(cache => cache.id === cacheId);
     },
-    [savedCacheCoords, savedCaches, user, isCacheSavedOffline]
+    [savedCacheCoords, savedCaches, user]
   );
 
   const updateBookmarkList = useCallback(
@@ -239,41 +184,21 @@ export function useSavedCachesStore() {
   );
 
   const syncOfflineBookmarks = useCallback(async () => {
-    if (!isOnline || !user || offlineBookmarks.length === 0) return;
-    setIsSyncing(true);
-    try {
-      const currentTags = bookmarkListEvent?.tags || [];
-      const newTags = [...currentTags];
-      for (const { naddr } of offlineBookmarks) {
-        if (!newTags.some(tag => tag[1] === naddr)) {
-          newTags.push(['a', naddr]);
-        }
-      }
-      await updateBookmarkList(newTags);
-    } catch (error) {
-      console.error('Failed to sync offline bookmarks:', error);
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isOnline, user, offlineBookmarks, bookmarkListEvent, updateBookmarkList]);
+    return;
+  }, []);
 
 
 
   const saveCache = useCallback(
     async (geocache: Geocache) => {
       const naddr = `${geocache.kind || NIP_GC_KINDS.GEOCACHE}:${geocache.pubkey}:${geocache.dTag}`;
-      if (isOnline) {
-        // Check if already saved using the existing function
-        if (isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey, geocache.kind)) return;
-        const currentTags = bookmarkListEvent?.tags || [];
-        const newTags = [...currentTags, ['a', naddr]];
-        await updateBookmarkList(newTags);
-        await saveBookmarkOffline(geocache);
-      } else {
-        await saveBookmarkOffline(geocache);
-      }
+      // Check if already saved using the existing function
+      if (isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey, geocache.kind)) return;
+      const currentTags = bookmarkListEvent?.tags || [];
+      const newTags = [...currentTags, ['a', naddr]];
+      await updateBookmarkList(newTags);
     },
-    [isOnline, bookmarkListEvent, updateBookmarkList, saveBookmarkOffline, isCacheSaved]
+    [bookmarkListEvent, updateBookmarkList, isCacheSaved]
   );
 
   const unsaveCache = useCallback(
@@ -289,23 +214,18 @@ export function useSavedCachesStore() {
         };
       });
 
-      if (isOnline) {
-        const currentTags = bookmarkListEvent?.tags || [];
-        const newTags = currentTags.filter(
-          tag => !(tag[0] === 'a' && tag[1] === naddr)
-        );
-        // Publish the update without waiting for it to complete
-        updateBookmarkList(newTags).catch(error => {
-          console.error("Failed to update bookmark list:", error);
-          // Revert optimistic update on failure
-          queryClient.invalidateQueries({ queryKey: ['cache-bookmark-list', user?.pubkey] });
-        });
-        await removeOfflineBookmark(naddr);
-      } else {
-        await removeOfflineBookmark(naddr);
-      }
+      const currentTags = bookmarkListEvent?.tags || [];
+      const newTags = currentTags.filter(
+        tag => !(tag[0] === 'a' && tag[1] === naddr)
+      );
+      // Publish the update without waiting for it to complete
+      updateBookmarkList(newTags).catch(error => {
+        console.error("Failed to update bookmark list:", error);
+        // Revert optimistic update on failure
+        queryClient.invalidateQueries({ queryKey: ['cache-bookmark-list', user?.pubkey] });
+      });
     },
-    [isOnline, bookmarkListEvent, updateBookmarkList, removeOfflineBookmark, user?.pubkey, queryClient]
+    [bookmarkListEvent, updateBookmarkList, user?.pubkey, queryClient]
   );
 
   const toggleSaveCache = useCallback(
@@ -353,20 +273,17 @@ export function useSavedCachesStore() {
   );
 
   const clearAllSaved = useCallback(async () => {
-    if (isOnline) {
-      if (!user || !bookmarkListEvent) return;
-      const deletionEvent = {
-        kind: 5,
-        tags: [['e', bookmarkListEvent.id]],
-        content: 'Deleting cache bookmark list',
-      };
-      await publishEvent(deletionEvent);
-      queryClient.setQueryData(['cache-bookmark-list', user.pubkey], null);
-      await queryClient.invalidateQueries({ queryKey: ['cache-bookmark-list'] });
-      await queryClient.invalidateQueries({ queryKey: ['saved-geocaches'] });
-    }
-    await clearOfflineData();
-  }, [isOnline, user, bookmarkListEvent, publishEvent, queryClient, clearOfflineData]);
+    if (!user || !bookmarkListEvent) return;
+    const deletionEvent = {
+      kind: 5,
+      tags: [['e', bookmarkListEvent.id]],
+      content: 'Deleting cache bookmark list',
+    };
+    await publishEvent(deletionEvent);
+    queryClient.setQueryData(['cache-bookmark-list', user.pubkey], null);
+    await queryClient.invalidateQueries({ queryKey: ['cache-bookmark-list'] });
+    await queryClient.invalidateQueries({ queryKey: ['saved-geocaches'] });
+  }, [user, bookmarkListEvent, publishEvent, queryClient]);
 
   return {
     savedCaches,
@@ -377,10 +294,8 @@ export function useSavedCachesStore() {
     clearAllSaved,
     isNostrEnabled: !!user,
     nostrSavedCount: savedCacheCoords.length,
-    offlineSavedCount: offlineBookmarks.length,
     isLoading: (isLoadingBookmarks || isLoadingCaches),
-    isSyncing,
-    offlineOnly,
+    isSyncing: false,
     syncOfflineBookmarks,
   };
 }

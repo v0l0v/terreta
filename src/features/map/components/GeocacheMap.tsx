@@ -14,8 +14,8 @@ import type { Geocache } from "@/shared/types";
 import { getTypeLabel, getSizeLabel } from "@/features/geocache/utils/geocache-utils";
 
 import { getCacheIconSvg, getCacheColor } from "@/features/geocache/utils/cacheIconUtils";
-import { useOfflineMode, useOfflineSettings } from "@/features/offline/hooks/useOfflineStorage";
-import { getCacheEntryCount, cacheMapTile } from "@/features/geocache/utils/cacheUtils";
+
+
 import { CACHE_NAMES } from "@/shared/config";
 
 // Import Leaflet CSS and adventure theme
@@ -700,196 +700,10 @@ function SearchInViewControl({
   return null;
 }
 
-// Component to handle automatic offline tile caching
-function AutoOfflineTileManager({ 
-  userLocation, 
-  searchLocation, 
-  searchRadius,
-  isNearMeActive,
-  mapStyle
-}: { 
-  userLocation?: { lat: number; lng: number } | null;
-  searchLocation?: { lat: number; lng: number } | null;
-  searchRadius?: number;
-  isNearMeActive?: boolean;
-  mapStyle: MapStyle;
-}) {
-  const map = useMap();
-  const { isOnline, isOfflineMode } = useOfflineMode();
-  const { settings } = useOfflineSettings();
-  const [, setCachedTiles] = useState(0);
-  const [, setIsDownloading] = useState(false);
-  const [lastCachedLocation, setLastCachedLocation] = useState<string | null>(null);
 
-  const autoCacheMaps = (settings.autoCacheMaps as boolean) ?? false;
 
-  // Check storage limits before caching
-  const checkStorageBeforeCaching = useCallback(async (): Promise<boolean> => {
-    try {
-      const { isStorageNearLimit } = await import('@/shared/utils/storageConfig');
-      const nearLimit = await isStorageNearLimit();
-      if (nearLimit) {
-        console.log('Storage near limit, skipping map caching');
-        return false;
-      }
-      return true;
-    } catch (error) {
-      console.warn('Failed to check storage limit:', error);
-      return true; // Default to allowing caching if check fails
-    }
-  }, []);
-
-  const downloadTilesForBounds = React.useCallback(async (bounds: LatLngBounds, minZoom: number, maxZoom: number) => {
-    if (!isOnline || isOfflineMode) return 0;
-    
-    // Check storage limits before starting download
-    const canCache = await checkStorageBeforeCaching();
-    if (!canCache) return 0;
-    
-    setIsDownloading(true);
-    let downloadedCount = 0;
-
-    try {
-      for (let z = minZoom; z <= maxZoom; z++) {
-        const northEast = bounds.getNorthEast();
-        const southWest = bounds.getSouthWest();
-        
-        const minTileX = Math.floor((southWest.lng + 180) / 360 * Math.pow(2, z));
-        const maxTileX = Math.floor((northEast.lng + 180) / 360 * Math.pow(2, z));
-        const minTileY = Math.floor((1 - Math.log(Math.tan(northEast.lat * Math.PI / 180) + 1 / Math.cos(northEast.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z));
-        const maxTileY = Math.floor((1 - Math.log(Math.tan(southWest.lat * Math.PI / 180) + 1 / Math.cos(southWest.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z));
-
-        // Limit the number of tiles to prevent overwhelming the server
-        const totalTiles = (maxTileX - minTileX + 1) * (maxTileY - minTileY + 1);
-        if (totalTiles > 100) {
-          console.log(`Skipping zoom level ${z} - too many tiles (${totalTiles})`);
-          continue;
-        }
-
-        for (let x = minTileX; x <= maxTileX; x++) {
-          for (let y = minTileY; y <= maxTileY; y++) {
-            try {
-              // Use the current map style's URL template
-              let tileUrl = mapStyle.url
-                .replace('{z}', z.toString())
-                .replace('{x}', x.toString())
-                .replace('{y}', y.toString())
-                .replace('{r}', ''); // Remove retina suffix if present
-              
-              // Handle subdomain replacement for styles that use it
-              if (tileUrl.includes('{s}')) {
-                tileUrl = tileUrl.replace('{s}', 'a'); // Use 'a' subdomain
-              }
-              
-              const success = await cacheMapTile(tileUrl);
-              if (success) {
-                downloadedCount++;
-              }
-              
-              // Add small delay to avoid overwhelming the server
-              await new Promise(resolve => setTimeout(resolve, 50));
-            } catch (error) {
-              console.warn(`Failed to download tile ${z}/${x}/${y}:`, error);
-            }
-          }
-        }
-      }
-
-      setCachedTiles(prev => prev + downloadedCount);
-      
-      // Silent caching - no user notification needed
-      
-      return downloadedCount;
-    } catch (error) {
-      console.error('Failed to download tiles:', error);
-      // Silent failure - no user notification needed for background caching
-      return 0;
-    } finally {
-      setIsDownloading(false);
-    }
-  }, [isOnline, isOfflineMode, mapStyle.url, checkStorageBeforeCaching]);
-
-  // Auto-cache initial map view - don't block initial display
-  useEffect(() => {
-    if (!isOnline || isOfflineMode || !autoCacheMaps) return;
-
-    const cacheInitialView = async () => {
-      // Minimal wait time - don't block map display
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const bounds = map.getBounds();
-      const currentZoom = map.getZoom();
-      
-      // Cache current view and one zoom level up/down
-      await downloadTilesForBounds(
-        bounds, 
-        Math.max(currentZoom - 1, 8), 
-        Math.min(currentZoom + 1, 16)
-      );
-    };
-
-    cacheInitialView();
-  }, [map, isOnline, isOfflineMode, autoCacheMaps, downloadTilesForBounds]);
-
-  // Auto-cache when Near Me is activated or search location changes
-  useEffect(() => {
-    if (!isOnline || isOfflineMode || !autoCacheMaps) return;
-
-    const cacheLocationArea = async () => {
-      const location = searchLocation || (isNearMeActive ? userLocation : null);
-      if (!location) return;
-
-      // Create a location key to avoid re-caching the same area
-      const locationKey = `${location.lat.toFixed(4)},${location.lng.toFixed(4)},${searchRadius || 10}`;
-      if (locationKey === lastCachedLocation) return;
-
-      // Minimal wait for the map to settle after location change
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      let bounds: LatLngBounds;
-      
-      if (searchRadius) {
-        // Create bounds based on search radius
-        const radiusInDegrees = searchRadius / 111; // Rough conversion: 1 degree ≈ 111 km
-        bounds = L.latLngBounds(
-          [location.lat - radiusInDegrees, location.lng - radiusInDegrees],
-          [location.lat + radiusInDegrees, location.lng + radiusInDegrees]
-        );
-      } else {
-        // Use current map bounds
-        bounds = map.getBounds();
-      }
-
-      const downloadedCount = await downloadTilesForBounds(
-        bounds,
-        10, // Start from zoom level 10
-        15 // Go up to zoom level 15
-      );
-
-      if (downloadedCount > 0) {
-        setLastCachedLocation(locationKey);
-      }
-    };
-
-    cacheLocationArea();
-  }, [map, userLocation, searchLocation, searchRadius, isNearMeActive, isOnline, isOfflineMode, autoCacheMaps, lastCachedLocation, downloadTilesForBounds]);
-
-  // Count cached tiles on mount
-  useEffect(() => {
-    const countCachedTiles = async () => {
-      const count = await getCacheEntryCount(CACHE_NAMES.OSM_TILES);
-      setCachedTiles(count);
-    };
-
-    countCachedTiles();
-  }, []);
-
-  // No offline banners - removed both competing banners
-  return null;
-}
-
-// Custom tile layer that works offline with optimizations
-function OfflineTileLayer({ mapStyle }: { mapStyle: MapStyle }) {
+// Custom tile layer with optimizations
+function OptimizedTileLayer({ mapStyle }: { mapStyle: MapStyle }) {
 
   return (
     <TileLayer
@@ -902,8 +716,6 @@ function OfflineTileLayer({ mapStyle }: { mapStyle: MapStyle }) {
       updateWhenIdle={true} // Update when idle for better performance during interaction
       updateWhenZooming={false} // Don't update during zoom for smoother experience
       updateInterval={200} // Throttle updates for better performance
-      // Add error handling for offline mode
-      errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
       // Additional performance optimizations
       crossOrigin={true} // Enable CORS for better caching
       // Reduce tile loading overhead
@@ -1146,19 +958,13 @@ export function GeocacheMap({
         }}
         {...mapOptions}
       >
-      <OfflineTileLayer mapStyle={mapStyle} />
+      <OptimizedTileLayer mapStyle={mapStyle} />
       
       <MapSizeController />
       
       <MapRefController mapRef={mapRef} onMapReady={() => setIsMapReady(true)} />
       
-      <AutoOfflineTileManager 
-        userLocation={userLocation}
-        searchLocation={searchLocation}
-        searchRadius={searchRadius}
-        isNearMeActive={isNearMeActive}
-        mapStyle={mapStyle}
-      />
+      
       
       <MapController 
         center={mapCenter} 

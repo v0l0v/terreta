@@ -45,15 +45,6 @@ export async function setStorageConfig(config: Partial<StorageConfig>): Promise<
     
     // Save to localStorage for immediate access
     localStorage.setItem('treasures-storage-config', JSON.stringify(newConfig));
-    
-    // Also save to IndexedDB for persistence (if available)
-    try {
-      const { offlineStorage } = await import('@/features/offline/utils/offlineStorage');
-      await offlineStorage.setSetting('storageConfig', newConfig);
-    } catch (error) {
-      // IndexedDB might not be available in test environment, that's ok
-      console.warn('Failed to save to IndexedDB:', error);
-    }
   } catch (error) {
     console.error('Failed to save storage config:', error);
     throw error;
@@ -88,29 +79,12 @@ export async function getStorageUsage(): Promise<{
     console.warn('Failed to get storage estimate:', error);
   }
   
-  // Fallback: estimate based on IndexedDB size
-  try {
-    const { offlineStorage } = await import('@/features/offline/utils/offlineStorage');
-    await offlineStorage.init();
-    
-    // This is a rough estimate - in a real implementation you'd want to
-    // calculate the actual size of stored data
-    const geocaches = await offlineStorage.getAllGeocaches();
-    const estimatedSize = geocaches.length * 10000; // Rough estimate: 10KB per cache
-    
-    return {
-      used: estimatedSize,
-      quota: configuredQuota,
-      percentage: estimatedSize / configuredQuota,
-    };
-  } catch (error) {
-    console.warn('Failed to estimate storage usage:', error);
-    return {
-      used: 0,
-      quota: configuredQuota,
-      percentage: 0,
-    };
-  }
+  // Fallback: return zero usage
+  return {
+    used: 0,
+    quota: configuredQuota,
+    percentage: 0,
+  };
 }
 
 // Check if storage is approaching limit

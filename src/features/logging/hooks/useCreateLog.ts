@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/shared/hooks/useToast';
 import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
-import { useOfflineSync, useOfflineMode } from '@/features/offline/hooks/useOfflineStorage';
+
 import type { CreateLogData } from '@/types/geocache';
 import { 
   NIP_GC_KINDS, 
@@ -15,8 +15,6 @@ export function useCreateLog() {
   const queryClient = useQueryClient();
   const { mutateAsync: publishEvent } = useNostrPublish();
   const { toast } = useToast();
-  const { queueAction } = useOfflineSync();
-  const { isOnline } = useOfflineMode();
 
   return useMutation({
     mutationFn: async (data: CreateLogData) => {
@@ -58,105 +56,67 @@ export function useCreateLog() {
         });
       }
       
-      if (isOnline) {
-        try {
-          const result = await publishEvent({
-            kind: eventKind,
-            content: data.text.trim(), // Plain text log message in content
-            tags,
-          });
-
-          // Handle success
-          toast({
-            title: "Log posted!",
-            description: "Your log has been added to the geocache.",
-          });
-
-          // Optimistically update the cache
-          queryClient.setQueryData(['geocache-logs', data.geocacheDTag, data.geocachePubkey], (oldData: unknown) => {
-            const clientTag = result.tags.find(t => t[0] === 'client')?.[1];
-            const relayTags = result.tags.filter(t => t[0] === 'relay').map(t => t[1]);
-            
-            const newLog = {
-              id: result.id,
-              pubkey: result.pubkey,
-              created_at: result.created_at,
-              geocacheId: data.geocacheId,
-              type: data.type,
-              text: data.text.trim(),
-              images: data.images || [],
-              client: clientTag,
-              relays: relayTags,
-            };
-            
-            const existingLogs = Array.isArray(oldData) ? oldData : [];
-            const updatedLogs = [newLog, ...existingLogs.filter((log: { id: string }) => log.id !== result.id)];
-            
-            return updatedLogs;
-          });
-
-          return result;
-        } catch (error) {
-          // If online publishing fails, queue for offline sync
-          console.warn('Online log creation failed, queuing for later:', error);
-          await queueAction('create_log', {
-            geocacheId: data.geocacheId,
-            content: data.text.trim(),
-            type: data.type,
-            geocachePubkey: data.geocachePubkey,
-            geocacheDTag: data.geocacheDTag,
-            images: data.images,
-            preferredRelays: data.preferredRelays,
-          });
-
-          // Handle error
-          let errorMessage = "Please try again later.";
-          const errorObj = error as { message?: string };
-          
-          if (errorObj.message?.includes('not found on relays')) {
-            errorMessage = "Log was created but couldn't be verified. It may appear after a delay.";
-          } else if (errorObj.message?.includes('timeout')) {
-            errorMessage = "Connection timeout. Please check your internet connection and try again.";
-          } else if (errorObj.message?.includes('cancelled') || errorObj.message?.includes('rejected')) {
-            errorMessage = "Log posting was cancelled.";
-          } else if (errorObj.message?.includes('Failed to publish')) {
-            errorMessage = "Could not connect to Nostr relays. Please try again.";
-          } else if (errorObj.message) {
-            errorMessage = errorObj.message;
-          }
-          
-          toast({
-            title: "Failed to post log",
-            description: errorMessage,
-            variant: "destructive",
-          });
-
-          throw error;
-        }
-      } else {
-        // Offline mode - queue for later sync
-        await queueAction('create_log', {
-          geocacheId: data.geocacheId,
-          content: data.text.trim(),
-          type: data.type,
-          geocachePubkey: data.geocachePubkey,
-          geocacheDTag: data.geocacheDTag,
-          images: data.images,
-          preferredRelays: data.preferredRelays,
-        });
-        
-        // Return a mock event for optimistic updates
-        const mockEvent = {
-          id: `offline-${Date.now()}`,
-          pubkey: 'offline-user',
-          created_at: Math.floor(Date.now() / 1000),
+      try {
+        const result = await publishEvent({
           kind: eventKind,
-          content: data.text.trim(),
+          content: data.text.trim(), // Plain text log message in content
           tags,
-          sig: 'offline-signature',
-        };
+        });
+
+        // Handle success
+        toast({
+          title: "Log posted!",
+          description: "Your log has been added to the geocache.",
+        });
+
+        // Optimistically update the cache
+        queryClient.setQueryData(['geocache-logs', data.geocacheDTag, data.geocachePubkey], (oldData: unknown) => {
+          const clientTag = result.tags.find(t => t[0] === 'client')?.[1];
+          const relayTags = result.tags.filter(t => t[0] === 'relay').map(t => t[1]);
+          
+          const newLog = {
+            id: result.id,
+            pubkey: result.pubkey,
+            created_at: result.created_at,
+            geocacheId: data.geocacheId,
+            type: data.type,
+            text: data.text.trim(),
+            images: data.images || [],
+            client: clientTag,
+            relays: relayTags,
+          };
+          
+          const existingLogs = Array.isArray(oldData) ? oldData : [];
+          const updatedLogs = [newLog, ...existingLogs.filter((log: { id: string }) => log.id !== result.id)];
+          
+          return updatedLogs;
+        });
+
+        return result;
+      } catch (error) {
+        // Handle error
+        let errorMessage = "Please try again later.";
+        const errorObj = error as { message?: string };
         
-        return mockEvent;
+        if (errorObj.message?.includes('not found on relays')) {
+          errorMessage = "Log was created but couldn't be verified. It may appear after a delay.";
+        } else if (errorObj.message?.includes('timeout')) {
+          errorMessage = "Connection timeout. Please check your internet connection and try again.";
+        } else if (errorObj.message?.includes('cancelled') || errorObj.message?.includes('rejected')) {
+          errorMessage = "Log posting was cancelled.";
+        } else if (errorObj.message?.includes('Failed to publish')) {
+          errorMessage = "Could not connect to Nostr relays. Please try again.";
+        } else if (errorObj.message) {
+          errorMessage = errorObj.message;
+        }
+        
+        toast({
+          title: "Failed to post log",
+          description: errorMessage,
+          variant: "destructive",
+        });
+
+        throw error;
       }
     },
     onSuccess: (event, variables) => {

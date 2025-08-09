@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useToast } from '@/shared/hooks/useToast';
-import { offlineStorage } from '@/features/offline/utils/offlineStorage';
+
 import { NIP_GC_KINDS, createGeocacheCoordinate } from '@/features/geocache/utils/nip-gc';
 import { TIMEOUTS } from '@/shared/config';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -45,15 +45,7 @@ export function useBatchDeleteGeocaches() {
         failed: [],
       };
 
-      // Optimistically remove from local storage
-      for (const geocache of geocaches) {
-        try {
-          await offlineStorage.removeGeocache(geocache.id);
-          await offlineStorage.removeEvent(geocache.id);
-        } catch (error) {
-          console.warn(`Failed to remove ${geocache.id} from offline storage:`, error);
-        }
-      }
+      
 
       // Process deletions in batches to avoid overwhelming the network
       const batchSize = 3;
@@ -185,7 +177,6 @@ export function useBatchDeleteGeocaches() {
       
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['geocaches'] });
-      queryClient.invalidateQueries({ queryKey: ['offline-geocaches'] });
       queryClient.invalidateQueries({ queryKey: ['my-geocaches'] });
       
       console.log(`Batch deletion complete: ${successful.length} successful, ${failed.length} failed`);

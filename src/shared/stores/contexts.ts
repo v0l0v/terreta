@@ -8,7 +8,6 @@ import type {
   GeocacheStore,
   LogStore,
   AuthorStore,
-  OfflineStore,
   UnifiedStores 
 } from './types';
 
@@ -21,5 +20,5 @@ if (typeof createContext !== 'function') {
 export const GeocacheStoreContext = createContext<GeocacheStore | null>(null);
 export const LogStoreContext = createContext<LogStore | null>(null);
 export const AuthorStoreContext = createContext<AuthorStore | null>(null);
-export const OfflineStoreContext = createContext<OfflineStore | null>(null);
+
 export const UnifiedStoresContext = createContext<UnifiedStores | null>(null);

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGeocacheStoreContext } from '@/shared/stores/hooks';
 import { useToast } from '@/shared/hooks/useToast';
-import { offlineStorage } from '@/features/offline/utils/offlineStorage';
+
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface DeleteGeocacheParams {
@@ -17,14 +17,6 @@ export function useDeleteGeocache() {
 
   return useMutation({
     mutationFn: async ({ geocacheId }: DeleteGeocacheParams) => {
-      // Optimistically remove from local storage immediately
-      try {
-        await offlineStorage.removeGeocache(geocacheId);
-        await offlineStorage.removeEvent(geocacheId);
-      } catch (error) {
-        console.warn('Failed to remove from offline storage:', error);
-      }
-
       // Use the store's deleteGeocache method
       const result = await geocacheStore.deleteGeocache(geocacheId);
       if (!result.success) {
@@ -63,7 +55,6 @@ export function useDeleteGeocache() {
       
       // Invalidate related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['geocaches'] });
-      queryClient.invalidateQueries({ queryKey: ['offline-geocaches'] });
       queryClient.invalidateQueries({ queryKey: ['user-geocaches'] });
       
       console.log(`Deletion event sent for geocache: ${geocacheId}`);

@@ -71,7 +71,7 @@ export default function About() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               With Treasures, you can create, find, and log geocaches using your Nostr identity. 
-              The platform supports offline functionality, real-time updates, and seamless integration 
+              The platform supports real-time updates and seamless integration 
               with the broader Nostr ecosystem. Your geocaching activity is tied to your cryptographic 
               identity, ensuring authenticity while maintaining privacy.
             </p>

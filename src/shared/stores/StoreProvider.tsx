@@ -12,13 +12,12 @@ import type {
 import { useGeocacheStore } from './useGeocacheStore';
 import { useLogStore } from './useLogStore';
 import { useAuthorStore } from './useAuthorStore';
-import { useOfflineStore } from './useOfflineStore';
+
 import { DEFAULT_STORE_CONFIG } from './baseStore';
 import {
   GeocacheStoreContext,
   LogStoreContext,
   AuthorStoreContext,
-  OfflineStoreContext,
   UnifiedStoresContext
 } from './contexts';
 
@@ -73,25 +72,22 @@ export function StoreProvider({ children, config = EMPTY_CONFIG }: StoreProvider
   const geocacheStore = useGeocacheStore(storeConfig);
   const logStore = useLogStore(storeConfig);
   const authorStore = useAuthorStore(storeConfig);
-  const offlineStore = useOfflineStore(storeConfig);
+  
 
   // Create unified stores object with stable references
   const unifiedStores = useMemo((): UnifiedStores => ({
     geocache: geocacheStore,
     log: logStore,
     author: authorStore,
-    offline: offlineStore,
-  }), [geocacheStore, logStore, authorStore, offlineStore]);
+  }), [geocacheStore, logStore, authorStore]);
 
   return (
     <GeocacheStoreContext.Provider value={geocacheStore}>
       <LogStoreContext.Provider value={logStore}>
         <AuthorStoreContext.Provider value={authorStore}>
-          <OfflineStoreContext.Provider value={offlineStore}>
-            <UnifiedStoresContext.Provider value={unifiedStores}>
-              {children}
-            </UnifiedStoresContext.Provider>
-          </OfflineStoreContext.Provider>
+          <UnifiedStoresContext.Provider value={unifiedStores}>
+            {children}
+          </UnifiedStoresContext.Provider>
         </AuthorStoreContext.Provider>
       </LogStoreContext.Provider>
     </GeocacheStoreContext.Provider>

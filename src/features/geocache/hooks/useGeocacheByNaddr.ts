@@ -1,8 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGeocacheStoreContext } from '@/shared/stores/hooks';
 import { parseNaddr } from '@/shared/utils/naddr';
-import { useOfflineMode } from '@/features/offline/hooks/useOfflineStorage';
-import { offlineStorage } from '@/features/offline/utils/offlineStorage';
+
 import { parseGeocacheEvent } from '@/features/geocache/utils/nip-gc';
 import { useNostr } from '@nostrify/react';
 import { TIMEOUTS } from '@/lib/constants';
@@ -13,22 +12,21 @@ import type { Geocache } from '@/shared/types';
 
 export function useGeocacheByNaddr(naddr: string) {
   const geocacheStore = useGeocacheStoreContext();
-  const { isOnline, isConnected, connectionQuality } = useOfflineMode();
   const queryClient = useQueryClient();
   const { nostr } = useNostr();
   const { setZaps } = useZapStore();
 
   return useQuery({
     queryKey: ['geocache-by-naddr', naddr],
-    staleTime: (isOnline && isConnected && navigator.onLine) ? 30000 : Infinity, // 30 seconds online, never stale offline
+    staleTime: 30000,
     gcTime: 300000, // 5 minutes
     retry: (failureCount, error) => {
       // Don't retry if it's an invalid cache link
       if (error instanceof Error && error.message === 'INVALID_CACHE_LINK') {
         return false;
       }
-      // Retry network errors up to 2 times when online
-      return failureCount < 2 && (isOnline && isConnected && navigator.onLine);
+      // Retry network errors up to 2 times
+      return failureCount < 2;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
     refetchOnReconnect: true, // Refetch when connection is restored
@@ -37,10 +35,6 @@ export function useGeocacheByNaddr(naddr: string) {
     queryFn: async () => {
       console.log('useGeocacheByNaddr query starting...', {
         naddr,
-        isOnline,
-        isConnected,
-        connectionQuality,
-        navigatorOnline: navigator.onLine,
         timestamp: new Date().toISOString()
       });
 
@@ -61,24 +55,6 @@ export function useGeocacheByNaddr(naddr: string) {
           console.log('🚀 Using fresh cached data, skipping network request:', existingData.name);
           return existingData;
         }
-      }
-
-      // Always try to get offline data first as a fallback
-      let offlineGeocache: Geocache | undefined = undefined;
-      try {
-        await offlineStorage.init();
-        const cachedGeocaches = await offlineStorage.getAllGeocaches();
-        const cached = cachedGeocaches.find(c => 
-          c.event.pubkey === pubkey && 
-          c.event.tags.find(t => t[0] === 'd')?.[1] === dTag
-        );
-        
-        if (cached) {
-          offlineGeocache = parseGeocacheEvent(cached.event) || undefined;
-          console.log('Found offline geocache:', offlineGeocache?.name);
-        }
-      } catch (error) {
-        console.warn('Failed to get offline geocache:', error);
       }
 
       // Always attempt network fetch first when accessing direct links
@@ -106,15 +82,9 @@ export function useGeocacheByNaddr(naddr: string) {
           
           if (events.length === 0) {
             console.warn(`Geocache not found on relay: ${pubkey}:${dTag}`);
-            // If we have offline data, use that
-            if (offlineGeocache) {
-              console.log('Using offline geocache as fallback');
-              geocache = offlineGeocache || undefined;
-            } else {
-              // Return null instead of throwing error - this allows the UI to handle create scenarios
-              console.log('No geocache found and no offline data - returning null for potential create scenario');
-              return null;
-            }
+            // Return null instead of throwing error - this allows the UI to handle create scenarios
+            console.log('No geocache found - returning null for potential create scenario');
+            return null;
           } else {
             if (!events[0]) {
               throw new Error('No event returned from query');
@@ -125,18 +95,6 @@ export function useGeocacheByNaddr(naddr: string) {
             }
             geocache = parsedGeocache;
           }
-        }
-        
-        // Cache the geocache offline for future use
-        try {
-          // If we have the raw event (from direct query), cache it offline
-          if (!existingGeocache && geocache) {
-            await offlineStorage.init();
-            // Note: We don't have the raw event here, so we'll skip offline caching for direct queries
-            console.log('Skipping offline caching for direct naddr query');
-          }
-        } catch (error) {
-          console.warn('Failed to cache geocache offline:', error);
         }
         
         // If we returned null early (no geocache found), skip logs/zaps processing
@@ -215,23 +173,6 @@ export function useGeocacheByNaddr(naddr: string) {
         return resultGeocache;
       } catch (error) {
         console.warn('Online geocache query failed:', error);
-        // Return offline data if available, otherwise throw a more specific error
-        if (offlineGeocache) {
-          console.log('Falling back to offline data');
-          return {
-            ...offlineGeocache,
-            foundCount: 0,
-            logCount: 0,
-            zapTotal: 0,
-          };
-        }
-        
-        // If we have no offline data and network failed, provide a helpful error
-        if (!navigator.onLine || !isOnline || !isConnected) {
-          throw new Error('Geocache not available offline');
-        }
-        
-        // For other network errors, throw the original error
         throw error;
       }
     },

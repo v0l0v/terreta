@@ -8,7 +8,6 @@ import type {
   GeocacheStore,
   LogStore,
   AuthorStore,
-  OfflineStore,
   UnifiedStores,
   StoreConfig 
 } from './types';
@@ -16,7 +15,6 @@ import {
   GeocacheStoreContext, 
   LogStoreContext, 
   AuthorStoreContext, 
-  OfflineStoreContext, 
   UnifiedStoresContext 
 } from './contexts';
 
@@ -53,16 +51,7 @@ export function useAuthorStoreContext(): AuthorStore {
   return store;
 }
 
-/**
- * Hook to access the offline store
- */
-export function useOfflineStoreContext(): OfflineStore {
-  const store = useContext(OfflineStoreContext);
-  if (!store) {
-    throw new Error('useOfflineStoreContext must be used within a StoreProvider');
-  }
-  return store;
-}
+
 
 /**
  * Hook to access all stores
@@ -170,7 +159,6 @@ export function useStoreActions() {
       const results = await Promise.allSettled([
         stores.geocache.refreshAll(),
         stores.author.triggerSync(),
-        stores.offline.triggerSync(),
       ]);
       
       const errors = results
@@ -188,7 +176,6 @@ export function useStoreActions() {
         stores.geocache.invalidateAll(),
         stores.log.invalidateAll(),
         stores.author.invalidateAll(),
-        stores.offline.clearOfflineData(),
       ]);
     },
     
@@ -197,7 +184,6 @@ export function useStoreActions() {
       stores.geocache.startBackgroundSync();
       stores.log.startBackgroundSync();
       stores.author.startBackgroundSync();
-      stores.offline.startBackgroundSync();
     },
     
     // Stop background sync for all stores
@@ -205,7 +191,6 @@ export function useStoreActions() {
       stores.geocache.stopBackgroundSync();
       stores.log.stopBackgroundSync();
       stores.author.stopBackgroundSync();
-      stores.offline.stopBackgroundSync();
     },
     
     // Update configuration for all stores
@@ -213,7 +198,6 @@ export function useStoreActions() {
       stores.geocache.updateConfig(config);
       stores.log.updateConfig(config);
       stores.author.updateConfig(config);
-      stores.offline.updateConfig(config);
     },
   }), [stores]);
 }

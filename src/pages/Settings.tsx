@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { PageLayout } from "../components/layout";
 import { Label } from "../components/ui/label";
-import { OfflineSettings } from "../components/OfflineSettings";
+
 import { RelaySelector } from "../components/RelaySelector";
 import { WotSettings } from "../components/WotSettings";
 
@@ -142,21 +142,7 @@ export default function Settings() {
         {/* Web of Trust Settings */}
         <WotSettings />
 
-        {/* Offline & Sync Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wifi className="h-5 w-5" />
-              Offline & Sync
-            </CardTitle>
-            <CardDescription>
-              Manage offline functionality and data synchronization
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <OfflineSettings />
-          </CardContent>
-        </Card>
+        
       </div>
     </PageLayout>
   );

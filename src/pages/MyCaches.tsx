@@ -13,20 +13,13 @@ import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { formatDistanceToNow } from '@/shared/utils/date';
 import { useGeolocation } from '@/features/map/hooks/useGeolocation';
 import { ComponentLoading } from '@/components/ui/loading';
-import { useOnlineStatus } from '@/features/offline/hooks/useConnectivity';
+
 
 export default function MyCaches() {
   const { user } = useCurrentUser();
-  const { savedCaches, unsaveCache, clearAllSaved, isNostrEnabled, isLoading: isLoadingSaved, isSyncing, offlineSavedCount, offlineOnly, syncOfflineBookmarks } = useSavedCaches();
+  const { savedCaches, unsaveCache, clearAllSaved, isNostrEnabled, isLoading: isLoadingSaved, isSyncing } = useSavedCaches();
   const { coords } = useGeolocation();
-  const { isOnline } = useOnlineStatus();
   const [showClearDialog, setShowClearDialog] = useState(false);
-
-  useEffect(() => {
-    if (isOnline && user) {
-      syncOfflineBookmarks();
-    }
-  }, [isOnline, user, syncOfflineBookmarks]);
 
   // Calculate distances if location is available
   const savedCachesWithDistance = savedCaches.map(cache => {
@@ -102,21 +95,9 @@ export default function MyCaches() {
             {/* Nostr sync status */}
             {isNostrEnabled && (
               <div className={`flex items-center gap-2 text-sm ${
-                offlineOnly ? 'text-blue-600 dark:text-blue-400' :
-                !isOnline ? 'text-orange-600 dark:text-orange-400' :
                 isSyncing ? 'text-blue-600 dark:text-blue-400' : 'text-green-600'
               }`}>
-                {offlineOnly ? (
-                  <>
-                    <WifiOff className="h-4 w-4" />
-                    <span>Offline Mode</span>
-                  </>
-                ) : !isOnline ? (
-                  <>
-                    <WifiOff className="h-4 w-4" />
-                    <span>Offline ({offlineSavedCount})</span>
-                  </>
-                ) : isSyncing ? (
+                {isSyncing ? (
                   <>
                     <RefreshCcw className="h-4 w-4 animate-spin" />
                     <span>Syncing...</span>
@@ -132,16 +113,6 @@ export default function MyCaches() {
           </div>
           <p className="text-sm text-muted-foreground">
             Your saved caches are synced to your Nostr profile and available across all your devices.
-            {offlineOnly ? (
-              <span className="block mt-1 text-blue-600 dark:text-blue-400">
-                ℹ️ Offline mode is enabled. Only locally saved caches are shown.
-              </span>
-            ) : null}
-            {!isOnline && !offlineOnly && (
-              <span className="block mt-1 text-orange-600 dark:text-orange-400">
-                ⚠️ You are offline. Changes will sync when you reconnect.
-              </span>
-            )}
           </p>
         </div>
 
@@ -161,10 +132,7 @@ export default function MyCaches() {
                 avoidCollisions={true}
                 collisionPadding={{ bottom: 80 }}
               >
-                <DropdownMenuItem onSelect={() => syncOfflineBookmarks()}>
-                  <RefreshCcw className="h-4 w-4 mr-2" />
-                  Sync Offline Bookmarks
-                </DropdownMenuItem>
+                
                 <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
                   <AlertDialogTrigger asChild>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-700">
@@ -192,7 +160,7 @@ export default function MyCaches() {
           )}
         </div>
 
-        {isLoadingSaved && savedCaches.length === 0 && !offlineOnly ? (
+        {isLoadingSaved && savedCaches.length === 0 ? (
           <div className="flex items-center justify-center py-12">
             <ComponentLoading
               size="sm"

@@ -177,84 +177,13 @@ export interface AuthorStoreActions {
   getStats: () => CacheStats;
 }
 
-// Offline store specific types
-export interface OfflineBookmark {
-  naddr: string;
-  geocache: Geocache;
-  source: 'synced' | 'manual';
-}
 
-export interface OfflineStoreState extends BaseStoreState {
-  isOnline: boolean;
-  isConnected: boolean;
-  autoCacheMapAreas: boolean;
-  offlineGeocaches: Geocache[];
-  offlineLogs: Record<string, GeocacheLog[]>;
-  offlineBookmarks: OfflineBookmark[];
-  pendingActions: PendingAction[];
-  storageInfo: StorageInfo;
-  syncStatus: SyncStatus;
-}
-
-export interface PendingAction {
-  id: string;
-  type: 'create' | 'update' | 'delete';
-  entity: 'geocache' | 'log';
-  data: unknown;
-  timestamp: Date;
-  retryCount: number;
-}
-
-export interface StorageInfo {
-  totalSize: number;
-  availableSpace: number;
-  geocacheCount: number;
-  logCount: number;
-  lastCleanup: Date | null;
-}
-
-export interface OfflineStoreActions {
-  // Connectivity
-  setAutoCacheMapAreas: (autoCache: boolean) => void;
-  setOnlineStatus: (isOnline: boolean) => void;
-  setConnectedStatus: (isConnected: boolean) => void;
-  checkConnectivity: () => Promise<boolean>;
-  
-  // Offline data management
-  saveGeocacheOffline: (geocache: Geocache) => Promise<StoreActionResult<void>>;
-  saveLogOffline: (log: GeocacheLog) => Promise<StoreActionResult<void>>;
-  saveBookmarkOffline: (geocache: Geocache) => Promise<StoreActionResult<void>>;
-  removeOfflineGeocache: (id: string) => Promise<StoreActionResult<void>>;
-  removeOfflineLog: (id: string) => Promise<StoreActionResult<void>>;
-  removeOfflineBookmark: (naddr: string) => Promise<StoreActionResult<void>>;
-  
-  // Sync operations
-  syncPendingActions: () => Promise<StoreActionResult<void>>;
-  addPendingAction: (action: Omit<PendingAction, 'id' | 'timestamp' | 'retryCount'>) => void;
-  removePendingAction: (id: string) => void;
-  
-  // Storage management
-  getStorageInfo: () => Promise<StorageInfo>;
-  cleanupStorage: () => Promise<StoreActionResult<void>>;
-  clearOfflineData: () => Promise<StoreActionResult<void>>;
-  clearOfflineBookmarks: () => Promise<StoreActionResult<void>>;
-  
-  // Background sync
-  startBackgroundSync: () => void;
-  stopBackgroundSync: () => void;
-  triggerSync: () => Promise<StoreActionResult<void>>;
-  
-  // Configuration
-  updateConfig: (config: Partial<StoreConfig>) => void;
-  getStats: () => CacheStats;
-}
 
 // Combined store interface for unified access
 export interface UnifiedStores {
   geocache: GeocacheStoreState & GeocacheStoreActions;
   log: LogStoreState & LogStoreActions;
   author: AuthorStoreState & AuthorStoreActions;
-  offline: OfflineStoreState & OfflineStoreActions;
 }
 
 // Store provider context type
@@ -267,4 +196,3 @@ export interface StoreProviderProps {
 export type GeocacheStore = GeocacheStoreState & GeocacheStoreActions;
 export type LogStore = LogStoreState & LogStoreActions;
 export type AuthorStore = AuthorStoreState & AuthorStoreActions;
-export type OfflineStore = OfflineStoreState & OfflineStoreActions;

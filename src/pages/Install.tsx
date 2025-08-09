@@ -31,7 +31,7 @@ export default function Install() {
             
             <p className="text-md text-muted-foreground mb-6">
               Get the full geocaching experience with our Progressive Web App. 
-              Works offline, loads faster, and feels like a native app.
+              Loads faster and feels like a native app.
             </p>
           </div>
 
@@ -176,12 +176,12 @@ export default function Install() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Wifi className="h-5 w-5 text-blue-500" />
-                  Works Offline
+                  Always Available
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Access your cached geocaches and maps even without internet.
+                  Access your geocaches and maps anytime, anywhere.
                 </CardDescription>
               </CardContent>
             </Card>

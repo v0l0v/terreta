@@ -34,7 +34,6 @@ export interface SyncStatus {
   failedTasks: number;
   lastSync: Date | null;
   nextSync: Date | null;
-  networkStatus: 'online' | 'offline' | 'slow';
 }
 
 const DEFAULT_SYNC_CONFIG: SyncSchedulerConfig = {
@@ -60,29 +59,9 @@ export function useBackgroundSyncScheduler(config: Partial<SyncSchedulerConfig> 
     failedTasks: 0,
     lastSync: null,
     nextSync: null,
-    networkStatus: 'online',
   });
 
-  // Network status monitoring
-  const updateNetworkStatus = useCallback(() => {
-    if (!navigator.onLine) {
-      statusRef.current.networkStatus = 'offline';
-      return;
-    }
-
-    // Check connection quality (simplified)
-    const connection = (navigator as any).connection;
-    if (connection) {
-      const effectiveType = connection.effectiveType;
-      if (effectiveType === 'slow-2g' || effectiveType === '2g') {
-        statusRef.current.networkStatus = 'slow';
-      } else {
-        statusRef.current.networkStatus = 'online';
-      }
-    } else {
-      statusRef.current.networkStatus = 'online';
-    }
-  }, []);
+  
 
   // Adaptive scheduling based on performance
   const getAdaptiveInterval = useCallback((task: SyncTask): number => {
@@ -95,15 +74,7 @@ export function useBackgroundSyncScheduler(config: Partial<SyncSchedulerConfig> 
       return task.interval * Math.pow(1.5, task.retryCount);
     }
 
-    // Adjust based on network status
-    switch (statusRef.current.networkStatus) {
-      case 'offline':
-        return task.interval * 10; // Much longer when offline
-      case 'slow':
-        return task.interval * 2; // Longer when slow
-      default:
-        return task.interval;
-    }
+    return task.interval;
   }, [fullConfig.enableAdaptiveScheduling]);
 
   // Execute a single task - defined as a function to avoid hoisting issues
@@ -180,10 +151,6 @@ export function useBackgroundSyncScheduler(config: Partial<SyncSchedulerConfig> 
 
   // Main scheduler loop
   const runScheduler = useCallback(async () => {
-    if (statusRef.current.networkStatus === 'offline' && fullConfig.networkAwareScheduling) {
-      return; // Skip when offline
-    }
-
     const readyTasks = getReadyTasks();
     const availableSlots = fullConfig.maxConcurrentTasks - activeTasksRef.current.size;
     const tasksToRun = readyTasks.slice(0, availableSlots);
@@ -198,7 +165,7 @@ export function useBackgroundSyncScheduler(config: Partial<SyncSchedulerConfig> 
       .sort((a, b) => a.nextRun.getTime() - b.nextRun.getTime())[0];
     
     statusRef.current.nextSync = nextTask?.nextRun || null;
-  }, [fullConfig.maxConcurrentTasks, fullConfig.networkAwareScheduling, getReadyTasks, executeTask]);
+  }, [fullConfig.maxConcurrentTasks, getReadyTasks, executeTask]);
 
   // Throttled scheduler to prevent excessive runs
   const throttledScheduler = useThrottle(runScheduler, 1000);
@@ -208,7 +175,6 @@ export function useBackgroundSyncScheduler(config: Partial<SyncSchedulerConfig> 
     if (statusRef.current.isRunning) return;
 
     statusRef.current.isRunning = true;
-    updateNetworkStatus();
 
     schedulerRef.current = setInterval(() => {
       throttledScheduler();
@@ -216,7 +182,7 @@ export function useBackgroundSyncScheduler(config: Partial<SyncSchedulerConfig> 
 
     // Initial run
     throttledScheduler();
-  }, [throttledScheduler, updateNetworkStatus]);
+  }, [throttledScheduler]);
 
   // Stop the scheduler
   const stopScheduler = useCallback(() => {
@@ -280,36 +246,7 @@ export function useBackgroundSyncScheduler(config: Partial<SyncSchedulerConfig> 
     return Array.from(tasksRef.current.values());
   }, []);
 
-  // Network status change handler
-  useEffect(() => {
-    const handleOnline = () => {
-      updateNetworkStatus();
-      if (statusRef.current.isRunning) {
-        throttledScheduler(); // Resume sync when back online
-      }
-    };
-
-    const handleOffline = () => {
-      updateNetworkStatus();
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Connection change handler
-    const connection = (navigator as any).connection;
-    if (connection) {
-      connection.addEventListener('change', updateNetworkStatus);
-    }
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      if (connection) {
-        connection.removeEventListener('change', updateNetworkStatus);
-      }
-    };
-  }, [updateNetworkStatus, throttledScheduler]);
+  
 
   // Cleanup on unmount
   useEffect(() => {

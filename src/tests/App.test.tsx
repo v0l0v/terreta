@@ -59,15 +59,7 @@ vi.mock('@/features/auth/hooks/useCurrentUser', () => ({
   useCurrentUser: () => ({ user: null }),
 }));
 
-// Mock all problematic components and utilities
-vi.mock('@/features/offline/utils/offlineStorage', () => ({
-  offlineStorage: {
-    init: vi.fn().mockResolvedValue(undefined),
-    clearOldData: vi.fn().mockResolvedValue(undefined),
-    getPendingActions: vi.fn().mockResolvedValue([]),
-    getSetting: vi.fn().mockResolvedValue(null),
-  },
-}));
+
 
 vi.mock('@/shared/utils/connectivityChecker', () => ({
   connectivityChecker: {

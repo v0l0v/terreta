@@ -352,7 +352,6 @@ export default function CacheDetail() {
   if (isError && !geocache && !passedGeocacheData) {
     // Check if this is an invalid cache link error
     const isInvalidCacheLink = error && (error as Error).message === 'INVALID_CACHE_LINK';
-    const isOfflineError = error && (error as Error).message === 'Geocache not available offline';
     
     return (
       <div className="min-h-screen bg-muted/50 dark:bg-muted">
@@ -361,14 +360,11 @@ export default function CacheDetail() {
           <ErrorState
             title={
               isInvalidCacheLink ? "Invalid Cache Link" : 
-              isOfflineError ? "Offline - Cache Not Available" :
               "Connection Issue"
             }
             description={
               isInvalidCacheLink 
                 ? "This cache link is not valid. It may be corrupted or from an incompatible source."
-                : isOfflineError
-                ? "This geocache is not available offline. Please connect to the internet to load it."
                 : "Unable to load geocache. This might be a temporary network issue."
             }
             error={error}
@@ -383,7 +379,7 @@ export default function CacheDetail() {
               !isInvalidCacheLink ? (
                 <Button onClick={() => refetch()} variant="outline" className="w-full">
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  {isOfflineError ? "Retry When Online" : "Try Again"}
+                  Try Again
                 </Button>
               ) : undefined
             }

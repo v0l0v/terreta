@@ -4,7 +4,7 @@ import { Home, Map, Plus, Menu, Settings, Bookmark, LogOut, User, QrCode, ScanQr
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { LoginArea } from '@/components/auth/LoginArea';
-import { OfflineIndicator } from '@/components/OfflineIndicator';
+
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { RelaySelector } from '@/components/RelaySelector';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
@@ -227,7 +227,6 @@ export function MobileHeader() {
               {/* Ultra-Compact Settings Row */}
               <div className="flex items-center justify-between gap-2 text-[10px] xs:text-xs">
                 <div className="flex items-center gap-1">
-                  <OfflineIndicator showDetails={false} />
                 </div>
                 <div className="flex items-center gap-2">
                   <RelaySelector className="flex-1 min-w-[80px]" />

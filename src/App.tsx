@@ -14,8 +14,7 @@ import { AppProvider } from '@/components/AppProvider';
 import { AppConfig } from '@/contexts/AppContext';
 import { StoreProvider } from '@/shared/stores/StoreProvider';
 import { NWCProvider } from '@/components/NWCProvider';
-import { offlineStorage } from '@/features/offline/utils/offlineStorage';
-import { connectivityChecker } from '@/shared/utils/connectivityChecker';
+
 import { initializeCacheCleanup } from '@/features/geocache/utils/cacheCleanup';
 import { DEFAULT_RELAY, PRESET_RELAYS } from '@/shared/config/relays';
 import { useEffect } from 'react';
@@ -42,28 +41,11 @@ const defaultConfig: AppConfig = {
 };
 
 export function App() {
-  // Initialize offline storage and connectivity checking on app start
+  // Initialize cache cleanup manager
   useEffect(() => {
-    offlineStorage.init().catch(console.error);
-    
-    // Initialize connectivity checker (it starts automatically)
-    connectivityChecker.forceCheck().catch(console.error);
-    
-    // Initialize cache cleanup manager
     const cacheCleanup = initializeCacheCleanup(queryClient);
     
-    // Clean up old data periodically (30 days)
-    const cleanup = () => {
-      offlineStorage.clearOldData(30 * 24 * 60 * 60 * 1000).catch(console.error);
-    };
-    
-    // Run cleanup on app start and then every 24 hours
-    cleanup();
-    const cleanupInterval = setInterval(cleanup, 24 * 60 * 60 * 1000);
-    
     return () => {
-      clearInterval(cleanupInterval);
-      connectivityChecker.destroy();
       cacheCleanup.stop();
     };
   }, []);

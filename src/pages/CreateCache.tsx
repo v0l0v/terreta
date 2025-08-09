@@ -46,7 +46,7 @@ import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { nip19 } from "nostr-tools";
 import { parseVerificationFromHash } from "@/features/geocache/utils/verification";
 import { naddrToGeocache } from "@/shared/utils/naddr-utils";
-import { useOfflineMode } from "@/features/geocache/hooks/useOfflineStorage";
+
 
 // CSS override for confirmation map
 const confirmMapStyles = `
@@ -86,7 +86,7 @@ export default function CreateCache() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useCurrentUser();
-  const { isOfflineMode } = useOfflineMode();
+  
   const { mutateAsync: createGeocache, isPending } = useCreateGeocache();
   const { toast } = useToast();
   const { theme, systemTheme } = useTheme();
@@ -506,30 +506,7 @@ export default function CreateCache() {
     );
   }
 
-  if (isOfflineMode) {
-    return (
-      <PageLayout maxWidth="md" className="py-16">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                <WifiOff className="h-6 w-6 text-gray-500" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Offline Mode</h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Creating geocaches requires an internet connection. Please check your connection and try again.
-                </p>
-              </div>
-              <Button onClick={() => navigate("/")} variant="outline" className="w-full">
-                Go Back
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </PageLayout>
-    );
-  }
+  
 
   return (
     <PageLayout maxWidth="2xl" background="default" className={showQROverlay ? "h-screen" : "pb-4 md:pb-0"}>
