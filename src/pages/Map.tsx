@@ -273,18 +273,19 @@ export default function Map() {
     }
   };
 
-  const handleSearchInView = () => {
+  const handleSearchInView = (bounds?: L.LatLngBounds) => {
     // This is an explicit user action - clear all interaction locks
     clearMapInteractionLock();
     
-    // Get current map bounds from the map ref
-    if (mapRef.current) {
-      const bounds = mapRef.current.getBounds();
-      const center = bounds.getCenter();
+    // Get current map bounds from the map ref or from parameter
+    const mapBounds = bounds || (mapRef.current ? mapRef.current.getBounds() : null);
+    
+    if (mapBounds) {
+      const center = mapBounds.getCenter();
       
       // Calculate approximate radius from bounds
-      const northEast = bounds.getNorthEast();
-      const southWest = bounds.getSouthWest();
+      const northEast = mapBounds.getNorthEast();
+      const southWest = mapBounds.getSouthWest();
       const radiusKm = Math.max(
         calculateDistance(center.lat, center.lng, northEast.lat, northEast.lng),
         calculateDistance(center.lat, center.lng, southWest.lat, southWest.lng)
@@ -617,6 +618,7 @@ export default function Map() {
             center={mapCenter || undefined}
             zoom={mapZoom}
             onMarkerClick={handleMarkerClick}
+            onSearchInView={handleSearchInView}
             highlightedGeocache={highlightedGeocache || undefined}
             showStyleSelector={true}
             isNearMeActive={showNearMe}
@@ -859,6 +861,7 @@ export default function Map() {
                   center={mapCenter || undefined}
                   zoom={mapZoom}
                   onMarkerClick={handleMarkerClick}
+                  onSearchInView={handleSearchInView}
                   highlightedGeocache={highlightedGeocache || undefined}
                   showStyleSelector={true}
                   isNearMeActive={showNearMe}
