@@ -53,6 +53,30 @@ export function VerificationQRDialog({
     }
   }, [isOpen, naddr, verificationKeyPair.nsec, toast, qrType]);
 
+  // Separate effect to handle QR type changes when dialog is already open
+  useEffect(() => {
+    if (isOpen && qrDataUrl && naddr && verificationKeyPair.nsec) {
+      setIsGenerating(true);
+      setQrDataUrl(''); // Clear previous QR code immediately
+      
+      // Small delay to ensure state update is processed
+      setTimeout(() => {
+        generateVerificationQR(naddr, verificationKeyPair.nsec, qrType)
+          .then((dataUrl) => {
+            setQrDataUrl(dataUrl);
+          })
+          .catch((error) => {
+            toast({
+              title: 'QR Generation Failed',
+              description: error instanceof Error ? error.message : 'Unable to generate QR code. Please try again.',
+              variant: 'destructive',
+            });
+          })
+          .finally(() => setIsGenerating(false));
+      }, 50);
+    }
+  }, [qrType]); // Only depend on qrType for this effect
+
   const handleQrTypeChange = (type: 'full' | 'cutout' | 'micro') => {
     setQrType(type);
   };

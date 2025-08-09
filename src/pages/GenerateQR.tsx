@@ -125,6 +125,20 @@ export default function GenerateQR() {
     }
   }, [qrType, naddr, verificationKeyPair, generateQR]);
 
+  // Additional effect to handle QR type changes more robustly
+  useEffect(() => {
+    if (qrType && naddr && verificationKeyPair && qrDataUrl) {
+      // Clear current QR code immediately to show loading state
+      setQrDataUrl('');
+      setIsGenerating(true);
+      
+      // Small delay to ensure state updates are processed
+      setTimeout(() => {
+        generateQR();
+      }, 100);
+    }
+  }, [qrType]); // Only trigger on qrType changes
+
   if (!user) {
     return (
       <PageLayout maxWidth="md" className="py-16">
