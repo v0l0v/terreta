@@ -74,10 +74,12 @@ export function useUserFoundCaches(targetPubkey?: string, allGeocaches?: Geocach
               g => g.pubkey === geocachePubkey && g.dTag === dTag
             );
             
-            // If not found in the provided array, fetch it individually using the geocache store
-            // This ensures we get complete data with all stats
+            // If not found in the provided array, this means the geocache is not in the unified stats system
+            // This could happen if the geocache was created by someone outside the current user's WoT filter
+            // or if there's a sync issue. In this case, we should fetch the basic geocache data
+            // but we won't have stats from the unified system.
             if (!geocache) {
-              console.log(`🔍 useUserFoundCaches: Geocache not found in provided data, fetching individually: ${ref}`);
+              console.log(`🔍 useUserFoundCaches: Geocache not found in unified data, fetching basic data: ${ref}`);
               
               // Fetch the geocache normally using the geocache store
               const geocacheResult = await geocacheStore.fetchUserGeocaches(geocachePubkey);
@@ -95,9 +97,20 @@ export function useUserFoundCaches(targetPubkey?: string, allGeocaches?: Geocach
                 continue;
               }
               
-              console.log(`🔍 useUserFoundCaches: Fetched geocache individually:`, geocache.name);
+              console.log(`🔍 useUserFoundCaches: Fetched basic geocache data:`, geocache.name);
+              
+              // Since this geocache is not in the unified system, we need to add default stats
+              // The stats will be 0 since we can't get them from the unified system
+              geocache = {
+                ...geocache,
+                foundCount: 0,
+                logCount: 0,
+                zapTotal: 0,
+              };
+              
+              console.warn(`🔍 useUserFoundCaches: Geocache ${geocache.name} not in unified system, using default stats`);
             } else {
-              console.log(`🔍 useUserFoundCaches: Found geocache in provided data: ${geocache.name}`);
+              console.log(`🔍 useUserFoundCaches: Found geocache in unified data: ${geocache.name}`);
             }
             
             // Log the stats we found
