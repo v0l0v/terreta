@@ -3,7 +3,6 @@
 
 import NostrProvider from '@/components/NostrProvider'
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NostrLoginProvider } from '@nostrify/react/login';
@@ -44,7 +43,7 @@ export function App() {
   // Initialize cache cleanup manager
   useEffect(() => {
     const cacheCleanup = initializeCacheCleanup(queryClient);
-    
+
     return () => {
       cacheCleanup.stop();
     };
@@ -68,9 +67,8 @@ export function App() {
                     <div className="min-h-screen flex flex-col">
                       <AppRouter />
                     </div>
-                    
+
                     <Toaster />
-                    <Sonner />
                   </TooltipProvider>
                 </StoreProvider>
               </NWCProvider>
