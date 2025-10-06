@@ -1,5 +1,5 @@
 import { Moon, Sun, Sword, Monitor } from "lucide-react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/shared/hooks/useTheme"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,7 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
 
   // Adventure theme styling - matches the navigation bar brown
   const adventureClasses = "adventure:bg-[rgb(74,64,61)] adventure:border-[rgb(60,50,47)] adventure:text-stone-200 adventure:hover:bg-[rgb(60,50,47)]";
-  
+
   const getAdventureClasses = () => {
     // Mobile sheet doesn't need special adventure styling
     return variant === 'mobile-sheet' ? "" : adventureClasses;
@@ -45,8 +45,8 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
 
   if (!mounted) {
     return (
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         size={variant === 'mobile-sheet' ? 'sm' : 'icon'}
         disabled
         className={cn(
@@ -115,8 +115,8 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             className={cn(getAdventureClasses(), "flex-1 justify-start gap-2")}
           >
@@ -135,11 +135,11 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="icon"
             className={cn(
-              getAdventureClasses(), 
+              getAdventureClasses(),
               "h-6 w-6 p-0",
               // Ensure proper contrast in light mode - stronger borders and text
               "border-border text-gray-800 dark:text-foreground hover:bg-gray-100 dark:hover:bg-accent hover:text-gray-900 dark:hover:text-accent-foreground bg-transparent"
@@ -176,8 +176,8 @@ export function ThemeToggle({ variant = 'default' }: ThemeToggleProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="icon"
           className={cn(getAdventureClasses())}
         >

@@ -47,7 +47,7 @@ const TreesForestIcon = ({ className, ...props }: { className?: string }) => (
   </svg>
 );
 import { CacheIcon } from '@/features/geocache/utils/cacheIcons';
-import { useTheme } from 'next-themes';
+import { useTheme } from "@/shared/hooks/useTheme";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -74,7 +74,7 @@ interface CacheNameFieldProps {
 export function CacheNameField({ value, onChange, required = false, fieldId = "name" }: CacheNameFieldProps) {
   const suggestions = [
     "Hidden Treasure at [Location]",
-    "Secret of [Landmark]", 
+    "Secret of [Landmark]",
     "[Location] Mystery Cache",
     "Adventure at [Place]"
   ];
@@ -169,35 +169,35 @@ interface CacheSelectFieldProps {
 
 export function CacheTypeField({ value, onChange }: Omit<CacheSelectFieldProps, 'label' | 'options'>) {
   const { theme } = useTheme();
-  
+
   const typeOptions = [
-    { 
-      value: "traditional", 
-      name: "Traditional", 
+    {
+      value: "traditional",
+      name: "Traditional",
       description: "Classic geocache at given coordinates",
       example: "Container hidden at the exact GPS location"
     },
-    { 
-      value: "multi", 
-      name: "Multi-Cache", 
+    {
+      value: "multi",
+      name: "Multi-Cache",
       description: "Multiple stages leading to final cache",
       example: "Visit several waypoints to gather final coordinates"
     },
-    { 
-      value: "mystery", 
-      name: "Mystery/Puzzle", 
+    {
+      value: "mystery",
+      name: "Mystery/Puzzle",
       description: "Solve a puzzle to find coordinates",
       example: "Decode clues, solve riddles, or complete challenges"
     }
   ];
-  
+
   return (
     <div className="space-y-3 text-foreground">
       <Label>
         What type of cache?
         <span className="text-xs text-muted-foreground block mt-1">Choose the cache style</span>
       </Label>
-      
+
       <div className="grid grid-cols-3 gap-2">
         {typeOptions.map((type) => {
           return (
@@ -219,7 +219,7 @@ export function CacheTypeField({ value, onChange }: Omit<CacheSelectFieldProps, 
           );
         })}
       </div>
-      
+
       {value && (
         <div className="bg-muted/30 p-2 rounded-md">
           <p className="text-xs text-orange-700 dark:text-orange-300">
@@ -233,50 +233,50 @@ export function CacheTypeField({ value, onChange }: Omit<CacheSelectFieldProps, 
 
 export function CacheSizeField({ value, onChange }: Omit<CacheSelectFieldProps, 'label' | 'options'>) {
   const sizeOptions = [
-    { 
-      value: "micro", 
-      name: "Micro", 
+    {
+      value: "micro",
+      name: "Micro",
       icon: Dot,
       description: "Film canister or smaller",
       example: "Pill bottle, magnetic nano"
     },
-    { 
-      value: "small", 
-      name: "Small", 
+    {
+      value: "small",
+      name: "Small",
       icon: Square,
       description: "Sandwich container size",
       example: "Small tupperware, mint tin"
     },
-    { 
-      value: "regular", 
-      name: "Regular", 
+    {
+      value: "regular",
+      name: "Regular",
       icon: Package,
       description: "Shoebox or tupperware",
       example: "Lock & lock container, shoebox"
     },
-    { 
-      value: "large", 
-      name: "Large", 
+    {
+      value: "large",
+      name: "Large",
       icon: Archive,
       description: "Bucket or ammo can",
       example: "Ammo can, large storage box"
     },
-    { 
-      value: "other", 
-      name: "Other", 
+    {
+      value: "other",
+      name: "Other",
       icon: HelpCircle,
       description: "Unusual or virtual cache",
       example: "Virtual cache, unusual container"
     }
   ];
-  
+
   return (
     <div className="space-y-3 text-foreground">
       <Label>
         Container size
         <span className="text-xs text-muted-foreground block mt-1">Choose the container size</span>
       </Label>
-      
+
       <div className="grid grid-cols-5 gap-2">
         {sizeOptions.map((size) => {
           const IconComponent = size.icon;
@@ -303,7 +303,7 @@ export function CacheSizeField({ value, onChange }: Omit<CacheSelectFieldProps, 
           );
         })}
       </div>
-      
+
       {value && (
         <div className="bg-muted/30 p-2 rounded-md">
           <p className="text-xs text-purple-700 dark:text-purple-300">
@@ -317,52 +317,52 @@ export function CacheSizeField({ value, onChange }: Omit<CacheSelectFieldProps, 
 
 export function CacheDifficultyField({ value, onChange }: Omit<CacheSelectFieldProps, 'label' | 'options'>) {
   const numericValue = parseInt(value) || 1;
-  
+
   const difficultyLevels = [
-    { 
-      level: 1, 
-      name: "Easy", 
+    {
+      level: 1,
+      name: "Easy",
       icon: Eye,
       description: "Simple find, minimal thinking required",
       example: "Cache is visible or in an obvious hiding spot"
     },
-    { 
-      level: 2, 
-      name: "Moderate", 
+    {
+      level: 2,
+      name: "Moderate",
       icon: Search,
       description: "Some problem-solving needed",
       example: "May require reading clues or simple puzzle solving"
     },
-    { 
-      level: 3, 
-      name: "Challenging", 
+    {
+      level: 3,
+      name: "Challenging",
       icon: Lightbulb,
       description: "Requires planning and effort",
       example: "Multi-step puzzle or research required"
     },
-    { 
-      level: 4, 
-      name: "Hard", 
+    {
+      level: 4,
+      name: "Hard",
       icon: Brain,
       description: "Challenging, may need special skills",
       example: "Complex puzzles, special tools, or knowledge needed"
     },
-    { 
-      level: 5, 
-      name: "Expert", 
+    {
+      level: 5,
+      name: "Expert",
       icon: Cpu,
       description: "Extremely difficult, expert level",
       example: "Advanced cryptography, specialized skills required"
     }
   ];
-  
+
   return (
     <div className="space-y-3 text-foreground">
       <Label>
         How hard is it to solve?
         <span className="text-xs text-muted-foreground block mt-1">Mental challenge level</span>
       </Label>
-      
+
       {/* Desktop: 5 options in a single row */}
       <div className="hidden md:grid md:grid-cols-5 gap-2">
         {difficultyLevels.map((level) => {
@@ -394,7 +394,7 @@ export function CacheDifficultyField({ value, onChange }: Omit<CacheSelectFieldP
           );
         })}
       </div>
-      
+
       {/* Mobile: 3 options in first row, 2 options centered in second row */}
       <div className="md:hidden space-y-2">
         {/* First row: 3 options */}
@@ -428,7 +428,7 @@ export function CacheDifficultyField({ value, onChange }: Omit<CacheSelectFieldP
             );
           })}
         </div>
-        
+
         {/* Second row: 2 options centered */}
         <div className="flex gap-2 justify-center">
           {difficultyLevels.slice(3).map((level) => {
@@ -461,7 +461,7 @@ export function CacheDifficultyField({ value, onChange }: Omit<CacheSelectFieldP
           })}
         </div>
       </div>
-      
+
       {numericValue > 0 && (
         <div className="bg-muted/30 p-2 rounded-md">
           <p className="text-xs text-green-700 dark:text-green-300">
@@ -475,52 +475,52 @@ export function CacheDifficultyField({ value, onChange }: Omit<CacheSelectFieldP
 
 export function CacheTerrainField({ value, onChange }: Omit<CacheSelectFieldProps, 'label' | 'options'>) {
   const numericValue = parseInt(value) || 1;
-  
+
   const terrainLevels = [
-    { 
-      level: 1, 
-      name: "Easy Walk", 
+    {
+      level: 1,
+      name: "Easy Walk",
       icon: SneakerIcon,
       description: "Wheelchair accessible, paved paths",
       example: "Sidewalks, parking lots, accessible trails"
     },
-    { 
-      level: 2, 
-      name: "Light Hike", 
+    {
+      level: 2,
+      name: "Light Hike",
       icon: Footprints,
       description: "Suitable for most, minor obstacles",
       example: "Gravel paths, slight inclines, easy trails"
     },
-    { 
-      level: 3, 
-      name: "Moderate Hike", 
+    {
+      level: 3,
+      name: "Moderate Hike",
       icon: TreesForestIcon,
       description: "Not suitable for all, some climbing",
       example: "Uneven terrain, hills, some scrambling"
     },
-    { 
-      level: 4, 
-      name: "Difficult Hike", 
+    {
+      level: 4,
+      name: "Difficult Hike",
       icon: Mountain,
       description: "Experienced hikers, special equipment",
       example: "Steep climbs, rough terrain, may need gear"
     },
-    { 
-      level: 5, 
-      name: "Extreme", 
+    {
+      level: 5,
+      name: "Extreme",
       icon: Pickaxe,
       description: "Extreme conditions, serious hazards",
       example: "Rock climbing, dangerous conditions, expert only"
     }
   ];
-  
+
   return (
     <div className="space-y-3 text-foreground">
       <Label>
         How hard is it to reach?
         <span className="text-xs text-muted-foreground block mt-1">Physical challenge level</span>
       </Label>
-      
+
       {/* Desktop: 5 options in a single row */}
       <div className="hidden md:grid md:grid-cols-5 gap-2">
         {terrainLevels.map((level) => {
@@ -552,7 +552,7 @@ export function CacheTerrainField({ value, onChange }: Omit<CacheSelectFieldProp
           );
         })}
       </div>
-      
+
       {/* Mobile: 3 options in first row, 2 options centered in second row */}
       <div className="md:hidden space-y-2">
         {/* First row: 3 options */}
@@ -586,7 +586,7 @@ export function CacheTerrainField({ value, onChange }: Omit<CacheSelectFieldProp
             );
           })}
         </div>
-        
+
         {/* Second row: 2 options centered */}
         <div className="flex gap-2 justify-center">
           {terrainLevels.slice(3).map((level) => {
@@ -619,7 +619,7 @@ export function CacheTerrainField({ value, onChange }: Omit<CacheSelectFieldProp
           })}
         </div>
       </div>
-      
+
       {numericValue > 0 && (
         <div className="bg-muted/30 p-2 rounded-md">
           <p className="text-xs text-blue-700 dark:text-blue-300">
@@ -704,7 +704,7 @@ export function CacheImageManager({ images, onImagesChange, disabled = false, cl
   return (
     <div className={cn("space-y-2 text-foreground", className)}>
       <Label>Images</Label>
-      
+
       {/* Image List */}
       {images.map((url, index) => (
         <div key={index} className="flex items-center gap-2 p-2 border rounded">
@@ -730,7 +730,7 @@ export function CacheImageManager({ images, onImagesChange, disabled = false, cl
           </Button>
         </div>
       ))}
-      
+
       {/* Upload Button */}
       <div className="flex items-center gap-2 text-foreground">
         <Input
@@ -765,7 +765,7 @@ export function GeocacheForm({
   fieldPrefix = "",
   className
 }: GeocacheFormProps) {
-  
+
   const updateField = (field: keyof GeocacheFormData, value: string | boolean) => {
     onFormDataChange({
       ...formData,
@@ -781,21 +781,21 @@ export function GeocacheForm({
           <h3 className="text-lg font-medium text-foreground">Basic Information</h3>
           <p className="text-sm text-muted-foreground">Tell seekers about your cache</p>
         </div>
-        
+
         <CacheNameField
           value={formData.name}
           onChange={(value) => updateField('name', value)}
           required={showRequiredMarkers}
           fieldId={fieldPrefix ? `${fieldPrefix}-name` : 'name'}
         />
-        
+
         <CacheDescriptionField
           value={formData.description}
           onChange={(value) => updateField('description', value)}
           required={showRequiredMarkers}
           fieldId={fieldPrefix ? `${fieldPrefix}-description` : 'description'}
         />
-        
+
         <CacheHintField
           value={formData.hint}
           onChange={(value) => updateField('hint', value)}
@@ -809,28 +809,28 @@ export function GeocacheForm({
           <h3 className="text-lg font-medium text-foreground">Cache Properties</h3>
           <p className="text-sm text-muted-foreground">Set the type, size, and challenge level</p>
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <CacheTypeField
             value={formData.type}
             onChange={(value) => updateField('type', value)}
             fieldId={fieldPrefix ? `${fieldPrefix}-type` : 'type'}
           />
-          
+
           <CacheSizeField
             value={formData.size}
             onChange={(value) => updateField('size', value)}
             fieldId={fieldPrefix ? `${fieldPrefix}-size` : 'size'}
           />
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <CacheDifficultyField
             value={formData.difficulty}
             onChange={(value) => updateField('difficulty', value)}
             fieldId={fieldPrefix ? `${fieldPrefix}-difficulty` : 'difficulty'}
           />
-          
+
           <CacheTerrainField
             value={formData.terrain}
             onChange={(value) => updateField('terrain', value)}
@@ -857,7 +857,7 @@ export function GeocacheForm({
           <h3 className="text-lg font-medium text-foreground">Images</h3>
           <p className="text-sm text-muted-foreground">Add photos to help seekers identify the area</p>
         </div>
-        
+
         <CacheImageManager
           images={images}
           onImagesChange={onImagesChange}
@@ -871,7 +871,7 @@ export function GeocacheForm({
           <h3 className="text-lg font-medium text-foreground">Visibility</h3>
           <p className="text-sm text-muted-foreground">Control who can find your cache</p>
         </div>
-        
+
         <CacheHiddenField
           checked={formData.hidden || false}
           onChange={(checked) => updateField('hidden', checked)}

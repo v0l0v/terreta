@@ -1,6 +1,7 @@
-import { ThemeProvider as NextThemesProvider } from "next-themes"
-import { type ThemeProviderProps } from "next-themes/dist/types"
+import React from 'react';
+import { ThemeProvider as CustomThemeProvider } from "@/shared/hooks/useTheme"
+import { type ThemeProviderProps } from "@/shared/hooks/useTheme"
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  return React.createElement(CustomThemeProvider, props, children);
 }

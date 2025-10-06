@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useAppContext } from "@/shared/hooks/useAppContext";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { RelayCombobox } from "@/components/RelayCombobox";
 
 interface RelaySelectorProps {
@@ -23,7 +23,7 @@ export function RelaySelector(props: RelaySelectorProps) {
   const { config, updateConfig, presetRelays = [] } = useAppContext();
   const { theme } = useTheme();
   const isAdventureTheme = theme === 'adventure';
-  
+
   const selectedRelay = config.relayUrl;
   const setSelectedRelay = (relay: string) => {
     updateConfig((current) => ({ ...current, relayUrl: relay }));
@@ -39,12 +39,12 @@ export function RelaySelector(props: RelaySelectorProps) {
   const normalizeRelayUrl = (url: string): string => {
     const trimmed = url.trim();
     if (!trimmed) return trimmed;
-    
+
     // Check if it already has a protocol
     if (trimmed.includes('://')) {
       return trimmed;
     }
-    
+
     // Add wss:// prefix
     return `wss://${trimmed}`;
   };
@@ -72,7 +72,7 @@ export function RelaySelector(props: RelaySelectorProps) {
   const isValidRelayInput = (value: string): boolean => {
     const trimmed = value.trim();
     if (!trimmed) return false;
-    
+
     // Basic validation - should contain at least a domain-like structure
     const normalized = normalizeRelayUrl(trimmed);
     try {
@@ -93,20 +93,20 @@ export function RelaySelector(props: RelaySelectorProps) {
       {/* Mobile: Use select dropdown */}
       <div className={cn("md:hidden space-y-2", className)} data-testid="mobile-relay-selector">
         <div className="flex items-center gap-2">
-          <Select 
-            value={isCustomRelay ? "custom" : selectedRelay} 
+          <Select
+            value={isCustomRelay ? "custom" : selectedRelay}
             onValueChange={handlePresetSelection}
           >
-            <SelectTrigger 
+            <SelectTrigger
               className={cn(
                 "flex-1 text-foreground",
                 isAdventureTheme && "!bg-stone-700 !border-stone-600 !text-stone-200 hover:!bg-stone-600 hover:!text-stone-100"
               )}
             >
               <SelectValue placeholder="Select relay...">
-                {selectedOption 
-                  ? selectedOption.name 
-                  : isCustomRelay 
+                {selectedOption
+                  ? selectedOption.name
+                  : isCustomRelay
                     ? selectedRelay.replace(/^wss?:\/\//, '')
                     : "Select relay..."
                 }
@@ -129,7 +129,7 @@ export function RelaySelector(props: RelaySelectorProps) {
               </SelectItem>
             </SelectContent>
           </Select>
-          
+
           {isCustomRelay && (
             <Button
               variant="outline"

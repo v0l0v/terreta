@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
 import { LatLngExpression, LatLngBounds } from "leaflet";
 import L from "leaflet";
 import { createRoot } from "react-dom/client";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/shared/hooks/useTheme";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { MapStyleSelector } from "./MapStyleSelector";
 import { SearchInViewButton } from "./SearchInViewButton";
@@ -25,31 +25,31 @@ import "../map.css";
 // Create HTML popup content for geocaches
 const createGeocachePopupHTML = (geocache: Geocache) => {
   // Pre-escape and truncate description
-  const description = geocache.description.length > 100 
-    ? geocache.description.substring(0, 100) + '...' 
+  const description = geocache.description.length > 100
+    ? geocache.description.substring(0, 100) + '...'
     : geocache.description;
-  
+
   return `
     <div class="p-3 min-w-[200px] max-w-[280px]">
       <h3 class="font-semibold text-sm leading-tight mb-2">${geocache.name}</h3>
-      
+
       <div class="flex flex-wrap gap-1 mb-2">
         <span class="px-2 py-1 text-xs bg-secondary rounded">D${geocache.difficulty}</span>
         <span class="px-2 py-1 text-xs bg-secondary rounded">T${geocache.terrain}</span>
         <span class="px-2 py-1 text-xs bg-secondary rounded">${getSizeLabel(geocache.size)}</span>
         <span class="px-2 py-1 text-xs bg-secondary rounded">${getTypeLabel(geocache.type)}</span>
       </div>
-      
+
       <p class="text-xs text-gray-600 mb-3 line-clamp-2">${description}</p>
-      
+
       <div class="flex gap-2">
-        <button 
+        <button
           class="flex-1 bg-blue-600 text-white text-xs px-3 py-2 rounded hover:bg-blue-700 transition-colors"
           onclick="window.dispatchEvent(new CustomEvent('geocache-view-details', { detail: '${geocache.dTag}' }))"
         >
           View Details
         </button>
-        <button 
+        <button
           class="inline-flex items-center justify-center p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
           onclick="window.open('https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}', '_blank')"
           title="Get directions"
@@ -67,7 +67,7 @@ const createGeocachePopupHTML = (geocache: Geocache) => {
 const createCacheIcon = (type: string, isAdventureTheme: boolean = false) => {
   const iconSvg = getCacheIconSvg(type);
   const color = getCacheColor(type);
-  
+
   if (isAdventureTheme) {
     // Adventure-style quest markers - slightly more blue with parchment texture
     const adventureColors = {
@@ -76,11 +76,11 @@ const createCacheIcon = (type: string, isAdventureTheme: boolean = false) => {
       icon: '#FFFFFF',       // Pure white - maximum contrast against sepia
       shadow: '#4682B4',     // Steel blue shadow
     };
-    
+
     return L.divIcon({
       html: `
         <div style="
-          background: 
+          background:
             url('/parchment-50.jpg'),
             ${adventureColors.background};
           background-blend-mode: soft-light;
@@ -126,7 +126,7 @@ const createCacheIcon = (type: string, isAdventureTheme: boolean = false) => {
       popupAnchor: [0, -42],
     });
   }
-  
+
   // Standard theme icons
   return L.divIcon({
     html: `
@@ -206,24 +206,24 @@ const userLocationIcon = L.divIcon({
         background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         border: 3px solid white;
         border-radius: 50%;
-        box-shadow: 
+        box-shadow:
           0 3px 8px rgba(0,0,0,0.3),
           inset 0 1px 0 rgba(255,255,255,0.4);
       "></div>
     </div>
     <style>
       @keyframes locationPulse {
-        0% { 
-          transform: scale(1); 
-          opacity: 0.8; 
+        0% {
+          transform: scale(1);
+          opacity: 0.8;
         }
-        50% { 
-          transform: scale(1.4); 
-          opacity: 0.4; 
+        50% {
+          transform: scale(1.4);
+          opacity: 0.4;
         }
-        100% { 
-          transform: scale(2); 
-          opacity: 0; 
+        100% {
+          transform: scale(2);
+          opacity: 0;
         }
       }
     </style>
@@ -254,14 +254,14 @@ interface GeocacheMapProps {
 
 
 // Component to handle map centering
-function MapController({ 
-  center, 
+function MapController({
+  center,
   zoom,
   searchLocation,
   searchRadius,
   isMapCenterLocked = false
-}: { 
-  center: LatLngExpression; 
+}: {
+  center: LatLngExpression;
   zoom: number;
   searchLocation?: { lat: number; lng: number } | null;
   searchRadius?: number;
@@ -287,23 +287,23 @@ function MapController({
 }
 
 // Component to handle theme styling
-function ThemeController({ 
+function ThemeController({
   currentStyle,
   appTheme,
   systemTheme
-}: { 
+}: {
   currentStyle: string;
   appTheme?: string;
   systemTheme?: string;
 }) {
   const map = useMap();
-  
+
   useEffect(() => {
     const container = map.getContainer();
-    
+
     // Remove all theme classes
     container.classList.remove('dark-theme', 'adventure-theme', 'system-dark-theme');
-    
+
     // Add current theme class
     if (currentStyle === 'dark') {
       container.classList.add('dark-theme');
@@ -317,15 +317,15 @@ function ThemeController({
       // If app theme is explicitly light, don't add any dark theme classes
     }
   }, [map, currentStyle, appTheme, systemTheme]);
-  
+
   return null;
 }
 
 // Component to handle popup opening for highlighted geocache
-function PopupController({ 
+function PopupController({
   highlightedGeocache,
   geocaches
-}: { 
+}: {
   highlightedGeocache?: string;
   geocaches: Geocache[];
 }) {
@@ -334,13 +334,13 @@ function PopupController({
   const popupAttemptsRef = useRef<number>(0);
   const maxAttempts = 15;
   const isOpeningRef = useRef<boolean>(false);
-  
+
   useEffect(() => {
     if (highlightedGeocache && highlightedGeocache !== lastHighlightedRef.current) {
       lastHighlightedRef.current = highlightedGeocache;
       popupAttemptsRef.current = 0;
       isOpeningRef.current = true;
-      
+
       // Find the geocache
       const geocache = geocaches.find(g => g.dTag === highlightedGeocache);
       if (geocache) {
@@ -352,21 +352,21 @@ function PopupController({
             isOpeningRef.current = false;
             return;
           }
-          
+
           let markerFound = false;
-          
+
           // Search through all layers to find the marker, including cluster groups
           map.eachLayer((layer: L.Layer) => {
             if (layer instanceof L.Marker && 'getLatLng' in layer && !markerFound) {
               const markerLatLng = (layer as L.Marker).getLatLng();
-              if (Math.abs(markerLatLng.lat - geocache.location.lat) < 0.0001 && 
+              if (Math.abs(markerLatLng.lat - geocache.location.lat) < 0.0001 &&
                   Math.abs(markerLatLng.lng - geocache.location.lng) < 0.0001) {
-                
+
                 const marker = layer as L.Marker;
-                
+
                 // Force close any existing popups first
                 map.closePopup();
-                
+
                 // Check if marker has a popup bound
                 if (marker.getPopup()) {
                   // Force open the popup with a small delay to ensure it's ready
@@ -396,7 +396,7 @@ function PopupController({
                     keepInView: true,
                     closeOnClick: false
                   });
-                  
+
                   setTimeout(() => {
                     try {
                       marker.openPopup();
@@ -414,7 +414,7 @@ function PopupController({
               }
             }
           });
-          
+
           // If marker wasn't found, try again with exponential backoff
           if (!markerFound && isOpeningRef.current) {
             const delay = Math.min(50 * Math.pow(1.3, attempt), 800); // Exponential backoff, max 800ms
@@ -424,7 +424,7 @@ function PopupController({
             }, delay);
           }
         };
-        
+
         // Start attempting to open popup after a very short delay for map to settle
         setTimeout(() => {
           attemptOpenPopup(1);
@@ -436,14 +436,14 @@ function PopupController({
       isOpeningRef.current = false;
     }
   }, [map, highlightedGeocache, geocaches]);
-  
+
   return null;
 }
 
 // Component to handle map size invalidation
 function MapSizeController() {
   const map = useMap();
-  
+
   useEffect(() => {
     // Add a small delay to ensure map is fully initialized
     const timer = setTimeout(() => {
@@ -451,79 +451,79 @@ function MapSizeController() {
         map.invalidateSize();
       }
     }, 100);
-    
+
     // Also invalidate size on window resize
     const handleResize = () => {
       if (map && typeof map.invalidateSize === 'function') {
         map.invalidateSize();
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
-    
+
     return () => {
       clearTimeout(timer);
       window.removeEventListener('resize', handleResize);
     };
   }, [map]);
-  
+
   return null;
 }
 
 // Component to expose map reference and handle loading state
-function MapRefController({ 
-  mapRef, 
-  onMapReady 
-}: { 
+function MapRefController({
+  mapRef,
+  onMapReady
+}: {
   mapRef?: React.RefObject<L.Map>;
   onMapReady?: () => void;
 }) {
   const map = useMap();
-  
+
   useEffect(() => {
     // Expose map reference immediately
     if (mapRef && 'current' in mapRef) {
       (mapRef as React.MutableRefObject<L.Map | null>).current = map;
     }
-    
+
     // Mark map as ready almost immediately - just a tiny delay for DOM
     const timer = setTimeout(() => {
       onMapReady?.();
     }, 50); // Minimal delay
-    
+
     return () => clearTimeout(timer);
   }, [map, mapRef, onMapReady]);
-  
+
   return null;
 }
 
 // Custom Leaflet control for map style selector
-function MapStyleControl({ 
-  currentStyle, 
-  onStyleChange 
-}: { 
-  currentStyle: string; 
-  onStyleChange: (style: string) => void; 
+function MapStyleControl({
+  currentStyle,
+  onStyleChange
+}: {
+  currentStyle: string;
+  onStyleChange: (style: string) => void;
 }) {
   const map = useMap();
   const rootRef = useRef<ReturnType<typeof createRoot> | null>(null);
   const controlRef = useRef<L.Control | null>(null);
   const isInitializedRef = useRef(false);
-  
+
   // Use refs to store the latest props to avoid dependency issues
   const currentStyleRef = useRef(currentStyle);
   const onStyleChangeRef = useRef(onStyleChange);
-  
+
   // Update refs when props change
   useEffect(() => {
     currentStyleRef.current = currentStyle;
     onStyleChangeRef.current = onStyleChange;
   });
-  
+
   useEffect(() => {
     // Only initialize once
     if (isInitializedRef.current) return;
-    
+
     // Create a custom control
     const StyleControl = L.Control.extend({
       onAdd: function() {
@@ -533,11 +533,11 @@ function MapStyleControl({
         div.style.margin = '0';
         div.style.position = 'relative';
         div.style.zIndex = '1000';
-        
+
         // Prevent map interaction when clicking on the control
         L.DomEvent.disableClickPropagation(div);
         L.DomEvent.disableScrollPropagation(div);
-        
+
         // Create React root and render the MapStyleSelector
         rootRef.current = createRoot(div);
         rootRef.current.render(
@@ -546,16 +546,16 @@ function MapStyleControl({
             onStyleChange={onStyleChangeRef.current}
           />
         );
-        
+
         return div;
       }
     });
-    
+
     const styleControl = new StyleControl({ position: 'topright' });
     controlRef.current = styleControl;
     map.addControl(styleControl);
     isInitializedRef.current = true;
-    
+
     // Cleanup
     return () => {
       // Remove control first to prevent further interactions
@@ -563,12 +563,12 @@ function MapStyleControl({
         map.removeControl(controlRef.current);
         controlRef.current = null;
       }
-      
+
       // Unmount React root asynchronously to avoid synchronous unmount during render
       if (rootRef.current) {
         const root = rootRef.current;
         rootRef.current = null;
-        
+
         // Use setTimeout to defer unmounting until after current render cycle
         setTimeout(() => {
           try {
@@ -582,11 +582,11 @@ function MapStyleControl({
           }
         }, 0);
       }
-      
+
       isInitializedRef.current = false;
     };
   }, [map]); // Only depend on map
-  
+
   // Update the rendered component when props change (without recreating the control)
   useEffect(() => {
     if (rootRef.current && isInitializedRef.current) {
@@ -598,15 +598,15 @@ function MapStyleControl({
       );
     }
   }, [currentStyle, onStyleChange]);
-  
+
   return null;
 }
 
 // Custom component for search in view button - positioned at top center
-function SearchInViewControl({ 
+function SearchInViewControl({
   onSearchInView,
   isAdventureTheme
-}: { 
+}: {
   onSearchInView: (bounds: L.LatLngBounds) => void;
   isAdventureTheme: boolean;
 }) {
@@ -614,23 +614,23 @@ function SearchInViewControl({
   const containerRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<ReturnType<typeof createRoot> | null>(null);
   const isInitializedRef = useRef(false);
-  
+
   // Use refs to store the latest props to avoid dependency issues
   const onSearchInViewRef = useRef(onSearchInView);
   const isAdventureThemeRef = useRef(isAdventureTheme);
-  
+
   // Update refs when props change
   useEffect(() => {
     onSearchInViewRef.current = onSearchInView;
     isAdventureThemeRef.current = isAdventureTheme;
   });
-  
+
   useEffect(() => {
     // Only initialize once
     if (isInitializedRef.current) return;
-    
+
     const mapContainer = map.getContainer();
-    
+
     // Create container div for the search in view button
     const container = document.createElement('div');
     container.className = 'search-in-view-container';
@@ -642,11 +642,11 @@ function SearchInViewControl({
       z-index: 1000;
       pointer-events: auto;
     `;
-    
+
     // Add container to map container
     mapContainer.appendChild(container);
     containerRef.current = container;
-    
+
     // Create React root and render the SearchInViewButton
     rootRef.current = createRoot(container);
     rootRef.current.render(
@@ -656,19 +656,19 @@ function SearchInViewControl({
         isAdventureTheme={isAdventureThemeRef.current}
       />
     );
-    
+
     isInitializedRef.current = true;
-    
+
     // Cleanup
     return () => {
       if (containerRef.current && containerRef.current.parentNode) {
         containerRef.current.parentNode.removeChild(containerRef.current);
       }
-      
+
       if (rootRef.current) {
         const root = rootRef.current;
         rootRef.current = null;
-        
+
         setTimeout(() => {
           try {
             if (root && typeof root.unmount === 'function') {
@@ -679,11 +679,11 @@ function SearchInViewControl({
           }
         }, 0);
       }
-      
+
       isInitializedRef.current = false;
     };
   }, [map]); // Only depend on map
-  
+
   // Update the rendered component when props change
   useEffect(() => {
     if (rootRef.current && isInitializedRef.current) {
@@ -696,7 +696,7 @@ function SearchInViewControl({
       );
     }
   }, [onSearchInView, isAdventureTheme, map]);
-  
+
   return null;
 }
 
@@ -728,8 +728,8 @@ function OptimizedTileLayer({ mapStyle }: { mapStyle: MapStyle }) {
 
 // Map styles are now imported from MapStyleSelector component
 
-export function GeocacheMap({ 
-  geocaches, 
+export function GeocacheMap({
+  geocaches,
   center,
   zoom = 10,
   userLocation,
@@ -747,7 +747,7 @@ export function GeocacheMap({
   const { theme, systemTheme } = useTheme();
   const [isMapReady, setIsMapReady] = useState(false);
   const [isMapInitialized, setIsMapInitialized] = useState(false);
-  
+
   // Determine if we should use dark mode for the map
   const getDefaultMapStyle = () => {
     // First check app theme setting
@@ -761,14 +761,14 @@ export function GeocacheMap({
       // Use system preference if theme is set to system
       return systemTheme === "dark" ? "dark" : "original";
     }
-    
+
     // Fallback to system preference if theme is undefined (during mounting)
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return "dark";
     }
     return "original";
   };
-  
+
   const [currentMapStyle, setCurrentMapStyle] = useState(getDefaultMapStyle());
   const [hasManuallySelectedStyle, setHasManuallySelectedStyle] = useState(false);
   const mapStyle: MapStyle = (MAP_STYLES[currentMapStyle] || MAP_STYLES.original) as MapStyle;
@@ -796,7 +796,7 @@ export function GeocacheMap({
       } else if (theme === "system") {
         return systemTheme === "dark" ? "dark" : "original";
       }
-      
+
       // Fallback to system preference
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         return "dark";
@@ -881,16 +881,16 @@ export function GeocacheMap({
 
 
     window.addEventListener('geocache-view-details', handleViewDetails as EventListener);
-    
+
     return () => {
       window.removeEventListener('geocache-view-details', handleViewDetails as EventListener);
     };
   }, [geocaches, onMarkerClick, handleMarkerClick]);
 
   return (
-    <div 
-      className="relative h-full w-full overflow-hidden" 
-      style={{ 
+    <div
+      className="relative h-full w-full overflow-hidden"
+      style={{
         backgroundColor: '#f8fafc',
         minHeight: '100%'
       }}
@@ -899,7 +899,7 @@ export function GeocacheMap({
       {currentMapStyle === 'adventure' && (
         <>
           {/* Strong parchment overlay */}
-          <div 
+          <div
             className="absolute inset-0 pointer-events-none adventure-parchment-overlay"
             style={{
               backgroundColor: '#d2b48c',
@@ -908,9 +908,9 @@ export function GeocacheMap({
               zIndex: 1
             }}
           />
-          
+
           {/* Subtle border overlay */}
-          <div 
+          <div
             className="absolute inset-0 pointer-events-none adventure-border-overlay"
             style={{
               backgroundColor: 'slategray',
@@ -921,7 +921,7 @@ export function GeocacheMap({
           />
         </>
       )}
-      
+
       {/* Map Loading Skeleton - show only during initial map creation */}
       {!isMapInitialized && (
         <div className="absolute inset-0 z-10 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -931,7 +931,7 @@ export function GeocacheMap({
           </div>
         </div>
       )}
-      
+
       {/* Geocache Loading Indicator - subtle overlay when geocaches are loading */}
       {isMapInitialized && !isMapReady && geocaches.length === 0 && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/95 backdrop-blur-sm border rounded-full px-4 py-2 shadow-lg animate-in fade-in duration-300">
@@ -941,7 +941,7 @@ export function GeocacheMap({
           </div>
         </div>
       )}
-      
+
       <MapContainer
         center={mapCenter}
         zoom={zoom}
@@ -959,32 +959,32 @@ export function GeocacheMap({
         {...mapOptions}
       >
       <OptimizedTileLayer mapStyle={mapStyle} />
-      
+
       <MapSizeController />
-      
+
       <MapRefController mapRef={mapRef} onMapReady={() => setIsMapReady(true)} />
-      
-      
-      
-      <MapController 
-        center={mapCenter} 
-        zoom={zoom} 
+
+
+
+      <MapController
+        center={mapCenter}
+        zoom={zoom}
         searchLocation={searchLocation}
         searchRadius={searchRadius}
         isMapCenterLocked={isMapCenterLocked}
       />
-      
-      <ThemeController 
+
+      <ThemeController
         currentStyle={currentMapStyle}
         appTheme={theme}
         systemTheme={systemTheme}
       />
-      
-      <PopupController 
+
+      <PopupController
         highlightedGeocache={highlightedGeocache}
         geocaches={geocaches}
       />
-      
+
       {/* Map Style Control - properly integrated with Leaflet */}
       {showStyleSelector && (
         <MapStyleControl
@@ -992,7 +992,7 @@ export function GeocacheMap({
           onStyleChange={handleStyleChange}
         />
       )}
-      
+
       {/* Search in View Control - appears only when user has moved the map */}
       {showStyleSelector && onSearchInView && (
         <SearchInViewControl
@@ -1000,7 +1000,7 @@ export function GeocacheMap({
           isAdventureTheme={currentMapStyle === 'adventure'}
         />
       )}
-      
+
       {/* Search radius circle */}
       {searchLocation && searchRadius && (
         <Circle
@@ -1025,7 +1025,7 @@ export function GeocacheMap({
           }}
         />
       )}
-      
+
       {/* User location marker */}
       {userLocation && (
         <Marker
@@ -1033,7 +1033,7 @@ export function GeocacheMap({
           icon={userLocationIcon}
         ></Marker>
       )}
-      
+
       {/* Geocache markers with clustering */}
       <MarkerClusterGroup
         chunkedLoading={true}
@@ -1052,7 +1052,7 @@ export function GeocacheMap({
         iconCreateFunction={(cluster: { getChildCount: () => any; }) => {
           const count = cluster.getChildCount();
           const size = count < 10 ? 'small' : count < 100 ? 'medium' : 'large';
-          
+
           return L.divIcon({
             html: `<div class="cluster-marker cluster-${size}"><span>${count}</span></div>`,
             className: 'custom-cluster-icon',

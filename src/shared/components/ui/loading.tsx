@@ -3,7 +3,7 @@ import { LucideIcon, MapPin, Compass, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/shared/utils/utils';
-import { useTheme } from 'next-themes';
+import { useTheme } from "@/shared/hooks/useTheme";
 
 // ============================================================================
 // COMPASS SPINNER - Base component for all loading states
@@ -15,17 +15,17 @@ interface CompassSpinnerProps {
   className?: string;
 }
 
-export function CompassSpinner({ 
-  size = 'md', 
+export function CompassSpinner({
+  size = 'md',
   variant = 'component',
-  className = '' 
+  className = ''
 }: CompassSpinnerProps) {
   // Size mapping
-  const sizeClasses = typeof size === 'number' 
+  const sizeClasses = typeof size === 'number'
     ? { width: `${size}px`, height: `${size}px` }
     : {
         sm: 'h-4 w-4',
-        md: 'h-6 w-6', 
+        md: 'h-6 w-6',
         lg: 'h-8 w-8',
         xl: 'h-12 w-12'
       }[size];
@@ -36,7 +36,7 @@ export function CompassSpinner({
   const colorClass = variant === 'page' ? isAdventureTheme ? 'text-stone-600' : 'text-green-600' : 'text-muted-foreground';
 
   return (
-    <Compass 
+    <Compass
       className={cn('animate-spin', colorClass, typeof size === 'string' ? sizeClasses : '', className)}
       style={typeof size === 'number' ? sizeClasses as React.CSSProperties : undefined}
     />
@@ -79,15 +79,15 @@ export function LoadingState({
   const content = (
     <div className={cn('text-center', className)}>
       {showSpinner ? (
-        <CompassSpinner 
-          size={sizes.spinner as 'md' | 'lg' | 'xl'} 
+        <CompassSpinner
+          size={sizes.spinner as 'md' | 'lg' | 'xl'}
           variant={variant}
-          className="mx-auto mb-4" 
+          className="mx-auto mb-4"
         />
       ) : Icon ? (
         <Icon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
       ) : null}
-      
+
       <p className={cn('text-foreground font-medium', sizes.text)}>{title}</p>
       {description && (
         <p className={cn('text-muted-foreground mt-2', sizes.desc)}>{description}</p>
@@ -117,11 +117,11 @@ interface InlineLoadingProps {
   className?: string;
 }
 
-export function InlineLoading({ 
-  text, 
+export function InlineLoading({
+  text,
   variant = 'component',
   size = 'sm',
-  className 
+  className
 }: InlineLoadingProps) {
   return (
     <div className={cn('flex items-center gap-2', className)}>
@@ -164,7 +164,7 @@ export function ErrorState({
         <Icon className="h-12 w-12 text-red-400 mx-auto mb-4" />
         <p className="text-lg font-medium mb-2">{title}</p>
         {description && <p className="text-muted-foreground mb-4">{description}</p>}
-        
+
         <div className="space-y-2">
           {primaryAction}
           {onRetry && !primaryAction && (
@@ -175,7 +175,7 @@ export function ErrorState({
           )}
           {secondaryAction}
         </div>
-        
+
         {error && (
           <p className="text-xs text-muted-foreground mt-4">
             Error: {error instanceof Error ? error.message : error}
@@ -241,7 +241,7 @@ export function CompassLoading(props: {
   return <LoadingState {...props} variant="page" />;
 }
 
-// LoadingSpinner compatibility  
+// LoadingSpinner compatibility
 export function LoadingSpinner(props: {
   size?: 'sm' | 'md' | 'lg';
   className?: string;

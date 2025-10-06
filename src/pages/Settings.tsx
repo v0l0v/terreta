@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Palette, Sun, Moon, Monitor, Wifi, Compass, Settings as SettingsIcon } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { PageLayout } from "../components/layout";
@@ -142,7 +142,7 @@ export default function Settings() {
         {/* Web of Trust Settings */}
         <WotSettings />
 
-        
+
       </div>
     </PageLayout>
   );

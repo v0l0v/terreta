@@ -9,7 +9,7 @@ import { LocationSearch } from "@/components/LocationSearch";
 import { MapStyleSelector } from "@/features/map/components/MapStyleSelector";
 import { MAP_STYLES } from "@/features/map/constants/mapStyles";
 import { useGeolocation } from "@/features/map/hooks/useGeolocation";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { autocorrectCoordinates, parseCoordinate, formatCoordinateForInput } from "@/features/map/utils/coordinates";
 import { mapIcons } from "@/features/map/utils/mapIcons";
 
@@ -21,14 +21,14 @@ interface LocationPickerProps {
 }
 
 // Component to handle map clicks and center updates
-function LocationSelector({ 
-  value, 
+function LocationSelector({
+  value,
   onChange,
   center,
   beaconLocation,
   onPinDropped,
   onMapClick
-}: { 
+}: {
   value: { lat: number; lng: number } | null;
   onChange: (location: { lat: number; lng: number }) => void;
   center?: LatLngExpression;
@@ -37,7 +37,7 @@ function LocationSelector({
   onMapClick?: () => void;
 }) {
   const map = useMap();
-  
+
   useMapEvents({
     click: (e) => {
       onChange({
@@ -63,13 +63,13 @@ function LocationSelector({
     <>
       {/* Blue beacon for current/searched location */}
       {beaconLocation && (
-        <Marker 
-          position={[beaconLocation.lat, beaconLocation.lng]} 
+        <Marker
+          position={[beaconLocation.lat, beaconLocation.lng]}
           icon={mapIcons.blueBeacon}
           interactive={false}
         />
       )}
-      
+
       {/* Red pin for selected cache location */}
       {value && (
         <Marker position={[value.lat, value.lng]} icon={mapIcons.droppedPin} />
@@ -104,14 +104,14 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     } else if (theme === "system") {
       return systemTheme === "dark" ? "dark" : "original";
     }
-    
+
     // Fallback to system preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return "dark";
     }
     return "original";
   };
-  
+
   const [currentMapStyle, setCurrentMapStyle] = useState(getDefaultMapStyle());
   const [hasManuallySelectedStyle, setHasManuallySelectedStyle] = useState(false);
   const mapStyle = MAP_STYLES[currentMapStyle] || MAP_STYLES.original;
@@ -139,7 +139,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
       } else if (theme === "system") {
         return systemTheme === "dark" ? "dark" : "original";
       }
-      
+
       // Fallback to system preference
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         return "dark";
@@ -162,7 +162,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
           lng: formatCoordinateForInput(value.lng, true),
         });
       }
-      
+
       // Only update map center if pin wasn't just dropped
       if (!pinDropped) {
         setMapCenter([value.lat, value.lng]);
@@ -177,20 +177,20 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     // Only process if we have new coords that are different from last time
     if (coords && coords !== lastCoordsRef.current) {
       lastCoordsRef.current = coords;
-      
+
       // Apply autocorrection even to GPS coordinates (in case of device errors)
       const { lat, lng } = autocorrectCoordinates(coords.latitude, coords.longitude);
       const location = { lat, lng };
-      
+
       // Set beacon location for current location
       setBeaconLocation(location);
       setMapCenter([lat, lng]);
-      setManualCoords({ 
-        lat: formatCoordinateForInput(lat, true), 
-        lng: formatCoordinateForInput(lng, true) 
+      setManualCoords({
+        lat: formatCoordinateForInput(lat, true),
+        lng: formatCoordinateForInput(lng, true)
       });
       setManualCoordsModified(false);
-      
+
       // If no pin has been set yet, automatically set it at current location
       if (!value) {
         onChange(location);
@@ -219,12 +219,12 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
 
     // Apply autocorrection
     const { lat, lng, corrected } = autocorrectCoordinates(inputLat, inputLng);
-    
+
     // Update input fields to show corrected values
     if (corrected) {
-      setManualCoords({ 
-        lat: formatCoordinateForInput(lat, true), 
-        lng: formatCoordinateForInput(lng, true) 
+      setManualCoords({
+        lat: formatCoordinateForInput(lat, true),
+        lng: formatCoordinateForInput(lng, true)
       });
     }
 
@@ -237,18 +237,18 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
   const handleLocationSearch = (location: { lat: number; lng: number; name: string }) => {
     // Apply autocorrection to search results
     const { lat, lng } = autocorrectCoordinates(location.lat, location.lng);
-    
+
     const newLocation = { lat, lng };
     // Set beacon location for searched location
     setBeaconLocation(newLocation);
     setMapCenter([lat, lng]);
     // Update manual coords to show corrected values and reset modification flag
-    setManualCoords({ 
-      lat: formatCoordinateForInput(lat, true), 
-      lng: formatCoordinateForInput(lng, true) 
+    setManualCoords({
+      lat: formatCoordinateForInput(lat, true),
+      lng: formatCoordinateForInput(lng, true)
     });
     setManualCoordsModified(false);
-    
+
     // Don't automatically set the cache location - user must click on map
   };
 
@@ -267,16 +267,16 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
             url={mapStyle?.url ?? ''}
             maxZoom={19}
           />
-          <LocationSelector 
-            value={value} 
-            onChange={onChange} 
-            center={mapCenter} 
+          <LocationSelector
+            value={value}
+            onChange={onChange}
+            center={mapCenter}
             beaconLocation={beaconLocation}
             onPinDropped={() => setPinDropped(true)}
             onMapClick={() => setManualCoordsModified(false)}
           />
         </MapContainer>
-        
+
         {/* Map Style Selector - floating over the map */}
         <div className="absolute top-2 right-2 z-[3]">
           <MapStyleSelector
@@ -301,7 +301,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
         <div>
           <Label className="text-sm font-medium text-foreground">Search for a location</Label>
           <div className="mt-1">
-            <LocationSearch 
+            <LocationSearch
               onLocationSelect={handleLocationSearch}
               placeholder="Search city, zip code, or address..."
               mobilePlaceholder="Search for a location..."

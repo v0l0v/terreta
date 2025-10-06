@@ -4,7 +4,7 @@ import { PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CacheIcon } from "@/features/geocache/utils/cacheIcons";
-import { useTheme } from 'next-themes';
+import { useTheme } from "@/shared/hooks/useTheme";
 import { NIP_GC_KINDS } from "@/features/geocache/utils/nip-gc";
 
 export default function About() {
@@ -16,10 +16,10 @@ export default function About() {
         <Card>
           <CardHeader className="text-center py-12">
             <div className="flex justify-center mb-8">
-              <img 
-                src="/icon.svg" 
-                alt="Treasures" 
-                className="w-48 h-48" 
+              <img
+                src="/icon.svg"
+                alt="Treasures"
+                className="w-48 h-48"
               />
             </div>
             <CardTitle className="text-4xl font-bold mb-4 text-foreground">
@@ -41,14 +41,14 @@ export default function About() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground leading-relaxed">
-              Geocaching is a real-world treasure hunting game where participants use GPS coordinates 
-              to find hidden containers called "geocaches" or "caches." These containers are placed 
-              by other geocachers and can be found in urban areas, parks, forests, and remote locations 
+              Geocaching is a real-world treasure hunting game where participants use GPS coordinates
+              to find hidden containers called "geocaches" or "caches." These containers are placed
+              by other geocachers and can be found in urban areas, parks, forests, and remote locations
               around the world.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Each geocache contains a logbook where finders can record their visit, and larger caches 
-              may contain small trinkets for trading. The game combines outdoor adventure, problem-solving, 
+              Each geocache contains a logbook where finders can record their visit, and larger caches
+              may contain small trinkets for trading. The game combines outdoor adventure, problem-solving,
               and exploration, encouraging people to discover new places and hidden gems in their communities.
             </p>
           </CardContent>
@@ -64,15 +64,15 @@ export default function About() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground leading-relaxed">
-              Treasures is a decentralized geocaching platform built on the Nostr protocol. Unlike 
-              traditional geocaching platforms that rely on centralized servers, Treasures uses a 
-              network of relays to store and distribute geocache data, making it censorship-resistant 
+              Treasures is a decentralized geocaching platform built on the Nostr protocol. Unlike
+              traditional geocaching platforms that rely on centralized servers, Treasures uses a
+              network of relays to store and distribute geocache data, making it censorship-resistant
               and globally accessible.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              With Treasures, you can create, find, and log geocaches using your Nostr identity. 
-              The platform supports real-time updates and seamless integration 
-              with the broader Nostr ecosystem. Your geocaching activity is tied to your cryptographic 
+              With Treasures, you can create, find, and log geocaches using your Nostr identity.
+              The platform supports real-time updates and seamless integration
+              with the broader Nostr ecosystem. Your geocaching activity is tied to your cryptographic
               identity, ensuring authenticity while maintaining privacy.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
@@ -129,7 +129,7 @@ export default function About() {
                 <div>
                   <h4 className="font-semibold">Traditional</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    The classic geocache type. A container hidden at the given coordinates 
+                    The classic geocache type. A container hidden at the given coordinates
                     with a logbook inside.
                   </p>
                 </div>
@@ -144,7 +144,7 @@ export default function About() {
                 <div>
                   <h4 className="font-semibold">Multi-Cache</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    A sequence of locations leading to the final cache. Solve clues 
+                    A sequence of locations leading to the final cache. Solve clues
                     at each stage to find the next.
                   </p>
                 </div>
@@ -159,7 +159,7 @@ export default function About() {
                 <div>
                   <h4 className="font-semibold">Mystery</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Puzzle caches that require solving a mystery or puzzle to 
+                    Puzzle caches that require solving a mystery or puzzle to
                     determine the final coordinates.
                   </p>
                 </div>
@@ -181,14 +181,14 @@ export default function About() {
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-muted-foreground leading-relaxed">
-              Treasures is built on the Nostr protocol, a simple, open protocol that enables global, 
-              decentralized, and censorship-resistant communication. Nostr leverages a network of relays 
+              Treasures is built on the Nostr protocol, a simple, open protocol that enables global,
+              decentralized, and censorship-resistant communication. Nostr leverages a network of relays
               to create applications that can't be shut down or controlled by any single entity.
             </p>
-            
+
             <p className="text-muted-foreground leading-relaxed">
-              The application was created using the <code className="bg-muted px-2 py-1 rounded text-sm">stacks</code> command 
-              in combination with <a 
+              The application was created using the <code className="bg-muted px-2 py-1 rounded text-sm">stacks</code> command
+              in combination with <a
                 href="https://getstacks.dev/stack/naddr1qvzqqqrhl5pzqprpljlvcnpnw3pejvkkhrc3y6wvmd7vjuad0fg2ud3dky66gaxaqqrk66mnw3skx6c4g6ltw"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -197,12 +197,12 @@ export default function About() {
                 mkstack
               </a>, a powerful toolkit for building Nostr applications with modern web technologies.
             </p>
-            
+
             <div className="flex justify-center">
               <Button variant="outline" asChild>
-                <a 
-                  href="https://getstacks.dev" 
-                  target="_blank" 
+                <a
+                  href="https://getstacks.dev"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
                 >
@@ -211,7 +211,7 @@ export default function About() {
                 </a>
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
                 <Globe className="h-5 w-5 text-primary mt-1" />
@@ -255,10 +255,10 @@ export default function About() {
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-muted-foreground leading-relaxed">
-              Treasures uses custom Nostr event kinds defined in NIP-GC (Geocaching Events). 
+              Treasures uses custom Nostr event kinds defined in NIP-GC (Geocaching Events).
               This specification defines how geocaches and logs are stored and shared across the Nostr network.
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-4 border rounded-lg">
                 <h4 className="font-semibold mb-2">Kind {NIP_GC_KINDS.GEOCACHE}</h4>
@@ -285,12 +285,12 @@ export default function About() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex justify-center">
               <Button variant="outline" asChild>
-                <a 
-                  href="https://nostrhub.io/naddr1qvzqqqrcvypzppscgyy746fhmrt0nq955z6xmf80pkvrat0yq0hpknqtd00z8z68qqgkwet0vdskx6rfdenj6etkv4h8guc6gs5y5" 
-                  target="_blank" 
+                <a
+                  href="https://nostrhub.io/naddr1qvzqqqrcvypzppscgyy746fhmrt0nq955z6xmf80pkvrat0yq0hpknqtd00z8z68qqgkwet0vdskx6rfdenj6etkv4h8guc6gs5y5"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
                 >
@@ -311,9 +311,9 @@ export default function About() {
               </p>
               <div className="flex justify-center">
                 <Button variant="outline" asChild>
-                  <a 
-                    href="https://gitlab.com/chad.curtis/treasures" 
-                    target="_blank" 
+                  <a
+                    href="https://gitlab.com/chad.curtis/treasures"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"
                   >
