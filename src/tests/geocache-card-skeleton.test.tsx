@@ -61,9 +61,11 @@ vi.mock('@/features/auth/hooks/useCurrentUser', () => ({
   }),
 }));
 
-vi.mock('next-themes', () => ({
+vi.mock('@/shared/hooks/useTheme', () => ({
   useTheme: () => ({
     theme: 'light',
+    resolvedTheme: 'light',
+    setTheme: vi.fn(),
   }),
 }));
 
@@ -96,7 +98,7 @@ describe('GeocacheCard Skeleton Loading', () => {
     expect(screen.getByText('1,000')).toBeInTheDocument(); // zap total
     expect(screen.getByText('5')).toBeInTheDocument(); // found count
     expect(screen.getByText('10')).toBeInTheDocument(); // log count
-    
+
     // Should not show any skeletons
     expect(screen.queryByTestId('skeleton')).not.toBeInTheDocument();
   });
@@ -114,21 +116,21 @@ describe('GeocacheCard Skeleton Loading', () => {
     expect(screen.queryByText('1,000')).not.toBeInTheDocument(); // zap total should not be visible
     expect(screen.queryByText('5')).not.toBeInTheDocument(); // found count should not be visible
     expect(screen.queryByText('10')).not.toBeInTheDocument(); // log count should not be visible
-    
+
     // Should show skeleton elements with appropriate sizes
     const skeletons = screen.getAllByTestId('skeleton');
     expect(skeletons.length).toBe(3); // One for each stat
-    
+
     // Check that skeletons have appropriate width classes (small sizes)
     const zapSkeleton = skeletons[0];
     const foundSkeleton = skeletons[1];
     const logSkeleton = skeletons[2];
-    
+
     // Check that skeletons have small width classes (the actual implementation uses w-3 and w-4)
     expect(zapSkeleton?.className).toMatch(/w-\d+/); // Should have some width class
     expect(foundSkeleton?.className).toMatch(/w-\d+/); // Should have some width class
     expect(logSkeleton?.className).toMatch(/w-\d+/); // Should have some width class
-    
+
     // Check that they don't have large width classes
     expect(zapSkeleton?.className).not.toMatch(/w-1[2-9]/); // Should not have large widths
     expect(foundSkeleton?.className).not.toMatch(/w-1[2-9]/); // Should not have large widths
@@ -148,21 +150,21 @@ describe('GeocacheCard Skeleton Loading', () => {
     expect(screen.queryByText('1,000')).not.toBeInTheDocument();
     expect(screen.queryByText('5')).not.toBeInTheDocument();
     expect(screen.queryByText('10')).not.toBeInTheDocument();
-    
+
     // Should show skeleton elements with appropriate sizes
     const skeletons = screen.getAllByTestId('skeleton');
     expect(skeletons.length).toBe(3); // One for each stat
-    
+
     // Check that skeletons have appropriate width classes for compact variant
     const zapSkeleton = skeletons[0];
     const foundSkeleton = skeletons[1];
     const logSkeleton = skeletons[2];
-    
+
     // Check that skeletons have small width classes for compact variant
     expect(zapSkeleton?.className).toMatch(/w-\d+/); // Should have some width class
     expect(foundSkeleton?.className).toMatch(/w-\d+/); // Should have some width class
     expect(logSkeleton?.className).toMatch(/w-\d+/); // Should have some width class
-    
+
     // Check that they don't have large width classes
     expect(zapSkeleton?.className).not.toMatch(/w-1[2-9]/); // Should not have large widths
     expect(foundSkeleton?.className).not.toMatch(/w-1[2-9]/); // Should not have large widths
@@ -199,7 +201,7 @@ describe('GeocacheCard Skeleton Loading', () => {
     expect(screen.getByText('1,000')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
     expect(screen.getByText('10')).toBeInTheDocument();
-    
+
     // Should not show any skeletons
     expect(screen.queryByTestId('skeleton')).not.toBeInTheDocument();
   });

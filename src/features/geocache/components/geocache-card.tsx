@@ -13,7 +13,7 @@ import { formatDistanceToNow } from '@/shared/utils/date';
 import { formatDistance } from '@/features/map/utils/geo';
 import { CacheIcon } from '@/features/geocache/utils/cacheIcons';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
-import { useTheme } from 'next-themes';
+import { useTheme } from "@/shared/hooks/useTheme";
 import type { Geocache } from '@/types/geocache';
 import {
   Tooltip,
@@ -120,16 +120,16 @@ export function GeocacheCard({
   const { navigateToGeocache } = useGeocacheNavigation();
   const author = useAuthor(cache.pubkey);
   const zapStoreKey = cache.naddr ? `naddr:${cache.naddr}` : `event:${cache.id}`;
-  
+
   // Select the memoized zap total directly from store state
   const zapTotal = useStore(useZapStore, (state) => state.zapTotals[zapStoreKey] ?? 0);
-  
+
   // Use zap total from cache data if available, otherwise fall back to memoized store value
   const totalZapAmount = cache.zapTotal ?? zapTotal;
 
   const authorName = author.data?.metadata?.name || cache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
-  
+
   // Handle avatar loading errors gracefully
   const [avatarError, setAvatarError] = React.useState(false);
   const handleAvatarError = React.useCallback(() => {

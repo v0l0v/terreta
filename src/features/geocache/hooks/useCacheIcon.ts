@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from 'next-themes';
+import { useTheme } from "@/shared/hooks/useTheme";
 import { CacheIcon } from '@/features/geocache/utils/cacheIcons';
 
 /**

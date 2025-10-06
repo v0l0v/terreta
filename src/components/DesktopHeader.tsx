@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { RelaySelector } from '@/components/RelaySelector';
-import { useTheme } from 'next-themes';
+import { useTheme } from "@/shared/hooks/useTheme";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,12 +25,12 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
   const isAdventureTheme = theme === 'adventure';
 
   // Map page has different styling needs due to layout constraints
-  const baseClasses = variant === 'map' 
+  const baseClasses = variant === 'map'
     ? "hidden lg:block border-b sticky top-0 z-50"
     : "border-b sticky top-0 z-50 hidden md:block";
-  
-  const adventureClasses = isAdventureTheme 
-    ? "bg-adventure-nav border-adventure-nav text-stone-200" 
+
+  const adventureClasses = isAdventureTheme
+    ? "bg-adventure-nav border-adventure-nav text-stone-200"
     : "bg-background/80 backdrop-blur-sm md:bg-background md:backdrop-blur-none border-border";
 
   const headerClasses = `${baseClasses} ${adventureClasses}`;
@@ -40,14 +40,14 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img 
-              src="/icon.svg" 
-              alt="Treasures" 
-              className={`h-12 w-12 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`} 
+            <img
+              src="/icon.svg"
+              alt="Treasures"
+              className={`h-12 w-12 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`}
             />
             <h1 className={`text-2xl font-bold m-0 leading-none ${isAdventureTheme ? 'text-stone-200' : 'text-foreground'}`}>Treasures</h1>
           </Link>
-          
+
           <nav className="flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -105,7 +105,7 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             <RelaySelector className="w-[200px]" />
             <ThemeToggle />
             <LoginArea />

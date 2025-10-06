@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { MapPin, AlertTriangle, CheckCircle, Check, WifiOff, QrCode, Edit3 } from "lucide-react";
 import { CompassSpinner } from "@/components/ui/loading";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { MAP_STYLES } from "@/features/map/constants/mapStyles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,14 +67,14 @@ if (typeof document !== 'undefined') {
 // Component to ensure map recognizes its actual size
 function MapResizer({ location }: { location: { lat: number; lng: number } }) {
   const map = useMap();
-  
+
   useEffect(() => {
     // Force map to recognize its actual container size immediately
     map.invalidateSize(true);
     // Set view again with exact coordinates to force proper centering
     map.setView([location.lat, location.lng], 16, { animate: false });
   }, [map, location]);
-  
+
   return null;
 }
 
@@ -86,7 +86,7 @@ export default function CreateCache() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useCurrentUser();
-  
+
   const { mutateAsync: createGeocache, isPending } = useCreateGeocache();
   const { toast } = useToast();
   const { theme, systemTheme } = useTheme();
@@ -118,14 +118,14 @@ export default function CreateCache() {
       // Use system preference if theme is set to system
       return systemTheme === "dark" ? "dark" : "original";
     }
-    
+
     // Fallback to system preference if theme is undefined (during mounting)
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return "dark";
     }
     return "original";
   };
-  
+
   const [currentMapStyle, setCurrentMapStyle] = useState(getDefaultMapStyle());
   const [hasManuallySelectedStyle, setHasManuallySelectedStyle] = useState(false);
   const mapStyle = MAP_STYLES[currentMapStyle] || MAP_STYLES.original;
@@ -142,7 +142,7 @@ export default function CreateCache() {
       } else if (theme === "system") {
         return systemTheme === "dark" ? "dark" : "original";
       }
-      
+
       // Fallback to system preference if theme is undefined (during mounting)
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         return "dark";
@@ -178,7 +178,7 @@ export default function CreateCache() {
     const processClaimUrl = async () => {
       const claimUrlParam = searchParams.get('claimUrl');
       console.log('🔗 Processing claim URL:', { claimUrlParam, user: !!user });
-      
+
       // Guard against processing the same claim URL multiple times
       if (!claimUrlParam || !user || importedDTag || importedVerificationKeyPair) {
         console.log('🛑 Skipping claim URL processing:', {
@@ -189,10 +189,10 @@ export default function CreateCache() {
         });
         return;
       }
-      
+
       try {
         console.log('🔗 Raw claimUrlParam:', claimUrlParam);
-        
+
         // Handle both full URLs and relative URLs
         let claimUrl: URL;
         if (claimUrlParam.startsWith('http')) {
@@ -201,7 +201,7 @@ export default function CreateCache() {
           // If it's a relative path, construct a full URL
           claimUrl = new URL(claimUrlParam, window.location.origin);
         }
-        
+
         console.log('🌐 Constructed claim URL:', {
           href: claimUrl.href,
           origin: claimUrl.origin,
@@ -209,17 +209,17 @@ export default function CreateCache() {
           hash: claimUrl.hash,
           search: claimUrl.search
         });
-        
+
         // Extract naddr from pathname - it should be the entire path without leading slash
         const pathname = claimUrl.pathname;
         console.log('📄 Raw pathname:', pathname);
-        
+
         // Handle case where pathname might be like "/naddr1..." or just "naddr1..."
         let naddr = pathname;
         if (pathname.startsWith('/')) {
           naddr = pathname.slice(1);
         }
-        
+
         // If the naddr starts with the origin, remove it (this would be the bug)
         if (naddr.startsWith(claimUrl.origin)) {
           naddr = naddr.slice(claimUrl.origin.length);
@@ -227,18 +227,18 @@ export default function CreateCache() {
             naddr = naddr.slice(1);
           }
         }
-        
+
         console.log('🎯 Extracted naddr:', naddr);
-        
+
         // Extract nsec from hash
         const nsec = parseVerificationFromHash(claimUrl.hash);
         console.log('🔑 Extracted nsec:', nsec ? nsec.substring(0, 20) + '...' : null);
-        
+
         if (naddr && nsec) {
           try {
             console.log('🔍 Attempting to decode naddr:', naddr);
             const decodedNaddr = naddrToGeocache(naddr);
-            
+
             console.log('✅ Decoded naddr successfully:', {
               pubkey: decodedNaddr.pubkey,
               identifier: decodedNaddr.identifier,
@@ -246,23 +246,23 @@ export default function CreateCache() {
               userPubkey: user.pubkey,
               matches: decodedNaddr.pubkey === user.pubkey
             });
-            
+
             if (decodedNaddr.pubkey === user.pubkey) {
               // Decode the nsec to get the private key bytes
               const { data: privateKeyBytes } = nip19.decode(nsec);
-              
+
               // Import the private key and derive the public key
               const { getPublicKey } = await import('nostr-tools');
-              
+
               // The privateKeyBytes is already a Uint8Array, which is what getPublicKey expects
               const publicKeyHex = getPublicKey(privateKeyBytes as Uint8Array);
-              
+
               console.log('🔑 Derived key pair:', {
                 publicKey: publicKeyHex,
                 publicKeyShort: `${publicKeyHex.substring(0, 10)}...`,
                 nsec: nsec.substring(0, 20) + '...'
               });
-              
+
               // Store the complete, valid keypair
               setImportedVerificationKeyPair({
                 nsec: nsec,
@@ -270,10 +270,10 @@ export default function CreateCache() {
                 publicKey: publicKeyHex,
                 npub: nip19.npubEncode(publicKeyHex), // Add npub to match interface
               });
-              
+
               setImportedDTag(decodedNaddr.identifier);
               setImportedKind(decodedNaddr.kind);
-              
+
               toast({
                 title: "Claim URL Imported",
                 description: "Your pre-generated cache settings have been loaded. Please fill in the location and other details.",
@@ -314,14 +314,14 @@ export default function CreateCache() {
         });
       }
     };
-    
+
     processClaimUrl();
   }, [searchParams, user, importedDTag, importedVerificationKeyPair, toast]); // Add all dependencies
 
   // Handle location verification when location changes
   const handleLocationChange = async (newLocation: { lat: number; lng: number } | null) => {
     setLocation(newLocation);
-    
+
     if (newLocation && currentStep === 1) {
       setIsVerifying(true);
       try {
@@ -385,7 +385,7 @@ export default function CreateCache() {
 
     if (!formData.description.trim()) {
       toast({
-        title: "Description required", 
+        title: "Description required",
         description: "Please enter a description for your geocache",
         variant: "destructive",
       });
@@ -430,38 +430,38 @@ export default function CreateCache() {
 
       // We have the geocache data already, so we can navigate directly with the data
       const { geocache } = result;
-      
+
       // Generate naddr for the created cache (for URL consistency)
       const dTag = event.tags.find((t: string[]) => t[0] === 'd')?.[1];
       console.log('🏷️ Extracted dTag:', dTag);
-      
+
       if (dTag && geocache) {
         const relays = event.tags.filter((t: string[]) => t[0] === 'relay').map((t: string[]) => t[1]);
         console.log('🔗 Extracted relays:', relays);
-        
+
         const { geocacheToNaddr } = await import('@/shared/utils/naddr-utils');
-        
+
         // If this was created from a claim URL, don't include relays in the naddr
         // Otherwise, include relays for regular cache creation
         const includeRelays = !importedDTag; // Only include relays if not from claim URL
         const naddr = geocacheToNaddr(event.pubkey, dTag, relays as string[], event.kind, includeRelays);
-        
+
         console.log('🎯 Generated naddr:', naddr);
         console.log('🧭 Navigating to:', `/${naddr}`);
         console.log('📡 Include relays:', includeRelays);
-        
+
         toast({
           title: "Cache Published Successfully!",
           description: "Your geocache is now live. Redirecting...",
         });
-        
+
         // Navigate to the newly created cache with the data we already have
         // This prevents the "not found" issue while relay propagation happens
-        navigate(`/${naddr}`, { 
-          state: { 
+        navigate(`/${naddr}`, {
+          state: {
             geocacheData: geocache,
-            justCreated: true 
-          } 
+            justCreated: true
+          }
         });
       } else {
         console.error('❌ No dTag found in event tags:', event.tags);
@@ -506,7 +506,7 @@ export default function CreateCache() {
     );
   }
 
-  
+
 
   return (
     <PageLayout maxWidth="2xl" background="default" className={showQROverlay ? "h-screen" : "pb-4 md:pb-0"}>
@@ -518,10 +518,10 @@ export default function CreateCache() {
                 <h2 className="text-2xl text-foreground font-bold mb-2">Create a Geocache</h2>
                 <p className="text-sm text-muted-foreground">Choose how you'd like to get started. Create a QR code that you can scan to create your geocache later, or create your full listing now.</p>
               </div>
-              
+
               <div className="space-y-4">
                 <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer">
-                  <CardContent 
+                  <CardContent
                     className="p-6"
                     onClick={() => navigate('/generate-qr')}
                   >
@@ -540,7 +540,7 @@ export default function CreateCache() {
                 </Card>
 
                 <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer">
-                  <CardContent 
+                  <CardContent
                     className="p-6"
                     onClick={() => setShowQROverlay(false)}
                   >
@@ -579,11 +579,11 @@ export default function CreateCache() {
                 </div>
               </div>
               <p className="text-muted-foreground">
-                Create a new geocache for others to discover. Choose your difficulty and terrain ratings carefully - 
+                Create a new geocache for others to discover. Choose your difficulty and terrain ratings carefully -
                 they help seekers know what to expect and prepare appropriately.
               </p>
             </div>
-            
+
             {/* Desktop Card Header */}
             <Card className="hidden md:block">
           <CardHeader>
@@ -591,7 +591,7 @@ export default function CreateCache() {
               <div>
                 <CardTitle className="text-foreground">Hide a New Geocache</CardTitle>
                 <CardDescription>
-                  Create a new geocache for others to discover. Choose your difficulty and terrain ratings carefully - 
+                  Create a new geocache for others to discover. Choose your difficulty and terrain ratings carefully -
                   they help seekers know what to expect and prepare appropriately.
                 </CardDescription>
               </div>
@@ -628,26 +628,26 @@ export default function CreateCache() {
                     <h3 className="text-lg font-semibold mb-1 text-foreground">Choose the location</h3>
                     <p className="text-sm text-gray-600 dark:text-muted-foreground">Where will seekers find your geocache?</p>
                   </div>
-                  
+
                   <LocationPicker
                     value={location}
                     onChange={handleLocationChange}
                   />
-                  
+
                   {isVerifying && (
                     <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted/50 dark:bg-muted rounded-lg p-3">
                       <CompassSpinner size={16} variant="component" />
                       Checking location restrictions...
                     </div>
                   )}
-                  
+
                   {locationVerification && (
-                    <LocationWarnings 
-                      verification={locationVerification} 
+                    <LocationWarnings
+                      verification={locationVerification}
                       hideCreatorWarnings={true}
                     />
                   )}
-                  
+
                   <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
                     <AlertDescription className="text-sm">
                       Ensure you have permission to place a cache here and that it's publicly accessible.
@@ -662,19 +662,19 @@ export default function CreateCache() {
                     <h3 className="text-lg font-semibold mb-1 text-foreground">Tell us about your cache</h3>
                     <p className="text-sm text-gray-600 dark:text-muted-foreground">Give your geocache a name and description</p>
                   </div>
-                  
+
                   <CacheNameField
                     value={formData.name}
                     onChange={(value) => setFormData({...formData, name: value})}
                     required={true}
                   />
-                  
+
                   <CacheDescriptionField
                     value={formData.description}
                     onChange={(value) => setFormData({...formData, description: value})}
                     required={true}
                   />
-                  
+
                   <CacheHintField
                     value={formData.hint}
                     onChange={(value) => setFormData({...formData, hint: value})}
@@ -688,25 +688,25 @@ export default function CreateCache() {
                     <h3 className="text-lg font-semibold mb-1 text-foreground">Set the challenge level</h3>
                     <p className="text-sm text-gray-600 dark:text-muted-foreground">Help seekers know what to expect</p>
                   </div>
-                  
+
                   <CacheTypeField
                     fieldId="cache-type"
                     value={formData.type}
                     onChange={(value) => setFormData({...formData, type: value})}
                   />
-                  
+
                   <CacheDifficultyField
                     fieldId="cache-difficulty"
                     value={formData.difficulty}
                     onChange={(value) => setFormData({...formData, difficulty: value})}
                   />
-                  
+
                   <CacheTerrainField
                     fieldId="cache-terrain"
                     value={formData.terrain}
                     onChange={(value) => setFormData({...formData, terrain: value})}
                   />
-                  
+
                   <CacheSizeField
                     fieldId="cache-size"
                     value={formData.size}
@@ -721,18 +721,18 @@ export default function CreateCache() {
                     <h3 className="text-lg font-semibold mb-1 text-foreground">Add photos & final touches</h3>
                     <p className="text-sm text-gray-600 dark:text-muted-foreground">Help seekers identify the area</p>
                   </div>
-                  
+
                   <CacheImageManager
                     images={images}
                     onImagesChange={setImages}
                     disabled={isPending || isVerifying}
                   />
-                  
+
                   <CacheHiddenField
                     checked={formData.hidden || false}
                     onChange={(checked) => setFormData({...formData, hidden: checked})}
                   />
-                  
+
                   {/* Preview */}
                   <div className="bg-muted/20 border border-muted rounded-lg p-4">
                     <h4 className="text-sm font-medium text-muted-foreground mb-3">Preview: How your cache will appear</h4>
@@ -754,19 +754,19 @@ export default function CreateCache() {
               {/* Navigation Buttons */}
               <div className="flex gap-4 pt-4">
                 {currentStep > 1 && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => setCurrentStep(currentStep - 1)}
                     className="flex-1"
                   >
                     ← Previous
                   </Button>
                 )}
-                
+
                 {currentStep < totalSteps ? (
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={() => {
                       // Validate current step
                       if (currentStep === 1 && !location) {
@@ -805,10 +805,10 @@ export default function CreateCache() {
                     Next →
                   </Button>
                 ) : (
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={handleCreateGeocache}
-                    disabled={isPending || isVerifying} 
+                    disabled={isPending || isVerifying}
                     className="flex-1"
                   >
                     {isVerifying ? (
@@ -823,7 +823,7 @@ export default function CreateCache() {
                     )}
                   </Button>
                 )}
-                
+
                 <Button type="button" variant="outline" onClick={() => navigate("/")}>
                   Cancel
                 </Button>
@@ -831,7 +831,7 @@ export default function CreateCache() {
             </form>
           </CardContent>
         </Card>
-        
+
             {/* Mobile Form - no card wrapper */}
             <div className="md:hidden px-4 pb-4 bg-background">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -864,26 +864,26 @@ export default function CreateCache() {
                   <h3 className="text-lg font-semibold mb-1 text-foreground">Choose the location</h3>
                   <p className="text-sm text-gray-600 dark:text-muted-foreground">Where will seekers find your geocache?</p>
                 </div>
-                
+
                 <LocationPicker
                   value={location}
                   onChange={handleLocationChange}
                 />
-                
+
                 {isVerifying && (
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted/50 dark:bg-muted rounded-lg p-3">
                     <CompassSpinner size={16} variant="component" />
                     Checking location restrictions...
                   </div>
                 )}
-                
+
                 {locationVerification && (
-                  <LocationWarnings 
-                    verification={locationVerification} 
+                  <LocationWarnings
+                    verification={locationVerification}
                     hideCreatorWarnings={true}
                   />
                 )}
-                
+
                 <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
                   <AlertDescription className="text-sm">
                     Ensure you have permission to place a cache here and that it's publicly accessible.
@@ -898,19 +898,19 @@ export default function CreateCache() {
                   <h3 className="text-lg font-semibold mb-1 text-foreground">Tell us about your cache</h3>
                   <p className="text-sm text-gray-600 dark:text-muted-foreground">Give your geocache a name and description</p>
                 </div>
-                
+
                 <CacheNameField
                   value={formData.name}
                   onChange={(value) => setFormData({...formData, name: value})}
                   required={true}
                 />
-                
+
                 <CacheDescriptionField
                   value={formData.description}
                   onChange={(value) => setFormData({...formData, description: value})}
                   required={true}
                 />
-                
+
                 <CacheHintField
                   value={formData.hint}
                   onChange={(value) => setFormData({...formData, hint: value})}
@@ -924,25 +924,25 @@ export default function CreateCache() {
                   <h3 className="text-lg font-semibold mb-1 text-foreground">Set the challenge level</h3>
                   <p className="text-sm text-gray-600 dark:text-muted-foreground">Help seekers know what to expect</p>
                 </div>
-                
+
                 <CacheTypeField
                   fieldId="cache-type-mobile"
                   value={formData.type}
                   onChange={(value) => setFormData({...formData, type: value})}
                 />
-                
+
                 <CacheDifficultyField
                   fieldId="cache-difficulty-mobile"
                   value={formData.difficulty}
                   onChange={(value) => setFormData({...formData, difficulty: value})}
                 />
-                
+
                 <CacheTerrainField
                   fieldId="cache-terrain-mobile"
                   value={formData.terrain}
                   onChange={(value) => setFormData({...formData, terrain: value})}
                 />
-                
+
                 <CacheSizeField
                   fieldId="cache-size-mobile"
                   value={formData.size}
@@ -957,18 +957,18 @@ export default function CreateCache() {
                   <h3 className="text-lg font-semibold mb-1 text-foreground">Add photos & final touches</h3>
                   <p className="text-sm text-gray-600 dark:text-muted-foreground">Help seekers identify the area</p>
                 </div>
-                
+
                 <CacheImageManager
                   images={images}
                   onImagesChange={setImages}
                   disabled={isPending || isVerifying}
                 />
-                
+
                 <CacheHiddenField
                   checked={formData.hidden || false}
                   onChange={(checked) => setFormData({...formData, hidden: checked})}
                 />
-                
+
                 {/* Preview */}
                 <div className="bg-muted/20 border border-muted rounded-lg p-4">
                   <h4 className="text-sm font-medium text-muted-foreground mb-3">Preview: How your cache will appear</h4>
@@ -990,19 +990,19 @@ export default function CreateCache() {
             {/* Navigation Buttons */}
             <div className="flex gap-4 pt-4">
               {currentStep > 1 && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setCurrentStep(currentStep - 1)}
                   className="flex-1"
                 >
                   ← Previous
                 </Button>
               )}
-              
+
               {currentStep < totalSteps ? (
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   onClick={() => {
                     // Validate current step
                     if (currentStep === 1 && !location) {
@@ -1041,10 +1041,10 @@ export default function CreateCache() {
                   Next →
                 </Button>
               ) : (
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   onClick={handleCreateGeocache}
-                  disabled={isPending || isVerifying} 
+                  disabled={isPending || isVerifying}
                   className="flex-1"
                 >
                   {isVerifying ? (
@@ -1059,7 +1059,7 @@ export default function CreateCache() {
                   )}
                 </Button>
               )}
-              
+
               <Button type="button" variant="outline" onClick={() => navigate("/")}>
                 Cancel
               </Button>
@@ -1098,8 +1098,8 @@ export default function CreateCache() {
                             maxZoom={19}
                           />
                           <MapResizer location={location} />
-                          <Marker 
-                            position={[location.lat, location.lng]} 
+                          <Marker
+                            position={[location.lat, location.lng]}
                             icon={mapIcons.droppedPin}
                           />
                         </MapContainer>
@@ -1111,7 +1111,7 @@ export default function CreateCache() {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Confirmation */}
                     <div className="flex items-center">
                       <div className="text-sm">
@@ -1138,11 +1138,11 @@ export default function CreateCache() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Location Analysis */}
                 {locationVerification && (
-                  <LocationWarnings 
-                    verification={locationVerification} 
+                  <LocationWarnings
+                    verification={locationVerification}
                     className="space-y-2"
                     hideCreatorWarnings={false}
                   />
@@ -1154,7 +1154,7 @@ export default function CreateCache() {
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel onClick={handleLocationReview}>Review Location</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleLocationConfirm}
               className={`flex items-center gap-2 ${
                 locationVerification && getVerificationSummary(locationVerification).status === 'restricted'

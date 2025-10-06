@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { useAppContext } from "@/shared/hooks/useAppContext";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/shared/hooks/useTheme";
 
 interface RelayComboboxProps {
   className?: string;
@@ -28,7 +28,7 @@ export function RelayCombobox(props: RelayComboboxProps) {
   const { config, updateConfig, presetRelays = [] } = useAppContext();
   const { theme } = useTheme();
   const isAdventureTheme = theme === 'adventure';
-  
+
   const [open, setOpen] = useState(false);
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customUrl, setCustomUrl] = useState("");
@@ -45,12 +45,12 @@ export function RelayCombobox(props: RelayComboboxProps) {
   const normalizeRelayUrl = (url: string): string => {
     const trimmed = url.trim();
     if (!trimmed) return trimmed;
-    
+
     // Check if it already has a protocol
     if (trimmed.includes('://')) {
       return trimmed;
     }
-    
+
     // Add wss:// prefix
     return `wss://${trimmed}`;
   };
@@ -59,7 +59,7 @@ export function RelayCombobox(props: RelayComboboxProps) {
   const isValidRelayInput = (value: string): boolean => {
     const trimmed = value.trim();
     if (!trimmed) return false;
-    
+
     // Basic validation - should contain at least a domain-like structure
     const normalized = normalizeRelayUrl(trimmed);
     try {
@@ -158,7 +158,7 @@ export function RelayCombobox(props: RelayComboboxProps) {
             </Command>
           </PopoverContent>
         </Popover>
-        
+
         {isCustomRelay && (
           <Button
             variant="outline"

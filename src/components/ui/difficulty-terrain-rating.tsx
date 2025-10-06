@@ -1,14 +1,14 @@
 import { getDifficultyLabel, getSizeLabel, getSizeLevel } from '@/features/geocache/utils/geocache-utils';
-import { useTheme } from 'next-themes';
+import { useTheme } from "@/shared/hooks/useTheme";
 
 // Difficulty/terrain/size rating display component
-export function DifficultyTerrainRating({ 
-  difficulty, 
-  terrain, 
+export function DifficultyTerrainRating({
+  difficulty,
+  terrain,
   cacheSize,
   showLabels = true,
-  size = 'default' 
-}: { 
+  size = 'default'
+}: {
   difficulty: number;
   terrain: number;
   cacheSize?: string;
@@ -17,17 +17,17 @@ export function DifficultyTerrainRating({
 }) {
   const { theme } = useTheme();
   const isAdventureTheme = theme === 'adventure';
-  
+
   const dotSize = size === 'small' ? 'h-3 w-3' : 'h-4 w-4';
   const textSize = size === 'small' ? 'text-xs' : 'text-sm';
   const sizeLevel = cacheSize ? getSizeLevel(cacheSize) : 0;
-  
+
   // Use more neutral colors in adventure mode
   const difficultyActiveColor = isAdventureTheme ? "bg-stone-600" : "bg-green-600";
   const terrainActiveColor = isAdventureTheme ? "bg-stone-500" : "bg-blue-600";
   const sizeActiveColor = isAdventureTheme ? "bg-stone-400" : "bg-purple-600";
   const inactiveColor = isAdventureTheme ? "bg-stone-200" : "bg-gray-200";
-  
+
   return (
     <div className="space-y-2">
       <div>
@@ -46,7 +46,7 @@ export function DifficultyTerrainRating({
           {showLabels && <span className={`${textSize} text-foreground`}>{getDifficultyLabel(difficulty)}</span>}
         </div>
       </div>
-      
+
       <div>
         <p className={`font-medium text-muted-foreground ${textSize}`}>Terrain</p>
         <div className="flex items-center gap-2 mt-1">
@@ -63,7 +63,7 @@ export function DifficultyTerrainRating({
           {showLabels && <span className={`${textSize} text-foreground`}>{getDifficultyLabel(terrain)}</span>}
         </div>
       </div>
-      
+
       {cacheSize && (
         <div>
           <p className={`font-medium text-muted-foreground ${textSize}`}>Size</p>
