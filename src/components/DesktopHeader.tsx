@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Search, Plus, Info, ChevronDown, Compass, QrCode, ScanQrCode, Scroll, Settings, BookOpen } from 'lucide-react';
+import { Search, Plus, Info, ChevronDown, Compass, QrCode, ScanQrCode, Scroll, Settings, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -61,6 +61,12 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
                   <Link to="/map">
                     <Search className="h-4 w-4 mr-2" />
                     {isAdventureTheme ? "Reveal" : "Explore"} Map
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/texas-ren-fest">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Texas Ren Fest
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
