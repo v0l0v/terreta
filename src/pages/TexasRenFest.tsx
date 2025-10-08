@@ -20,8 +20,8 @@ import { useTheme } from "@/shared/hooks/useTheme";
 
 // Texas Renaissance Festival coordinates
 const TEXAS_REN_FEST_CENTER = {
-  lat: 30.2672,
-  lng: -95.7165
+  lat: 30.25423961135441,
+  lng: -95.83969787081105
 };
 
 const TEXAS_REN_FEST_ZOOM = 16;
