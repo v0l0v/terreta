@@ -21,16 +21,17 @@ import Install from "./pages/Install";
 import Claim from "./pages/Claim";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import TexasRenFest from "./pages/TexasRenFest";
 
 export function AppRouter() {
   return (
     <BrowserRouter>
       {/* Scroll to top on route changes */}
       <ScrollToTop />
-      
+
       {/* Mobile Header */}
       <MobileHeader />
-      
+
       {/* Main Content Area - with bottom padding for mobile nav */}
       <main className="flex-1 pb-16 md:pb-0 bg-background">
         <Routes>
@@ -48,13 +49,14 @@ export function AppRouter() {
           <Route path="/install" element={<Install />} />
           <Route path="/claim" element={<Claim />} />
           <Route path="/about" element={<About />} />
+          <Route path="/texas-ren-fest" element={<TexasRenFest />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE NADDR CATCH-ALL ROUTE */}
           <Route path="/:naddr" element={<CacheDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      
+
       {/* Mobile Bottom Navigation - Fixed positioned */}
       <MobileBottomNav />
     </BrowserRouter>
