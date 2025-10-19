@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { 
-  User, 
-  MapPin, 
+import {
+  User,
+  MapPin,
   CheckCircle,
   Edit,
   Bookmark
@@ -17,6 +17,7 @@ import { FullPageLoading, ComponentLoading } from '@/components/ui/loading';
 
 import { LoginRequiredCard } from '@/components/LoginRequiredCard';
 import { GeocacheCard } from '@/components/ui/geocache-card';
+import { ProfileGlobe } from '@/components/ProfileGlobe';
 import { EditProfileForm } from '@/features/profile/components/EditProfileForm';
 import { ProfileHeader } from '@/features/profile/components/ProfileHeader';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
@@ -47,10 +48,10 @@ export default function Profile() {
   const { data: authorData, isLoading: isLoadingAuthor } = useAuthor(targetPubkey);
   const { data: userCaches, isLoading: isLoadingUserCaches } = useUserGeocaches(targetPubkey);
   const { savedCaches, isLoading: isLoadingSavedCaches } = useSavedCaches();
-  
+
   // Use the same stats query/store system as index/map page for created caches
   const { data: allGeocaches, isStatsLoading } = useGeocaches();
-  
+
   // Now use the allGeocaches data for found caches
   const { data: foundCaches, isLoading: isLoadingFoundCaches } = useUserFoundCaches(targetPubkey, allGeocaches);
 
@@ -67,9 +68,9 @@ export default function Profile() {
       const R = 6371; // Earth's radius in kilometers
       const dLat = (cache.location.lat - coords.latitude) * Math.PI / 180;
       const dLon = (cache.location.lng - coords.longitude) * Math.PI / 180;
-      const a = 
+      const a =
         Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(coords.latitude * Math.PI / 180) * Math.cos(cache.location.lat * Math.PI / 180) * 
+        Math.cos(coords.latitude * Math.PI / 180) * Math.cos(cache.location.lat * Math.PI / 180) *
         Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       distance = R * c * 1000; // Convert to meters
@@ -83,9 +84,9 @@ export default function Profile() {
       const R = 6371; // Earth's radius in kilometers
       const dLat = (cache.location.lat - coords.latitude) * Math.PI / 180;
       const dLon = (cache.location.lng - coords.longitude) * Math.PI / 180;
-      const a = 
+      const a =
         Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(coords.latitude * Math.PI / 180) * Math.cos(cache.location.lat * Math.PI / 180) * 
+        Math.cos(coords.latitude * Math.PI / 180) * Math.cos(cache.location.lat * Math.PI / 180) *
         Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       distance = R * c * 1000; // Convert to meters
@@ -99,9 +100,9 @@ export default function Profile() {
       const R = 6371; // Earth's radius in kilometers
       const dLat = (cache.location.lat - coords.latitude) * Math.PI / 180;
       const dLon = (cache.location.lng - coords.longitude) * Math.PI / 180;
-      const a = 
+      const a =
         Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(coords.latitude * Math.PI / 180) * Math.cos(cache.location.lat * Math.PI / 180) * 
+        Math.cos(coords.latitude * Math.PI / 180) * Math.cos(cache.location.lat * Math.PI / 180) *
         Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       distance = R * c * 1000; // Convert to meters
@@ -137,7 +138,7 @@ export default function Profile() {
           backgroundSize: '300px 300px',
           opacity: 0.25
         }}></div>
-        
+
         <DesktopHeader />
         <div className="container mx-auto px-4 py-8 max-md:h-mobile-content max-md:flex max-md:items-center max-md:justify-center">
           <LoginRequiredCard
@@ -170,7 +171,7 @@ export default function Profile() {
         backgroundSize: '300px 300px',
         opacity: 0.25
       }}></div>
-      
+
       <DesktopHeader />
 
       <div className="container mx-auto px-4 py-8">
@@ -208,6 +209,27 @@ export default function Profile() {
             </ProfileHeader>
           </CardContent>
         </Card>
+
+        {/* Globe showing created caches */}
+        {userGeocachesWithStats && userGeocachesWithStats.length > 0 && (
+          <Card className="mb-4">
+            <CardContent className="p-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold">Cache Locations</h3>
+                  <span className="text-sm text-muted-foreground">
+                    ({userGeocachesWithStats.length} {userGeocachesWithStats.length === 1 ? 'cache' : 'caches'})
+                  </span>
+                </div>
+                <ProfileGlobe
+                  geocaches={userGeocachesWithStats}
+                  className="w-full"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Cache Tabs */}
         <Tabs defaultValue="created" className="w-full">
