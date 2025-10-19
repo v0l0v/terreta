@@ -13,13 +13,50 @@ export function useAuthor(pubkey: string | undefined) {
         return {};
       }
 
+      let events: NostrEvent[] = [];
+      let usedFallback = false;
+
       try {
         // Use FAST_QUERY timeout for author data to prevent blocking UI
         const signal = AbortSignal.any([c.signal, AbortSignal.timeout(TIMEOUTS.FAST_QUERY)]);
-        const events = await nostr.query(
+        events = await nostr.query(
           [{ kinds: [0], authors: [pubkey], limit: 1 }],
           { signal }
         );
+
+        // If no event found, try nostr.band fallback
+        if (!events || events.length === 0) {
+          console.log(`🔄 [useAuthor] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on selected relay, trying nostr.band fallback`);
+
+          try {
+            // Create a direct connection to nostr.band for fallback
+            const { NRelay1 } = await import('@nostrify/nostrify');
+            const fallbackRelay = new NRelay1('wss://relay.nostr.band');
+
+            const fallbackSignal = AbortSignal.timeout(TIMEOUTS.FAST_QUERY);
+            const fallbackEvents = await fallbackRelay.query([{
+              kinds: [0],
+              authors: [pubkey],
+              limit: 1,
+            }], { signal: fallbackSignal });
+
+            events = fallbackEvents;
+            usedFallback = true;
+
+            if (events.length > 0) {
+              console.log(`✅ [useAuthor] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on nostr.band fallback`);
+            } else {
+              console.log(`❌ [useAuthor] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on nostr.band either`);
+            }
+
+            // Close the fallback relay connection
+            fallbackRelay.close();
+          } catch (fallbackError) {
+            console.warn(`⚠️ [useAuthor] Fallback to nostr.band failed for ${pubkey.slice(0, 8)}...:`, fallbackError);
+          }
+        } else {
+          console.log(`✅ [useAuthor] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on selected relay`);
+        }
 
         // If no event found, return empty object (user has no profile)
         // This is a valid state, not an error
@@ -31,11 +68,11 @@ export function useAuthor(pubkey: string | undefined) {
 
         try {
           const metadata = n.json().pipe(n.metadata()).parse(event?.content);
-          return { metadata, event, hasProfile: true };
+          return { metadata, event, hasProfile: true, usedFallback };
         } catch (parseError) {
           console.warn('Failed to parse metadata for pubkey', pubkey, parseError);
           // Event exists but content is invalid JSON
-          return { event, hasProfile: true };
+          return { event, hasProfile: true, usedFallback };
         }
       } catch (error) {
         console.warn('Failed to fetch author data for pubkey', pubkey, error);

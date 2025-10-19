@@ -5,17 +5,17 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { 
-  useBaseStore, 
-  createQueryKey, 
-  batchOperations 
+import {
+  useBaseStore,
+  createQueryKey,
+  batchOperations
 } from './baseStore';
-import type { 
-  AuthorStore, 
-  AuthorStoreState, 
+import type {
+  AuthorStore,
+  AuthorStoreState,
   AuthorMetadata,
-  StoreConfig, 
-  StoreActionResult 
+  StoreConfig,
+  StoreActionResult
 } from './types';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
@@ -28,7 +28,7 @@ import { verifyNip05 } from '@/shared/utils/nip05';
 export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
   const baseStore = useBaseStore('author', config);
   const { user } = useCurrentUser();
-  
+
   // Store state
   const [state, setState] = useState<AuthorStoreState>(() => ({
     ...baseStore.createBaseState(),
@@ -45,7 +45,7 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
 
   // Update current user when user changes - use a ref to avoid hoisting issues
   const fetchAuthorRef = useRef<(pubkey: string) => Promise<StoreActionResult<AuthorMetadata>>>();
-  
+
   useEffect(() => {
     if (user?.pubkey) {
       const currentUserMetadata = state.authors[user.pubkey];
@@ -63,13 +63,48 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
   // Data fetching actions
   const fetchAuthor = useCallback(async (pubkey: string): Promise<StoreActionResult<AuthorMetadata>> => {
     return baseStore.safeAsyncOperation(async () => {
+      // First, try to get from the selected relay
       const { data: events } = await baseStore.batchQuery([{
         kinds: [0], // Profile metadata
         authors: [pubkey],
         limit: 1,
       }], 'fetchAuthor');
 
-      const metadata = events?.[0] || null;
+      let metadata = events?.[0] || null;
+
+      // If no metadata found, fall back to nostr.band
+      if (!metadata) {
+        console.log(`🔄 [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on selected relay, trying nostr.band fallback`);
+
+        try {
+          // Create a direct connection to nostr.band for fallback
+          const { NRelay1 } = await import('@nostrify/nostrify');
+          const fallbackRelay = new NRelay1('wss://relay.nostr.band');
+
+          const fallbackSignal = AbortSignal.timeout(TIMEOUTS.QUERY);
+          const fallbackEvents = await fallbackRelay.query([{
+            kinds: [0],
+            authors: [pubkey],
+            limit: 1,
+          }], { signal: fallbackSignal });
+
+          metadata = fallbackEvents[0] || null;
+
+          if (metadata) {
+            console.log(`✅ [author] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on nostr.band fallback`);
+          } else {
+            console.log(`❌ [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on nostr.band either`);
+          }
+
+          // Close the fallback relay connection
+          fallbackRelay.close();
+        } catch (fallbackError) {
+          console.warn(`⚠️ [author] Fallback to nostr.band failed for ${pubkey.slice(0, 8)}...:`, fallbackError);
+        }
+      } else {
+        console.log(`✅ [author] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on selected relay`);
+      }
+
       const authorData: AuthorMetadata = {
         pubkey,
         metadata,
@@ -99,7 +134,7 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
   const fetchAuthors = useCallback(async (pubkeys: string[]): Promise<StoreActionResult<AuthorMetadata[]>> => {
     return baseStore.safeAsyncOperation(async () => {
       const uniquePubkeys = [...new Set(pubkeys)];
-      
+
       const fetchedAuthors = await batchOperations(
         uniquePubkeys,
         async (pubkey) => {
@@ -128,11 +163,11 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
       };
 
       const signedEvent = await user.signer.signEvent(event);
-      
+
       // Publish to relay
       const signal = AbortSignal.timeout(TIMEOUTS.QUERY);
       await baseStore.nostr.event(signedEvent, { signal });
-      
+
       return signedEvent;
     },
     onSuccess: (signedEvent) => {
@@ -144,7 +179,7 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
           nip05Verified: false, // Will be re-verified
           lastUpdate: new Date(),
         };
-        
+
         updateState({
           authors: {
             ...state.authors,
@@ -152,7 +187,7 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
           },
           currentUser: authorData,
         });
-        
+
         // Re-verify NIP-05 if present
         try {
           const content = JSON.parse(signedEvent.content);
@@ -202,7 +237,7 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
       }
 
       const verified = await verifyNip05(pubkey, content.nip05);
-      
+
       // Update cache
       updateState({
         authors: {
@@ -308,31 +343,31 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
   const store = useMemo((): AuthorStore => ({
     // State
     ...state,
-    
+
     // Data fetching
     fetchAuthor,
     fetchAuthors,
-    
+
     // Profile management
     updateProfile,
     verifyNip05: verifyNip05Manual,
-    
+
     // Cache management
     invalidateAuthor,
     invalidateAll,
     refreshAuthor,
-    
+
     // Prefetching
     prefetchAuthors,
-    
+
     // Background sync
     startBackgroundSync,
     stopBackgroundSync,
     triggerSync,
-    
+
     // User management
     setCurrentUser,
-    
+
     // Configuration
     updateConfig,
     getStats,
