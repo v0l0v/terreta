@@ -7,6 +7,7 @@ import { useGeocaches } from "@/features/geocache/hooks/useGeocaches";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { CompactGeocacheCard } from "@/components/ui/geocache-card";
 import { GeocacheDialog } from "@/components/GeocacheDialog";
+import { TreasureMapWelcomeModal } from "@/components/TreasureMapWelcomeModal";
 import type { Geocache } from "@/types/geocache";
 import { useIsMobile } from "@/shared/hooks/useIsMobile";
 import { MapViewTabs } from "@/components/ui/mobile-button-patterns";
@@ -114,6 +115,7 @@ export default function TexasRenFest() {
 
   return (
     <div className="h-screen flex flex-col adventure">
+      <TreasureMapWelcomeModal />
       <DesktopHeader />
 
       {/* Hero Banner */}
