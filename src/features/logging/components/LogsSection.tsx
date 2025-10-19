@@ -8,6 +8,7 @@ import { EmptyStateCard } from "@/shared/components/ui/card-patterns";
 import { LogList } from "@/features/logging/components/LogList";
 import { LoginArea } from "@/features/auth/components/LoginArea";
 import LoginDialog from "@/components/auth/LoginDialog";
+import SignupDialog from "@/components/auth/SignupDialog";
 import { VerifiedLoginPromptDialog } from "@/components/auth/VerifiedLoginPromptDialog";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useCreateLog } from "@/features/logging/hooks/useCreateLog";
@@ -56,6 +57,7 @@ export function LogsSection({
   const [shareToFeed, setShareToFeed] = useState(false);
   const [postingStatus, setPostingStatus] = useState<string>("");
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [showSignupDialog, setShowSignupDialog] = useState(false);
   const [showVerifiedLoginPrompt, setShowVerifiedLoginPrompt] = useState(false);
 
   const handleCreateLog = async () => {
@@ -122,12 +124,20 @@ export function LogsSection({
     setShowVerifiedLoginPrompt(true);
   };
 
+  const handleNormalSignupClick = () => {
+    setShowSignupDialog(true);
+  };
+
   const handleLoginDialogClose = () => {
     setShowLoginDialog(false);
   };
 
   const handleVerifiedPromptClose = () => {
     setShowVerifiedLoginPrompt(false);
+  };
+
+  const handleSignupDialogClose = () => {
+    setShowSignupDialog(false);
   };
 
   return (
@@ -240,7 +250,7 @@ export function LogsSection({
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Button
-                    onClick={handleSignupClick}
+                    onClick={handleNormalSignupClick}
                     variant="default"
                     className="w-full"
                   >
@@ -278,7 +288,16 @@ export function LogsSection({
         isOpen={showLoginDialog}
         onClose={handleLoginDialogClose}
         onLogin={handleLoginDialogClose}
-        onSignup={handleSignupClick}
+        onSignup={() => {
+          setShowLoginDialog(false);
+          setShowVerifiedLoginPrompt(true);
+        }}
+      />
+
+      {/* Signup Dialog */}
+      <SignupDialog
+        isOpen={showSignupDialog}
+        onClose={handleSignupDialogClose}
       />
 
       {/* Verified Login Prompt Dialog */}

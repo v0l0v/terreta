@@ -166,26 +166,7 @@ export const VerifiedLoginPromptDialog: React.FC<VerifiedLoginPromptDialogProps>
           </Button>
         </div>
 
-        {/* Trust indicators */}
-        <div className='text-center space-y-2'>
-          <p className='text-xs text-muted-foreground'>
-            Free forever • No email required • Decentralized
-          </p>
-          <div className='flex items-center justify-center gap-4 text-xs text-muted-foreground'>
-            <div className='flex items-center gap-1'>
-              <ShieldCheck className='w-3 h-3' />
-              <span>Secure</span>
-            </div>
-            <div className='flex items-center gap-1'>
-              <Zap className='w-3 h-3' />
-              <span>Instant</span>
-            </div>
-            <div className='flex items-center gap-1'>
-              <Crown className='w-3 h-3' />
-              <span>Private</span>
-            </div>
-          </div>
-        </div>
+
       </div>
     </BaseDialog>
   );
