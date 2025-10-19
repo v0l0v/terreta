@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Share2 } from "lucide-react";
+import { MessageSquare, Share2, LogIn, UserPlus, ShieldCheck } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { LogTypeButtonGroup } from "@/shared/components/ui/mobile-button-patterns";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -7,6 +7,8 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { EmptyStateCard } from "@/shared/components/ui/card-patterns";
 import { LogList } from "@/features/logging/components/LogList";
 import { LoginArea } from "@/features/auth/components/LoginArea";
+import LoginDialog from "@/components/auth/LoginDialog";
+import { VerifiedLoginPromptDialog } from "@/components/auth/VerifiedLoginPromptDialog";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useCreateLog } from "@/features/logging/hooks/useCreateLog";
 import { useShareLogAsEvent } from "@/features/logging/hooks/useShareLogAsEvent";
@@ -32,10 +34,10 @@ interface LogsSectionProps {
   hideForm?: boolean;
 }
 
-export function LogsSection({ 
-  logs, 
-  geocache, 
-  onProfileClick, 
+export function LogsSection({
+  logs,
+  geocache,
+  onProfileClick,
   compact = false,
   isOwner = false,
   className,
@@ -44,24 +46,26 @@ export function LogsSection({
   hideForm = false
 }: LogsSectionProps) {
   // Logs received from parent component
-  
+
   const { user } = useCurrentUser();
   const { mutate: createLog, isPending: isCreatingLog } = useCreateLog();
   const { shareLogAsEvent, isPublishing: isSharing } = useShareLogAsEvent();
-  
+
   const [logText, setLogText] = useState("");
   const [logType, setLogType] = useState<"found" | "dnf" | "note" | "maintenance" | "archived">("found");
   const [shareToFeed, setShareToFeed] = useState(false);
   const [postingStatus, setPostingStatus] = useState<string>("");
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [showVerifiedLoginPrompt, setShowVerifiedLoginPrompt] = useState(false);
 
   const handleCreateLog = async () => {
     if (!logText.trim() || !geocache) return;
-    
+
     setPostingStatus("Signing event...");
-    
+
     // Get the primary relay from the geocache's relay list
     const primaryRelay = geocache.relays?.[0] || '';
-    
+
     createLog({
       geocacheId: geocache.id,
       geocacheDTag: geocache.dTag,
@@ -74,7 +78,7 @@ export function LogsSection({
     }, {
       onSuccess: async () => {
         setPostingStatus("Posted! Refreshing...");
-        
+
         // If user wants to share to feed, publish as kind 1 event
         if (shareToFeed) {
           try {
@@ -96,7 +100,7 @@ export function LogsSection({
         } else {
           setPostingStatus("Posted! Refreshing...");
         }
-        
+
         setLogText("");
         setShareToFeed(false);
         setTimeout(() => {
@@ -110,6 +114,22 @@ export function LogsSection({
     });
   };
 
+  const handleLoginClick = () => {
+    setShowLoginDialog(true);
+  };
+
+  const handleSignupClick = () => {
+    setShowVerifiedLoginPrompt(true);
+  };
+
+  const handleLoginDialogClose = () => {
+    setShowLoginDialog(false);
+  };
+
+  const handleVerifiedPromptClose = () => {
+    setShowVerifiedLoginPrompt(false);
+  };
+
   return (
     <div className={`space-y-4 ${className || ''}`}>
       {/* Show verified form if verification key is valid */}
@@ -120,7 +140,7 @@ export function LogsSection({
           compact={compact}
         />
       )}
-      
+
       {/* Show regular form for logged-in users (unless they have verification) */}
       {user && !(verificationKey && isVerificationValid) && !hideForm && (
         <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm">
@@ -136,7 +156,7 @@ export function LogsSection({
               isOwner={isOwner}
               disabled={isCreatingLog}
             />
-            
+
             <Textarea
               placeholder="Share your experience..."
               value={logText}
@@ -144,7 +164,7 @@ export function LogsSection({
               rows={compact ? 3 : 4}
               className={`text-primary ${compact && "text-sm"}`}
             />
-            
+
             {/* Only show share option for "found" logs */}
             {logType === 'found' && (
               <div className="flex items-center space-x-2 text-primary">
@@ -163,16 +183,16 @@ export function LogsSection({
                 </label>
               </div>
             )}
-            
-            <Button 
-              onClick={handleCreateLog} 
+
+            <Button
+              onClick={handleCreateLog}
               disabled={!logText.trim() || isCreatingLog || isSharing}
               size={compact ? "sm" : "default"}
               className="w-full"
             >
               {isCreatingLog || isSharing ? "Posting..." : "Post Log"}
             </Button>
-            
+
             {postingStatus && (
               <p className={`text-muted-foreground text-center ${compact ? "text-xs" : "text-sm"}`}>
                 {postingStatus}
@@ -181,7 +201,67 @@ export function LogsSection({
           </div>
         </div>
       )}
-      
+
+      {/* Login prompt for non-logged in users */}
+      {!user && !hideForm && (
+        <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm">
+          {!compact && (
+            <div className="lg:p-6 lg:pb-0 px-4 sm:p-4 lg:pt-6 sm:pt-2">
+              <h3 className="text-lg font-semibold text-card-foreground">Log Your Find</h3>
+            </div>
+          )}
+          <div className={compact ? "p-4 space-y-3" : "lg:p-6 lg:pt-0 p-4 space-y-4 lg:pb-6 pb-2"}>
+            {/* Special prompt for verified found logs */}
+            {verificationKey && isVerificationValid ? (
+              <div className="space-y-4">
+                <div className="relative p-4 rounded-lg bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/50 dark:to-emerald-950/50 adventure:from-amber-50 adventure:to-orange-100 adventure:dark:from-amber-950/50 adventure:dark:to-orange-950/50 border border-green-200 dark:border-green-800 adventure:border-amber-200 adventure:dark:border-amber-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ShieldCheck className="h-5 w-5 text-green-600 adventure:text-amber-700" />
+                    <span className="font-semibold text-green-800 dark:text-green-200 adventure:text-amber-800 adventure:dark:text-amber-200">
+                      Verified Discovery Available!
+                    </span>
+                  </div>
+                  <p className="text-sm text-green-700 dark:text-green-300 adventure:text-amber-700 adventure:dark:text-amber-300 mb-3">
+                    You have a valid verification key for this cache. Create an account to post a verified "Found it" log with a special verification badge!
+                  </p>
+                  <Button
+                    onClick={handleSignupClick}
+                    className="w-full bg-green-600 hover:bg-green-700 adventure:bg-amber-700 adventure:hover:bg-amber-800"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Create Account to Log Verified Find
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Found this geocache? Create an account or log in to share your experience with the community!
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Button
+                    onClick={handleSignupClick}
+                    variant="default"
+                    className="w-full"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Create Account
+                  </Button>
+                  <Button
+                    onClick={handleLoginClick}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Log In
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {logs && logs.length > 0 ? (
         <LogList logs={logs} compact={compact} onProfileClick={onProfileClick} />
       ) : (
@@ -192,6 +272,23 @@ export function LogsSection({
           action={!user ? <LoginArea /> : undefined}
         />
       )}
+
+      {/* Login Dialog */}
+      <LoginDialog
+        isOpen={showLoginDialog}
+        onClose={handleLoginDialogClose}
+        onLogin={handleLoginDialogClose}
+        onSignup={handleSignupClick}
+      />
+
+      {/* Verified Login Prompt Dialog */}
+      <VerifiedLoginPromptDialog
+        isOpen={showVerifiedLoginPrompt}
+        onClose={handleVerifiedPromptClose}
+        onLogin={handleLoginClick}
+        onSignup={handleSignupClick}
+        geocacheName={geocache.name}
+      />
     </div>
   );
 }
