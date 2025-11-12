@@ -244,15 +244,19 @@ export default function CreateCacheLanding() {
       <div className="max-w-md mx-auto text-center space-y-4">
         {/* Hero Section */}
         <div className="space-y-2">
-          <h1 className="text-foreground [@media(max-height:800px)]:text-xl text-2xl font-bold flex items-center justify-center gap-2 mb-2">
-            <div className="bg-green-600 adventure:bg-amber-700 p-2 rounded-lg">
+          <div className="flex items-center gap-3 justify-center mb-2">
+            <div className="bg-green-600 adventure:bg-amber-700 p-2 rounded-lg flex-shrink-0">
               <Chest className="text-white h-6 w-6" />
             </div>
-            Hide a New Treasure
-          </h1>
-          <p className="text-muted-foreground text-xs">
-            Create a treasure for others to discover!
-          </p>
+            <div className="text-left">
+              <h1 className="text-foreground [@media(max-height:800px)]:text-xl text-2xl font-bold">
+                Hide a New Treasure
+              </h1>
+              <p className="text-muted-foreground text-xs">
+                Create a treasure for others to discover!
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* QR Code Section */}
