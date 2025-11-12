@@ -242,179 +242,166 @@ export default function CreateCacheLanding() {
   return (
     <PageLayout maxWidth="lg" background="default" className="pb-4">
       <div className="max-w-md mx-auto text-center space-y-6">
-        {/* Hero Section with Gradient */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-emerald-500 adventure:from-amber-400 adventure:to-orange-500 rounded-3xl opacity-10 blur-xl"></div>
-          <div className="relative">
-            <h1 className="text-foreground [@media(max-height:800px)]:text-xl text-2xl font-bold flex items-center justify-center gap-2 mb-2">
-              <div className="bg-gradient-to-br from-green-500 to-emerald-600 adventure:from-amber-500 adventure:to-orange-600 p-2 rounded-xl">
-                <Chest className="text-white h-6 w-6" />
-              </div>
-              Hide a New Geocache
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Create a treasure for others to discover!
-            </p>
-          </div>
+        {/* Hero Section */}
+        <div className="space-y-2">
+          <h1 className="text-foreground [@media(max-height:800px)]:text-xl text-2xl font-bold flex items-center justify-center gap-2 mb-2">
+            <div className="bg-green-600 p-2 rounded-lg">
+              <Chest className="text-white h-6 w-6" />
+            </div>
+            Hide a New Geocache
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Create a treasure for others to discover!
+          </p>
         </div>
 
         {/* QR Code Section */}
         <div className="space-y-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-400 adventure:from-amber-400 adventure:to-orange-400 rounded-2xl opacity-20"></div>
-            <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 border border-green-200 adventure:border-amber-200">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <QrCode className="h-5 w-5 text-green-600 adventure:text-amber-600" />
-                <h2 className="text-lg font-semibold text-green-700 adventure:text-amber-700">
-                  Verification QR Code
-                </h2>
-                <Sparkles className="h-4 w-4 text-green-500 adventure:text-amber-500" />
-              </div>
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-green-200">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <QrCode className="h-5 w-5 text-green-600" />
+              <h2 className="text-lg font-semibold text-green-700">
+                Verification QR Code
+              </h2>
+            </div>
 
-              <p className="text-sm text-muted-foreground mb-4">
-                Optional but useful - lets finders log verified discoveries
-              </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Optional but useful - lets finders log verified discoveries
+            </p>
 
-              <div className="flex justify-center mb-4">
-                {qrDataUrl ? (
-                  <img
-                    src={qrDataUrl}
-                    alt="Verification QR Code"
-                    className="w-full [@media(max-height:680px)]:h-[120px] [@media(max-height:900px)]:max-w-[50vw] sm:h-auto rounded-lg shadow-md max-w-xs object-contain"
-                  />
-                ) : (
-                  <div className="w-48 h-48 flex items-center justify-center bg-gradient-to-br from-green-100 to-emerald-100 adventure:from-amber-100 adventure:to-orange-100 rounded-lg">
-                    <ComponentLoading size="sm" title="Generating..." />
-                  </div>
-                )}
-              </div>
+            <div className="flex justify-center mb-4">
+              {qrDataUrl ? (
+                <img
+                  src={qrDataUrl}
+                  alt="Verification QR Code"
+                  className="w-full [@media(max-height:680px)]:h-[120px] [@media(max-height:900px)]:max-w-[50vw] sm:h-auto rounded-lg shadow-sm max-w-xs object-contain"
+                />
+              ) : (
+                <div className="w-48 h-48 flex items-center justify-center bg-green-50 dark:bg-green-950 rounded-lg">
+                  <ComponentLoading size="sm" title="Generating..." />
+                </div>
+              )}
+            </div>
 
-              <div className="flex justify-center gap-2 flex-wrap">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Settings className="h-4 w-4 mr-1" />
-                      Style
-                      <ChevronDown className="h-3 w-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setQrType("full")}>
-                      Full
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setQrType("cutout")}>
-                      Cutout
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setQrType("micro")}>
-                      Micro
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setQrType("sheet")}>
-                      Sheet (3x3)
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button onClick={handleDownloadQR} disabled={!qrDataUrl} size="sm">
-                  <Download className="h-4 w-4 mr-1" />
-                  Save
-                </Button>
-                <Button variant="outline" onClick={handlePrint} disabled={!qrDataUrl} size="sm">
-                  <Printer className="h-4 w-4" />
-                </Button>
-              </div>
+            <div className="flex justify-center gap-2 flex-wrap">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Settings className="h-4 w-4 mr-1" />
+                    Style
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setQrType("full")}>
+                    Full
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setQrType("cutout")}>
+                    Cutout
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setQrType("micro")}>
+                    Micro
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setQrType("sheet")}>
+                    Sheet (3x3)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button onClick={handleDownloadQR} disabled={!qrDataUrl} size="sm">
+                <Download className="h-4 w-4 mr-1" />
+                Save
+              </Button>
+              <Button variant="outline" onClick={handlePrint} disabled={!qrDataUrl} size="sm">
+                <Printer className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Action Section */}
         <div className="space-y-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl opacity-20"></div>
-            <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 border border-blue-200">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <MapPin className="h-5 w-5 text-blue-600" />
-                <h2 className="text-lg font-semibold text-blue-700">
-                  Create Your Cache Listing
-                </h2>
-              </div>
-
-              {qrType === 'sheet' ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Hide each QR code in separate locations. Scan each one to create listings.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Create the listing now or scan the QR code later when you're ready.
-                  </p>
-                  <div className="flex gap-2 justify-center">
-                    <Button
-                      onClick={handleFillOutNow}
-                      disabled={!qrDataUrl}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg transform transition-all duration-200 hover:scale-105"
-                    >
-                      <Crown className="h-4 w-4 mr-2" />
-                      Create Now
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate("/")}
-                      className="border-blue-200 text-blue-700 hover:bg-blue-50"
-                    >
-                      Later
-                    </Button>
-                  </div>
-                </>
-              )}
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-green-200">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <MapPin className="h-5 w-5 text-green-600" />
+              <h2 className="text-lg font-semibold text-green-700">
+                Create Your Cache Listing
+              </h2>
             </div>
+
+            {qrType === 'sheet' ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Hide each QR code in separate locations. Scan each one to create listings.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create the listing now or scan the QR code later when you're ready.
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    onClick={handleFillOutNow}
+                    disabled={!qrDataUrl}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Create Now
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/")}
+                    className="border-green-200 text-green-700 hover:bg-green-50"
+                  >
+                    Later
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
         {/* Simplified Advanced Options */}
         {showAdvanced && (
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl opacity-20"></div>
-            <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-4 border border-purple-200">
-              <div className="flex items-center gap-2 mb-3">
-                <Gift className="h-4 w-4 text-purple-600" />
-                <span className="text-sm font-medium text-purple-700">Giftable Cache</span>
-              </div>
-              <input
-                type="text"
-                placeholder="Recipient's npub (optional)"
-                value={customNpub}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setCustomNpub(value);
-                  if (value && !validateNpub(value)) {
-                    setNpubError("Invalid npub format");
-                  } else {
-                    setNpubError("");
-                  }
-                }}
-                className="w-full px-3 py-2 text-sm border rounded-md bg-background text-primary focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              {npubError && (
-                <p className="text-xs text-destructive mt-1">{npubError}</p>
-              )}
-              {customNpub && !npubError && (
-                <Button
-                  size="sm"
-                  onClick={async () => {
-                    setSubmittedNpub(customNpub);
-                    toast({
-                      title: "Giftable Cache Updated",
-                      description: "QR code updated for the gift recipient",
-                    });
-                  }}
-                  className="w-full mt-2 bg-purple-600 hover:bg-purple-700"
-                >
-                  <Gift className="h-4 w-4 mr-1" />
-                  Create Gift QR
-                </Button>
-              )}
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-green-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Gift className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-700">Giftable Cache</span>
             </div>
+            <input
+              type="text"
+              placeholder="Recipient's npub (optional)"
+              value={customNpub}
+              onChange={(e) => {
+                const value = e.target.value;
+                setCustomNpub(value);
+                if (value && !validateNpub(value)) {
+                  setNpubError("Invalid npub format");
+                } else {
+                  setNpubError("");
+                }
+              }}
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background text-primary focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            {npubError && (
+              <p className="text-xs text-destructive mt-1">{npubError}</p>
+            )}
+            {customNpub && !npubError && (
+              <Button
+                size="sm"
+                onClick={async () => {
+                  setSubmittedNpub(customNpub);
+                  toast({
+                    title: "Giftable Cache Updated",
+                    description: "QR code updated for the gift recipient",
+                  });
+                }}
+                className="w-full mt-2 bg-green-600 hover:bg-green-700"
+              >
+                <Gift className="h-4 w-4 mr-1" />
+                Create Gift QR
+              </Button>
+            )}
           </div>
         )}
 
