@@ -266,7 +266,8 @@ export default function CreateCacheLanding() {
             </div>
 
             <p className="text-xs text-muted-foreground mb-4">
-              Optional but useful - lets finders log verified discoveries. Print and place this QR code inside your cache container.
+              Optional but useful - lets finders log verified discoveries.<br />
+              Print and place this QR code inside your geocache container.
             </p>
 
             <div className="flex justify-center mb-4">

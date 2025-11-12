@@ -16,7 +16,7 @@ import { RelayErrorFallback } from "@/components/RelayErrorFallback";
 export default function Home() {
   const { user } = useCurrentUser();
   const { config } = useAppContext();
-  
+
   // Use geocaches with optimized loading
   const {
     data: geocaches,
@@ -26,18 +26,18 @@ export default function Home() {
     isStatsLoading,
     refetch: refresh
   } = useGeocaches();
-  
+
   const [isRetrying, setIsRetrying] = useState(false);
-  
+
   // Add a state to track initial page load for skeleton display
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  
+
   // Set initial load to false after a short delay to show skeletons
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsInitialLoad(false);
     }, 1500); // Show skeletons for at least 1.5 seconds
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -49,7 +49,7 @@ export default function Home() {
     geocacheCount: geocaches?.length || 0,
     shouldShowSkeletons: (isLoading || isInitialLoad) && !geocaches
   });
-  
+
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);
 
@@ -120,7 +120,7 @@ export default function Home() {
           backgroundSize: '300px 300px',
           opacity: 0.4
         }}></div>
-        
+
         {/* Full-width top depth shadow with better fade - adventure mode only */}
         <div className="absolute top-0 left-0 right-0 h-16 adventure:bg-gradient-to-b adventure:from-black/20 adventure:via-black/12 adventure:via-black/6 adventure:via-black/3 adventure:via-black/1 adventure:to-transparent pointer-events-none"></div>
         {/* Full-width bottom depth shadow with better fade - adventure mode only */}
@@ -144,55 +144,55 @@ export default function Home() {
             <div className="absolute bottom-2/3 right-1/4 animate-pulse" style={{animationDelay: '1.5s'}}>
               <MapPin className="w-5 h-5 text-emerald-600 dark:text-emerald-300 opacity-65 drop-shadow-sm" />
             </div>
-            
+
             {/* Globe-style curved grid lines */}
             <div className="absolute inset-0 pointer-events-none opacity-60">
               {/* Horizontal latitude lines - curved to appear like globe */}
               <svg className="absolute inset-0 w-full h-full opacity-60" viewBox="0 0 100 100" preserveAspectRatio="none">
                 {/* Top latitude line */}
-                <path 
-                  d="M 10,25 Q 50,22 90,25" 
-                  stroke="currentColor" 
-                  strokeWidth="0.4" 
+                <path
+                  d="M 10,25 Q 50,22 90,25"
+                  stroke="currentColor"
+                  strokeWidth="0.4"
                   fill="none"
                   className="text-green-400/70 dark:text-emerald-400/90"
                 />
                 {/* Middle latitude line */}
-                <path 
-                  d="M 5,50 Q 50,48 95,50" 
-                  stroke="currentColor" 
-                  strokeWidth="0.5" 
+                <path
+                  d="M 5,50 Q 50,48 95,50"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
                   fill="none"
                   className="text-green-500/80 dark:text-emerald-300"
                 />
                 {/* Bottom latitude line */}
-                <path 
-                  d="M 10,75 Q 50,78 90,75" 
-                  stroke="currentColor" 
-                  strokeWidth="0.4" 
+                <path
+                  d="M 10,75 Q 50,78 90,75"
+                  stroke="currentColor"
+                  strokeWidth="0.4"
                   fill="none"
                   className="text-green-400/70 dark:text-emerald-400/90"
                 />
-                
+
                 {/* Vertical longitude lines - curved to show globe curvature */}
-                <path 
-                  d="M 25,10 Q 22,50 25,90" 
-                  stroke="currentColor" 
-                  strokeWidth="0.3" 
+                <path
+                  d="M 25,10 Q 22,50 25,90"
+                  stroke="currentColor"
+                  strokeWidth="0.3"
                   fill="none"
                   className="text-green-300/60 dark:text-emerald-500/80"
                 />
-                <path 
-                  d="M 50,5 Q 48,50 50,95" 
-                  stroke="currentColor" 
-                  strokeWidth="0.3" 
+                <path
+                  d="M 50,5 Q 48,50 50,95"
+                  stroke="currentColor"
+                  strokeWidth="0.3"
                   fill="none"
                   className="text-green-400/70 dark:text-emerald-400/90"
                 />
-                <path 
-                  d="M 75,10 Q 78,50 75,90" 
-                  stroke="currentColor" 
-                  strokeWidth="0.3" 
+                <path
+                  d="M 75,10 Q 78,50 75,90"
+                  stroke="currentColor"
+                  strokeWidth="0.3"
                   fill="none"
                   className="text-green-300/60 dark:text-emerald-500/80"
                 />
@@ -222,57 +222,57 @@ export default function Home() {
             <div className="absolute bottom-2/3 right-1/4 animate-pulse" style={{animationDelay: '0.5s'}}>
               <Compass className="w-6 h-6 text-stone-800/80 opacity-80 drop-shadow-sm transform rotate-180" />
             </div>
-            
+
             {/* Vintage map elements - hand-drawn treasure paths */}
             <div className="absolute inset-0 pointer-events-none">
               <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                 {/* Meandering treasure paths - irregular, hand-drawn style */}
-                <path 
-                  d="M 15,20 Q 25,18 35,22 T 55,25 Q 65,28 75,24 T 90,28" 
-                  stroke="currentColor" 
-                  strokeWidth="0.4" 
+                <path
+                  d="M 15,20 Q 25,18 35,22 T 55,25 Q 65,28 75,24 T 90,28"
+                  stroke="currentColor"
+                  strokeWidth="0.4"
                   fill="none"
                   strokeDasharray="2,1"
                   className="text-stone-600/60"
                 />
-                <path 
-                  d="M 10,45 Q 20,42 30,48 T 50,52 Q 60,55 70,50 T 85,53" 
-                  stroke="currentColor" 
-                  strokeWidth="0.3" 
+                <path
+                  d="M 10,45 Q 20,42 30,48 T 50,52 Q 60,55 70,50 T 85,53"
+                  stroke="currentColor"
+                  strokeWidth="0.3"
                   fill="none"
                   strokeDasharray="1.5,0.5"
                   className="text-stone-700/50"
                 />
-                <path 
-                  d="M 20,70 Q 30,68 40,72 T 60,75 Q 70,78 80,74" 
-                  stroke="currentColor" 
-                  strokeWidth="0.4" 
+                <path
+                  d="M 20,70 Q 30,68 40,72 T 60,75 Q 70,78 80,74"
+                  stroke="currentColor"
+                  strokeWidth="0.4"
                   fill="none"
                   strokeDasharray="2,1"
                   className="text-stone-600/55"
                 />
-                
+
                 {/* Vertical treasure routes - winding paths */}
-                <path 
-                  d="M 25,15 Q 22,25 28,35 T 25,55 Q 22,65 28,75 T 25,85" 
-                  stroke="currentColor" 
-                  strokeWidth="0.3" 
+                <path
+                  d="M 25,15 Q 22,25 28,35 T 25,55 Q 22,65 28,75 T 25,85"
+                  stroke="currentColor"
+                  strokeWidth="0.3"
                   fill="none"
                   strokeDasharray="1,0.5"
                   className="text-stone-800/45"
                 />
-                <path 
-                  d="M 50,10 Q 48,20 52,30 T 50,50 Q 48,60 52,70 T 50,90" 
-                  stroke="currentColor" 
-                  strokeWidth="0.4" 
+                <path
+                  d="M 50,10 Q 48,20 52,30 T 50,50 Q 48,60 52,70 T 50,90"
+                  stroke="currentColor"
+                  strokeWidth="0.4"
                   fill="none"
                   strokeDasharray="1.5,1"
                   className="text-stone-700/55"
                 />
-                <path 
-                  d="M 75,12 Q 78,22 72,32 T 75,52 Q 78,62 72,72 T 75,88" 
-                  stroke="currentColor" 
-                  strokeWidth="0.3" 
+                <path
+                  d="M 75,12 Q 78,22 72,32 T 75,52 Q 78,62 72,72 T 75,88"
+                  stroke="currentColor"
+                  strokeWidth="0.3"
                   fill="none"
                   strokeDasharray="1,0.5"
                   className="text-stone-800/45"
@@ -283,7 +283,7 @@ export default function Home() {
 
           </div>
         </div>
-        
+
         <div className="container mx-auto text-center relative flex-1 flex flex-col justify-center md:block">
           <div className="mb-6 animate-fade-in">
             <Link to="/install" className="inline-flex flex-col items-center gap-0.5 bg-green-100 dark:bg-green-900 adventure:bg-[#4682B4] text-green-700 dark:text-green-300 adventure:text-white px-4 py-1.5 rounded-full text-base adventure:text-[16px] font-medium hover:bg-green-200 dark:hover:bg-green-800 adventure:hover:bg-stone-700 transition-colors">
@@ -298,7 +298,7 @@ export default function Home() {
               </span>
             </Link>
           </div>
-          
+
           <h2 className="adventure:text-4xl text-2xl xs:text-3xl md:text-5xl adventure:xs:text-5xl adventure:md:text-7xl font-bold text-foreground mb-4 md:mb-6 animate-slide-up">
             <span className="adventure:hidden">Discover Hidden</span>
             <span className="hidden adventure:inline">Embark on Epic</span>
@@ -310,18 +310,18 @@ export default function Home() {
               <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-600 adventure:from-stone-600 adventure:to-stone-800 transform scale-x-0 animate-expand-line"></span>
             </span>
           </h2>
-          
+
           <p className="text-md xs:text-sm md:text-xl text-stone-600 dark:text-stone-400 mb-6 md:mb-8 max-w-2xl mx-auto animate-slide-up-delay">
             <span className="adventure:hidden">
-              Join the decentralized geocaching adventure powered by Nostr. 
+              Join the decentralized geocaching adventure powered by Nostr.
               Hide geocaches, find them, and connect with explorers worldwide.
             </span>
             <span className="hidden adventure:inline">
-              Join a fellowship of geocachers on an ancient quest powered by mystical networks. 
+              Join a fellowship of geocachers on an ancient quest powered by mystical networks.
               Conceal geocaches, discover legendary geocaches, and forge bonds with fellow adventurers across the realm.
             </span>
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-2 xs:gap-3 md:gap-4 justify-center animate-slide-up-delay-2">
             <Link to="/map" className="flex-1 sm:flex-initial group">
               <Button size="lg" className="bg-green-600 hover:bg-green-700 adventure:bg-stone-700 adventure:hover:bg-stone-800 adventure:text-stone-100 w-full sm:w-auto transform transition-all duration-200 hover:scale-105 hover:shadow-lg text-sm xs:text-base adventure:text-base adventure:xs:text-lg px-4 xs:px-6">
@@ -357,26 +357,26 @@ export default function Home() {
                   <Plus className="h-5 w-5 mr-1 xs:mr-2 transition-transform group-hover:rotate-90 adventure:hidden" />
                   <Crown className="h-5 w-5 mr-1 xs:mr-2 transition-transform group-hover:rotate-12 hidden adventure:inline" />
                   <span className="adventure:hidden">
-                    <span className="hidden xs:inline">Hide a Geocache</span>
+                    <span className="hidden xs:inline">Hide a Treasure</span>
                     <span className="xs:hidden">Hide</span>
                   </span>
                   <span className="hidden adventure:inline">
-                    <span className="hidden xs:inline">Conceal a Geocache</span>
+                    <span className="hidden xs:inline">Conceal a Treasure</span>
                     <span className="xs:hidden">Conceal</span>
                   </span>
                 </Button>
               </Link>
             ) : (
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className="w-full sm:w-auto border-green-200 dark:border-green-800 adventure:border-stone-400 hover:border-green-300 dark:hover:border-green-700 adventure:hover:border-stone-500 hover:bg-green-50 dark:hover:bg-green-950 adventure:hover:bg-stone-200 adventure:hover:text-stone-800 transform transition-all duration-200 hover:scale-105 group text-sm xs:text-base adventure:text-base adventure:xs:text-lg px-4 xs:px-6"
                 onClick={handleLoginClick}
               >
                 <Plus className="h-4 w-4 xs:h-5 xs:w-5 mr-1 xs:mr-2 transition-transform group-hover:rotate-12 adventure:hidden" />
                 <Shield className="h-4 w-4 xs:h-5 xs:w-5 mr-1 xs:mr-2 transition-transform group-hover:rotate-12 hidden adventure:inline" />
                 <span className="adventure:hidden">
-                  <span className="hidden xs:inline">Login to Hide Geocaches</span>
+                  <span className="hidden xs:inline">Login to Hide Treasures</span>
                   <span className="xs:hidden">Login</span>
                 </span>
                 <span className="hidden adventure:inline">
@@ -469,7 +469,7 @@ export default function Home() {
                 Uncover the latest geocaches concealed by legendary explorers across the realm. Each one holds ancient secrets awaiting discovery.
               </span>
             </p>
-            
+
             {/* Action buttons */}
             <div className="flex items-center justify-center gap-3 mt-6">
               <Link to="/map">
@@ -482,7 +482,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          
+
           {(isLoading || isInitialLoad) ? (
             // Show skeleton cards during loading
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -536,7 +536,7 @@ export default function Home() {
                   />
                 ))}
               </div>
-              
+
               {/* Mobile view all button */}
               <div className="mt-8 text-center sm:hidden">
                 <Link to="/map">
@@ -554,13 +554,13 @@ export default function Home() {
       </section>
 
       {/* Login and Signup Dialogs */}
-      <LoginDialog 
+      <LoginDialog
         isOpen={loginDialogOpen}
         onClose={() => setLoginDialogOpen(false)}
         onLogin={handleLoginSuccess}
         onSignup={handleSignupClick}
       />
-      <SignupDialog 
+      <SignupDialog
         isOpen={signupDialogOpen}
         onClose={handleSignupClose}
       />

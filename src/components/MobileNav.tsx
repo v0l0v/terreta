@@ -17,7 +17,7 @@ const navigation = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Map', href: '/map', icon: Map },
   { name: 'Claim', href: '/claim', icon: ScanQrCode },
-  { name: 'New', href: '/create', icon: Plus },
+  { name: 'New Treasure', href: '/create', icon: Plus },
 ];
 
 // Helper function for consistent theme-aware styling
