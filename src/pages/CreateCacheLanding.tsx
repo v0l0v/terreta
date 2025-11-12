@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { QrCode, ChevronDown, Download, Printer, Settings, Gift, MapPin, Sparkles, Crown, Package } from "lucide-react";
+import { QrCode, ChevronDown, Download, Printer, Settings, Gift, MapPin, Sparkles, Crown, Package, Edit } from "lucide-react";
 import { Chest } from "@/features/geocache/constants/cacheIconConstants";
 import { Button } from "@/components/ui/button";
 import {
@@ -322,7 +322,7 @@ export default function CreateCacheLanding() {
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-green-100 adventure:border-amber-200">
             <div className="flex items-center justify-center gap-2 mb-3">
-              <MapPin className="h-5 w-5 text-green-600 adventure:text-amber-600" />
+              <Chest className="h-5 w-5 text-green-600 adventure:text-amber-600" />
               <h2 className="text-lg font-semibold text-green-700 adventure:text-amber-700">
                 Create Your Cache Listing
               </h2>
@@ -345,7 +345,7 @@ export default function CreateCacheLanding() {
                     disabled={!qrDataUrl}
                     className="bg-green-600 hover:bg-green-700 adventure:bg-amber-700 adventure:hover:bg-amber-800 text-white"
                   >
-                    <Chest className="h-4 w-4 mr-2" />
+                    <Edit className="h-4 w-4 mr-2" />
                     Create Now
                   </Button>
                   <Button
