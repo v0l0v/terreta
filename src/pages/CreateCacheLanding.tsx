@@ -266,7 +266,7 @@ export default function CreateCacheLanding() {
             </div>
 
             <p className="text-xs text-muted-foreground mb-4">
-              Optional but useful - lets finders log verified discoveries. If you use it, print and place this QR code inside your cache container.
+              Optional but useful - lets finders log verified discoveries. Print and place this QR code inside your cache container.
             </p>
 
             <div className="flex justify-center mb-4">
@@ -345,7 +345,7 @@ export default function CreateCacheLanding() {
                     disabled={!qrDataUrl}
                     className="bg-green-600 hover:bg-green-700 adventure:bg-amber-700 adventure:hover:bg-amber-800 text-white"
                   >
-                    <Package className="h-4 w-4 mr-2" />
+                    <Chest className="h-4 w-4 mr-2" />
                     Create Now
                   </Button>
                   <Button
