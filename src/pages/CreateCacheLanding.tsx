@@ -249,10 +249,10 @@ export default function CreateCacheLanding() {
               <Chest className="text-white h-6 w-6" />
             </div>
             Hide a New Treasure
-            <span className="text-muted-foreground text-xs ml-2">
-              Create a treasure for others to discover!
-            </span>
           </h1>
+          <p className="text-muted-foreground text-xs">
+            Create a treasure for others to discover!
+          </p>
         </div>
 
         {/* QR Code Section */}
