@@ -249,10 +249,10 @@ export default function CreateCacheLanding() {
               <Chest className="text-white h-6 w-6" />
             </div>
             Hide a New Treasure
+            <span className="text-muted-foreground text-xs ml-2">
+              Create a treasure for others to discover!
+            </span>
           </h1>
-          <p className="text-muted-foreground text-xs">
-            Create a treasure for others to discover!
-          </p>
         </div>
 
         {/* QR Code Section */}
@@ -267,7 +267,7 @@ export default function CreateCacheLanding() {
 
             <p className="text-xs text-muted-foreground mb-4">
               Optional but useful - lets finders log verified discoveries.<br />
-              Print and place this QR code inside your geocache container.
+              Print and put this QR code inside your geocache.
             </p>
 
             <div className="flex justify-center mb-4">
