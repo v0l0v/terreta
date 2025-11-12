@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { QrCode, ChevronDown, Download, Printer, Settings, Gift, MapPin, Sparkles, Crown } from "lucide-react";
+import { QrCode, ChevronDown, Download, Printer, Settings, Gift, MapPin, Sparkles, Crown, Package } from "lucide-react";
 import { Chest } from "@/features/geocache/constants/cacheIconConstants";
 import { Button } from "@/components/ui/button";
 import {
@@ -241,7 +241,7 @@ export default function CreateCacheLanding() {
 
   return (
     <PageLayout maxWidth="lg" background="default" className="pb-4">
-      <div className="max-w-md mx-auto text-center space-y-6">
+      <div className="max-w-md mx-auto text-center space-y-4">
         {/* Hero Section */}
         <div className="space-y-2">
           <h1 className="text-foreground [@media(max-height:800px)]:text-xl text-2xl font-bold flex items-center justify-center gap-2 mb-2">
@@ -265,8 +265,11 @@ export default function CreateCacheLanding() {
               </h2>
             </div>
 
-            <p className="text-xs text-muted-foreground mb-4">
+            <p className="text-xs text-muted-foreground mb-2">
               Optional but useful - lets finders log verified discoveries
+            </p>
+            <p className="text-xs text-muted-foreground mb-4 font-medium">
+              💡 Print this QR code and place it inside your cache container
             </p>
 
             <div className="flex justify-center mb-4">
@@ -345,7 +348,7 @@ export default function CreateCacheLanding() {
                     disabled={!qrDataUrl}
                     className="bg-green-600 hover:bg-green-700 adventure:bg-amber-700 adventure:hover:bg-amber-800 text-white"
                   >
-                    <MapPin className="h-4 w-4 mr-2" />
+                    <Package className="h-4 w-4 mr-2" />
                     Create Now
                   </Button>
                   <Button
