@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { QrCode, ChevronDown, Download, Printer, Settings, Gift, MapPin, Sparkles, Treasure, Crown } from "lucide-react";
+import { QrCode, ChevronDown, Download, Printer, Settings, Gift, MapPin, Sparkles, Crown } from "lucide-react";
+import { Chest } from "@/features/geocache/constants/cacheIconConstants";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -247,7 +248,7 @@ export default function CreateCacheLanding() {
           <div className="relative">
             <h1 className="text-foreground [@media(max-height:800px)]:text-xl text-2xl font-bold flex items-center justify-center gap-2 mb-2">
               <div className="bg-gradient-to-br from-green-500 to-emerald-600 adventure:from-amber-500 adventure:to-orange-600 p-2 rounded-xl">
-                <Treasure className="text-white h-6 w-6" />
+                <Chest className="text-white h-6 w-6" />
               </div>
               Hide a New Geocache
             </h1>
