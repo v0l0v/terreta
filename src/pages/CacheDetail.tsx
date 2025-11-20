@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
+import { Copy, Check } from "lucide-react";
 
 import { useStore } from 'zustand';
 import { useZapStore } from '@/shared/stores/useZapStore';
@@ -155,6 +156,9 @@ export default function CacheDetail() {
   // Verification state
   const [verificationKey, setVerificationKey] = useState<string | null>(null);
   const [isVerificationValid, setIsVerificationValid] = useState(false);
+
+  // Copy to clipboard state
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
   // Initialize edit form when geocache loads
   useEffect(() => {
@@ -385,6 +389,24 @@ export default function CacheDetail() {
   const handleProfileClick = (pubkey: string) => {
     setSelectedProfilePubkey(pubkey);
     setProfileDialogOpen(true);
+  };
+
+  const handleCopyToClipboard = async (text: string, itemType: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedItem(itemType);
+      toast({
+        title: "Copied!",
+        description: `${itemType} copied to clipboard`,
+      });
+      setTimeout(() => setCopiedItem(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Copy Failed",
+        description: "Failed to copy to clipboard",
+        variant: "destructive",
+      });
+    }
   };
 
   // Show error with retry option if there was an error and no cached data
@@ -786,23 +808,57 @@ export default function CacheDetail() {
                       <span className="text-orange-600 text-xs">(modified)</span>
                     )}
                   </p>
-                  <p className="text-xs md:text-sm font-mono mt-1 break-all text-foreground">
-                    {isEditing && editLocation ?
-                      `${editLocation.lat.toFixed(6)}, ${editLocation.lng.toFixed(6)}` :
-                      `${geocache.location.lat.toFixed(6)}, ${geocache.location.lng.toFixed(6)}`
-                    }
-                  </p>
+                  <button
+                    onClick={() => {
+                      const location = isEditing && editLocation ? editLocation : geocache.location;
+                      handleCopyToClipboard(
+                        `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`,
+                        "Coordinates"
+                      );
+                    }}
+                    className="flex items-center gap-2 text-xs md:text-sm font-mono mt-1 break-all text-foreground hover:bg-muted/50 p-1 rounded transition-colors w-full text-left"
+                    title="Click to copy coordinates"
+                  >
+                    <span className="flex-1">
+                      {isEditing && editLocation ?
+                        `${editLocation.lat.toFixed(6)}, ${editLocation.lng.toFixed(6)}` :
+                        `${geocache.location.lat.toFixed(6)}, ${geocache.location.lng.toFixed(6)}`
+                      }
+                    </span>
+                    {copiedItem === "Coordinates" ? (
+                      <Check className="h-3 w-3 text-green-600 flex-shrink-0" />
+                    ) : (
+                      <Copy className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    )}
+                  </button>
                   <p className="text-xs font-medium text-muted-foreground mt-3">
                     Geohash {isEditing && editLocation && (editLocation.lat !== geocache.location.lat || editLocation.lng !== geocache.location.lng) && (
                       <span className="text-orange-600 text-xs">(modified)</span>
                     )}
                   </p>
-                  <p className="text-xs md:text-sm font-mono mt-1 break-all text-foreground">
-                    {isEditing && editLocation ?
-                      encodeGeohash(editLocation.lat, editLocation.lng, 9) :
-                      encodeGeohash(geocache.location.lat, geocache.location.lng, 9)
-                    }
-                  </p>
+                  <button
+                    onClick={() => {
+                      const location = isEditing && editLocation ? editLocation : geocache.location;
+                      handleCopyToClipboard(
+                        encodeGeohash(location.lat, location.lng, 9),
+                        "Geohash"
+                      );
+                    }}
+                    className="flex items-center gap-2 text-xs md:text-sm font-mono mt-1 break-all text-foreground hover:bg-muted/50 p-1 rounded transition-colors w-full text-left"
+                    title="Click to copy geohash"
+                  >
+                    <span className="flex-1">
+                      {isEditing && editLocation ?
+                        encodeGeohash(editLocation.lat, editLocation.lng, 9) :
+                        encodeGeohash(geocache.location.lat, geocache.location.lng, 9)
+                      }
+                    </span>
+                    {copiedItem === "Geohash" ? (
+                      <Check className="h-3 w-3 text-green-600 flex-shrink-0" />
+                    ) : (
+                      <Copy className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    )}
+                  </button>
                   <Button
                     variant="outline"
                     size="sm"
