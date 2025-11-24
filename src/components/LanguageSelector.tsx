@@ -21,7 +21,7 @@ const languages = [
 export function LanguageSelector({ className }: LanguageSelectorProps) {
   const { i18n } = useTranslation();
 
-  const currentLanguage = i18n.language || 'en';
+  const currentLanguage = i18n.language;
   const currentLangData = languages.find(lang => lang.code === currentLanguage) || languages[0];
 
   const handleLanguageChange = (value: string) => {
