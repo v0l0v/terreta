@@ -90,7 +90,13 @@
     "concealGeocache": "ジオキャッシュを隠す",
     "blog": "ブログ",
     "appSettings": "アプリ設定",
-    "about": "について"
+    "about": "について",
+    "switchAccount": "アカウントを切り替え",
+    "myProfile": "マイプロフィール",
+    "savedCaches": "保存されたキャッシュ",
+    "walletSettings": "ウォレット設定",
+    "addAnotherAccount": "別のアカウントを追加",
+    "logOut": "ログアウト"
   }
 }
 

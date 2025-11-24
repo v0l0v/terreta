@@ -90,7 +90,13 @@
     "concealGeocache": "ซ่อนจีโอแคช",
     "blog": "บล็อก",
     "appSettings": "การตั้งค่าแอป",
-    "about": "เกี่ยวกับ"
+    "about": "เกี่ยวกับ",
+    "switchAccount": "สลับบัญชี",
+    "myProfile": "โปรไฟล์ของฉัน",
+    "savedCaches": "แคชที่บันทึกไว้",
+    "walletSettings": "การตั้งค่ากระเป๋าเงิน",
+    "addAnotherAccount": "เพิ่มบัญชีอื่น",
+    "logOut": "ออกจากระบบ"
   }
 }
 

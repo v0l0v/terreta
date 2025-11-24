@@ -90,7 +90,13 @@
     "concealGeocache": "Conceal a Geocache",
     "blog": "Blog",
     "appSettings": "App Settings",
-    "about": "About"
+    "about": "About",
+    "switchAccount": "Switch Account",
+    "myProfile": "My Profile",
+    "savedCaches": "Saved Caches",
+    "walletSettings": "Wallet Settings",
+    "addAnotherAccount": "Add another account",
+    "logOut": "Log out"
   }
 }
 
