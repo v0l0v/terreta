@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, CheckCircle, XCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LocationVerification, getVerificationSummary } from "@/features/geocache/utils/osmVerification";
@@ -10,6 +11,7 @@ interface LocationWarningsProps {
 }
 
 export function LocationWarnings({ verification, className, hideCreatorWarnings = false }: LocationWarningsProps) {
+  const { t } = useTranslation();
   const [showDetails, setShowDetails] = useState(false);
   const summary = getVerificationSummary(verification);
   
@@ -113,7 +115,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
             <div className="flex items-start gap-3">
               <XCircle className="h-4 w-4 mt-0.5 text-destructive flex-shrink-0" />
               <div className="flex-1">
-                <div className="font-medium text-sm text-foreground mb-1">Critical Issues</div>
+                <div className="font-medium text-sm text-foreground mb-1">{t('locationInfo.criticalIssues')}</div>
                 <div className="space-y-1">
                   {categorizedWarnings.critical.map((warning, idx) => (
                     <div key={idx} className="text-xs text-foreground">
@@ -137,7 +139,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
               <StatusIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${statusColor}`} />
               <div className="flex-1">
                 <div className="font-medium text-sm text-foreground mb-1">
-                  {summary.status === 'restricted' ? 'Location Warning' : 'Location Notice'}
+                  {summary.status === 'restricted' ? t('locationInfo.locationWarning') : t('locationInfo.locationNotice')}
                 </div>
                 <div className="text-sm text-foreground">{summary.message}</div>
               </div>
@@ -151,7 +153,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
             <div className="flex items-start gap-3">
               <Info className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
               <div className="flex-1">
-                <div className="font-medium text-sm text-foreground mb-2">Location Info</div>
+                <div className="font-medium text-sm text-foreground mb-2">{t('locationInfo.title')}</div>
                 <div className="flex flex-wrap gap-1">
                   {visibleFeatures.slice(0, 4).map((feature, idx) => (
                     <Badge 
@@ -171,7 +173,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
                       onClick={() => setShowDetails(!showDetails)}
                       className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {showDetails ? 'Show less' : `+${Math.max(0, visibleFeatures.length - 4 + overflowFeatures.length + categorizedWarnings.other.length)} more`}
+                      {showDetails ? t('locationInfo.showLess') : t('locationInfo.showMore', { count: Math.max(0, visibleFeatures.length - 4 + overflowFeatures.length + categorizedWarnings.other.length) })}
                     </button>
                   )}
                 </div>
@@ -187,7 +189,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
               {/* Remaining visible features */}
               {visibleFeatures.length > 4 && (
                 <div className="space-y-1">
-                  <div className="text-xs font-medium text-muted-foreground">Additional Features</div>
+                  <div className="text-xs font-medium text-muted-foreground">{t('locationInfo.additionalFeatures')}</div>
                   <div className="flex flex-wrap gap-1">
                     {visibleFeatures.slice(4).map((feature, idx) => (
                       <Badge 
@@ -205,7 +207,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
               {/* Other details */}
               {categorizedWarnings.other.length > 0 && (
                 <div className="space-y-1">
-                  <div className="text-xs font-medium text-muted-foreground">Other Details</div>
+                  <div className="text-xs font-medium text-muted-foreground">{t('locationInfo.otherDetails')}</div>
                   <div className="space-y-1">
                     {categorizedWarnings.other.slice(0, 5).map((warning, idx) => (
                       <div key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
@@ -215,7 +217,7 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
                     ))}
                     {categorizedWarnings.other.length > 5 && (
                       <div className="text-xs text-muted-foreground">
-                        ... and {categorizedWarnings.other.length - 5} more details
+                        {t('locationInfo.andMore', { count: categorizedWarnings.other.length - 5 })}
                       </div>
                     )}
                   </div>
