@@ -154,7 +154,11 @@ export default function CreateCacheLanding() {
         const dataUrl = await generateVerificationQR(
           naddr,
           verificationKeyPair.nsec,
-          qrType
+          qrType,
+          {
+            line1: t('qrCode.foundTreasure'),
+            line2: t('qrCode.scanToLog')
+          }
         );
         setQrDataUrl(dataUrl);
       }

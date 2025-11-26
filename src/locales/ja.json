@@ -150,5 +150,7 @@
   "createCache.gift.updatedDescription": "ギフト受取人用のQRコードを更新しました",
   "createCache.gift.createQR": "ギフトQRを作成",
   "createCache.advanced": "詳細設定",
-  "createCache.unknownUser": "不明なユーザー"
+  "createCache.unknownUser": "不明なユーザー",
+  "qrCode.foundTreasure": "宝物を見つけました！",
+  "qrCode.scanToLog": "このQRコードをスキャンして冒険を記録してください。"
 }

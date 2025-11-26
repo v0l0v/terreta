@@ -150,5 +150,7 @@
   "createCache.gift.updatedDescription": "QR code updated for the gift recipient",
   "createCache.gift.createQR": "Create Gift QR",
   "createCache.advanced": "Advanced",
-  "createCache.unknownUser": "Unknown User"
+  "createCache.unknownUser": "Unknown User",
+  "qrCode.foundTreasure": "You found a treasure!",
+  "qrCode.scanToLog": "Scan this QR code to log your adventure."
 }

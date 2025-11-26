@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { QrCode, Download, Copy, ChevronDown, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ const customConfig: Config = {
 };
 
 export default function GenerateQR() {
+  const { t } = useTranslation();
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -56,7 +58,10 @@ export default function GenerateQR() {
       setCacheName(finalCacheName);
       setNaddr(naddr);
       setVerificationKeyPair(keyPair);
-      const dataUrl = await generateVerificationQR(naddr, keyPair.nsec, 'full');
+      const dataUrl = await generateVerificationQR(naddr, keyPair.nsec, 'full', {
+        line1: t('qrCode.foundTreasure'),
+        line2: t('qrCode.scanToLog')
+      });
       setQrDataUrl(dataUrl);
     };
 
@@ -83,7 +88,10 @@ export default function GenerateQR() {
         setQrDataUrl(gridUrl);
       } else {
         setSheetData([]);
-        const dataUrl = await generateVerificationQR(naddr, verificationKeyPair!.nsec, qrType);
+        const dataUrl = await generateVerificationQR(naddr, verificationKeyPair!.nsec, qrType, {
+          line1: t('qrCode.foundTreasure'),
+          line2: t('qrCode.scanToLog')
+        });
         setQrDataUrl(dataUrl);
       }
     } catch (error) {
@@ -95,7 +103,7 @@ export default function GenerateQR() {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, qrType, toast, naddr, verificationKeyPair]);
+  }, [user, qrType, toast, naddr, verificationKeyPair, t]);
 
   const handlePrint = () => {
     if (qrDataUrl) {

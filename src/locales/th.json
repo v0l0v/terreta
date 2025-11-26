@@ -150,5 +150,7 @@
   "createCache.gift.updatedDescription": "อัปเดต QR code สำหรับผู้รับของขวัญแล้ว",
   "createCache.gift.createQR": "สร้าง QR ของขวัญ",
   "createCache.advanced": "ขั้นสูง",
-  "createCache.unknownUser": "ผู้ใช้ที่ไม่รู้จัก"
+  "createCache.unknownUser": "ผู้ใช้ที่ไม่รู้จัก",
+  "qrCode.foundTreasure": "คุณพบสมบัติแล้ว!",
+  "qrCode.scanToLog": "สแกน QR code นี้เพื่อบันทึกการผจญภัยของคุณ"
 }
