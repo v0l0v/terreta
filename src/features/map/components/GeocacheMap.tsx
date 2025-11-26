@@ -470,6 +470,53 @@ function MapSizeController() {
   return null;
 }
 
+// Component to handle world wrapping and ensure markers stay visible
+function WorldWrapController({ geocaches }: { geocaches: Geocache[] }) {
+  const map = useMap();
+  const markersRef = useRef<L.Marker[]>([]);
+  const worldWrappersRef = useRef<L.Marker[]>([]);
+
+  useEffect(() => {
+    const handleMoveEnd = () => {
+      const bounds = map.getBounds();
+      const center = map.getCenter();
+
+      // Check if we've wrapped around the world
+      if (center.lng > 180 || center.lng < -180) {
+        // Normalize center longitude
+        const normalizedLng = ((center.lng + 180) % 360 + 360) % 360 - 180;
+
+        // If we've wrapped, we need to handle marker visibility
+        // This is a simplified approach - in practice, you might want to duplicate
+        // markers at world boundaries for seamless experience
+        map.eachLayer((layer: L.Layer) => {
+          if (layer instanceof L.Marker && layer.getLatLng()) {
+            const latlng = layer.getLatLng();
+
+            // Check if marker is outside the visible world bounds
+            if (latlng.lng > 180 || latlng.lng < -180) {
+              // Normalize marker longitude
+              const normalizedLng = ((latlng.lng + 180) % 360 + 360) % 360 - 180;
+              const normalizedLatLng = L.latLng(latlng.lat, normalizedLng);
+
+              // Update marker position to normalized coordinates
+              layer.setLatLng(normalizedLatLng);
+            }
+          }
+        });
+      }
+    };
+
+    map.on('moveend', handleMoveEnd);
+
+    return () => {
+      map.off('moveend', handleMoveEnd);
+    };
+  }, [map, geocaches]);
+
+  return null;
+}
+
 // Component to ensure popups remain functional during zoom operations
 function ZoomPopupManager({ geocaches }: { geocaches: Geocache[] }) {
   const map = useMap();
@@ -823,9 +870,9 @@ function OptimizedTileLayer({ mapStyle }: { mapStyle: MapStyle }) {
       attribution={mapStyle.attribution}
       url={mapStyle.url}
       maxZoom={18} // Reduced max zoom for better performance
-      minZoom={3} // Set minimum zoom to prevent over-zooming out
+      minZoom={2} // Allow zooming out further to see world wrapping
       // Optimize for fastest possible loading
-      keepBuffer={1} // Small buffer for smoother panning
+      keepBuffer={2} // Larger buffer for world wrapping
       updateWhenIdle={true} // Update when idle for better performance during interaction
       updateWhenZooming={false} // Don't update during zoom for smoother experience
       updateInterval={200} // Throttle updates for better performance
@@ -835,6 +882,11 @@ function OptimizedTileLayer({ mapStyle }: { mapStyle: MapStyle }) {
       tileSize={256} // Standard tile size
       zoomOffset={0} // No zoom offset
       detectRetina={false} // Disable retina detection for consistency
+      // World wrapping support
+      noWrap={false} // Enable world wrapping
+      bounds={[[-90, -180], [90, 180]]} // Standard world bounds
+      // Continuous world support
+      continuousWorld={true} // Enable continuous world for seamless wrapping
     />
   );
 }
@@ -964,7 +1016,7 @@ export function GeocacheMap({
     scrollWheelZoom: true,
     tap: false,
     tapTolerance: 15, // Increased tolerance for better touch performance
-    bounceAtZoomLimits: false, // Disable for faster performance
+    bounceAtZoomLevels: false, // Disable for faster performance
     maxBoundsViscosity: 0.3, // Further reduce viscosity for better performance
     preferCanvas: true, // Use canvas for better performance
     fadeAnimation: false, // Disable fade for faster tile display
@@ -978,7 +1030,8 @@ export function GeocacheMap({
     inertia: true, // Enable inertia for smoother panning
     inertiaDeceleration: 3000, // Faster deceleration
     inertiaMaxSpeed: 1500, // Limit max speed for better control
-    worldCopyJump: false, // Disable world copy jump for performance
+    worldCopyJump: true, // Enable world copy jump to prevent marker disappearance when wrapping
+    continuousWorld: true, // Enable continuous world for seamless wrapping
   };
 
   // Set up event listeners for popup buttons
@@ -1074,6 +1127,7 @@ export function GeocacheMap({
       <OptimizedTileLayer mapStyle={mapStyle} />
 
       <MapSizeController />
+      <WorldWrapController geocaches={geocaches} />
       <ZoomPopupManager geocaches={geocaches} />
 
       <MapRefController mapRef={mapRef} onMapReady={() => setIsMapReady(true)} />
@@ -1157,7 +1211,7 @@ export function GeocacheMap({
         spiderfyOnMaxZoom={false} // Disable spiderfy for better performance
         showCoverageOnHover={false}
         zoomToBoundsOnClick={true}
-        removeOutsideVisibleBounds={true}
+        removeOutsideVisibleBounds={false} // Keep markers when they wrap around
         animate={false} // Disable animations for better performance
         animateAddingMarkers={false}
         // Performance optimizations
@@ -1166,6 +1220,8 @@ export function GeocacheMap({
         // Enhanced clustering options for better popup handling
         spiderfyDistanceMultiplier={1.5} // Better spiderfy behavior
         clusterPane="markerPane" // Ensure proper layering
+        // Handle world wrapping properly
+        chunkedLoadingDelay={50} // Add delay for chunked loading
         // Prevent popup issues during clustering operations
         iconCreateFunction={(cluster: { getChildCount: () => any; }) => {
           const count = cluster.getChildCount();
@@ -1192,10 +1248,14 @@ export function GeocacheMap({
         }}
       >
         {geocaches.filter(g => g.location).slice(0, 200).map((geocache) => { // Limit to 200 markers for performance
+          // Normalize longitude to handle world wrapping
+          const normalizedLng = ((geocache.location.lng + 180) % 360 + 360) % 360 - 180;
+          const normalizedPosition = [geocache.location.lat, normalizedLng];
+
           return (
             <Marker
               key={geocache.dTag}
-              position={[geocache.location.lat, geocache.location.lng]}
+              position={normalizedPosition as LatLngExpression}
               icon={createCacheIcon(geocache.type, currentMapStyle === 'adventure')}
               eventHandlers={{
                 add: (e) => {
