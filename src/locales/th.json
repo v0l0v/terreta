@@ -451,5 +451,16 @@
   "locationInfo.otherDetails": "รายละเอียดอื่นๆ",
   "locationInfo.showLess": "แสดงน้อยลง",
   "locationInfo.showMore": "+{{count}} เพิ่มเติม",
-  "locationInfo.andMore": "... และรายละเอียดอีก {{count}} รายการ"
+  "locationInfo.andMore": "... และรายละเอียดอีก {{count}} รายการ",
+  "mapStyle.original": "ต้นฉบับ",
+  "mapStyle.original.description": "แผนที่ที่สะอาดและสว่าง",
+  "mapStyle.dark": "โหมดมืด",
+  "mapStyle.dark.description": "ธีมมืดสำหรับใช้ตอนกลางคืน",
+  "mapStyle.satellite": "ดาวเทียม",
+  "mapStyle.satellite.description": "มุมมองภาพถ่ายทางอากาศ",
+  "mapStyle.adventure": "แผนที่เควสต์",
+  "mapStyle.adventure.description": "สำหรับนักผจญภัยตัวจริง",
+  "mapStyle.title": "สไตล์แผนที่",
+  "mapStyle.active": "ใช้งานอยู่",
+  "mapStyle.footer": "เลือกระหว่างสไตล์ที่สะอาด มืด หรือธีมการผจญภัยสำหรับการผจญภัยของคุณ"
 }

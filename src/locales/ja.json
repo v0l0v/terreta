@@ -451,5 +451,16 @@
   "locationInfo.otherDetails": "その他の詳細",
   "locationInfo.showLess": "表示を減らす",
   "locationInfo.showMore": "さらに{{count}}件",
-  "locationInfo.andMore": "... さらに{{count}}件の詳細"
+  "locationInfo.andMore": "... さらに{{count}}件の詳細",
+  "mapStyle.original": "オリジナル",
+  "mapStyle.original.description": "クリーンで明るい地図",
+  "mapStyle.dark": "ダークモード",
+  "mapStyle.dark.description": "夜間使用のダークテーマ",
+  "mapStyle.satellite": "衛星",
+  "mapStyle.satellite.description": "航空画像ビュー",
+  "mapStyle.adventure": "クエストマップ",
+  "mapStyle.adventure.description": "真の冒険者のために",
+  "mapStyle.title": "地図スタイル",
+  "mapStyle.active": "アクティブ",
+  "mapStyle.footer": "クリーン、ダーク、または冒険テーマのスタイルから選択してください。"
 }

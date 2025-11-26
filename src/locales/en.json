@@ -451,5 +451,16 @@
   "locationInfo.otherDetails": "Other Details",
   "locationInfo.showLess": "Show less",
   "locationInfo.showMore": "+{{count}} more",
-  "locationInfo.andMore": "... and {{count}} more details"
+  "locationInfo.andMore": "... and {{count}} more details",
+  "mapStyle.original": "Original",
+  "mapStyle.original.description": "Clean, bright cartography",
+  "mapStyle.dark": "Dark Mode",
+  "mapStyle.dark.description": "Dark theme for night use",
+  "mapStyle.satellite": "Satellite",
+  "mapStyle.satellite.description": "Aerial imagery view",
+  "mapStyle.adventure": "Quest Map",
+  "mapStyle.adventure.description": "For true adventurers",
+  "mapStyle.title": "Map Styles",
+  "mapStyle.active": "Active",
+  "mapStyle.footer": "Choose between clean, dark, or adventure-themed styles for your adventure."
 }
