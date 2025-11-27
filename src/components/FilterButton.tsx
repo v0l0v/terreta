@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ComparisonFilter, type ComparisonOperator } from "@/components/ui/comparison-filter";
-import { DIFFICULTY_TERRAIN_OPTIONS, CACHE_TYPE_OPTIONS } from "@/features/geocache/utils/geocache-constants";
+import { CACHE_TYPE_OPTIONS } from "@/features/geocache/utils/geocache-constants";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -45,8 +45,17 @@ export function FilterButton({
   className,
   compact = false,
 }: FilterButtonProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Create translated difficulty/terrain options that update when language changes
+  const difficultyTerrainOptions = useMemo(() => [
+    { value: "1", label: `1 - ${t('geocache.difficulty.easy')}` },
+    { value: "2", label: `2 - ${t('geocache.difficulty.moderate')}` },
+    { value: "3", label: `3 - ${t('geocache.difficulty.hard')}` },
+    { value: "4", label: `4 - ${t('geocache.difficulty.veryHard')}` },
+    { value: "5", label: `5 - ${t('geocache.difficulty.expert')}` },
+  ], [t, i18n.language]);
 
   // Helper functions for consistent value handling
   const createValueChangeHandler = (setter: (value: number | undefined) => void) => 
@@ -123,7 +132,7 @@ export function FilterButton({
               onValueChange={createValueChangeHandler(onDifficultyChange)}
               operator={difficultyOperator}
               onOperatorChange={onDifficultyOperatorChange}
-              options={DIFFICULTY_TERRAIN_OPTIONS}
+              options={difficultyTerrainOptions}
             />
 
             {/* Terrain Filter */}
@@ -133,7 +142,7 @@ export function FilterButton({
               onValueChange={createValueChangeHandler(onTerrainChange)}
               operator={terrainOperator}
               onOperatorChange={onTerrainOperatorChange}
-              options={DIFFICULTY_TERRAIN_OPTIONS}
+              options={difficultyTerrainOptions}
             />
 
             {/* Cache Type Filter */}

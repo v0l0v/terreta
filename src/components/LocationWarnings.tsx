@@ -209,12 +209,22 @@ export function LocationWarnings({ verification, className, hideCreatorWarnings 
                 <div className="space-y-1">
                   <div className="text-xs font-medium text-muted-foreground">{t('locationInfo.otherDetails')}</div>
                   <div className="space-y-1">
-                    {categorizedWarnings.other.slice(0, 5).map((warning, idx) => (
-                      <div key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
-                        <span className="text-muted-foreground mt-0.5">•</span>
-                        <span>{warning.replace(/⚠️\s*/, '').replace(new RegExp(t('locationInfo.features.areaRestrictedHoursPrefix', { defaultValue: 'Area has restricted hours: ' })), t('locationInfo.features.hoursPrefix', { defaultValue: 'Hours: ' }))}</span>
-                      </div>
-                    ))}
+                    {categorizedWarnings.other.slice(0, 5).map((warning, idx) => {
+                      // Warnings come from osmVerification.ts in English, so we need to match English patterns
+                      // and replace with translated versions
+                      let translatedWarning = warning.replace(/⚠️\s*/, '');
+                      // Replace English "Area has restricted hours: " with translated "Hours: "
+                      const englishPattern = 'Area has restricted hours: ';
+                      if (translatedWarning.includes(englishPattern)) {
+                        translatedWarning = translatedWarning.replace(englishPattern, t('locationInfo.features.hoursPrefix'));
+                      }
+                      return (
+                        <div key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
+                          <span className="text-muted-foreground mt-0.5">•</span>
+                          <span>{translatedWarning}</span>
+                        </div>
+                      );
+                    })}
                     {categorizedWarnings.other.length > 5 && (
                       <div className="text-xs text-muted-foreground">
                         {t('locationInfo.andMore', { count: categorizedWarnings.other.length - 5 })}
