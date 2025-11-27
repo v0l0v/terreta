@@ -163,6 +163,8 @@
   "createCache.validation.locationRequired.description": "กรุณาเลือกตำแหน่งสำหรับ geocache ของคุณ",
   "createCache.locationVerification.title": "กำลังตรวจสอบตำแหน่ง",
   "createCache.locationVerification.description": "กรุณารอสักครู่ขณะที่เราตรวจสอบตำแหน่งของคุณ",
+  "createCache.form.hint.label": "คำใบ้ (ไม่บังคับ)",
+  "createCache.form.hint.placeholder": "ให้คำใบ้ที่คลุมเครือเพื่อช่วยผู้ค้นหา",
   "qrCode.foundTreasure": "คุณพบสมบัติแล้ว!",
   "qrCode.scanToLog": "สแกน QR code นี้เพื่อบันทึกการผจญภัยของคุณ",
   "home.install.badge": "เข้าร่วมการผจญภัย",

@@ -379,7 +379,7 @@ export default function CreateCache() {
     if (!formData.name.trim()) {
       toast({
         title: t('createCache.validation.nameRequired.title'),
-        description: "Please enter a name for your geocache",
+        description: t('createCache.validation.nameRequired.description'),
         variant: "destructive",
       });
       return;

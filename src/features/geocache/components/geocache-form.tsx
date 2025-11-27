@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, X, HelpCircle, Dot, Square, Package, Archive, Footprints, Mountain, Pickaxe, Eye, Search, Brain, Lightbulb, Cpu } from 'lucide-react';
 import { sneaker, treesForest } from '@lucide/lab';
 
@@ -144,14 +145,15 @@ interface CacheHintFieldProps {
 }
 
 export function CacheHintField({ value, onChange, fieldId = "hint" }: CacheHintFieldProps) {
+  const { t } = useTranslation();
   return (
     <div className="text-foreground">
-      <Label htmlFor={fieldId}>Hint (Optional)</Label>
+      <Label htmlFor={fieldId}>{t('createCache.form.hint.label')}</Label>
       <Input
         id={fieldId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Provide a cryptic hint to help seekers"
+        placeholder={t('createCache.form.hint.placeholder')}
       />
     </div>
   );
