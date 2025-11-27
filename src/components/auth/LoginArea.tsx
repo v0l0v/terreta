@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import LoginDialog from './LoginDialog';
+import { LoginDialog } from './index';
 import SignupDialog from './SignupDialog';
 import { WelcomeModal } from './WelcomeModal';
 import { useLoggedInAccounts } from '@/features/geocache/hooks/useLoggedInAccounts';

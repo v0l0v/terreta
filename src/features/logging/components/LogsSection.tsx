@@ -8,7 +8,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { EmptyStateCard } from "@/shared/components/ui/card-patterns";
 import { LogList } from "@/features/logging/components/LogList";
 import { LoginArea } from "@/features/auth/components/LoginArea";
-import LoginDialog from "@/components/auth/LoginDialog";
+import { LoginDialog } from "@/components/auth";
 import SignupDialog from "@/components/auth/SignupDialog";
 import { VerifiedLoginPromptDialog } from "@/components/auth/VerifiedLoginPromptDialog";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";

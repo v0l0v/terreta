@@ -6,7 +6,7 @@ import { MapPin, Plus, Search, Compass, Scroll, Crown, Shield, Users, Globe, Sca
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/ui/card-patterns";
 import { DesktopHeader } from "@/components/DesktopHeader";
-import LoginDialog from "@/components/auth/LoginDialog";
+import { LoginDialog } from "@/components/auth";
 import SignupDialog from "@/components/auth/SignupDialog";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useGeocaches } from "@/features/geocache/hooks/useGeocaches";
