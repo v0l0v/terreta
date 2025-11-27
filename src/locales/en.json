@@ -606,5 +606,12 @@
   "about.nip.kind4.description": "Comment logs for DNF, notes, and maintenance reports",
   "about.nip.readSpec": "Read the full NIP-GC specification",
   "about.footer.description": "Treasures is open source and community-driven.",
-  "about.footer.viewSource": "View Source Code"
+  "about.footer.viewSource": "View Source Code",
+  "texasRenFest.title": "Texas Renaissance Festival",
+  "texasRenFest.subtitle": "Discover hidden treasures at the festival grounds",
+  "texasRenFest.location": "Todd Mission, TX",
+  "texasRenFest.festivalArea": "Festival Area",
+  "texasRenFest.cacheCount": "{{count}} cache{{count, plural, one {} other {s}}}",
+  "texasRenFest.elsewhere": "...treasures elsewhere in the world",
+  "texasRenFest.noCaches": "No caches found"
 }

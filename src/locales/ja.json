@@ -606,5 +606,12 @@
   "about.nip.kind4.description": "DNF、メモ、メンテナンスレポート用のコメントログ",
   "about.nip.readSpec": "完全なNIP-GC仕様を読む",
   "about.footer.description": "Treasuresはオープンソースでコミュニティ主導です。",
-  "about.footer.viewSource": "ソースコードを表示"
+  "about.footer.viewSource": "ソースコードを表示",
+  "texasRenFest.title": "テキサス・ルネッサンス・フェスティバル",
+  "texasRenFest.subtitle": "フェスティバル会場で隠された宝物を発見",
+  "texasRenFest.location": "テキサス州トッド・ミッション",
+  "texasRenFest.festivalArea": "フェスティバルエリア",
+  "texasRenFest.cacheCount": "{{count}}キャッシュ",
+  "texasRenFest.elsewhere": "...世界の他の場所の宝物",
+  "texasRenFest.noCaches": "キャッシュが見つかりませんでした"
 }

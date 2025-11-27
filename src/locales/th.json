@@ -606,5 +606,12 @@
   "about.nip.kind4.description": "บันทึกความคิดเห็นสำหรับ DNF หมายเหตุ และรายงานการบำรุงรักษา",
   "about.nip.readSpec": "อ่านข้อกำหนด NIP-GC เต็มรูปแบบ",
   "about.footer.description": "Treasures เป็นโอเพ่นซอร์สและขับเคลื่อนโดยชุมชน",
-  "about.footer.viewSource": "ดูซอร์สโค้ด"
+  "about.footer.viewSource": "ดูซอร์สโค้ด",
+  "texasRenFest.title": "เทศกาลเรเนซองส์เท็กซัส",
+  "texasRenFest.subtitle": "ค้นพบสมบัติที่ซ่อนอยู่ในพื้นที่เทศกาล",
+  "texasRenFest.location": "Todd Mission, TX",
+  "texasRenFest.festivalArea": "พื้นที่เทศกาล",
+  "texasRenFest.cacheCount": "{{count}} แคช",
+  "texasRenFest.elsewhere": "...สมบัติในที่อื่นๆ ในโลก",
+  "texasRenFest.noCaches": "ไม่พบแคช"
 }
