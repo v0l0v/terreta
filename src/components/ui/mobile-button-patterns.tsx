@@ -252,10 +252,12 @@ interface MapViewTabsProps {
 }
 
 export function MapViewTabs({ children, className, value, onValueChange, defaultValue = "list" }: MapViewTabsProps) {
-  const mapTabs: MobileTabItem[] = [
-    { value: 'list', label: 'List' },
-    { value: 'map', label: 'Map' },
-  ];
+  const { t, i18n } = useTranslation();
+  
+  const mapTabs: MobileTabItem[] = useMemo(() => [
+    { value: 'list', label: t('map.tabs.list') },
+    { value: 'map', label: t('map.tabs.map') },
+  ], [t, i18n.language]);
 
   // If controlled (value prop provided), use controlled mode
   if (value !== undefined && onValueChange) {
