@@ -7,13 +7,13 @@ import { useNostrPublish } from '@/shared/hooks/useNostrPublish';
 import { useToast } from '@/shared/hooks/useToast';
 import { Form } from '@/shared/components/ui/form';
 import { LoadingButton } from '@/shared/components/ui/button-extensions';
-import { 
-  TextField, 
-  TextAreaField, 
-  SwitchField, 
-  ImageUploadField 
+import {
+  TextField,
+  TextAreaField,
+  SwitchField,
+  ImageUploadField
 } from '@/shared/components/ui/form-fields';
-import { 
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -71,6 +71,14 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
 
   // Handle file uploads for profile picture and banner
   const uploadPicture = async (file: File, field: 'picture' | 'banner') => {
+    const fieldName = field === 'picture' ? 'Profile picture' : 'Banner';
+
+    // Show upload starting toast
+    toast({
+      title: 'Uploading...',
+      description: `Uploading ${fieldName.toLowerCase()}...`,
+    });
+
     try {
       // The first tuple in the array contains the URL
       const [[_, url]] = await uploadFile(file);
@@ -82,11 +90,14 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
       });
     } catch (error) {
       const fieldName = field === 'picture' ? t('editProfile.upload.profilePicture') : t('editProfile.upload.banner');
+      const errorObj = error as { message?: string };
       toast({
         title: t('editProfile.toast.error.title'),
-        description: t('editProfile.toast.error.uploadFailed', { field: fieldName }),
+        description: errorObj.message || t('editProfile.toast.error.uploadFailed', { field: fieldName }),
+
         variant: 'destructive',
       });
+      throw error; // Re-throw to let the ImageUploadField handle the loading state
     }
   };
 
@@ -137,7 +148,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
       
       // Set the error for the troubleshooter
       setPublishError(errorMessage);
-      
+
       // Also show a toast for immediate feedback
       toast({
         title: t('editProfile.toast.error.title'),
@@ -207,6 +218,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
                 description={t('editProfile.images.picture.description')}
                 previewType="square"
                 onUpload={(file) => uploadPicture(file, 'picture')}
+                isUploading={isUploading}
               />
 
               <ImageUploadField
@@ -217,6 +229,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
                 description={t('editProfile.images.banner.description')}
                 previewType="wide"
                 onUpload={(file) => uploadPicture(file, 'banner')}
+                isUploading={isUploading}
               />
             </div>
           </CardContent>
@@ -286,14 +299,14 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <LoadingButton
-            type="submit" 
-            className="flex-1 sm:flex-none sm:min-w-[120px]" 
+            type="submit"
+            className="flex-1 sm:flex-none sm:min-w-[120px]"
             isLoading={isPending || isUploading}
             loadingText={t('editProfile.actions.saving')}
           >
             {t('editProfile.actions.save')}
           </LoadingButton>
-          
+
           {onSuccess && (
             <LoadingButton
               type="button"
@@ -310,8 +323,8 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
 
       {publishError && (
         <div className="mt-6">
-          <PublishTroubleshooter 
-            error={publishError} 
+          <PublishTroubleshooter
+            error={publishError}
             onRetry={handleRetry}
             isRetrying={isPending}
           />

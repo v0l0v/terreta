@@ -1,6 +1,6 @@
-import { ReactNode, useRef } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload } from 'lucide-react';
+import { Upload, Loader2} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,10 +73,10 @@ export function TextField<TFieldValues extends FieldValues, TName extends FieldP
   return (
     <BaseFormField control={control} name={name} label={label} description={description}>
       {(field: any) => (
-        <Input 
+        <Input
           type={type}
-          placeholder={placeholder} 
-          {...field} 
+          placeholder={placeholder}
+          {...field}
         />
       )}
     </BaseFormField>
@@ -104,11 +104,11 @@ export function TextAreaField<TFieldValues extends FieldValues, TName extends Fi
   return (
     <BaseFormField control={control} name={name} label={label} description={description}>
       {(field: any) => (
-        <Textarea 
+        <Textarea
           placeholder={placeholder}
           rows={rows}
           className="resize-none"
-          {...field} 
+          {...field}
         />
       )}
     </BaseFormField>
@@ -161,7 +161,8 @@ interface ImageUploadFieldProps<TFieldValues extends FieldValues, TName extends 
   placeholder?: string;
   description?: string;
   previewType?: 'square' | 'wide';
-  onUpload: (file: File) => void;
+  onUpload: (file: File) => Promise<void>;
+  isUploading?: boolean;
 }
 
 export function ImageUploadField<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues>>({
@@ -172,9 +173,29 @@ export function ImageUploadField<TFieldValues extends FieldValues, TName extends
   description,
   previewType = 'square',
   onUpload,
+  isUploading = false,
 }: ImageUploadFieldProps<TFieldValues, TName>) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [localUploading, setLocalUploading] = useState(false);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLocalUploading(true);
+      try {
+        await onUpload(file);
+      } finally {
+        setLocalUploading(false);
+        // Reset the file input so the same file can be selected again
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    }
+  };
+
+  const uploading = isUploading || localUploading;
 
   return (
     <FormField
@@ -191,40 +212,52 @@ export function ImageUploadField<TFieldValues extends FieldValues, TName extends
                 value={field.value ?? ''}
                 onChange={e => field.onChange(e.target.value)}
                 onBlur={field.onBlur}
+                disabled={uploading}
               />
             </FormControl>
             <div className="flex items-center gap-2">
-              <input 
-                type="file" 
+              <input
+                type="file"
                 ref={fileInputRef}
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    onUpload(file);
-                  }
-                }}
+                onChange={handleFileSelect}
+                disabled={uploading}
               />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
               >
-                <Upload className="h-4 w-4 mr-2" />
-                {t('form.uploadImage')}
+                 {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    {t('form.uploadImage')}
+                  </>
+                )}
               </Button>
               {field.value && (
-                <div className={`h-10 ${previewType === 'square' ? 'w-10' : 'w-24'} rounded overflow-hidden`}>
+                <div className={`relative h-10 ${previewType === 'square' ? 'w-10' : 'w-24'} rounded overflow-hidden`}>
                   <BlurredImage
-                    src={field.value} 
-                    alt={`${label} preview`} 
+                    src={field.value}
+                    alt={`${label} preview`}
                     className="h-full w-full"
                     blurIntensity="light"
                     defaultBlurred={true}
                     showToggle={true}
                   />
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Loader2 className="h-5 w-5 text-white animate-spin" />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

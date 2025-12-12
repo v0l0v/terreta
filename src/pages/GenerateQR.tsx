@@ -13,12 +13,12 @@ import { PageLayout } from "@/components/layout";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { useToast } from "@/shared/hooks/useToast";
-import { 
-  generateVerificationKeyPair, 
+import {
+  generateVerificationKeyPair,
   downloadQRCode,
   generateVerificationQR,
   generateQRGridImage,
-  type VerificationKeyPair 
+  type VerificationKeyPair
 } from "@/features/geocache/utils/verification";
 import { geocacheToNaddr } from "@/shared/utils/naddr-utils";
 import { generateDeterministicDTag } from "@/features/geocache/utils/dTag";
@@ -113,8 +113,75 @@ export default function GenerateQR() {
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       document.body.appendChild(iframe);
-      iframe.contentDocument?.write(`<img src="${qrDataUrl}" onload="window.print();setTimeout(() => document.body.removeChild(iframe), 100)" />`);
-      iframe.contentDocument?.close();
+
+      const iframeDoc = iframe.contentDocument;
+      if (!iframeDoc) return;
+
+      // Detect if this is a grid (sheet) type
+      const isGrid = qrType === 'sheet';
+
+      // Detect mobile for adjusted margins
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const gridMargin = isMobile ? '0.4in' : '0.25in';
+
+      // Write proper HTML with print styles for mobile compatibility
+      iframeDoc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            @page {
+              size: ${isGrid ? 'letter portrait' : 'auto'};
+              margin: ${isGrid ? gridMargin : '0.5cm'};
+            }
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            html, body {
+              width: 100%;
+              height: 100%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: white;
+            }
+            img {
+              max-width: 100%;
+              max-height: ${isGrid ? '100%' : '100vh'};
+              width: ${isGrid ? (isMobile ? '95%' : '100%') : 'auto'};
+              height: auto;
+              display: block;
+              object-fit: contain;
+              page-break-inside: avoid;
+              margin: 0 auto;
+            }
+            @media print {
+              html, body {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+              }
+              img {
+                max-width: 100% !important;
+                max-height: ${isGrid ? '100%' : '100vh'} !important;
+                width: ${isGrid ? (isMobile ? '95%' : '100%') : 'auto'} !important;
+                height: auto !important;
+                object-fit: contain !important;
+                page-break-inside: avoid !important;
+                margin: 0 auto !important;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <img src="${qrDataUrl}" onload="window.print(); setTimeout(() => window.parent.document.body.removeChild(window.frameElement), 500)" />
+        </body>
+        </html>
+      `);
+      iframeDoc.close();
     }
   };
 
@@ -142,7 +209,7 @@ export default function GenerateQR() {
       // Clear current QR code immediately to show loading state
       setQrDataUrl('');
       setIsGenerating(true);
-      
+
       // Small delay to ensure state updates are processed
       setTimeout(() => {
         generateQR();
