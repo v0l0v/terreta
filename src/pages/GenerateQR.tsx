@@ -106,6 +106,9 @@ export default function GenerateQR() {
       const iframeDoc = iframe.contentDocument;
       if (!iframeDoc) return;
 
+      // Detect if this is a grid (sheet) type
+      const isGrid = qrType === 'sheet';
+
       // Write proper HTML with print styles for mobile compatibility
       iframeDoc.write(`
         <!DOCTYPE html>
@@ -114,8 +117,8 @@ export default function GenerateQR() {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
             @page {
-              size: auto;
-              margin: 0.5cm;
+              size: ${isGrid ? 'letter portrait' : 'auto'};
+              margin: ${isGrid ? '0.25in' : '0.5cm'};
             }
             * {
               margin: 0;
@@ -132,23 +135,25 @@ export default function GenerateQR() {
             }
             img {
               max-width: 100%;
-              max-height: 100vh;
-              width: auto;
+              max-height: ${isGrid ? '100%' : '100vh'};
+              width: ${isGrid ? '100%' : 'auto'};
               height: auto;
               display: block;
-              object-fit: contain;
+              object-fit: ${isGrid ? 'fill' : 'contain'};
               page-break-inside: avoid;
             }
             @media print {
               html, body {
                 width: 100%;
                 height: 100%;
+                overflow: hidden;
               }
               img {
                 max-width: 100% !important;
-                max-height: 100vh !important;
-                width: auto !important;
+                max-height: ${isGrid ? '100%' : '100vh'} !important;
+                width: ${isGrid ? '100%' : 'auto'} !important;
                 height: auto !important;
+                object-fit: ${isGrid ? 'fill' : 'contain'} !important;
                 page-break-inside: avoid !important;
               }
             }

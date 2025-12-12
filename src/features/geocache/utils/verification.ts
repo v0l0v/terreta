@@ -1,6 +1,6 @@
 /**
  * Geocache verification utilities using Nostr key pairs
- * 
+ *
  * When regenerating a QR code, a new geocache event (kind 37516) is created
  * with a new verification key, invalidating all previous verification keys.
  * Only the most recent verification key from the latest geocache event is valid.
@@ -52,10 +52,10 @@ export interface VerificationKeyPair {
 export async function generateVerificationKeyPair(): Promise<VerificationKeyPair> {
   const privateKey = await generateSecretKey();
   const publicKey = await getPublicKeyFromSecret(privateKey);
-  
+
   const nsec = nip19.nsecEncode(privateKey);
   const npub = nip19.npubEncode(publicKey);
-  
+
   return {
     privateKey,
     publicKey,
@@ -71,7 +71,7 @@ async function loadAndResizeImage(src: string, size: number): Promise<HTMLCanvas
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -79,22 +79,22 @@ async function loadAndResizeImage(src: string, size: number): Promise<HTMLCanvas
         reject(new Error('Could not get canvas context'));
         return;
       }
-      
+
       canvas.width = size;
       canvas.height = size;
-      
+
       // Enable high-quality image smoothing (with fallback)
       ctx.imageSmoothingEnabled = true;
       if ('imageSmoothingQuality' in ctx) {
         (ctx as any).imageSmoothingQuality = 'high';
       }
-      
+
       // Draw the image scaled to fit, preserving original colors
       ctx.drawImage(img, 0, 0, size, size);
-      
+
       resolve(canvas);
     };
-    
+
     img.onerror = () => reject(new Error('Failed to load image'));
     img.src = src;
   });
@@ -113,13 +113,13 @@ export async function generateVerificationQR(
   if (!naddr || !nsec) {
     throw new Error('Missing required parameters: naddr and nsec are required');
   }
-  
+
   if (!nsec.startsWith('nsec1')) {
     throw new Error('Invalid nsec format: must start with nsec1');
   }
-  
+
   const verificationUrl = `https://treasures.to/${naddr}#verify=${nsec}`;
-  
+
   try {
     switch (qrType) {
       case 'cutout':
@@ -132,7 +132,7 @@ export async function generateVerificationQR(
     }
   } catch (error) {
     console.error('QR generation error:', error);
-    
+
     // Provide more specific error messages
     if (error instanceof Error) {
       if (error.message.includes('Failed to load QR code')) {
@@ -143,7 +143,7 @@ export async function generateVerificationQR(
         throw new Error(`QR generation failed: ${error.message}`);
       }
     }
-    
+
     throw new Error('Failed to generate QR code due to an unknown error');
   }
 }
@@ -349,9 +349,9 @@ export function parseVerificationFromHash(hash: string): string | null {
   if (!hash.startsWith(VERIFICATION_HASH_PREFIX)) {
     return null;
   }
-  
+
   const nsec = hash.substring(VERIFICATION_HASH_PREFIX.length);
-  
+
   // Validate that it's a proper nsec
   try {
     const decoded = nip19.decode(nsec);
@@ -373,10 +373,10 @@ export async function verifyKeyPair(nsec: string, expectedPubkey: string): Promi
     if (decoded.type !== 'nsec') {
       return false;
     }
-    
+
     const privateKey = decoded.data;
     const publicKey = await getPublicKeyFromSecret(privateKey);
-    
+
     return publicKey === expectedPubkey;
   } catch {
     return false;
@@ -404,16 +404,16 @@ export async function createVerificationEvent(
     if (decoded.type !== 'nsec') {
       throw new Error('Invalid private key format - must be nsec');
     }
-    
+
     const privateKey = decoded.data;
     const signer = new NSecSigner(privateKey);
-    
+
     // Generate naddr for the geocache
     const geocacheNaddr = geocacheToNaddr(geocachePubkey, geocacheDTag);
-    
+
     // Convert finder pubkey to npub for content
     const finderNpub = nip19.npubEncode(finderPubkey);
-    
+
     const eventTemplate = {
       kind: NIP_GC_KINDS.VERIFICATION,
       content: buildVerificationEventContent(finderNpub),
@@ -423,11 +423,11 @@ export async function createVerificationEvent(
       }),
       created_at: Math.floor(Date.now() / 1000),
     };
-    
+
     return await signer.signEvent(eventTemplate);
   } catch (error: unknown) {
     const errorObj = error as { message?: string };
-    
+
     // Provide more specific error messages
     if (errorObj.message?.includes('Invalid private key format')) {
       throw new Error('Invalid verification key format. Please check the QR code.');
@@ -459,14 +459,14 @@ export function hasEmbeddedVerification(event: NostrEvent): boolean {
 export function getEmbeddedVerification(event: NostrEvent): NostrEvent | null {
   try {
     // Look for embedded verification event
-    const verificationTag = event.tags.find((tag: string[]) => 
+    const verificationTag = event.tags.find((tag: string[]) =>
       tag[0] === 'verification'
     );
-    
+
     if (!verificationTag || !verificationTag[1]) {
       return null;
     }
-    
+
     // Parse the embedded verification event
     return JSON.parse(verificationTag[1]);
   } catch (error) {
@@ -500,29 +500,29 @@ setInterval(() => {
  * Verify that an embedded verification event is valid for a specific log
  */
 export async function verifyEmbeddedVerification(
-  logEvent: NostrEvent, 
+  logEvent: NostrEvent,
   expectedVerificationPubkey: string
 ): Promise<boolean> {
   try {
     // Create a cache key based on log event ID and verification pubkey
     const cacheKey = `${logEvent.id}:${expectedVerificationPubkey}`;
-    
+
     // Check cache first
     if (verificationCache.has(cacheKey)) {
       return verificationCache.get(cacheKey)!;
     }
-    
+
     const embeddedVerification = getEmbeddedVerification(logEvent);
     if (!embeddedVerification) {
       verificationCache.set(cacheKey, false);
       return false;
     }
-    
+
     const result = await verifyVerificationEvent(embeddedVerification, logEvent, expectedVerificationPubkey);
-    
+
     // Cache the result
     verificationCache.set(cacheKey, result);
-    
+
     return result;
   } catch (error) {
     return false;
@@ -536,8 +536,8 @@ export async function verifyEmbeddedVerification(
  * According to NIP-GC specification
  */
 export async function verifyVerificationEvent(
-  verificationEvent: NostrEvent, 
-  logEvent: NostrEvent, 
+  verificationEvent: NostrEvent,
+  logEvent: NostrEvent,
   expectedVerificationPubkey: string
 ): Promise<boolean> {
   try {
@@ -545,16 +545,16 @@ export async function verifyVerificationEvent(
     if (verificationEvent.pubkey !== expectedVerificationPubkey) {
       return false;
     }
-    
+
     // Check if it's the right kind of event (NIP-GC verification)
     if (verificationEvent.kind !== NIP_GC_KINDS.VERIFICATION) {
       return false;
     }
-    
+
     // Check content format: "Geocache verification for <finder-npub>"
     let finderNpub: string;
     let expectedContent: string;
-    
+
     try {
       finderNpub = nip19.npubEncode(logEvent.pubkey);
       expectedContent = buildVerificationEventContent(finderNpub);
@@ -562,41 +562,41 @@ export async function verifyVerificationEvent(
       // Invalid pubkey format
       return false;
     }
-    
+
     if (verificationEvent.content !== expectedContent) {
       return false;
     }
-    
+
     // Check 'a' tag format: "<finder-pubkey-hex>:<geocache-naddr>"
     const aTag = verificationEvent.tags.find((tag: string[]) => tag[0] === 'a');
     if (!aTag || !aTag[1]) {
       return false;
     }
-    
+
     // Split at first colon only since geocache naddr contains colons
     const colonIndex = aTag[1].indexOf(':');
     if (colonIndex === -1) {
       return false;
     }
-    
+
     const finderPubkeyHex = aTag[1].substring(0, colonIndex);
     const geocacheNaddr = aTag[1].substring(colonIndex + 1);
-    
+
     if (!finderPubkeyHex || !geocacheNaddr) {
       return false;
     }
-    
+
     // Verify that the finder pubkey matches the log submitter
     if (finderPubkeyHex !== logEvent.pubkey) {
       return false;
     }
-    
+
     // Verify the geocache naddr is valid
     const parsedNaddr = parseNaddr(geocacheNaddr);
     if (!parsedNaddr) {
       return false;
     }
-    
+
     // Verify the event signature
     const signatureValid = await verifyEventSignature(verificationEvent);
     return signatureValid;
@@ -639,12 +639,17 @@ export function downloadQRCode(dataUrl: string, filename: string = 'geocache-ver
 
 /**
  * Generate a printable 3x3 grid of QR codes.
+ * Uses adaptive DPI based on device capabilities for better mobile support.
  */
 export async function generateQRGridImage(sheetData: {name: string, naddr: string, keyPair: VerificationKeyPair}[]): Promise<string> {
-  const dpi = 300;
-  const paperWidth = 8.5 * dpi; // 2550
-  const paperHeight = 11 * dpi; // 3300
-  const margin = 0.5 * dpi; // 150
+  // Use lower DPI for mobile devices to prevent print overflow
+  // Desktop can handle 300 DPI, but mobile needs 150 DPI or lower
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const dpi = isMobile ? 150 : 300;
+
+  const paperWidth = 8.5 * dpi;
+  const paperHeight = 11 * dpi;
+  const margin = 0.5 * dpi;
 
   const canvas = document.createElement('canvas');
   canvas.width = paperWidth;
@@ -664,11 +669,15 @@ export async function generateQRGridImage(sheetData: {name: string, naddr: strin
   const cellWidth = contentWidth / 3;
   const cellHeight = contentHeight / 3;
   const qrSize = Math.min(cellWidth, cellHeight) * 0.9;
-  const textHeight = 40;
+
+  // Scale text sizes based on DPI
+  const textHeight = dpi * 0.13; // Proportional to DPI (40px at 300 DPI)
+  const fontSize = dpi * 0.11;    // Proportional to DPI (32px at 300 DPI)
+  const lineWidth = dpi * 0.013;  // Proportional to DPI (4px at 300 DPI)
 
   ctx.fillStyle = 'black';
   ctx.textAlign = 'center';
-  ctx.font = '32px Arial';
+  ctx.font = `${fontSize}px Arial`;
 
   const qrCodePromises = sheetData.map(d => generateVerificationQR(d.naddr, d.keyPair.nsec, 'full'));
 
@@ -685,18 +694,20 @@ export async function generateQRGridImage(sheetData: {name: string, naddr: strin
 
       const x = margin + col * cellWidth;
       const y = margin + row * cellHeight;
-      
+
       const qrX = x + (cellWidth - qrSize) / 2;
       const qrY = y + (cellHeight - qrSize - textHeight) / 2;
 
       ctx.strokeStyle = '#888888';
-      ctx.lineWidth = 4;
-      ctx.setLineDash([15, 15]);
-      ctx.strokeRect(qrX - 10, qrY - 10, qrSize + 20, qrSize + 20);
+      ctx.lineWidth = lineWidth;
+      const dashSize = dpi * 0.05; // Proportional to DPI (15px at 300 DPI)
+      const padding = dpi * 0.033; // Proportional to DPI (10px at 300 DPI)
+      ctx.setLineDash([dashSize, dashSize]);
+      ctx.strokeRect(qrX - padding, qrY - padding, qrSize + padding * 2, qrSize + padding * 2);
       ctx.setLineDash([]);
 
       ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
-      
+
       const textX = x + cellWidth / 2;
       const textY = qrY + qrSize + textHeight;
       const nameData = sheetData[row * 3 + col];
