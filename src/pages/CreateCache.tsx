@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { MapPin, AlertTriangle, CheckCircle, Check, WifiOff, QrCode, Edit3 } from "lucide-react";
+import { MapPin, AlertTriangle, CheckCircle, Check, QrCode, Edit3, FileEdit } from "lucide-react";
 import { CompassSpinner } from "@/components/ui/loading";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import { useTheme } from "@/shared/hooks/useTheme";
@@ -663,7 +663,7 @@ export default function CreateCache() {
               {/* Draft Notice */}
               {showDraftNotice && (
                 <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
-                  <WifiOff className="h-4 w-4" />
+                  <FileEdit className="h-4 w-4" />
                   <AlertDescription className="flex items-center justify-between">
                     <span className="text-sm">Continuing your draft from where you left off.</span>
                     <Button
@@ -918,7 +918,7 @@ export default function CreateCache() {
             {/* Draft Notice */}
             {showDraftNotice && (
               <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
-                <WifiOff className="h-4 w-4" />
+                <FileEdit className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
                   <span className="text-sm">Continuing your draft.</span>
                   <Button
