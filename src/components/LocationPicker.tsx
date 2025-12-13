@@ -9,6 +9,7 @@ import { LocationSearch } from "@/components/LocationSearch";
 import { MapStyleSelector } from "@/features/map/components/MapStyleSelector";
 import { MAP_STYLES } from "@/features/map/constants/mapStyles";
 import { useGeolocation } from "@/features/map/hooks/useGeolocation";
+import { useInitialLocation } from "@/features/map/hooks/useInitialLocation";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { autocorrectCoordinates, parseCoordinate, formatCoordinateForInput } from "@/features/map/utils/coordinates";
 import { mapIcons } from "@/features/map/utils/mapIcons";
@@ -80,11 +81,12 @@ function LocationSelector({
 
 export function LocationPicker({ value, onChange }: LocationPickerProps) {
   const { theme, systemTheme } = useTheme();
+  const { location: initialLocation } = useInitialLocation();
   const [manualCoords, setManualCoords] = useState({
     lat: value?.lat?.toString() || "",
     lng: value?.lng?.toString() || "",
   });
-  const [mapCenter, setMapCenter] = useState<LatLngExpression>([40.7128, -74.0060]); // Default to NYC
+  const [mapCenter, setMapCenter] = useState<LatLngExpression>([initialLocation.lat, initialLocation.lng]);
   const [beaconLocation, setBeaconLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [pinDropped, setPinDropped] = useState(false);
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
@@ -92,6 +94,14 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
 
   // Track if manual coordinates have been modified by user
   const [manualCoordsModified, setManualCoordsModified] = useState(false);
+
+  // Update map center when initial location is detected
+  useEffect(() => {
+    // Only update if we don't have a value set yet and haven't dropped a pin
+    if (!value && !pinDropped) {
+      setMapCenter([initialLocation.lat, initialLocation.lng]);
+    }
+  }, [initialLocation, value, pinDropped]);
 
   // Map style management
   const getDefaultMapStyle = () => {

@@ -11,6 +11,7 @@ export { MAP_STYLES, ADVENTURE_COLORS } from './constants/mapStyles';
 
 // Hooks
 export { useGeolocation } from './hooks/useGeolocation';
+export { useInitialLocation } from './hooks/useInitialLocation';
 
 // Utils - avoid duplicate exports
 export { calculateDistance, formatDistance, sortByDistance, filterByRadius, findClosestGeocache } from './utils/geo';

@@ -11,6 +11,7 @@ import { DesktopHeader } from "@/components/DesktopHeader";
 import { useAdaptiveReliableGeocaches, type GeocacheWithDistance } from "@/features/geocache/hooks/useReliableProximitySearch";
 import { useGeocaches } from "@/features/geocache/hooks/useGeocaches";
 import { useGeolocation } from "@/features/map/hooks/useGeolocation";
+import { useInitialLocation } from "@/features/map/hooks/useInitialLocation";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { CompactGeocacheCard } from "@/components/ui/geocache-card";
 import { GeocacheDialog } from "@/components/GeocacheDialog";
@@ -42,7 +43,7 @@ export default function Map() {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [mapZoom, setMapZoom] = useState(10);
   const [isMapCenterLocked, setIsMapCenterLocked] = useState(false);
-  
+
   // Function to clear interaction state for explicit user actions
   const clearMapInteractionLock = () => {
     setIsMapCenterLocked(false);
@@ -60,46 +61,47 @@ export default function Map() {
   const [activeTab, setActiveTab] = useState<string>("list");
 
   const mapRef = useRef<L.Map | null>(null);
-  
+
   const { loading: isGettingLocation, coords, getLocation } = useGeolocation();
-  
+  const { location: initialLocation, isLoading: isLoadingInitialLocation } = useInitialLocation();
+
   // Use the same geocaches hook as Home page to ensure consistent stats
   const baseGeocaches = useGeocaches();
-  
+
   // Add state for skeleton loading
   const [showMapSkeletons, setShowMapSkeletons] = useState(true);
-  
+
   // Hide skeletons after data loads or timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowMapSkeletons(false);
     }, 2000); // Show skeletons for at least 2 seconds
-    
+
     return () => clearTimeout(timer);
   }, []);
-  
+
   // Hide skeletons immediately if we have data and it's not the initial load
   useEffect(() => {
     if (baseGeocaches.data && baseGeocaches.data.length > 0) {
       const timer = setTimeout(() => {
         setShowMapSkeletons(false);
       }, 1000); // Keep skeletons for at least 1 second even with data
-      
+
       return () => clearTimeout(timer);
     }
     return;
   }, [baseGeocaches.data]);
-  
+
   const [isRetrying, setIsRetrying] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const pullStartY = useRef<number | null>(null);
   const pullThreshold = 80; // pixels to trigger refresh
 
-  const { 
-    data: geocaches, 
-    isLoading, 
-    error, 
+  const {
+    data: geocaches,
+    isLoading,
+    error,
     refetch,
     searchStrategy,
     proximityAttempted,
@@ -131,7 +133,7 @@ export default function Map() {
     if (lat && lng) {
       // URL navigation is an explicit action - clear interaction locks
       clearMapInteractionLock();
-      
+
       const center = {
         lat: parseFloat(lat),
         lng: parseFloat(lng),
@@ -160,6 +162,14 @@ export default function Map() {
     }
   }, [searchParams]);
 
+  // Set initial map center when initial location is detected
+  useEffect(() => {
+    // Only set if no center has been set yet and not loading
+    if (!mapCenter && !isLoadingInitialLocation && initialLocation) {
+      setMapCenter(initialLocation);
+    }
+  }, [initialLocation, isLoadingInitialLocation, mapCenter]);
+
   useEffect(() => {
     // Update user location when coords change
     if (coords) {
@@ -168,7 +178,7 @@ export default function Map() {
         lng: coords.longitude,
       };
       setUserLocation(location);
-      
+
       // If Near Me is active, update the map center when location is obtained
       // Force map update even if we already have a location (in case it's more accurate)
       if (showNearMe) {
@@ -185,7 +195,7 @@ export default function Map() {
 
   // Use proximity search results when active, otherwise fall back to base geocaches
   // Apply client-side filtering when using base geocaches
-  const filteredGeocaches: GeocacheWithDistance[] = isProximitySearchActive 
+  const filteredGeocaches: GeocacheWithDistance[] = isProximitySearchActive
     ? (geocaches || [])
     : applyClientSideFilters(baseGeocaches.data || []);
 
@@ -196,7 +206,7 @@ export default function Map() {
     // Text search filter
     if (searchQuery) {
       const searchLower = searchQuery.toLowerCase();
-      filtered = filtered.filter(g => 
+      filtered = filtered.filter(g =>
         g.name.toLowerCase().includes(searchLower) ||
         g.description.toLowerCase().includes(searchLower)
       );
@@ -204,14 +214,14 @@ export default function Map() {
 
     // Difficulty filter
     if (difficulty !== undefined && difficultyOperator && difficultyOperator !== 'all') {
-      filtered = filtered.filter(g => 
+      filtered = filtered.filter(g =>
         applyComparison(g.difficulty, difficultyOperator, difficulty)
       );
     }
 
     // Terrain filter
     if (terrain !== undefined && terrainOperator && terrainOperator !== 'all') {
-      filtered = filtered.filter(g => 
+      filtered = filtered.filter(g =>
         applyComparison(g.terrain, terrainOperator, terrain)
       );
     }
@@ -242,7 +252,7 @@ export default function Map() {
   const handleLocationSelect = (location: { lat: number; lng: number; name: string }) => {
     // This is an explicit user action - clear all interaction locks
     clearMapInteractionLock();
-    
+
     // Update all location-related state
     const newCenter = { lat: location.lat, lng: location.lng };
     setMapCenter(newCenter);
@@ -258,14 +268,14 @@ export default function Map() {
   const handleNearMe = async () => {
     // This is an explicit user action - clear all interaction locks
     clearMapInteractionLock();
-    
+
     setShowNearMe(true);
     setSearchLocation(null); // Clear search location
     setSearchInView(false); // Clear search in view
     setShowMobileSearchOptions(true); // Expand search options on mobile
 
     // Clear any highlighted geocache
-    
+
     // Start location request
     try {
       await getLocation();
@@ -280,13 +290,13 @@ export default function Map() {
   const handleSearchInView = (bounds?: L.LatLngBounds) => {
     // This is an explicit user action - clear all interaction locks
     clearMapInteractionLock();
-    
+
     // Get current map bounds from the map ref or from parameter
     const mapBounds = bounds || (mapRef.current ? mapRef.current.getBounds() : null);
-    
+
     if (mapBounds) {
       const center = mapBounds.getCenter();
-      
+
       // Calculate approximate radius from bounds
       const northEast = mapBounds.getNorthEast();
       const southWest = mapBounds.getSouthWest();
@@ -294,7 +304,7 @@ export default function Map() {
         calculateDistance(center.lat, center.lng, northEast.lat, northEast.lng),
         calculateDistance(center.lat, center.lng, southWest.lat, southWest.lng)
       );
-      
+
       setSearchInView(true);
       setShowNearMe(false); // Clear near me
       setSearchLocation({ lat: center.lat, lng: center.lng });
@@ -310,11 +320,11 @@ export default function Map() {
     const R = 6371; // Earth's radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    
+
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
               Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    
+
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
@@ -328,7 +338,7 @@ export default function Map() {
   const handleCardClick = (geocache: Geocache) => {
     // This is an explicit user action - clear all interaction locks
     clearMapInteractionLock();
-    
+
     // Check if we're on mobile AND in list view - only then open the dialog
     if (isMobile && activeTab === 'list') {
       setSelectedGeocache(geocache);
@@ -337,12 +347,12 @@ export default function Map() {
       setActiveTab('map');
       return;
     }
-    
+
     // On desktop (or when in map tab), center map on the geocache and highlight it to show popup
     setMapCenter({ lat: geocache.location.lat, lng: geocache.location.lng });
     setMapZoom(16);
     setHighlightedGeocache(geocache.dTag);
-    
+
     // Clear any location-based searches to prevent conflicts
     setShowNearMe(false);
     setSearchLocation(null);
@@ -380,10 +390,10 @@ export default function Map() {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (pullStartY.current === null || e.touches.length !== 1) return;
-    
+
     const currentY = e.touches[0]?.clientY || 0;
     const distance = currentY - pullStartY.current;
-    
+
     // Only allow pull down when at the top of the scroll container
     const scrollContainer = e.currentTarget as HTMLElement;
     if (scrollContainer.scrollTop === 0 && distance > 0) {
@@ -404,7 +414,7 @@ export default function Map() {
         setIsPullRefreshing(false);
       }
     }
-    
+
     pullStartY.current = null;
     setPullDistance(0);
   };
@@ -418,7 +428,7 @@ export default function Map() {
   return (
     <div className="h-screen flex flex-col">
       <DesktopHeader />
-      
+
       {/* Desktop View */}
       <div className="hidden lg:flex flex-1 overflow-hidden min-h-0">
         {/* Sidebar */}
@@ -446,18 +456,18 @@ export default function Map() {
                   onCacheTypeChange={setCacheType}
                 />
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <LocationSearch 
+                    <LocationSearch
                       onLocationSelect={handleLocationSelect}
                       placeholder={t('map.locationSearch.placeholder')}
                     />
                   </div>
-                  
-                  <Button 
-                    variant={showNearMe ? "default" : "outline"} 
+
+                  <Button
+                    variant={showNearMe ? "default" : "outline"}
                     className="h-9 w-9 p-0 flex-shrink-0"
                     onClick={handleNearMe}
                     disabled={isGettingLocation}
@@ -466,7 +476,7 @@ export default function Map() {
                     <Locate className={`h-4 w-4 ${isGettingLocation ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
-                
+
                 {(showNearMe || searchLocation || searchInView) && (
                   <div className="flex items-center justify-between bg-muted/50 rounded-lg p-2">
                     <div className="flex items-center gap-2">
@@ -485,7 +495,7 @@ export default function Map() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -502,7 +512,7 @@ export default function Map() {
                   </div>
                 )}
               </div>
-              
+
 
             </div>
           </div>
@@ -556,15 +566,15 @@ export default function Map() {
                   <div className="text-sm text-muted-foreground">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span>
-                        {filteredGeocaches.length === 1 
+                        {filteredGeocaches.length === 1
                           ? t('map.results.count', { count: filteredGeocaches.length })
                           : t('map.results.countPlural', { count: filteredGeocaches.length })
                         }
                         {isProximitySearchActive && ` • ${t('map.results.radius', { radius: searchRadius })}`}
                       </span>
-                      
 
-                      
+
+
                       {((isProximitySearchActive ? isLoading : baseGeocaches.isLoading) && filteredGeocaches.length === 0) && (
                         <div className="flex items-center gap-1 text-xs">
                           <div className="animate-spin rounded-full h-3 w-3 border border-muted-foreground/30 border-t-muted-foreground"></div>
@@ -581,8 +591,8 @@ export default function Map() {
                   </div>
                   <div className="flex items-center gap-2">
 
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={handleRetry}
                       className="h-8 px-3 hover:bg-muted/50 dark:bg-muted border-muted-foreground/20 transition-all duration-200"
@@ -613,8 +623,8 @@ export default function Map() {
 
         {/* Map - render immediately with progressive geocache loading */}
         <div className="flex-1 relative bg-background min-h-0">
-          <GeocacheMap 
-            geocaches={filteredGeocaches} 
+          <GeocacheMap
+            geocaches={filteredGeocaches}
             userLocation={userLocation}
             searchLocation={searchLocation || (showNearMe ? userLocation : null)}
             searchRadius={searchRadius}
@@ -628,7 +638,7 @@ export default function Map() {
             mapRef={mapRef}
             isMapCenterLocked={isMapCenterLocked}
           />
-          
+
           {/* Progressive loading indicator for geocaches */}
           {(isProximitySearchActive ? isLoading : baseGeocaches.isLoading) && filteredGeocaches.length === 0 && (
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/95 backdrop-blur-sm border rounded-full px-4 py-2 shadow-lg">
@@ -638,8 +648,8 @@ export default function Map() {
               </div>
             </div>
           )}
-          
-          
+
+
         </div>
       </div>
 
@@ -670,18 +680,18 @@ export default function Map() {
                   compact
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <LocationSearch 
+                    <LocationSearch
                       onLocationSelect={handleLocationSelect}
                       placeholder={t('map.locationSearch.placeholder')}
                     />
                   </div>
-                  
-                  <Button 
-                    variant={showNearMe ? "default" : "outline"} 
+
+                  <Button
+                    variant={showNearMe ? "default" : "outline"}
                     className="h-9 w-9 p-0 flex-shrink-0"
                     onClick={handleNearMe}
                     disabled={isGettingLocation}
@@ -689,7 +699,7 @@ export default function Map() {
                   >
                     <Locate className={`h-4 w-4 ${isGettingLocation ? 'animate-spin' : ''}`} />
                   </Button>
-                  
+
                   {(showNearMe || searchLocation || searchInView) && (
                     <Button
                       variant="ghost"
@@ -698,10 +708,10 @@ export default function Map() {
                       onClick={() => setShowMobileSearchOptions(!showMobileSearchOptions)}
                       title={showMobileSearchOptions ? t('map.searchOptions.hide') : t('map.searchOptions.show')}
                     >
-                      <svg 
-                        className={`h-4 w-4 transition-transform duration-200 ${showMobileSearchOptions ? 'rotate-180' : ''}`} 
-                        fill="none" 
-                        stroke="currentColor" 
+                      <svg
+                        className={`h-4 w-4 transition-transform duration-200 ${showMobileSearchOptions ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -709,7 +719,7 @@ export default function Map() {
                     </Button>
                   )}
                 </div>
-                
+
                 {(showNearMe || searchLocation || searchInView) && showMobileSearchOptions && (
                   <div className="flex items-center justify-between bg-muted/50 rounded-lg p-2">
                     <div className="flex items-center gap-2">
@@ -728,7 +738,7 @@ export default function Map() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -749,18 +759,18 @@ export default function Map() {
             </div>
           </div>
         </div>
-        
+
 
         {/* Mobile Content Area */}
         <div className="flex-1 overflow-hidden">
-          <MapViewTabs 
+          <MapViewTabs
             className="h-full flex flex-col"
             value={activeTab}
             onValueChange={setActiveTab}
           >
             {/* List Tab - Always mounted but hidden when inactive */}
             <TabsContent value="list" className="flex-1 mt-0 m-0 p-0 data-[state=active]:flex data-[state=active]:flex-col bg-background overflow-hidden data-[state=inactive]:hidden">
-              <div 
+              <div
                 className="flex-1 overflow-y-auto p-4 pb-6 min-h-0 relative"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
@@ -768,19 +778,19 @@ export default function Map() {
               >
                 {/* Pull-to-refresh indicator */}
                 {(pullDistance > 0 || isPullRefreshing) && (
-                  <div 
+                  <div
                     className="absolute top-0 left-0 right-0 flex items-center justify-center bg-background/95 backdrop-blur-sm border-b transition-all duration-200 z-10"
-                    style={{ 
+                    style={{
                       height: `${Math.min(pullDistance, pullThreshold)}px`,
-                      opacity: pullDistance > 20 ? 1 : pullDistance / 20 
+                      opacity: pullDistance > 20 ? 1 : pullDistance / 20
                     }}
                   >
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <RefreshCw className={`h-4 w-4 ${(isPullRefreshing || pullDistance >= pullThreshold) ? 'animate-spin' : ''}`} />
                       <span>
-                        {isPullRefreshing 
+                        {isPullRefreshing
                           ? t('map.pullToRefresh.refreshing')
-                          : pullDistance >= pullThreshold 
+                          : pullDistance >= pullThreshold
                             ? t('map.pullToRefresh.release')
                             : t('map.pullToRefresh.pull')
                         }
@@ -788,7 +798,7 @@ export default function Map() {
                     </div>
                   </div>
                 )}
-                
+
                 <div style={{ paddingTop: pullDistance > 0 ? `${Math.min(pullDistance, pullThreshold)}px` : '0' }}>
                 <SmartLoadingState
                   isLoading={isProximitySearchActive ? isLoading && filteredGeocaches.length === 0 : baseGeocaches.isLoading && baseGeocaches.data === undefined}
@@ -809,7 +819,7 @@ export default function Map() {
                     <div className="text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <span>
-                          {filteredGeocaches.length === 1 
+                          {filteredGeocaches.length === 1
                             ? t('map.results.count', { count: filteredGeocaches.length })
                             : t('map.results.countPlural', { count: filteredGeocaches.length })
                           }
@@ -831,8 +841,8 @@ export default function Map() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={handleRetry}
                         className="h-8 px-3 hover:bg-muted/50 dark:bg-muted border-muted-foreground/20 transition-all duration-200"
@@ -843,8 +853,8 @@ export default function Map() {
                         <span className="text-xs">{t('map.refresh')}</span>
                       </Button>
                       {isProximitySearchActive && (
-                        <Badge 
-                          variant={proximitySuccessful ? "secondary" : "outline"} 
+                        <Badge
+                          variant={proximitySuccessful ? "secondary" : "outline"}
                           className="text-xs flex items-center gap-1"
                           title={proximityAttempted ? (proximitySuccessful ? t('map.proximity.success') : t('map.proximity.failed')) : t('map.proximity.broad')}
                         >
@@ -870,12 +880,12 @@ export default function Map() {
                 </div>
               </div>
             </TabsContent>
-            
+
             {/* Map Tab - Always mounted but hidden when inactive */}
             <TabsContent value="map" className="flex-1 mt-0 m-0 p-0 data-[state=active]:block data-[state=inactive]:hidden">
               <div className="h-full w-full bg-background relative">
-                <GeocacheMap 
-                  geocaches={filteredGeocaches} 
+                <GeocacheMap
+                  geocaches={filteredGeocaches}
                   userLocation={userLocation}
                   searchLocation={searchLocation || (showNearMe ? userLocation : null)}
                   searchRadius={searchRadius}
@@ -889,7 +899,7 @@ export default function Map() {
                   mapRef={mapRef}
                   isMapCenterLocked={isMapCenterLocked}
                 />
-                
+
                 {/* Progressive loading indicator for mobile map */}
                 {(isProximitySearchActive ? isLoading : baseGeocaches.isLoading) && filteredGeocaches.length === 0 && (
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-background/95 backdrop-blur-sm border rounded-full px-4 py-2 shadow-lg">
@@ -899,8 +909,8 @@ export default function Map() {
                     </div>
                   </div>
                 )}
-                
-                
+
+
               </div>
             </TabsContent>
           </MapViewTabs>
@@ -908,7 +918,7 @@ export default function Map() {
       </div>
 
       {/* Geocache Dialog */}
-      <GeocacheDialog 
+      <GeocacheDialog
         geocache={selectedGeocache}
         isOpen={dialogOpen}
         onOpenChange={(open) => {

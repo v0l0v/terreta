@@ -10,6 +10,7 @@ import { SearchInViewButton } from "./SearchInViewButton";
 import { MAP_STYLES, type MapStyle } from "@/features/map/constants/mapStyles";
 import { useGeocacheNavigation } from "@/features/geocache/hooks/useGeocacheNavigation";
 import { useMapController } from "@/features/map/hooks/useMapController";
+import { useInitialLocation } from "@/features/map/hooks/useInitialLocation";
 import type { Geocache } from "@/shared/types";
 import { getTypeLabel, getSizeLabel } from "@/features/geocache/utils/geocache-utils";
 import { getCacheIconSvg, getCacheColor } from "@/features/geocache/utils/cacheIconUtils";
@@ -990,13 +991,16 @@ export function GeocacheMap({
     return () => mediaQuery.removeEventListener('change', handleThemeChange);
   }, [theme, currentMapStyle, hasManuallySelectedStyle]);
 
+  // Get initial location (IP-based or NYC fallback)
+  const { location: initialLocation } = useInitialLocation();
+
   // Calculate center if not provided - use stable defaults to prevent jumping
   const mapCenter: LatLngExpression = useMemo(() => {
     if (center) return [center.lat, center.lng];
     if (searchLocation) return [searchLocation.lat, searchLocation.lng];
     if (userLocation) return [userLocation.lat, userLocation.lng];
-    return [40.7128, -74.0060]; // Default to NYC - stable fallback
-  }, [center, searchLocation, userLocation]);
+    return [initialLocation.lat, initialLocation.lng]; // Use detected location or NYC fallback
+  }, [center, searchLocation, userLocation, initialLocation]);
 
 
 
