@@ -10,7 +10,7 @@ export function parseCoordinate(coordStr: string): number {
 
   // Trim whitespace
   const trimmed = coordStr.trim();
-  
+
   // Handle empty string
   if (trimmed === '') {
     return NaN;
@@ -19,7 +19,7 @@ export function parseCoordinate(coordStr: string): number {
   // Handle various number formats
   // This includes integers, decimals, and scientific notation
   const parsed = parseFloat(trimmed);
-  
+
   // Additional validation - ensure it's a finite number
   if (!isFinite(parsed)) {
     return NaN;
@@ -63,9 +63,10 @@ export function autocorrectCoordinates(lat: number, lng: number): { lat: number;
     corrected = true;
   }
 
-  // Common correction: Western hemisphere positive longitude
-  // If coordinates appear to be in North America but longitude is positive
-  if (newLat > 20 && newLat < 50 && newLng > 0 && newLng < 130) {
+  // Common correction: North America positive longitude
+  // Only flip if longitude is in the range that would make sense for North America (60-130)
+  // This avoids incorrectly flipping Asian coordinates (100-180)
+  if (newLat > 20 && newLat < 50 && newLng > 60 && newLng < 100) {
     newLng = -newLng;
     corrected = true;
   }
@@ -92,15 +93,15 @@ export function formatCoordinates(lat: number, lng: number, precision: number = 
 export function getCoordinatePrecision(value: number): number {
   const str = value.toString();
   const decimalIndex = str.indexOf('.');
-  
+
   if (decimalIndex === -1) {
     return 0; // No decimal places
   }
-  
+
   // Count digits after decimal point, excluding trailing zeros
   const afterDecimal = str.substring(decimalIndex + 1);
   const withoutTrailingZeros = afterDecimal.replace(/0+$/, '');
-  
+
   return withoutTrailingZeros.length;
 }
 
@@ -114,11 +115,11 @@ export function getGeohashPrecisionLevels(lat: number, lng: number): number[] {
   const latPrecision = getCoordinatePrecision(lat);
   const lngPrecision = getCoordinatePrecision(lng);
   const maxPrecision = Math.max(latPrecision, lngPrecision);
-  
+
   // Mapping of coordinate decimal places to appropriate geohash precision
   // This ensures we don't generate overly precise geohashes for imprecise coordinates
   let maxGeohashPrecision: number;
-  
+
   if (maxPrecision === 0) {
     // Integer coordinates (very imprecise) - only broad area geohashes
     maxGeohashPrecision = 3;
@@ -141,15 +142,15 @@ export function getGeohashPrecisionLevels(lat: number, lng: number): number[] {
     // 6+ decimal places (~0.11m precision or better) - exact location
     maxGeohashPrecision = 9;
   }
-  
+
   // Always include precision levels 3-4 for broad proximity search
   // Then add progressively more precise levels up to the determined maximum
   const levels: number[] = [];
-  
+
   for (let precision = 3; precision <= Math.max(4, maxGeohashPrecision); precision++) {
     levels.push(precision);
   }
-  
+
   return levels;
 }
 /**
