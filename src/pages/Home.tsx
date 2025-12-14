@@ -386,8 +386,29 @@ export default function Home() {
       </section>
 
       {/* Features - Why Treasures? */}
-      <section className="py-12 xs:py-16 md:py-20 px-3 xs:px-4 bg-gradient-to-b from-background to-muted/20">
-        <div className="container mx-auto max-w-5xl">
+      <section className="relative py-12 xs:py-16 md:py-20 px-3 xs:px-4 bg-gradient-to-b from-background to-muted/20 overflow-hidden">
+        {/* Z-shaped ribbon background */}
+        <div className="absolute inset-0 pointer-events-none hidden md:block">
+          <svg className="absolute w-full h-full" viewBox="0 0 1000 800" preserveAspectRatio="none">
+            {/* Z-shaped path */}
+            <path
+              d="M -100 200 L 500 200 L 200 400 L 800 400 L 500 600 L 1100 600"
+              stroke="none"
+              fill="url(#ribbonGradient)"
+              opacity="0.08"
+              className="dark:opacity-[0.12] adventure:opacity-[0.15]"
+            />
+            <defs>
+              <linearGradient id="ribbonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" className="text-green-400 dark:text-green-500 adventure:text-amber-400" stopColor="currentColor" />
+                <stop offset="50%" className="text-emerald-400 dark:text-emerald-500 adventure:text-yellow-400" stopColor="currentColor" />
+                <stop offset="100%" className="text-teal-400 dark:text-teal-500 adventure:text-orange-400" stopColor="currentColor" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        <div className="container mx-auto max-w-5xl relative z-10">
           {/* Section header */}
           <div className="text-center mb-10 md:mb-14">
             <h3 className="text-2xl md:text-3xl adventure:text-3xl adventure:md:text-4xl font-bold text-foreground mb-3">
