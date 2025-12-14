@@ -146,8 +146,12 @@ export default function Home() {
             <div className="absolute bottom-2/3 right-1/4 animate-pulse" style={{animationDelay: '1.5s'}}>
               <MapPin className="w-5 h-5 text-emerald-600 dark:text-emerald-300 opacity-65 drop-shadow-sm" />
             </div>
+          </div>
+        </div>
 
-            {/* Globe-style curved grid lines */}
+        {/* Globe-style curved grid lines - separate from pulsing elements */}
+        <div className="absolute inset-0 flex justify-center adventure:hidden pointer-events-none">
+          <div className="relative w-full max-w-screen-2xl h-full">
             <div className="absolute inset-0 pointer-events-none opacity-60">
               {/* Horizontal latitude lines - curved to appear like globe */}
               <svg className="absolute inset-0 w-full h-full opacity-60" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -194,8 +198,13 @@ export default function Home() {
                 />
               </svg>
             </div>
+          </div>
+        </div>
 
-            {/* Subtle background texture - properly themed */}
+        {/* Subtle background texture - properly themed - empty placeholder */}
+        <div className="absolute inset-0 flex justify-center adventure:hidden pointer-events-none">
+          <div className="relative w-full max-w-screen-2xl h-full">
+            {/* Subtle background texture */}
           </div>
         </div>
 
