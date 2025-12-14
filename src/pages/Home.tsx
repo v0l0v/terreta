@@ -389,7 +389,7 @@ export default function Home() {
       <section className="relative py-12 xs:py-16 md:py-20 px-3 xs:px-4 bg-gradient-to-b from-background to-muted/20 overflow-hidden">
         {/* Z-shaped ribbon stripes - three diagonal bands */}
         <div className="absolute inset-0 pointer-events-none hidden md:flex justify-center">
-          <div className="relative w-full max-w-3xl h-full">
+          <div className="relative w-full max-w-2xl h-full">
             {/* First stripe - slanting down-right behind Decentralized */}
             <div className="absolute top-[20%] -left-[10%] w-[120%] h-56 bg-green-600/20 dark:bg-green-500/25 adventure:bg-amber-600/25 transform -rotate-[4deg]"></div>
 
