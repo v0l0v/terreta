@@ -58,15 +58,7 @@
       /* Minimal loading styles to prevent FOUC */
       #root {
         min-height: 100vh;
-        background-color: #f9fafb;
-      }
-
-      /* Dark mode support */
-      @media (prefers-color-scheme: dark) {
-        #root {
-          background-color: #0f172a;
-          color: #f8fafc;
-        }
+        background-color: #ffffff;
       }
 
       /* Loading spinner for initial load - Compass style */
@@ -78,6 +70,7 @@
         min-height: 100vh;
         font-family: system-ui, -apple-system, sans-serif;
         gap: 1rem;
+        background-color: #ffffff;
       }
 
       .compass-spinner {
@@ -87,34 +80,16 @@
         animation: spin 1s linear infinite;
       }
 
-      @media (prefers-color-scheme: dark) {
-        .compass-spinner {
-          color: #10b981;
-        }
-      }
-
       .loading-text {
         color: #1f2937;
         font-size: 1rem;
         font-weight: 500;
       }
 
-      @media (prefers-color-scheme: dark) {
-        .loading-text {
-          color: #f9fafb;
-        }
-      }
-
       .loading-description {
         color: #6b7280;
         font-size: 0.875rem;
         margin-top: 0.5rem;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        .loading-description {
-          color: #9ca3af;
-        }
       }
 
       @keyframes spin {
@@ -126,7 +101,61 @@
       .app-loaded .initial-loading {
         display: none;
       }
+
+      /* Theme-aware styling - defaults to light */
+      html.dark #root,
+      html.dark .initial-loading {
+        background-color: #0f172a;
+      }
+
+      html.dark .loading-text {
+        color: #f9fafb;
+      }
+
+      html.dark .loading-description {
+        color: #9ca3af;
+      }
+
+      /* Adventure theme support */
+      html.adventure #root,
+      html.adventure .initial-loading {
+        background-color: #f5f1e8;
+      }
+
+      html.adventure .compass-spinner {
+        color: #78716c;
+      }
+
+      html.adventure .loading-text {
+        color: #44403c;
+      }
+
+      html.adventure .loading-description {
+        color: #78716c;
+      }
     </style>
+    <script>
+      // Apply theme class immediately to prevent flash
+      (function() {
+        try {
+          const storedTheme = localStorage.getItem('ui-theme');
+          if (storedTheme && storedTheme !== 'system') {
+            // Apply stored theme directly (light, dark, or adventure)
+            document.documentElement.classList.add(storedTheme);
+          } else if (storedTheme === 'system') {
+            // System theme: check user preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.classList.add(prefersDark ? 'dark' : 'light');
+          } else {
+            // No stored theme: default to light
+            document.documentElement.classList.add('light');
+          }
+        } catch (e) {
+          // Ignore errors, default to light theme
+          document.documentElement.classList.add('light');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root">
