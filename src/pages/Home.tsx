@@ -441,9 +441,9 @@ export default function Home() {
                 className="text-green-500/40 dark:text-green-400/30 adventure:text-amber-700/50"
               />
 
-              {/* Arc from Community (right) to Global (left) - lower on mobile */}
+              {/* Arc from Community (right) to Global (left) - raised on mobile */}
               <path
-                d="M 75,57 Q 50,67 25,77"
+                d="M 75,57 Q 50,64 25,72"
                 stroke="currentColor"
                 strokeWidth="0.5"
                 fill="none"
@@ -454,12 +454,12 @@ export default function Home() {
               {/* Decorative waypoint dots at feature positions */}
               <circle cx="25" cy="32" r="1.2" className="fill-green-600/60 dark:fill-green-400/50 adventure:fill-amber-600/70" />
               <circle cx="75" cy="52" r="1.2" className="fill-green-600/60 dark:fill-green-400/50 adventure:fill-yellow-600/70" />
-              <circle cx="25" cy="77" r="1.2" className="fill-green-600/60 dark:fill-green-400/50 adventure:fill-orange-600/70" />
+              <circle cx="25" cy="72" r="1.2" className="fill-green-600/60 dark:fill-green-400/50 adventure:fill-orange-600/70" />
 
               {/* Subtle glow effect on waypoints */}
               <circle cx="25" cy="32" r="2.5" className="fill-green-600/20 dark:fill-green-400/15 adventure:fill-amber-600/25" />
               <circle cx="75" cy="52" r="2.5" className="fill-green-600/20 dark:fill-green-400/15 adventure:fill-yellow-600/25" />
-              <circle cx="25" cy="77" r="2.5" className="fill-green-600/20 dark:fill-green-400/15 adventure:fill-orange-600/25" />
+              <circle cx="25" cy="72" r="2.5" className="fill-green-600/20 dark:fill-green-400/15 adventure:fill-orange-600/25" />
             </svg>
           </div>
         </div>
