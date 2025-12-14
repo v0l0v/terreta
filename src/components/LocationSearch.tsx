@@ -19,6 +19,7 @@ interface SearchResult {
   type?: string;
   importance?: number;
   display_name?: string;
+  warning?: string;
 }
 
 export function LocationSearch({
@@ -52,7 +53,7 @@ export function LocationSearch({
     };
   }, [placeholder, mobilePlaceholder]);
 
-  const parseCoordinates = (input: string): { lat: number; lng: number } | null => {
+  const parseCoordinates = (input: string): { lat: number; lng: number; warning?: string } | null => {
     // Clean input: remove extra spaces, normalize separators
     const cleaned = input.trim()
       .replace(/[,;]/g, ' ')  // Replace commas and semicolons with spaces
@@ -69,25 +70,18 @@ export function LocationSearch({
       /^(\d+\.?\d*)\s*([NS])\s+(\d+\.?\d*)\s*([EW])$/i,
       // Degrees minutes seconds: 40°42'46"N 74°00'22"W
       /^(\d+)°(\d+)'(\d+\.?\d*)"?\s*([NS])\s+(\d+)°(\d+)'(\d+\.?\d*)"?\s*([EW])$/i,
-      // Swapped lat/lng: -74.0060, 40.7128 (common mistake)
-      /^(-?\d+\.?\d*)\s+(-?\d+\.?\d*)$/,
     ];
 
     for (const pattern of patterns) {
       const match = cleaned.match(pattern);
       if (match) {
         let lat: number, lng: number;
+        let warning: string | undefined;
 
-        if (pattern === patterns[0] || pattern === patterns[3]) {
+        if (pattern === patterns[0]) {
           // Simple decimal format
           lat = parseFloat(match[1] || '0');
           lng = parseFloat(match[2] || '0');
-
-          // Auto-detect if coordinates are swapped
-          // If "latitude" is > 90 or < -90, they're probably swapped
-          if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) {
-            [lat, lng] = [lng, lat];
-          }
         } else if (pattern === patterns[1]) {
           // N/S E/W format
           lat = parseFloat(match[1] || '0') * (match[2]?.toUpperCase() === 'S' ? -1 : 1);
@@ -110,17 +104,26 @@ export function LocationSearch({
           continue;
         }
 
-        // Validate and autocorrect coordinates
+        // Validate coordinates and generate warnings
         if (!isNaN(lat) && !isNaN(lng)) {
-          // Clamp latitude to valid range
-          if (lat > 90) lat = 90;
-          if (lat < -90) lat = -90;
+          // Check for potentially swapped coordinates
+          if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) {
+            warning = '⚠️ Latitude appears invalid (must be between -90 and 90). Did you swap lat/lng?';
+          }
+          // Check for out of range latitude
+          else if (Math.abs(lat) > 90) {
+            warning = '⚠️ Latitude must be between -90 and 90 degrees';
+          }
+          // Check for out of range longitude
+          else if (Math.abs(lng) > 180) {
+            warning = '⚠️ Longitude must be between -180 and 180 degrees';
+          }
+          // Check for coordinates that might be in the wrong ocean
+          else if (Math.abs(lat) < 1 && Math.abs(lng) < 1) {
+            warning = '⚠️ Coordinates near 0,0 (Gulf of Guinea). Is this correct?';
+          }
 
-          // Wrap longitude to valid range
-          while (lng > 180) lng -= 360;
-          while (lng < -180) lng += 360;
-
-          return { lat, lng };
+          return { lat, lng, warning };
         }
       }
     }
@@ -140,12 +143,13 @@ export function LocationSearch({
 
     // First check if it's coordinates
     const coords = parseCoordinates(searchQuery);
-    if (coords && coords.lat >= -90 && coords.lat <= 90 && coords.lng >= -180 && coords.lng <= 180) {
+    if (coords) {
       setResults([{
         name: `Coordinates: ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`,
         lat: coords.lat,
         lng: coords.lng,
-        type: 'coordinates'
+        type: 'coordinates',
+        warning: coords.warning
       }]);
       setIsSearching(false);
       return;
@@ -323,6 +327,11 @@ export function LocationSearch({
                   <div className="font-medium truncate">{result.name}</div>
                   {result.display_name && result.display_name !== result.name && (
                     <div className="text-sm text-gray-600 truncate">{result.display_name}</div>
+                  )}
+                  {result.warning && (
+                    <div className="text-xs text-amber-600 mt-1 flex items-start gap-1">
+                      <span className="shrink-0">{result.warning}</span>
+                    </div>
                   )}
                   <div className="text-xs text-gray-500">
                     {result.lat.toFixed(4)}, {result.lng.toFixed(4)}
