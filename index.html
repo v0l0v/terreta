@@ -89,12 +89,8 @@
         color: #1f2937;
         font-size: 1rem;
         font-weight: 500;
-      }
-
-      .loading-description {
-        color: #6b7280;
-        font-size: 0.875rem;
-        margin-top: 0.5rem;
+        margin: 0;
+        padding: 0;
       }
 
       @keyframes spin {
@@ -117,10 +113,6 @@
         color: #f9fafb;
       }
 
-      html.dark .loading-description {
-        color: #9ca3af;
-      }
-
       /* Adventure theme support */
       html.adventure #root,
       html.adventure .initial-loading {
@@ -133,10 +125,6 @@
 
       html.adventure .loading-text {
         color: #44403c;
-      }
-
-      html.adventure .loading-description {
-        color: #78716c;
       }
     </style>
     <script>
@@ -172,7 +160,6 @@
           <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
         </svg>
         <p class="loading-text">Loading Treasures...</p>
-        <p class="loading-description">Preparing your adventure</p>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
