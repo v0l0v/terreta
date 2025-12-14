@@ -391,7 +391,7 @@ export default function Home() {
       {/* Features - Why Treasures? */}
       <section className="relative py-12 xs:py-16 md:py-20 px-3 xs:px-4 bg-gradient-to-b from-muted/20 to-background overflow-hidden">
         {/* Arc path lines connecting features - treasure map style */}
-        <div className="absolute inset-0 pointer-events-none hidden md:flex justify-center">
+        <div className="absolute inset-0 pointer-events-none flex justify-center">
           <div className="relative w-full max-w-3xl h-full">
             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
               {/* Arc from Decentralized (left) to Community (right) */}
@@ -428,7 +428,7 @@ export default function Home() {
         </div>
 
         {/* Z-shaped ribbon stripes - three diagonal bands */}
-        <div className="absolute inset-0 pointer-events-none hidden md:flex justify-center">
+        <div className="absolute inset-0 pointer-events-none flex justify-center">
           <div className="relative w-full max-w-2xl h-full">
             {/* First stripe - slanting down-right behind Decentralized */}
             <div className="absolute top-[18%] -left-[10%] w-[120%] h-56 bg-green-600/20 dark:bg-green-500/25 adventure:bg-amber-600/25 transform -rotate-[4deg]"></div>
@@ -454,11 +454,11 @@ export default function Home() {
           </div>
 
           {/* Zig-zag layout */}
-          <div className="space-y-20 md:space-y-28">
+          <div className="space-y-16 md:space-y-28">
             {/* Decentralized - Image Left */}
-            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
-              <div className="w-full md:w-5/12 flex justify-center">
-                <div className="w-48 h-48 md:w-56 md:h-56 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 adventure:from-amber-50 adventure:to-yellow-50 rounded-xl p-6 shadow-sm">
+            <div className="flex flex-row items-center gap-4 md:gap-10">
+              <div className="w-5/12 flex justify-center">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 adventure:from-amber-50 adventure:to-yellow-50 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm">
                   <img
                     src="/feature-decentralized.webp"
                     alt="Decentralized"
@@ -466,15 +466,15 @@ export default function Home() {
                   />
                 </div>
               </div>
-              <div className="w-full md:w-7/12 text-center md:text-left space-y-3">
-                <div className="flex items-center justify-center md:justify-start gap-2">
-                  <Shield className="w-6 h-6 md:w-7 md:h-7 text-green-600 dark:text-green-400 adventure:text-stone-700" />
-                  <h4 className="text-2xl md:text-3xl font-bold text-foreground">
+              <div className="w-7/12 text-left space-y-2 md:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-green-600 dark:text-green-400 adventure:text-stone-700" />
+                  <h4 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
                     <span className="adventure:hidden">{t("home.features.decentralized.title")}</span>
                     <span className="hidden adventure:inline">{t("home.features.decentralized.titleAdventure")}</span>
                   </h4>
                 </div>
-                <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+                <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed">
                   <span className="adventure:hidden">{t("home.features.decentralized.description")}</span>
                   <span className="hidden adventure:inline">{t("home.features.decentralized.descriptionAdventure")}</span>
                 </p>
@@ -482,9 +482,9 @@ export default function Home() {
             </div>
 
             {/* Community - Image Right */}
-            <div className="flex flex-col md:flex-row-reverse items-center gap-6 md:gap-10">
-              <div className="w-full md:w-5/12 flex justify-center">
-                <div className="w-48 h-48 md:w-56 md:h-56 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 adventure:from-yellow-50 adventure:to-amber-50 rounded-xl p-6 shadow-sm">
+            <div className="flex flex-row-reverse items-center gap-4 md:gap-10">
+              <div className="w-5/12 flex justify-center">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 adventure:from-yellow-50 adventure:to-amber-50 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm">
                   <img
                     src="/feature-community.webp"
                     alt="Community"
@@ -492,15 +492,15 @@ export default function Home() {
                   />
                 </div>
               </div>
-              <div className="w-full md:w-7/12 text-center md:text-left space-y-3">
-                <div className="flex items-center justify-center md:justify-start gap-2">
-                  <Users className="w-6 h-6 md:w-7 md:h-7 text-green-600 dark:text-green-400 adventure:text-stone-700" />
-                  <h4 className="text-2xl md:text-3xl font-bold text-foreground">
+              <div className="w-7/12 text-left space-y-2 md:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-green-600 dark:text-green-400 adventure:text-stone-700" />
+                  <h4 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
                     <span className="adventure:hidden">{t("home.features.community.title")}</span>
                     <span className="hidden adventure:inline">{t("home.features.community.titleAdventure")}</span>
                   </h4>
                 </div>
-                <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+                <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed">
                   <span className="adventure:hidden">{t("home.features.community.description")}</span>
                   <span className="hidden adventure:inline">{t("home.features.community.descriptionAdventure")}</span>
                 </p>
@@ -508,9 +508,9 @@ export default function Home() {
             </div>
 
             {/* Global - Image Left */}
-            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
-              <div className="w-full md:w-5/12 flex justify-center">
-                <div className="w-48 h-48 md:w-56 md:h-56 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 adventure:from-orange-50 adventure:to-amber-50 rounded-xl p-6 shadow-sm">
+            <div className="flex flex-row items-center gap-4 md:gap-10">
+              <div className="w-5/12 flex justify-center">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 adventure:from-orange-50 adventure:to-amber-50 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm">
                   <img
                     src="/feature-global.webp"
                     alt="Global Adventure"
@@ -518,15 +518,15 @@ export default function Home() {
                   />
                 </div>
               </div>
-              <div className="w-full md:w-7/12 text-center md:text-left space-y-3">
-                <div className="flex items-center justify-center md:justify-start gap-2">
-                  <Globe className="w-6 h-6 md:w-7 md:h-7 text-green-600 dark:text-green-400 adventure:text-stone-700" />
-                  <h4 className="text-2xl md:text-3xl font-bold text-foreground">
+              <div className="w-7/12 text-left space-y-2 md:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-green-600 dark:text-green-400 adventure:text-stone-700" />
+                  <h4 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
                     <span className="adventure:hidden">{t("home.features.global.title")}</span>
                     <span className="hidden adventure:inline">{t("home.features.global.titleAdventure")}</span>
                   </h4>
                 </div>
-                <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+                <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed">
                   <span className="adventure:hidden">{t("home.features.global.description")}</span>
                   <span className="hidden adventure:inline">{t("home.features.global.descriptionAdventure")}</span>
                 </p>
