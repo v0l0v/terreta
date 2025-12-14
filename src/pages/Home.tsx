@@ -560,14 +560,16 @@ export default function Home() {
       {/* Recent Caches */}
       <section className="relative py-6 xs:py-12 md:py-16 px-3 xs:px-4 overflow-hidden">
         {/* Forest skyline background - anchored to bottom */}
-        <div className="absolute inset-x-0 bottom-0 h-[600px] md:h-[800px] pointer-events-none">
+        <div className="absolute inset-x-0 bottom-0 h-[600px] md:h-[800px] pointer-events-none opacity-40">
           <img
             src="/forest-skyline.webp"
             alt=""
-            className="absolute bottom-0 left-0 w-full h-full object-cover object-bottom"
+            className="absolute bottom-0 left-0 w-full h-full object-cover object-bottom adventure:sepia"
           />
           {/* Gradient fade at top */}
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/50 to-transparent" />
+          {/* Subtle white overlay for more subtlety */}
+          <div className="absolute inset-0 bg-white/30 dark:bg-white/10 adventure:bg-transparent" />
         </div>
 
         <div className="container mx-auto relative z-10">
