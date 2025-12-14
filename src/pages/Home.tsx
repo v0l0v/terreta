@@ -114,19 +114,24 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-green-50/60 via-emerald-50/50 to-teal-50/40 dark:from-slate-900 dark:via-green-950 dark:to-emerald-950 adventure:from-amber-100/80 adventure:via-yellow-50/60 adventure:to-orange-100/70">      <DesktopHeader />
 
       {/* Hero Section */}
-      <section className="relative min-h-[calc(100vh-8rem)] md:min-h-0 flex items-center pt-4 pb-20 md:pt-16 md:pb-20 px-3 xs:px-4 md:py-24 overflow-hidden">
-        {/* Parchment background for adventure mode only - behind everything */}
+      <section className="relative min-h-[calc(100vh-8rem)] md:min-h-0 flex items-center pt-4 pb-8 md:pt-16 md:pb-12 px-3 xs:px-4 overflow-hidden">
+        {/* Parchment background for adventure mode only - behind everything with fade mask */}
         <div className="absolute inset-0 hidden adventure:block" style={{
           backgroundImage: 'url(/parchment-300.jpg)',
           backgroundRepeat: 'repeat',
           backgroundSize: '300px 300px',
-          opacity: 0.4
+          opacity: 0.4,
+          maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)'
         }}></div>
 
         {/* Full-width top depth shadow with better fade - adventure mode only */}
         <div className="absolute top-0 left-0 right-0 h-32 adventure:bg-gradient-to-b adventure:from-black/20 adventure:via-black/15 adventure:via-black/10 adventure:via-black/6 adventure:via-black/3 adventure:via-black/1 adventure:to-transparent pointer-events-none"></div>
-        {/* Full-width bottom depth shadow with better fade - adventure mode only - taller and smoother */}
-        <div className="absolute bottom-0 left-0 right-0 h-48 md:h-64 adventure:bg-gradient-to-t adventure:from-black/20 adventure:via-black/15 adventure:via-black/10 adventure:via-black/6 adventure:via-black/3 adventure:via-black/1 adventure:to-transparent pointer-events-none"></div>
+
+        {/* Transparent fade to next section - taller gradient overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-64 md:h-96 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 via-background/50 via-background/70 via-background/85 to-background"></div>
+        </div>
         {/* Modern background elements (default and dark themes) */}
         <div className="absolute inset-0 flex justify-center adventure:hidden">
           <div className="relative w-full max-w-screen-2xl h-full">
