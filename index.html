@@ -55,10 +55,28 @@
 
     <!-- Prevent FOUC with minimal inline CSS -->
     <style>
+      /* Reset browser defaults */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+      }
+
       /* Minimal loading styles to prevent FOUC */
       #root {
         min-height: 100vh;
         background-color: #ffffff;
+        margin: 0;
+        padding: 0;
+        border: none;
       }
 
       /* Loading spinner for initial load - Compass style */
@@ -71,6 +89,9 @@
         font-family: system-ui, -apple-system, sans-serif;
         gap: 1rem;
         background-color: #ffffff;
+        margin: 0;
+        padding: 0;
+        border: none;
       }
 
       .compass-spinner {
