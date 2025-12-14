@@ -396,7 +396,7 @@ export default function Home() {
           <div className="absolute top-[45%] left-0 w-[120%] -left-[10%] h-72 bg-green-600/20 dark:bg-green-500/25 adventure:bg-yellow-600/25 transform rotate-6 origin-center"></div>
 
           {/* Third stripe - slanting down-right behind Global */}
-          <div className="absolute top-[62%] left-0 w-[120%] -left-[10%] h-72 bg-green-600/20 dark:bg-green-500/25 adventure:bg-orange-600/25 transform -rotate-6 origin-center"></div>
+          <div className="absolute top-[66%] left-0 w-[120%] -left-[10%] h-72 bg-green-600/20 dark:bg-green-500/25 adventure:bg-orange-600/25 transform -rotate-6 origin-center"></div>
         </div>
 
         <div className="container mx-auto max-w-5xl relative z-10">
