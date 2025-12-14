@@ -157,7 +157,7 @@ export default function Home() {
                   stroke="currentColor"
                   strokeWidth="0.4"
                   fill="none"
-                  className="text-green-400/70 dark:text-emerald-400/90"
+                  className="text-green-400/70"
                 />
                 {/* Middle latitude line */}
                 <path
@@ -165,7 +165,7 @@ export default function Home() {
                   stroke="currentColor"
                   strokeWidth="0.5"
                   fill="none"
-                  className="text-green-500/80 dark:text-emerald-300"
+                  className="text-green-500/80"
                 />
                 {/* Bottom latitude line */}
                 <path
@@ -173,7 +173,7 @@ export default function Home() {
                   stroke="currentColor"
                   strokeWidth="0.4"
                   fill="none"
-                  className="text-green-400/70 dark:text-emerald-400/90"
+                  className="text-green-400/70"
                 />
 
                 {/* Vertical longitude lines - curved to show globe curvature */}
@@ -182,21 +182,21 @@ export default function Home() {
                   stroke="currentColor"
                   strokeWidth="0.3"
                   fill="none"
-                  className="text-green-300/60 dark:text-emerald-500/80"
+                  className="text-green-300/60"
                 />
                 <path
                   d="M 50,5 Q 48,50 50,95"
                   stroke="currentColor"
                   strokeWidth="0.3"
                   fill="none"
-                  className="text-green-400/70 dark:text-emerald-400/90"
+                  className="text-green-400/70"
                 />
                 <path
                   d="M 75,10 Q 78,50 75,90"
                   stroke="currentColor"
                   strokeWidth="0.3"
                   fill="none"
-                  className="text-green-300/60 dark:text-emerald-500/80"
+                  className="text-green-300/60"
                 />
               </svg>
             </div>
@@ -409,7 +409,7 @@ export default function Home() {
               <span className="hidden adventure:inline">{t("home.features.titleAdventure")}</span>
             </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover what makes Treasures the greatest geocaching adventure.
+              Discover what makes Treasures the greatest geocaching adventure
             </p>
           </div>
 
