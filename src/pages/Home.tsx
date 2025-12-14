@@ -566,8 +566,8 @@ export default function Home() {
             alt=""
             className="absolute bottom-0 left-0 w-full h-full object-cover object-bottom adventure:sepia"
           />
-          {/* Gradient fade at top */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-transparent" />
+          {/* Multi-step gradient fade for smoother transition */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 via-background/85 via-background/70 via-background/50 via-background/30 via-background/15 to-transparent" />
           {/* Subtle white overlay for more subtlety */}
           <div className="absolute inset-0 bg-white/35 dark:bg-white/15 adventure:bg-amber-50/20" />
         </div>
