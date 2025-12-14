@@ -409,7 +409,7 @@ export default function Home() {
               <span className="hidden adventure:inline">{t("home.features.titleAdventure")}</span>
             </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover what makes Treasures.to the ultimate geocaching platform
+              Discover what makes Treasures the greatest geocaching adventure.
             </p>
           </div>
 
