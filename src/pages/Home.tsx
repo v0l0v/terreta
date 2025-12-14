@@ -479,7 +479,7 @@ export default function Home() {
                   <img
                     src="/feature-decentralized.webp"
                     alt="Decentralized"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain adventure:sepia"
                   />
                 </div>
               </div>
@@ -502,7 +502,7 @@ export default function Home() {
                   <img
                     src="/feature-community.webp"
                     alt="Community"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain adventure:sepia"
                   />
                 </div>
               </div>
@@ -525,7 +525,7 @@ export default function Home() {
                   <img
                     src="/feature-global.webp"
                     alt="Global Adventure"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain adventure:sepia"
                   />
                 </div>
               </div>
