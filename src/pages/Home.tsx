@@ -558,7 +558,7 @@ export default function Home() {
       </section>
 
       {/* Recent Caches */}
-      <section className="relative py-6 xs:py-12 md:py-16 px-3 xs:px-4 overflow-hidden">
+      <section className="relative py-6 xs:py-12 md:py-16 px-3 xs:px-4 overflow-hidden bg-transparent">
         {/* Forest skyline background - anchored to bottom */}
         <div className="absolute inset-x-0 bottom-0 h-[600px] md:h-[800px] pointer-events-none opacity-30">
           <img
