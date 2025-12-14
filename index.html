@@ -69,28 +69,17 @@
       /* Loading spinner for initial load - Compass style */
       .initial-loading {
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        font-family: system-ui, -apple-system, sans-serif;
-        gap: 1rem;
         background-color: #ffffff;
       }
 
       .compass-spinner {
-        width: 48px;
-        height: 48px;
+        width: 64px;
+        height: 64px;
         color: #10b981;
         animation: spin 1s linear infinite;
-      }
-
-      .loading-text {
-        color: #1f2937;
-        font-size: 1rem;
-        font-weight: 500;
-        margin: 0;
-        padding: 0;
       }
 
       @keyframes spin {
@@ -109,10 +98,6 @@
         background-color: #0f172a;
       }
 
-      html.dark .loading-text {
-        color: #f9fafb;
-      }
-
       /* Adventure theme support */
       html.adventure #root,
       html.adventure .initial-loading {
@@ -121,10 +106,6 @@
 
       html.adventure .compass-spinner {
         color: #78716c;
-      }
-
-      html.adventure .loading-text {
-        color: #44403c;
       }
     </style>
     <script>
@@ -155,11 +136,10 @@
       <!-- Initial loading state with compass -->
       <div class="initial-loading">
         <!-- Compass SVG icon -->
-        <svg class="compass-spinner" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="compass-spinner" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
           <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
         </svg>
-        <p class="loading-text">Loading Treasures...</p>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
