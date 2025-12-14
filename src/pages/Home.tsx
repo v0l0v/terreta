@@ -128,10 +128,6 @@ export default function Home() {
         {/* Full-width top depth shadow with better fade - adventure mode only */}
         <div className="absolute top-0 left-0 right-0 h-32 adventure:bg-gradient-to-b adventure:from-black/20 adventure:via-black/15 adventure:via-black/10 adventure:via-black/6 adventure:via-black/3 adventure:via-black/1 adventure:to-transparent pointer-events-none"></div>
 
-        {/* Transparent fade to next section - taller gradient overlay */}
-        <div className="absolute bottom-0 left-0 right-0 h-64 md:h-96 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 via-background/50 via-background/70 via-background/85 to-background"></div>
-        </div>
         {/* Modern background elements (default and dark themes) */}
         <div className="absolute inset-0 flex justify-center adventure:hidden">
           <div className="relative w-full max-w-screen-2xl h-full">
@@ -390,6 +386,11 @@ export default function Home() {
               </Button>
             )}
           </div>
+        </div>
+
+        {/* Transparent fade to next section - taller gradient overlay - placed last to fade everything */}
+        <div className="absolute bottom-0 left-0 right-0 h-80 md:h-[28rem] pointer-events-none z-10">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 via-background/40 via-background/60 via-background/80 via-background/95 to-background"></div>
         </div>
       </section>
 
