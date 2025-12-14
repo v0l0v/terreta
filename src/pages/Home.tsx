@@ -387,11 +387,6 @@ export default function Home() {
             )}
           </div>
         </div>
-
-        {/* Transparent fade to next section - taller gradient overlay - placed last to fade everything */}
-        <div className="absolute bottom-0 left-0 right-0 h-80 md:h-[28rem] pointer-events-none z-10">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 via-background/40 via-background/60 via-background/80 via-background/95 to-background"></div>
-        </div>
       </section>
 
       {/* Features - Why Treasures? */}
