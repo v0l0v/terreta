@@ -341,7 +341,7 @@ export function GeocacheCard({
                     <BlurredImage
                       src={previewImage}
                       alt={cache.name}
-                      className="w-full h-full"
+                      className="w-full h-full object-cover object-center"
                       blurIntensity="heavy"
                       showToggle={true}
                       defaultBlurred={true}
@@ -350,12 +350,10 @@ export function GeocacheCard({
                     <img
                       src={previewImage}
                       alt={cache.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-center"
                       loading="lazy"
                     />
                   )}
-                  {/* Gradient overlay - fade to card background to the right */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent via-50% to-card"></div>
                 </div>
               </div>
             )}
