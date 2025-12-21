@@ -243,12 +243,12 @@ export function GeocacheCard({
 
   const renderBadgesAndStats = (isCompact = false) => (
     <div className="flex items-center justify-between gap-2 mt-auto">
-      <div className="flex flex-wrap gap-1 sm:gap-1.5 min-w-0">
+      <div className="flex flex-wrap gap-0.5 sm:gap-1 min-w-0">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className={`text-xs ${isCompact ? 'py-0 px-1.5' : 'px-1.5 py-0.5 sm:px-2'} flex items-center gap-1 shrink-0`}>
-                <CacheIcon type={cache.type} size="xs" className="h-2.5 w-2.5" theme={theme} />
+              <Badge variant="outline" className="text-[10px] sm:text-xs py-0 px-1 sm:px-1.5 flex items-center gap-0.5 shrink-0 h-4 sm:h-5">
+                <CacheIcon type={cache.type} size="xs" className="h-2 w-2 sm:h-2.5 sm:w-2.5" theme={theme} />
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
@@ -256,18 +256,18 @@ export function GeocacheCard({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <Badge variant="outline" className={`text-xs ${isCompact ? 'py-0 px-1.5' : 'px-1.5 py-0.5 sm:px-2'} shrink-0`}>
+        <Badge variant="outline" className="text-[10px] sm:text-xs py-0 px-1 sm:px-1.5 shrink-0 h-4 sm:h-5">
           D{cache.difficulty}
         </Badge>
-        <Badge variant="outline" className={`text-xs ${isCompact ? 'py-0 px-1.5' : 'px-1.5 py-0.5 sm:px-2'} shrink-0`}>
+        <Badge variant="outline" className="text-[10px] sm:text-xs py-0 px-1 sm:px-1.5 shrink-0 h-4 sm:h-5">
           T{cache.terrain}
         </Badge>
-        <Badge variant="secondary" className={`text-xs ${isCompact ? 'py-0 px-1.5' : 'px-1.5 py-0.5 sm:px-2'} shrink-0`}>
+        <Badge variant="secondary" className="text-[10px] sm:text-xs py-0 px-1 sm:px-1.5 shrink-0 h-4 sm:h-5">
           {getSizeLabel(cache.size)}
         </Badge>
         {distance !== undefined && (
-          <Badge variant="outline" className={`text-xs ${isCompact ? 'py-0 px-1.5' : 'px-1.5 py-0.5 sm:px-2'} flex items-center gap-1 shrink-0`}>
-            <Navigation className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+          <Badge variant="outline" className="text-[10px] sm:text-xs py-0 px-1 sm:px-1.5 flex items-center gap-0.5 shrink-0 h-4 sm:h-5">
+            <Navigation className="h-2 w-2" />
             {isCompact ? (
               formatDistance(distance)
             ) : (
@@ -279,8 +279,8 @@ export function GeocacheCard({
           </Badge>
         )}
         {'foundAt' in cache && (
-          <Badge variant="default" className={`flex items-center gap-1 bg-green-600 adventure:bg-stone-700 text-xs ${isCompact ? 'py-0 px-1.5' : 'px-1.5 py-0.5 sm:px-2'} shrink-0`}>
-            <CheckCircle className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+          <Badge variant="default" className="flex items-center gap-0.5 bg-green-600 adventure:bg-stone-700 text-[10px] sm:text-xs py-0 px-1 sm:px-1.5 shrink-0 h-4 sm:h-5">
+            <CheckCircle className="h-2 w-2" />
             {t('geocacheCard.found')}
           </Badge>
         )}
@@ -515,12 +515,12 @@ export function GeocacheCard({
 
             {/* Bottom row with badges and stats */}
             <div className="flex items-center justify-between gap-2 mt-3">
-              <div className="flex flex-wrap gap-1 min-w-0">
+              <div className="flex flex-wrap gap-0.5 min-w-0">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline" className="text-xs py-0 px-1.5 flex items-center gap-1 shrink-0">
-                        <CacheIcon type={cache.type} size="xs" className="h-2.5 w-2.5" theme={theme} />
+                      <Badge variant="outline" className="text-[10px] py-0 px-1 flex items-center gap-0.5 shrink-0 h-4">
+                        <CacheIcon type={cache.type} size="xs" className="h-2 w-2" theme={theme} />
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -528,23 +528,23 @@ export function GeocacheCard({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <Badge variant="outline" className="text-xs py-0 px-1.5 shrink-0">
+                <Badge variant="outline" className="text-[10px] py-0 px-1 shrink-0 h-4">
                   D{cache.difficulty}
                 </Badge>
-                <Badge variant="outline" className="text-xs py-0 px-1.5 shrink-0">
+                <Badge variant="outline" className="text-[10px] py-0 px-1 shrink-0 h-4">
                   T{cache.terrain}
                 </Badge>
-                <Badge variant="secondary" className="text-xs py-0 px-1.5 shrink-0">
+                <Badge variant="secondary" className="text-[10px] py-0 px-1 shrink-0 h-4">
                   {cache.size}
                 </Badge>
                 {distance !== undefined && (
-                  <Badge variant="outline" className="text-xs py-0 px-1.5 flex items-center gap-1 shrink-0">
+                  <Badge variant="outline" className="text-[10px] py-0 px-1 flex items-center gap-0.5 shrink-0 h-4">
                     <Navigation className="h-2 w-2" />
                     {formatDistance(distance)}
                   </Badge>
                 )}
                 {'foundAt' in cache && (
-                  <Badge variant="default" className="flex items-center gap-1 bg-green-600 adventure:bg-stone-700 text-xs py-0 px-1.5 shrink-0">
+                  <Badge variant="default" className="flex items-center gap-0.5 bg-green-600 adventure:bg-stone-700 text-[10px] py-0 px-1 shrink-0 h-4">
                     <CheckCircle className="h-2 w-2" />
                     {t('geocacheCard.found')}
                   </Badge>
