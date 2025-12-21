@@ -347,7 +347,7 @@ export function GeocacheCard({
           <div className="flex items-stretch h-full relative">
             {/* Preview image on left side */}
             {previewImage && (
-              <div className="relative shrink-0 w-32 sm:w-40">
+              <div className="relative shrink-0 w-32 sm:w-40 max-h-48">
                 {hasSpoiler ? (
                   <BlurredImage
                     src={previewImage}
