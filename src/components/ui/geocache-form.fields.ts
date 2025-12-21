@@ -4,6 +4,7 @@
 export { CacheNameField } from '@/features/geocache/components/geocache-form';
 export { CacheDescriptionField } from '@/features/geocache/components/geocache-form';
 export { CacheHintField } from '@/features/geocache/components/geocache-form';
+export { ContentWarningField } from '@/features/geocache/components/geocache-form';
 export { CacheTypeField } from '@/features/geocache/components/geocache-form';
 export { CacheSizeField } from '@/features/geocache/components/geocache-form';
 export { CacheDifficultyField } from '@/features/geocache/components/geocache-form';
