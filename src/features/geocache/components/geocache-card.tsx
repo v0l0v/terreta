@@ -333,30 +333,32 @@ export function GeocacheCard({
       >
         <CardContent className="p-0 flex-1 flex flex-col">
           <div className="flex items-stretch h-full relative">
-            {/* Preview image as full left side background with gradient */}
+            {/* Preview image as full left side background with gradient fade */}
             {previewImage && (
-              <div className="absolute left-0 top-0 bottom-0 w-1/3 sm:w-2/5 pointer-events-none">
-                <div className="relative w-full h-full">
-                  {hasSpoiler ? (
-                    <BlurredImage
-                      src={previewImage}
-                      alt={cache.name}
-                      className="w-full h-full"
-                      blurIntensity="heavy"
-                      showToggle={true}
-                      defaultBlurred={true}
-                    />
-                  ) : (
-                    <img
-                      src={previewImage}
-                      alt={cache.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  )}
-                  {/* Gradient overlay - fade to transparent to the right */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-card"></div>
-                </div>
+              <div
+                className="absolute left-0 top-0 bottom-0 right-0 pointer-events-none"
+                style={{
+                  maskImage: 'linear-gradient(to right, black 0%, black 35%, transparent 65%)',
+                  WebkitMaskImage: 'linear-gradient(to right, black 0%, black 35%, transparent 65%)'
+                }}
+              >
+                {hasSpoiler ? (
+                  <BlurredImage
+                    src={previewImage}
+                    alt={cache.name}
+                    className="w-full h-full"
+                    blurIntensity="heavy"
+                    showToggle={true}
+                    defaultBlurred={true}
+                  />
+                ) : (
+                  <img
+                    src={previewImage}
+                    alt={cache.name}
+                    className="w-full h-full object-cover object-left"
+                    loading="lazy"
+                  />
+                )}
               </div>
             )}
 
