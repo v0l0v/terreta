@@ -564,8 +564,8 @@ export default function Home() {
         {/* Forest skyline background - anchored to bottom with fade mask */}
         <div className="absolute inset-x-0 bottom-0 h-[500px] sm:h-[600px] md:h-[700px] lg:h-[800px] xl:h-[900px] pointer-events-none opacity-30">
           <div className="absolute inset-0" style={{
-            maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 100%)'
+            maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 5%, rgba(0,0,0,0.3) 10%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,0.7) 20%, rgba(0,0,0,0.85) 25%, black 35%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 5%, rgba(0,0,0,0.3) 10%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,0.7) 20%, rgba(0,0,0,0.85) 25%, black 35%)'
           }}>
             <img
               src="/forest-skyline.webp"
@@ -575,8 +575,8 @@ export default function Home() {
           </div>
           {/* Subtle overlay for tone adjustment */}
           <div className="absolute inset-0 bg-white/35 dark:bg-white/15 adventure:bg-amber-50/20" style={{
-            maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 100%)'
+            maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 5%, rgba(0,0,0,0.3) 10%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,0.7) 20%, rgba(0,0,0,0.85) 25%, black 35%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 5%, rgba(0,0,0,0.3) 10%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,0.7) 20%, rgba(0,0,0,0.85) 25%, black 35%)'
           }} />
         </div>
 
