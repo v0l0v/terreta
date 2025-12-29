@@ -335,13 +335,13 @@ export function GeocacheCard({
           <div className="flex relative">
             {/* Preview image rectangle on left side - fixed aspect ratio */}
             {previewImage && (
-              <div className="shrink-0 w-24 sm:w-32 aspect-square overflow-hidden">
-                <div className="relative w-full h-full flex items-center justify-center bg-muted">
+              <div className="shrink-0 w-24 sm:w-32 aspect-square overflow-hidden bg-muted">
+                <div className="relative w-full h-full">
                   {hasSpoiler ? (
                     <BlurredImage
                       src={previewImage}
                       alt={cache.name}
-                      className="w-full h-full object-cover object-center"
+                      className="absolute inset-0 w-full h-full object-cover object-center"
                       blurIntensity="heavy"
                       showToggle={true}
                       defaultBlurred={true}
@@ -350,7 +350,7 @@ export function GeocacheCard({
                     <img
                       src={previewImage}
                       alt={cache.name}
-                      className="w-full h-full object-cover object-center"
+                      className="absolute inset-0 w-full h-full object-cover object-center"
                       loading="lazy"
                     />
                   )}
