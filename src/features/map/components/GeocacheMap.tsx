@@ -28,35 +28,51 @@ const createGeocachePopupHTML = (geocache: Geocache) => {
     ? geocache.description.substring(0, 100) + '...'
     : geocache.description;
 
+  // Get preview image (first image if available)
+  const previewImage = geocache.images && geocache.images.length > 0 ? geocache.images[0] : undefined;
+
   return `
-    <div class="p-3 min-w-[200px] max-w-[280px]">
-      <h3 class="font-semibold text-sm leading-tight mb-2">${geocache.name}</h3>
+    <div class="p-0 min-w-[200px] max-w-[280px] overflow-hidden">
+      ${previewImage ? `
+        <div class="relative w-full h-32 overflow-hidden bg-green-100">
+          <img
+            src="${previewImage}"
+            alt="${geocache.name}"
+            class="absolute inset-0 w-full h-full object-cover object-center"
+            loading="lazy"
+          />
+        </div>
+      ` : ''}
 
-      <div class="flex flex-wrap gap-1 mb-2">
-        <span class="px-2 py-1 text-xs bg-secondary rounded">D${geocache.difficulty}</span>
-        <span class="px-2 py-1 text-xs bg-secondary rounded">T${geocache.terrain}</span>
-        <span class="px-2 py-1 text-xs bg-secondary rounded">${getSizeLabel(geocache.size)}</span>
-        <span class="px-2 py-1 text-xs bg-secondary rounded">${getTypeLabel(geocache.type)}</span>
-      </div>
+      <div class="p-3">
+        <h3 class="font-semibold text-sm leading-tight mb-2">${geocache.name}</h3>
 
-      <p class="text-xs text-gray-600 mb-3 line-clamp-2">${description}</p>
+        <div class="flex flex-wrap gap-1 mb-2">
+          <span class="px-2 py-1 text-xs bg-secondary rounded">D${geocache.difficulty}</span>
+          <span class="px-2 py-1 text-xs bg-secondary rounded">T${geocache.terrain}</span>
+          <span class="px-2 py-1 text-xs bg-secondary rounded">${getSizeLabel(geocache.size)}</span>
+          <span class="px-2 py-1 text-xs bg-secondary rounded">${getTypeLabel(geocache.type)}</span>
+        </div>
 
-      <div class="flex gap-2">
-        <button
-          class="flex-1 bg-blue-600 text-white text-xs px-3 py-2 rounded hover:bg-blue-700 transition-colors"
-          onclick="window.dispatchEvent(new CustomEvent('geocache-view-details', { detail: '${geocache.dTag}' }))"
-        >
-          ${i18n.t('map.popup.viewDetails')}
-        </button>
-        <button
-          class="inline-flex items-center justify-center p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-          onclick="window.open('https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}', '_blank')"
-          title="${i18n.t('map.popup.getDirections')}"
-        >
-          <svg class="h-3 w-3" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2">
-            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-          </svg>
-        </button>
+        <p class="text-xs text-gray-600 mb-3 line-clamp-2">${description}</p>
+
+        <div class="flex gap-2">
+          <button
+            class="flex-1 bg-blue-600 text-white text-xs px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+            onclick="window.dispatchEvent(new CustomEvent('geocache-view-details', { detail: '${geocache.dTag}' }))"
+          >
+            ${i18n.t('map.popup.viewDetails')}
+          </button>
+          <button
+            class="inline-flex items-center justify-center p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+            onclick="window.open('https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}', '_blank')"
+            title="${i18n.t('map.popup.getDirections')}"
+          >
+            <svg class="h-3 w-3" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -363,7 +379,12 @@ function PopupController({
 
                 const marker = layer as L.Marker;
 
-                // Force close any existing popups first
+                // Close ALL open popups first to ensure only one is open at a time
+                map.eachLayer((l: L.Layer) => {
+                  if (l instanceof L.Marker && l.getPopup && l.getPopup() && l.isPopupOpen()) {
+                    l.closePopup();
+                  }
+                });
                 map.closePopup();
 
                 // Check if marker has a popup bound
@@ -1295,8 +1316,14 @@ export function GeocacheMap({
                   L.DomEvent.stopPropagation(e);
                   L.DomEvent.preventDefault(e);
 
-                  // Close any other open popups first
+                  // Close ALL open popups first to ensure only one is open at a time
                   if (map) {
+                    map.eachLayer((layer: L.Layer) => {
+                      if (layer instanceof L.Marker && layer.getPopup && layer.getPopup() && layer.isPopupOpen()) {
+                        layer.closePopup();
+                      }
+                    });
+                    // Also close any popups directly on the map
                     map.closePopup();
                   }
 
