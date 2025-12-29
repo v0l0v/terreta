@@ -335,7 +335,7 @@ export function GeocacheCard({
           <div className="flex relative flex-1">
             {/* Preview image rectangle on left side - fixed aspect ratio */}
             {previewImage && (
-              <div className="shrink-0 w-24 sm:w-32 aspect-square overflow-hidden bg-muted">
+              <div className="shrink-0 w-20 sm:w-28 aspect-square overflow-hidden bg-muted">
                 <div className="relative w-full h-full">
                   {hasSpoiler ? (
                     <BlurredImage
