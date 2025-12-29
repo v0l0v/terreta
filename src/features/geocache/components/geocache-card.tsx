@@ -333,11 +333,11 @@ export function GeocacheCard({
       >
         <CardContent className="p-0 flex-1 flex flex-col">
           <div className="flex relative flex-1">
-            {/* Preview image rectangle on left side - fixed aspect ratio */}
-            {previewImage && (
-              <div className="shrink-0 w-20 sm:w-28 aspect-square overflow-hidden bg-muted">
-                <div className="relative w-full h-full">
-                  {hasSpoiler ? (
+            {/* Image container - always shown with pastel green background if no image */}
+            <div className="shrink-0 w-20 sm:w-28 aspect-square overflow-hidden bg-green-100 dark:bg-green-900/20 adventure:bg-amber-100">
+              <div className="relative w-full h-full">
+                {previewImage && (
+                  hasSpoiler ? (
                     <BlurredImage
                       src={previewImage}
                       alt={cache.name}
@@ -353,42 +353,26 @@ export function GeocacheCard({
                       className="absolute inset-0 w-full h-full object-cover object-center"
                       loading="lazy"
                     />
-                  )}
-                  {/* Icon with hidden indicator - overlaid on image at bottom left */}
-                  <div className="absolute bottom-2 left-2 z-10">
-                    <div className="relative">
-                      <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ${isAdventureTheme ? '' : 'rounded-full bg-muted/80 backdrop-blur-sm'} shadow-lg`}>
-                        <CacheIcon type={cache.type} size="sm" className="w-4 h-4 sm:w-5 sm:h-5" theme={theme} />
+                  )
+                )}
+                {/* Icon with hidden indicator - overlaid at bottom left */}
+                <div className="absolute bottom-2 left-2 z-10">
+                  <div className="relative">
+                    <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ${isAdventureTheme ? '' : 'rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm'} shadow-lg`}>
+                      <CacheIcon type={cache.type} size="sm" className="w-4 h-4 sm:w-5 sm:h-5" theme={theme} />
+                    </div>
+                    {isHiddenByCreator && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
+                        <EyeOff className="h-2 w-2 sm:h-3 sm:w-3 text-white" />
                       </div>
-                      {isHiddenByCreator && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
-                          <EyeOff className="h-2 w-2 sm:h-3 sm:w-3 text-white" />
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
-
-            {/* Icon when no image - at bottom left with absolute positioning */}
-            {!previewImage && (
-              <div className="absolute bottom-3 left-3 z-10">
-                <div className="relative">
-                  <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 ${isAdventureTheme ? '' : 'rounded-full bg-muted/80 backdrop-blur-sm'}`}>
-                    <CacheIcon type={cache.type} size="sm" className="sm:w-5 sm:h-5" theme={theme} />
-                  </div>
-                  {isHiddenByCreator && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
-                      <EyeOff className="h-3 w-3 text-white" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            </div>
 
             {/* Content */}
-            <div className={`flex-1 min-w-0 flex flex-col relative z-10 p-3 sm:p-4 bg-card ${!previewImage ? 'pl-16 sm:pl-20' : ''}`}>
+            <div className="flex-1 min-w-0 flex flex-col relative z-10 p-3 sm:p-4 bg-card">
             {/* Title row with action buttons */}
             <div className="flex items-start justify-between gap-2 sm:gap-3">
               <h3 className="font-semibold text-base leading-tight line-clamp-2 sm:line-clamp-1 group-hover:text-green-600 adventure:group-hover:text-red-900 transition-colors duration-150 min-w-0 flex-1">
