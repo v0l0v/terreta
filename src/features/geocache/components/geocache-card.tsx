@@ -331,11 +331,11 @@ export function GeocacheCard({
         onClick={() => handleNavigate()}
         className="group hover:shadow-md transition-shadow duration-200 bg-card border border-border h-full flex flex-col overflow-hidden"
       >
-        <CardContent className="p-0 flex-1 flex flex-col">
-          <div className="flex items-stretch relative min-h-0">
-            {/* Preview image rectangle on left side - now properly contained */}
+        <CardContent className="p-0">
+          <div className="flex relative">
+            {/* Preview image rectangle on left side - fixed aspect ratio */}
             {previewImage && (
-              <div className="shrink-0 w-32 sm:w-40 overflow-hidden self-stretch">
+              <div className="shrink-0 w-24 sm:w-32 aspect-square overflow-hidden">
                 <div className="relative w-full h-full flex items-center justify-center bg-muted">
                   {hasSpoiler ? (
                     <BlurredImage
@@ -357,12 +357,12 @@ export function GeocacheCard({
                   {/* Icon with hidden indicator - overlaid on image at bottom left */}
                   <div className="absolute bottom-2 left-2 z-10">
                     <div className="relative">
-                      <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 ${isAdventureTheme ? '' : 'rounded-full bg-muted/80 backdrop-blur-sm'} shadow-lg`}>
-                        <CacheIcon type={cache.type} size="sm" className="sm:w-5 sm:h-5" theme={theme} />
+                      <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ${isAdventureTheme ? '' : 'rounded-full bg-muted/80 backdrop-blur-sm'} shadow-lg`}>
+                        <CacheIcon type={cache.type} size="sm" className="w-4 h-4 sm:w-5 sm:h-5" theme={theme} />
                       </div>
                       {isHiddenByCreator && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
-                          <EyeOff className="h-3 w-3 text-white" />
+                        <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
+                          <EyeOff className="h-2 w-2 sm:h-3 sm:w-3 text-white" />
                         </div>
                       )}
                     </div>
