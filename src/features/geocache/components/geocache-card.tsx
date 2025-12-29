@@ -443,12 +443,12 @@ export function GeocacheCard({
     const hasSpoiler = !!cache.contentWarning;
 
     return (
-      <InteractiveCard onClick={() => handleNavigate()} compact={true} className="group hover:shadow-md transition-shadow duration-200 overflow-hidden">
-        <CardContent className="p-0">
-          <div className="flex relative">
+      <InteractiveCard onClick={() => handleNavigate()} compact={true} className="group hover:shadow-md transition-shadow duration-200 overflow-hidden h-[120px]">
+        <CardContent className="p-0 h-full">
+          <div className="flex relative h-full">
             {/* Preview image on left side with icon overlay */}
             {previewImage && (
-              <div className="shrink-0 w-16 sm:w-20 aspect-square overflow-hidden bg-muted">
+              <div className="shrink-0 w-20 sm:w-24 h-full overflow-hidden bg-muted">
                 <div className="relative w-full h-full">
                   {hasSpoiler ? (
                     <BlurredImage
