@@ -604,7 +604,7 @@ export default function CacheDetail() {
 
               <div className="pt-6 sm:pt-0 lg:p-6 p-4 lg:pt-6">
                 <div className="flex items-start gap-2 sm:gap-4">
-                  <h1 className="text-2xl break-words flex-1 font-bold text-foreground">{geocache.name}</h1>
+                  <h1 className="text-2xl break-words flex-1 font-bold text-foreground select-text">{geocache.name}</h1>
                   <div className="flex gap-1 sm:gap-2 flex-shrink-0 ml-2">
                     <ZapButton target={geocache} />
                     {!isOwner && <SaveButton geocache={geocache} />}
@@ -761,7 +761,7 @@ export default function CacheDetail() {
                     </div>
 
                     <div className="prose max-w-none">
-                      <p className="text-foreground whitespace-pre-wrap break-words">{geocache.description}</p>
+                      <p className="text-foreground whitespace-pre-wrap break-words select-text">{geocache.description}</p>
 
                       {geocache.hint && (
                         <Alert className="mt-4 py-2">
@@ -770,7 +770,7 @@ export default function CacheDetail() {
                               <div className="flex-1">
                                 <strong>{t('cacheDetail.hint.label')}</strong>{' '}
                                 <span
-                                  className={`transition-all duration-200 ${
+                                  className={`select-text transition-all duration-200 ${
                                     isHintVisible ? '' : 'blur-sm'
                                   }`}
                                 >
@@ -849,57 +849,63 @@ export default function CacheDetail() {
                       <span className="text-orange-600 text-xs">{t('cacheDetail.details.coordinatesModified')}</span>
                     )}
                   </p>
-                  <button
-                    onClick={() => {
-                      const location = isEditing && editLocation ? editLocation : geocache.location;
-                      handleCopyToClipboard(
-                        `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`,
-                        t('cacheDetail.details.coordinates')
-                      );
-                    }}
-                    className="flex items-center gap-2 text-xs md:text-sm font-mono mt-1 break-all text-foreground hover:bg-muted/50 p-1 rounded transition-colors w-full text-left"
-                    title={t('cacheDetail.details.clickToCopy', { item: t('cacheDetail.details.coordinates') })}
-                  >
-                    <span className="flex-1">
+                  <div className="flex items-center gap-2 hover:bg-muted/50 p-1 rounded transition-colors group">
+                    <span className="flex-1 text-xs md:text-sm font-mono break-all text-foreground select-text">
                       {isEditing && editLocation ?
                         `${editLocation.lat.toFixed(6)}, ${editLocation.lng.toFixed(6)}` :
                         `${geocache.location.lat.toFixed(6)}, ${geocache.location.lng.toFixed(6)}`
                       }
                     </span>
-                    {copiedItem === t('cacheDetail.details.coordinates') ? (
-                      <Check className="h-3 w-3 text-green-600 flex-shrink-0" />
-                    ) : (
-                      <Copy className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                    )}
-                  </button>
+                    <button
+                      onClick={() => {
+                        const location = isEditing && editLocation ? editLocation : geocache.location;
+                        handleCopyToClipboard(
+                          `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`,
+                          t('cacheDetail.details.coordinates')
+                        );
+                      }}
+                      className="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors"
+                      title={t('cacheDetail.details.clickToCopy', { item: t('cacheDetail.details.coordinates') })}
+                      type="button"
+                    >
+                      {copiedItem === t('cacheDetail.details.coordinates') ? (
+                        <Check className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <Copy className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
                   <p className="text-xs font-medium text-muted-foreground mt-3">
                     {t('cacheDetail.details.geohash')} {isEditing && editLocation && (editLocation.lat !== geocache.location.lat || editLocation.lng !== geocache.location.lng) && (
                       <span className="text-orange-600 text-xs">{t('cacheDetail.details.geohashModified')}</span>
                     )}
                   </p>
-                  <button
-                    onClick={() => {
-                      const location = isEditing && editLocation ? editLocation : geocache.location;
-                      handleCopyToClipboard(
-                        encodeGeohash(location.lat, location.lng, 9),
-                        t('cacheDetail.details.geohash')
-                      );
-                    }}
-                    className="flex items-center gap-2 text-xs md:text-sm font-mono mt-1 break-all text-foreground hover:bg-muted/50 p-1 rounded transition-colors w-full text-left"
-                    title={t('cacheDetail.details.clickToCopy', { item: t('cacheDetail.details.geohash') })}
-                  >
-                    <span className="flex-1">
+                  <div className="flex items-center gap-2 hover:bg-muted/50 p-1 rounded transition-colors group">
+                    <span className="flex-1 text-xs md:text-sm font-mono break-all text-foreground select-text">
                       {isEditing && editLocation ?
                         encodeGeohash(editLocation.lat, editLocation.lng, 9) :
                         encodeGeohash(geocache.location.lat, geocache.location.lng, 9)
                       }
                     </span>
-                    {copiedItem === t('cacheDetail.details.geohash') ? (
-                      <Check className="h-3 w-3 text-green-600 flex-shrink-0" />
-                    ) : (
-                      <Copy className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                    )}
-                  </button>
+                    <button
+                      onClick={() => {
+                        const location = isEditing && editLocation ? editLocation : geocache.location;
+                        handleCopyToClipboard(
+                          encodeGeohash(location.lat, location.lng, 9),
+                          t('cacheDetail.details.geohash')
+                        );
+                      }}
+                      className="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors"
+                      title={t('cacheDetail.details.clickToCopy', { item: t('cacheDetail.details.geohash') })}
+                      type="button"
+                    >
+                      {copiedItem === t('cacheDetail.details.geohash') ? (
+                        <Check className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <Copy className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
