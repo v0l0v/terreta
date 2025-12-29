@@ -204,11 +204,11 @@ export function GeocacheCard({
   );
 
   const renderCreatedTime = () => 'created_at' in cache && cache.created_at && (
-    <div className="text-xs sm:text-sm text-muted-foreground/80 mb-3 flex items-center gap-2">
+    <div className="text-[10px] sm:text-xs text-muted-foreground/80 mb-3 flex items-center gap-2">
       {cityName && (
         <>
           <span className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
+            <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
             {cityName}
           </span>
           <span className="text-muted-foreground/50">•</span>
@@ -333,10 +333,10 @@ export function GeocacheCard({
       >
         <CardContent className="p-0 flex-1 flex flex-col">
           <div className="flex items-stretch h-full relative">
-            {/* Preview image rectangle on left side */}
+            {/* Preview image rectangle on left side - now properly contained */}
             {previewImage && (
-              <div className="absolute left-0 top-0 bottom-0 pointer-events-none">
-                <div className="relative w-full h-full">
+              <div className="shrink-0 w-32 sm:w-40 overflow-hidden">
+                <div className="relative w-full h-full flex items-center justify-center bg-muted">
                   {hasSpoiler ? (
                     <BlurredImage
                       src={previewImage}
@@ -354,26 +354,41 @@ export function GeocacheCard({
                       loading="lazy"
                     />
                   )}
+                  {/* Icon with hidden indicator - overlaid on image at bottom left */}
+                  <div className="absolute bottom-2 left-2 z-10">
+                    <div className="relative">
+                      <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 ${isAdventureTheme ? '' : 'rounded-full bg-muted/80 backdrop-blur-sm'} shadow-lg`}>
+                        <CacheIcon type={cache.type} size="sm" className="sm:w-5 sm:h-5" theme={theme} />
+                      </div>
+                      {isHiddenByCreator && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
+                          <EyeOff className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Icon with hidden indicator - overlaid on image */}
-            <div className="relative shrink-0 z-10 p-3 sm:p-4">
-              <div className="relative">
-                <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 ${isAdventureTheme ? '' : 'rounded-full bg-muted/80 backdrop-blur-sm'} ${previewImage ? 'shadow-lg' : ''}`}>
-                  <CacheIcon type={cache.type} size="sm" className="sm:w-5 sm:h-5" theme={theme} />
-                </div>
-                {isHiddenByCreator && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
-                    <EyeOff className="h-3 w-3 text-white" />
+            {/* Icon when no image - at bottom left with absolute positioning */}
+            {!previewImage && (
+              <div className="absolute bottom-3 left-3 z-10">
+                <div className="relative">
+                  <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 ${isAdventureTheme ? '' : 'rounded-full bg-muted/80 backdrop-blur-sm'}`}>
+                    <CacheIcon type={cache.type} size="sm" className="sm:w-5 sm:h-5" theme={theme} />
                   </div>
-                )}
+                  {isHiddenByCreator && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
+                      <EyeOff className="h-3 w-3 text-white" />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Content */}
-            <div className="flex-1 min-w-0 flex flex-col h-full relative z-10 p-3 sm:p-4 pl-0 bg-card">
+            <div className={`flex-1 min-w-0 flex flex-col h-full relative z-10 p-3 sm:p-4 bg-card ${!previewImage ? 'pl-16 sm:pl-20' : ''}`}>
             {/* Title row with action buttons */}
             <div className="flex items-start justify-between gap-2 sm:gap-3">
               <h3 className="font-semibold text-base leading-tight line-clamp-2 sm:line-clamp-1 group-hover:text-green-600 adventure:group-hover:text-red-900 transition-colors duration-150 min-w-0 flex-1">
@@ -491,7 +506,7 @@ export function GeocacheCard({
 
                 {/* Created time and location */}
                 {'created_at' in cache && cache.created_at && (
-                  <div className="text-xs text-muted-foreground/80 mt-1 flex items-center gap-1.5">
+                  <div className="text-[10px] sm:text-xs text-muted-foreground/80 mt-1 flex items-center gap-1.5">
                     {cityName && (
                       <>
                         <span className="flex items-center gap-1">
