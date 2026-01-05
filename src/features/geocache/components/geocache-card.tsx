@@ -472,33 +472,18 @@ export function GeocacheCard({
                 {renderActionButtons("h-4 w-4 sm:h-5 sm:w-5", true, true)}
               </div>
 
-              {/* Author and metadata */}
-              {showAuthor && (
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                  <span className="flex items-center gap-1">
-                    {t('geocacheCard.by')} {authorName}
-                    {profilePicture && !avatarError && (
-                      <img
-                        src={profilePicture}
-                        alt={authorName}
-                        className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full object-cover"
-                        onError={handleAvatarError}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    )}
-                  </span>
-                  {metadata && <span>{metadata}</span>}
+              {/* Author info */}
+              {renderAuthorInfo()}
+
+              {/* Metadata for compact variant */}
+              {metadata && (
+                <p className="text-xs text-muted-foreground/80 mb-1.5">
+                  {metadata}
                 </p>
               )}
 
-              {/* Location only */}
-              {cityName && (
-                <div className="text-[9px] sm:text-[10px] text-muted-foreground/80 mt-0.5 flex items-center gap-0.5">
-                  <MapPin className="h-2 w-2" />
-                  {cityName}
-                </div>
-              )}
+              {/* City name */}
+              {renderCityName()}
 
               {/* Spacer to push badges to bottom */}
               <div className="flex-1 min-h-0"></div>
