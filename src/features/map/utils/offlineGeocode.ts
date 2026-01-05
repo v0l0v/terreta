@@ -4,16 +4,26 @@
  * No external API calls - everything is local
  */
 
-import { Country, State, City, ICountry, IState, ICity } from 'country-state-city';
+import cities from 'cities.json';
 import { countryToFlag } from './countryToFlag';
+import { getStateCodeMapping } from '../data/stateCodeMappings';
 
 // Simple in-memory cache for reverse geocoding results
 const geocodeCache = new Map<string, string>();
 const CACHE_DURATION = 1000 * 60 * 60 * 24; // 24 hours
 const cacheTimestamps = new Map<string, number>();
 
-// Countries that use state/province abbreviations
+// Countries that use state/province abbreviations (2-digit codes)
 const COUNTRIES_WITH_STATES = new Set(['US', 'CA', 'AU', 'BR', 'IN', 'MX']);
+
+interface CityData {
+  name: string;
+  country: string;
+  lat: string;
+  lng: string;
+  admin1?: string; // State/province code (GeoNames format)
+  admin2?: string; // County/region code
+}
 
 /**
  * Calculate distance between two points using Haversine formula
@@ -38,110 +48,22 @@ function calculateDistance(
 }
 
 /**
- * Find the nearest city to given coordinates
+ * Quick distance approximation (faster than Haversine for initial filtering)
+ * Returns approximate distance in km
  */
-function findNearestCity(
-  lat: number,
-  lng: number,
-  countryCode: string,
-  stateCode?: string
-): ICity | null {
-  let cities: ICity[] = [];
-
-  if (stateCode) {
-    // Get cities for specific state
-    cities = City.getCitiesOfState(countryCode, stateCode);
-  } else {
-    // Get all cities for country
-    cities = City.getCitiesOfCountry(countryCode) || [];
-  }
-
-  if (cities.length === 0) {
-    return null;
-  }
-
-  // Find the closest city
-  let nearestCity: ICity | null = null;
-  let minDistance = Infinity;
-
-  for (const city of cities) {
-    if (city.latitude && city.longitude) {
-      const distance = calculateDistance(
-        lat,
-        lng,
-        parseFloat(city.latitude),
-        parseFloat(city.longitude)
-      );
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestCity = city;
-      }
-    }
-  }
-
-  // Only return if city is within reasonable distance (500km)
-  return minDistance < 500 ? nearestCity : null;
-}
-
-/**
- * Find the nearest state to given coordinates
- */
-function findNearestState(lat: number, lng: number, countryCode: string): IState | null {
-  const states = State.getStatesOfCountry(countryCode);
-
-  if (!states || states.length === 0) {
-    return null;
-  }
-
-  let nearestState: IState | null = null;
-  let minDistance = Infinity;
-
-  for (const state of states) {
-    if (state.latitude && state.longitude) {
-      const distance = calculateDistance(
-        lat,
-        lng,
-        parseFloat(state.latitude),
-        parseFloat(state.longitude)
-      );
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestState = state;
-      }
-    }
-  }
-
-  return nearestState;
-}
-
-/**
- * Find the nearest country to given coordinates
- */
-function findNearestCountry(lat: number, lng: number): ICountry | null {
-  const countries = Country.getAllCountries();
-
-  let nearestCountry: ICountry | null = null;
-  let minDistance = Infinity;
-
-  for (const country of countries) {
-    if (country.latitude && country.longitude) {
-      const distance = calculateDistance(
-        lat,
-        lng,
-        parseFloat(country.latitude),
-        parseFloat(country.longitude)
-      );
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestCountry = country;
-      }
-    }
-  }
-
-  return nearestCountry;
+function quickDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const latDiff = Math.abs(lat2 - lat1);
+  const lonDiff = Math.abs(lon2 - lon1);
+  
+  // Very rough approximation: 1 degree ≈ 111 km at equator
+  // Adjust longitude by latitude (cos correction)
+  const latMid = (lat1 + lat2) / 2;
+  const lonCorrection = Math.cos(latMid * Math.PI / 180);
+  
+  return Math.sqrt(
+    Math.pow(latDiff * 111, 2) + 
+    Math.pow(lonDiff * 111 * lonCorrection, 2)
+  );
 }
 
 /**
@@ -161,58 +83,59 @@ export function offlineGeocode(lat: number, lng: number): string {
   }
 
   try {
-    // Find nearest country
-    const country = findNearestCountry(lat, lng);
+    // Two-pass approach:
+    // 1. Quick filter to find cities within reasonable radius (fast)
+    // 2. Accurate distance calculation on filtered results (slow but on fewer items)
     
-    if (!country) {
+    const MAX_QUICK_DISTANCE = 200; // km - initial filter radius
+    const MAX_FINAL_DISTANCE = 50;  // km - final acceptance radius
+    
+    const candidates: Array<{ city: CityData; distance: number }> = [];
+    
+    // First pass: quick filtering
+    for (const city of cities as CityData[]) {
+      if (city.lat && city.lng) {
+        const cityLat = parseFloat(city.lat);
+        const cityLng = parseFloat(city.lng);
+        
+        const quickDist = quickDistance(lat, lng, cityLat, cityLng);
+        
+        if (quickDist < MAX_QUICK_DISTANCE) {
+          // Calculate accurate distance for candidates
+          const accurateDist = calculateDistance(lat, lng, cityLat, cityLng);
+          
+          if (accurateDist < MAX_FINAL_DISTANCE) {
+            candidates.push({ city, distance: accurateDist });
+          }
+        }
+      }
+    }
+
+    if (candidates.length === 0) {
+      // No city found within acceptable radius
       return '';
     }
 
-    const countryCode = country.isoCode;
+    // Sort by distance and get the closest
+    candidates.sort((a, b) => a.distance - b.distance);
+    const nearestCity = candidates[0].city;
+
+    const countryCode = nearestCity.country;
     const flagEmoji = countryToFlag(countryCode);
-    
-    // Check if this country uses states
     const hasStates = COUNTRIES_WITH_STATES.has(countryCode);
     
     let locationString = '';
     
-    if (hasStates) {
-      // Find nearest state
-      const state = findNearestState(lat, lng, countryCode);
+    if (hasStates && nearestCity.admin1) {
+      // Get the state code mapping for this country
+      const stateMapping = getStateCodeMapping(countryCode);
+      const stateCode = stateMapping?.[nearestCity.admin1] || nearestCity.admin1;
       
-      if (state) {
-        // Find nearest city within the state
-        const city = findNearestCity(lat, lng, countryCode, state.isoCode);
-        
-        if (city) {
-          // Format: "City, ST 🏳️"
-          locationString = `${city.name}, ${state.isoCode} ${flagEmoji}`;
-        } else {
-          // No city found, just show state
-          locationString = `${state.name}, ${state.isoCode} ${flagEmoji}`;
-        }
-      } else {
-        // No state found, try to find city directly
-        const city = findNearestCity(lat, lng, countryCode);
-        
-        if (city) {
-          locationString = `${city.name} ${flagEmoji}`;
-        } else {
-          // Just show country
-          locationString = `${country.name} ${flagEmoji}`;
-        }
-      }
+      // Format: "City, ST 🏳️"
+      locationString = `${nearestCity.name}, ${stateCode} ${flagEmoji}`;
     } else {
-      // Country without states - find nearest city
-      const city = findNearestCity(lat, lng, countryCode);
-      
-      if (city) {
-        // Format: "City 🏳️"
-        locationString = `${city.name} ${flagEmoji}`;
-      } else {
-        // No city found, just show country
-        locationString = `${country.name} ${flagEmoji}`;
-      }
+      // Format: "City 🏳️"
+      locationString = `${nearestCity.name} ${flagEmoji}`;
     }
     
     // Cache the result
@@ -231,7 +154,7 @@ export function offlineGeocode(lat: number, lng: number): string {
  * Useful for batch processing geocaches
  */
 export function prefetchLocations(coordinates: Array<{ lat: number; lng: number }>): void {
-  // Since we're fully offline, we can process all at once
+  // Since we're fully offline and synchronous, we can process all at once
   coordinates.forEach(coord => {
     offlineGeocode(coord.lat, coord.lng);
   });
