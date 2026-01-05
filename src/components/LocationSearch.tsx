@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Search, MapPin, X } from "lucide-react";
 import { CompassSpinner } from "@/components/ui/loading";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,8 @@ export function LocationSearch({
   const [currentPlaceholder, setCurrentPlaceholder] = useState(placeholder);
   const searchTimeout = useRef<NodeJS.Timeout>();
   const abortController = useRef<AbortController>();
+  const inputRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   // Update placeholder based on screen size
   useEffect(() => {
@@ -52,6 +55,43 @@ export function LocationSearch({
       window.removeEventListener('resize', updatePlaceholder);
     };
   }, [placeholder, mobilePlaceholder]);
+
+  // Update dropdown position when showing results or on scroll/resize
+  useEffect(() => {
+    const updatePosition = () => {
+      if (inputRef.current && showResults) {
+        const rect = inputRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX,
+          width: rect.width,
+        });
+      }
+    };
+
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [showResults]);
+
+  // Handle clicks outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showResults && inputRef.current && !inputRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showResults]);
 
   const parseCoordinates = (input: string): { lat: number; lng: number; warning?: string } | null => {
     // Clean input: remove extra spaces, normalize separators
@@ -283,8 +323,79 @@ export function LocationSearch({
     }
   };
 
+  const renderDropdown = () => {
+    if (!showResults) return null;
+
+    const dropdownContent = (
+      <>
+        {results.length > 0 && (
+          <Card
+            className="absolute z-[1000] max-h-64 overflow-y-auto shadow-lg"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
+              marginTop: '4px',
+            }}
+          >
+            <div className="p-1">
+              {results.map((result, index) => (
+                <button
+                  key={index}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-start gap-2 transition-colors"
+                  onClick={() => handleResultClick(result)}
+                >
+                  <span className="text-lg mt-0.5">{getResultIcon(result.type)}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{result.name}</div>
+                    {result.display_name && result.display_name !== result.name && (
+                      <div className="text-sm text-gray-600 truncate">{result.display_name}</div>
+                    )}
+                    {result.warning && (
+                      <div className="text-xs text-amber-600 mt-1 flex items-start gap-1">
+                        <span className="shrink-0">{result.warning}</span>
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-500">
+                      {result.lat.toFixed(4)}, {result.lng.toFixed(4)}
+                    </div>
+                  </div>
+                  {result.type && result.type !== 'coordinates' && (
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      {result.type}
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {!isSearching && results.length === 0 && query && (
+          <Card
+            className="absolute z-[1000] shadow-lg"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
+              marginTop: '4px',
+            }}
+          >
+            <div className="p-4 text-center text-gray-500">
+              <MapPin className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+              <p className="text-sm">No locations found</p>
+              <p className="text-xs mt-1">Try searching for a city, zip code, or coordinates</p>
+            </div>
+          </Card>
+        )}
+      </>
+    );
+
+    return createPortal(dropdownContent, document.body);
+  };
+
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" ref={inputRef}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
@@ -313,50 +424,7 @@ export function LocationSearch({
         )}
       </div>
 
-      {showResults && results.length > 0 && (
-        <Card className="absolute z-[1000] w-full mt-1 max-h-64 overflow-y-auto">
-          <div className="p-1">
-            {results.map((result, index) => (
-              <button
-                key={index}
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-start gap-2 transition-colors"
-                onClick={() => handleResultClick(result)}
-              >
-                <span className="text-lg mt-0.5">{getResultIcon(result.type)}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{result.name}</div>
-                  {result.display_name && result.display_name !== result.name && (
-                    <div className="text-sm text-gray-600 truncate">{result.display_name}</div>
-                  )}
-                  {result.warning && (
-                    <div className="text-xs text-amber-600 mt-1 flex items-start gap-1">
-                      <span className="shrink-0">{result.warning}</span>
-                    </div>
-                  )}
-                  <div className="text-xs text-gray-500">
-                    {result.lat.toFixed(4)}, {result.lng.toFixed(4)}
-                  </div>
-                </div>
-                {result.type && result.type !== 'coordinates' && (
-                  <Badge variant="outline" className="text-xs shrink-0">
-                    {result.type}
-                  </Badge>
-                )}
-              </button>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {showResults && !isSearching && results.length === 0 && query && (
-        <Card className="absolute z-[1000] w-full mt-1">
-          <div className="p-4 text-center text-gray-500">
-            <MapPin className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-            <p className="text-sm">No locations found</p>
-            <p className="text-xs mt-1">Try searching for a city, zip code, or coordinates</p>
-          </div>
-        </Card>
-      )}
+      {renderDropdown()}
     </div>
   );
 }
