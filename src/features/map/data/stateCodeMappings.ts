@@ -118,13 +118,14 @@ export const BR_ADMIN_TO_STATE: Record<string, string> = {
   '27': 'TO', // Tocantins
 };
 
-// Indian States (using postal abbreviations)
+// Indian States (using GeoNames admin1 codes mapped to postal abbreviations)
+// Note: GeoNames uses numeric codes for Indian states
 export const IN_ADMIN_TO_STATE: Record<string, string> = {
   '28': 'AP', // Andhra Pradesh
   '37': 'AR', // Arunachal Pradesh
   '03': 'AS', // Assam
   '34': 'BR', // Bihar
-  '37': 'CT', // Chhattisgarh
+  '26': 'CT', // Chhattisgarh
   '09': 'GA', // Goa
   '29': 'GJ', // Gujarat
   '06': 'HR', // Haryana
@@ -140,8 +141,8 @@ export const IN_ADMIN_TO_STATE: Record<string, string> = {
   '17': 'ML', // Meghalaya
   '15': 'MZ', // Mizoram
   '12': 'NL', // Nagaland
-  '26': 'OR', // Odisha
-  '34': 'PY', // Puducherry
+  '21': 'OR', // Odisha
+  '27': 'PY', // Puducherry
   '30': 'PB', // Punjab
   '24': 'RJ', // Rajasthan
   '11': 'SK', // Sikkim

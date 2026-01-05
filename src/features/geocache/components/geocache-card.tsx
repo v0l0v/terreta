@@ -146,8 +146,16 @@ export function GeocacheCard({
     console.warn('Avatar failed to load for:', authorName);
   }, [authorName]);
 
-  // Get city name with flag from coordinates (100% offline, synchronous)
-  const cityName = cache.city || (cache.location ? offlineGeocode(cache.location.lat, cache.location.lng) : '');
+  // Get city name with flag from coordinates (100% offline, lazy-loaded)
+  const [cityName, setCityName] = useState<string>(cache.city || '');
+  
+  useEffect(() => {
+    if (cache.city) {
+      setCityName(cache.city);
+    } else if (cache.location) {
+      offlineGeocode(cache.location.lat, cache.location.lng).then(setCityName);
+    }
+  }, [cache.city, cache.location]);
 
   // Use stats that are now included in the geocache data from useGeocaches
   const stats = {

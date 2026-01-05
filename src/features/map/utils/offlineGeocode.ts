@@ -2,11 +2,13 @@
  * 100% Offline reverse geocoding utility using local data
  * Converts coordinates to "City, ST 🏳️" or "City 🏳️" format
  * No external API calls - everything is local
+ * 
+ * Note: Cities data is lazy-loaded to keep the main bundle small
  */
 
-import cities from 'cities.json';
 import { countryToFlag } from './countryToFlag';
 import { getStateCodeMapping } from '../data/stateCodeMappings';
+import type { CityData } from './citiesData';
 
 // Simple in-memory cache for reverse geocoding results
 const geocodeCache = new Map<string, string>();
@@ -16,13 +18,31 @@ const cacheTimestamps = new Map<string, number>();
 // Countries that use state/province abbreviations (2-digit codes)
 const COUNTRIES_WITH_STATES = new Set(['US', 'CA', 'AU', 'BR', 'IN', 'MX']);
 
-interface CityData {
-  name: string;
-  country: string;
-  lat: string;
-  lng: string;
-  admin1?: string; // State/province code (GeoNames format)
-  admin2?: string; // County/region code
+// Lazy-loaded cities data
+let citiesDataPromise: Promise<CityData[]> | null = null;
+let citiesDataCache: CityData[] | null = null;
+
+/**
+ * Load cities data on-demand (lazy loading)
+ */
+async function getCitiesData(): Promise<CityData[]> {
+  // Return cached data if available
+  if (citiesDataCache) {
+    return citiesDataCache;
+  }
+
+  // Return existing promise if already loading
+  if (citiesDataPromise) {
+    return citiesDataPromise;
+  }
+
+  // Start loading cities data
+  citiesDataPromise = import('./citiesData').then(module => {
+    citiesDataCache = module.getCitiesData();
+    return citiesDataCache;
+  });
+
+  return citiesDataPromise;
 }
 
 /**
@@ -69,8 +89,10 @@ function quickDistance(lat1: number, lon1: number, lat2: number, lon2: number): 
 /**
  * Get a human-readable location name from coordinates using 100% offline data
  * Returns format: "City, ST 🏳️" for countries with states or "City 🏳️" for others
+ * 
+ * Note: This function is async because it lazy-loads the cities data
  */
-export function offlineGeocode(lat: number, lng: number): string {
+export async function offlineGeocode(lat: number, lng: number): Promise<string> {
   // Create cache key from rounded coordinates (to 2 decimal places for reasonable caching)
   const cacheKey = `${lat.toFixed(2)},${lng.toFixed(2)}`;
   
@@ -83,6 +105,9 @@ export function offlineGeocode(lat: number, lng: number): string {
   }
 
   try {
+    // Load cities data (lazy-loaded, cached after first load)
+    const cities = await getCitiesData();
+
     // Two-pass approach:
     // 1. Quick filter to find cities within reasonable radius (fast)
     // 2. Accurate distance calculation on filtered results (slow but on fewer items)
@@ -93,7 +118,7 @@ export function offlineGeocode(lat: number, lng: number): string {
     const candidates: Array<{ city: CityData; distance: number }> = [];
     
     // First pass: quick filtering
-    for (const city of cities as CityData[]) {
+    for (const city of cities) {
       if (city.lat && city.lng) {
         const cityLat = parseFloat(city.lat);
         const cityLng = parseFloat(city.lng);
@@ -153,11 +178,11 @@ export function offlineGeocode(lat: number, lng: number): string {
  * Prefetch location names for multiple coordinates
  * Useful for batch processing geocaches
  */
-export function prefetchLocations(coordinates: Array<{ lat: number; lng: number }>): void {
-  // Since we're fully offline and synchronous, we can process all at once
-  coordinates.forEach(coord => {
-    offlineGeocode(coord.lat, coord.lng);
-  });
+export async function prefetchLocations(coordinates: Array<{ lat: number; lng: number }>): Promise<void> {
+  // Process all coordinates in parallel
+  await Promise.all(
+    coordinates.map(coord => offlineGeocode(coord.lat, coord.lng))
+  );
 }
 
 /**
