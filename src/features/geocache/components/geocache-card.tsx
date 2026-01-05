@@ -17,7 +17,7 @@ import { CacheIcon } from '@/features/geocache/utils/cacheIcons';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useTheme } from "@/shared/hooks/useTheme";
 import { getSizeLabel } from '@/features/geocache/utils/geocache-utils';
-import { reverseGeocode } from '@/features/map/utils/reverseGeocode';
+import { offlineGeocode } from '@/features/map/utils/offlineGeocode';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import type { Geocache } from '@/types/geocache';
 import {
@@ -147,11 +147,11 @@ export function GeocacheCard({
     console.warn('Avatar failed to load for:', authorName);
   }, [authorName]);
 
-  // Fetch city name from coordinates if not already cached
+  // Fetch city name with flag from coordinates if not already cached
   const [cityName, setCityName] = useState<string>(cache.city || '');
   useEffect(() => {
     if (!cache.city && cache.location) {
-      reverseGeocode(cache.location.lat, cache.location.lng)
+      offlineGeocode(cache.location.lat, cache.location.lng)
         .then(location => {
           if (location) {
             setCityName(location);
