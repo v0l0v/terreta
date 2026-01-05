@@ -330,12 +330,61 @@ export function LocationSearch({
       <>
         {results.length > 0 && (
           <Card
-            className="absolute z-[1000] max-h-64 overflow-y-auto shadow-lg"
+            className="absolute max-h-64 overflow-y-auto shadow-lg"
             style={{
-              top: `${dropdownPosition.top}px`,
-              left: `${dropdownPosition.left}px`,
-              width: `${dropdownPosition.width}px`,
-              marginTop: '4px',
+              ...{
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                width: `${dropdownPosition.width}px`,
+                marginTop: '4px',
+              },
+              zIndex: 9999,
+            }}
+          >
+            <div className="p-1">
+              {results.map((result, index) => (
+                <button
+                  key={index}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-start gap-2 transition-colors"
+                  onClick={() => handleResultClick(result)}
+                >
+                  <span className="text-lg mt-0.5">{getResultIcon(result.type)}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{result.name}</div>
+                    {result.display_name && result.display_name !== result.name && (
+                      <div className="text-sm text-gray-600 truncate">{result.display_name}</div>
+                    )}
+                    {result.warning && (
+                      <div className="text-xs text-amber-600 mt-1 flex items-start gap-1">
+                        <span className="shrink-0">{result.warning}</span>
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-500">
+                      {result.lat.toFixed(4)}, {result.lng.toFixed(4)}
+                    </div>
+                  </div>
+                  {result.type && result.type !== 'coordinates' && (
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      {result.type}
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {!isSearching && results.length === 0 && query && (
+          <Card
+            className="absolute shadow-lg"
+            style={{
+              ...{
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                width: `${dropdownPosition.width}px`,
+                marginTop: '4px',
+              },
+              zIndex: 9999,
             }}
           >
             <div className="p-1">
