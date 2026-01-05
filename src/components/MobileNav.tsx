@@ -75,7 +75,7 @@ export function MobileHeader() {
 
   const navigation = [
     { name: t('navigation.home'), href: '/', icon: Home },
-    { name: t('navigation.map'), href: '/map', icon: Map },
+    { name: t('navigation.map'), href: '/map?tab=map', icon: Map },
     { name: t('navigation.claimTreasure'), href: '/claim', icon: ScanQrCode },
     { name: t('navigation.new'), href: '/create', icon: Plus },
   ];
@@ -315,7 +315,7 @@ export function MobileBottomNav() {
 
   const navigation = [
     { name: t('navigation.home'), href: '/', icon: Home },
-    { name: t('navigation.map'), href: '/map', icon: Map },
+    { name: t('navigation.map'), href: '/map?tab=map', icon: Map },
     { name: t('navigation.claimTreasure'), href: '/claim', icon: ScanQrCode },
     { name: t('navigation.new'), href: '/create', icon: Plus },
   ];
