@@ -199,18 +199,10 @@ export function GeocacheCard({
     </div>
   );
 
-  const renderCreatedTime = () => 'created_at' in cache && cache.created_at && (
-    <div className="text-[10px] sm:text-xs text-muted-foreground/80 mb-3 flex items-center gap-2">
-      {cityName && (
-        <>
-          <span className="flex items-center gap-1">
-            <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-            {cityName}
-          </span>
-          <span className="text-muted-foreground/50">•</span>
-        </>
-      )}
-      <span>{formatDistanceToNow(new Date(cache.created_at * 1000), { addSuffix: true })}</span>
+  const renderCityName = () => cityName && (
+    <div className="text-[10px] sm:text-xs text-muted-foreground/80 mb-3 flex items-center gap-1">
+      <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+      {cityName}
     </div>
   );
 
@@ -220,22 +212,34 @@ export function GeocacheCard({
     </p>
   );
 
-  const renderStatsSkeleton = (isCompact = false) => (
-    <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground shrink-0">
-      <span className="flex items-center gap-1">
-        <Zap className="h-3 w-3" />
-        <Skeleton className={`h-3 w-6 ${isCompact ? '' : 'sm:w-8'}`} />
-      </span>
-      <span className="flex items-center gap-1">
-        <Trophy className="h-3 w-3" />
-        <Skeleton className={`h-3 w-3 ${isCompact ? '' : 'sm:w-4'}`} />
-      </span>
-      <span className="flex items-center gap-1">
-        <MessageSquare className="h-3 w-3" />
-        <Skeleton className={`h-3 w-3 ${isCompact ? '' : 'sm:w-4'}`} />
-      </span>
-    </div>
-  );
+  const renderStatsSkeleton = (isCompact = false) => {
+    // Only show skeleton if we expect stats to load
+    const hasAnyStats = totalZapAmount > 0 || stats.foundCount > 0 || stats.logCount > 0;
+    if (!hasAnyStats) return null;
+
+    return (
+      <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground shrink-0">
+        {totalZapAmount > 0 && (
+          <span className="flex items-center gap-1">
+            <Zap className="h-3 w-3" />
+            <Skeleton className={`h-3 w-6 ${isCompact ? '' : 'sm:w-8'}`} />
+          </span>
+        )}
+        {stats.foundCount > 0 && (
+          <span className="flex items-center gap-1">
+            <Trophy className="h-3 w-3" />
+            <Skeleton className={`h-3 w-3 ${isCompact ? '' : 'sm:w-4'}`} />
+          </span>
+        )}
+        {stats.logCount > 0 && (
+          <span className="flex items-center gap-1">
+            <MessageSquare className="h-3 w-3" />
+            <Skeleton className={`h-3 w-3 ${isCompact ? '' : 'sm:w-4'}`} />
+          </span>
+        )}
+      </div>
+    );
+  };
 
   const renderBadgesAndStats = (isCompact = false) => (
     <div className="flex items-center justify-between gap-2 mt-auto">
@@ -276,18 +280,24 @@ export function GeocacheCard({
               renderStatsSkeleton(isCompact)
             ) : (
               <>
-                <span className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  <span>{totalZapAmount.toLocaleString()}</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <Trophy className="h-3 w-3" />
-                  <span>{stats.foundCount}</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  <span>{stats.logCount}</span>
-                </span>
+                {totalZapAmount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Zap className="h-3 w-3" />
+                    <span>{totalZapAmount.toLocaleString()}</span>
+                  </span>
+                )}
+                {stats.foundCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Trophy className="h-3 w-3" />
+                    <span>{stats.foundCount}</span>
+                  </span>
+                )}
+                {stats.logCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" />
+                    <span>{stats.logCount}</span>
+                  </span>
+                )}
               </>
             )}
           </>
@@ -387,8 +397,8 @@ export function GeocacheCard({
               </p>
             )}
 
-            {/* Created time */}
-            {!showMetadata && renderCreatedTime()}
+            {/* City name */}
+            {!showMetadata && renderCityName()}
 
             {/* Description */}
             {renderDescription()}
@@ -494,19 +504,11 @@ export function GeocacheCard({
                 </p>
               )}
 
-              {/* Created time and location */}
-              {'created_at' in cache && cache.created_at && (
-                <div className="text-[9px] sm:text-[10px] text-muted-foreground/80 mt-0.5 flex items-center gap-1.5">
-                  {cityName && (
-                    <>
-                      <span className="flex items-center gap-0.5">
-                        <MapPin className="h-2 w-2" />
-                        {cityName}
-                      </span>
-                      <span className="text-muted-foreground/50">•</span>
-                    </>
-                  )}
-                  <span>{formatDistanceToNow(new Date(cache.created_at * 1000), { addSuffix: true })}</span>
+              {/* Location only */}
+              {cityName && (
+                <div className="text-[9px] sm:text-[10px] text-muted-foreground/80 mt-0.5 flex items-center gap-0.5">
+                  <MapPin className="h-2 w-2" />
+                  {cityName}
                 </div>
               )}
 
@@ -544,33 +546,45 @@ export function GeocacheCard({
                 <div className="shrink-0">
                   {statsLoading ? (
                     <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground">
-                      <span className="flex items-center gap-0.5">
-                        <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        <Skeleton className="h-2.5 w-4 sm:h-3 sm:w-6" />
-                      </span>
-                      <span className="flex items-center gap-0.5">
-                        <Trophy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        <Skeleton className="h-2.5 w-2 sm:h-3 sm:w-3" />
-                      </span>
-                      <span className="flex items-center gap-0.5">
-                        <MessageSquare className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        <Skeleton className="h-2.5 w-2 sm:h-3 sm:w-3" />
-                      </span>
+                      {totalZapAmount > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <Skeleton className="h-2.5 w-4 sm:h-3 sm:w-6" />
+                        </span>
+                      )}
+                      {stats.foundCount > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <Trophy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <Skeleton className="h-2.5 w-2 sm:h-3 sm:w-3" />
+                        </span>
+                      )}
+                      {stats.logCount > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <MessageSquare className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <Skeleton className="h-2.5 w-2 sm:h-3 sm:w-3" />
+                        </span>
+                      )}
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground">
-                      <span className="flex items-center gap-0.5">
-                        <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        <span>{totalZapAmount.toLocaleString()}</span>
-                      </span>
-                      <span className="flex items-center gap-0.5">
-                        <Trophy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        <span>{stats.foundCount}</span>
-                      </span>
-                      <span className="flex items-center gap-0.5">
-                        <MessageSquare className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        <span>{stats.logCount}</span>
-                      </span>
+                      {totalZapAmount > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <span>{totalZapAmount.toLocaleString()}</span>
+                        </span>
+                      )}
+                      {stats.foundCount > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <Trophy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <span>{stats.foundCount}</span>
+                        </span>
+                      )}
+                      {stats.logCount > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <MessageSquare className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <span>{stats.logCount}</span>
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
