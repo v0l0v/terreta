@@ -1,154 +1,154 @@
 /**
- * Offline reverse geocoding utility using local data
- * Converts coordinates to "City, State 🏳️" or "City 🏳️" format
+ * 100% Offline reverse geocoding utility using local data
+ * Converts coordinates to "City, ST 🏳️" or "City 🏳️" format
+ * No external API calls - everything is local
  */
 
-import * as countryCoder from '@rapideditor/country-coder';
-import { flag } from 'country-emoji';
+import { Country, State, City, ICountry, IState, ICity } from 'country-state-city';
+import { countryToFlag } from './countryToFlag';
 
 // Simple in-memory cache for reverse geocoding results
 const geocodeCache = new Map<string, string>();
 const CACHE_DURATION = 1000 * 60 * 60 * 24; // 24 hours
 const cacheTimestamps = new Map<string, number>();
 
-// US states abbreviations
-const US_STATES: Record<string, string> = {
-  'Alabama': 'AL',
-  'Alaska': 'AK',
-  'Arizona': 'AZ',
-  'Arkansas': 'AR',
-  'California': 'CA',
-  'Colorado': 'CO',
-  'Connecticut': 'CT',
-  'Delaware': 'DE',
-  'Florida': 'FL',
-  'Georgia': 'GA',
-  'Hawaii': 'HI',
-  'Idaho': 'ID',
-  'Illinois': 'IL',
-  'Indiana': 'IN',
-  'Iowa': 'IA',
-  'Kansas': 'KS',
-  'Kentucky': 'KY',
-  'Louisiana': 'LA',
-  'Maine': 'ME',
-  'Maryland': 'MD',
-  'Massachusetts': 'MA',
-  'Michigan': 'MI',
-  'Minnesota': 'MN',
-  'Mississippi': 'MS',
-  'Missouri': 'MO',
-  'Montana': 'MT',
-  'Nebraska': 'NE',
-  'Nevada': 'NV',
-  'New Hampshire': 'NH',
-  'New Jersey': 'NJ',
-  'New Mexico': 'NM',
-  'New York': 'NY',
-  'North Carolina': 'NC',
-  'North Dakota': 'ND',
-  'Ohio': 'OH',
-  'Oklahoma': 'OK',
-  'Oregon': 'OR',
-  'Pennsylvania': 'PA',
-  'Rhode Island': 'RI',
-  'South Carolina': 'SC',
-  'South Dakota': 'SD',
-  'Tennessee': 'TN',
-  'Texas': 'TX',
-  'Utah': 'UT',
-  'Vermont': 'VT',
-  'Virginia': 'VA',
-  'Washington': 'WA',
-  'West Virginia': 'WV',
-  'Wisconsin': 'WI',
-  'Wyoming': 'WY',
-};
+// Countries that use state/province abbreviations
+const COUNTRIES_WITH_STATES = new Set(['US', 'CA', 'AU', 'BR', 'IN', 'MX']);
 
-// Canadian provinces/territories abbreviations
-const CA_PROVINCES: Record<string, string> = {
-  'Alberta': 'AB',
-  'British Columbia': 'BC',
-  'Manitoba': 'MB',
-  'New Brunswick': 'NB',
-  'Newfoundland and Labrador': 'NL',
-  'Northwest Territories': 'NT',
-  'Nova Scotia': 'NS',
-  'Nunavut': 'NU',
-  'Ontario': 'ON',
-  'Prince Edward Island': 'PE',
-  'Quebec': 'QC',
-  'Saskatchewan': 'SK',
-  'Yukon': 'YT',
-};
-
-// Australian states/territories abbreviations
-const AU_STATES: Record<string, string> = {
-  'Australian Capital Territory': 'ACT',
-  'New South Wales': 'NSW',
-  'Northern Territory': 'NT',
-  'Queensland': 'QLD',
-  'South Australia': 'SA',
-  'Tasmania': 'TAS',
-  'Victoria': 'VIC',
-  'Western Australia': 'WA',
-};
-
-// Brazilian states abbreviations
-const BR_STATES: Record<string, string> = {
-  'Acre': 'AC',
-  'Alagoas': 'AL',
-  'Amapá': 'AP',
-  'Amazonas': 'AM',
-  'Bahia': 'BA',
-  'Ceará': 'CE',
-  'Distrito Federal': 'DF',
-  'Espírito Santo': 'ES',
-  'Goiás': 'GO',
-  'Maranhão': 'MA',
-  'Mato Grosso': 'MT',
-  'Mato Grosso do Sul': 'MS',
-  'Minas Gerais': 'MG',
-  'Pará': 'PA',
-  'Paraíba': 'PB',
-  'Paraná': 'PR',
-  'Pernambuco': 'PE',
-  'Piauí': 'PI',
-  'Rio de Janeiro': 'RJ',
-  'Rio Grande do Norte': 'RN',
-  'Rio Grande do Sul': 'RS',
-  'Rondônia': 'RO',
-  'Roraima': 'RR',
-  'Santa Catarina': 'SC',
-  'São Paulo': 'SP',
-  'Sergipe': 'SE',
-  'Tocantins': 'TO',
-};
-
-// Countries with state/province systems
-const STATES_BY_COUNTRY: Record<string, Record<string, string>> = {
-  'US': US_STATES,
-  'CA': CA_PROVINCES,
-  'AU': AU_STATES,
-  'BR': BR_STATES,
-};
-
-interface NominatimResult {
-  address?: {
-    city?: string;
-    town?: string;
-    village?: string;
-    county?: string;
-    state?: string;
-    country?: string;
-  };
+/**
+ * Calculate distance between two points using Haversine formula
+ */
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 /**
- * Get a human-readable location name from coordinates using offline data
+ * Find the nearest city to given coordinates
+ */
+function findNearestCity(
+  lat: number,
+  lng: number,
+  countryCode: string,
+  stateCode?: string
+): ICity | null {
+  let cities: ICity[] = [];
+
+  if (stateCode) {
+    // Get cities for specific state
+    cities = City.getCitiesOfState(countryCode, stateCode);
+  } else {
+    // Get all cities for country
+    cities = City.getCitiesOfCountry(countryCode) || [];
+  }
+
+  if (cities.length === 0) {
+    return null;
+  }
+
+  // Find the closest city
+  let nearestCity: ICity | null = null;
+  let minDistance = Infinity;
+
+  for (const city of cities) {
+    if (city.latitude && city.longitude) {
+      const distance = calculateDistance(
+        lat,
+        lng,
+        parseFloat(city.latitude),
+        parseFloat(city.longitude)
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestCity = city;
+      }
+    }
+  }
+
+  // Only return if city is within reasonable distance (500km)
+  return minDistance < 500 ? nearestCity : null;
+}
+
+/**
+ * Find the nearest state to given coordinates
+ */
+function findNearestState(lat: number, lng: number, countryCode: string): IState | null {
+  const states = State.getStatesOfCountry(countryCode);
+
+  if (!states || states.length === 0) {
+    return null;
+  }
+
+  let nearestState: IState | null = null;
+  let minDistance = Infinity;
+
+  for (const state of states) {
+    if (state.latitude && state.longitude) {
+      const distance = calculateDistance(
+        lat,
+        lng,
+        parseFloat(state.latitude),
+        parseFloat(state.longitude)
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestState = state;
+      }
+    }
+  }
+
+  return nearestState;
+}
+
+/**
+ * Find the nearest country to given coordinates
+ */
+function findNearestCountry(lat: number, lng: number): ICountry | null {
+  const countries = Country.getAllCountries();
+
+  let nearestCountry: ICountry | null = null;
+  let minDistance = Infinity;
+
+  for (const country of countries) {
+    if (country.latitude && country.longitude) {
+      const distance = calculateDistance(
+        lat,
+        lng,
+        parseFloat(country.latitude),
+        parseFloat(country.longitude)
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestCountry = country;
+      }
+    }
+  }
+
+  return nearestCountry;
+}
+
+/**
+ * Get a human-readable location name from coordinates using 100% offline data
  * Returns format: "City, ST 🏳️" for countries with states or "City 🏳️" for others
  */
-export async function offlineGeocode(lat: number, lng: number): Promise<string> {
+export function offlineGeocode(lat: number, lng: number): string {
   // Create cache key from rounded coordinates (to 2 decimal places for reasonable caching)
   const cacheKey = `${lat.toFixed(2)},${lng.toFixed(2)}`;
   
@@ -161,43 +161,58 @@ export async function offlineGeocode(lat: number, lng: number): Promise<string> 
   }
 
   try {
-    // Get country code from coordinates using country-coder
-    const countryFeature = countryCoder.iso1A2Code([lng, lat]); // Note: lon, lat order
+    // Find nearest country
+    const country = findNearestCountry(lat, lng);
     
-    if (!countryFeature) {
-      // Fallback to online geocoding if offline lookup fails
-      return fallbackToOnlineGeocode(lat, lng);
+    if (!country) {
+      return '';
     }
 
-    const countryCode = countryFeature;
-    const flagEmoji = flag(countryCode) || '';
+    const countryCode = country.isoCode;
+    const flagEmoji = countryToFlag(countryCode);
     
-    // Get state/province info if available
-    const stateAbbreviations = STATES_BY_COUNTRY[countryCode];
-    
-    // For now, we need to get city name from Nominatim since we don't have a local city database
-    // We'll make a minimal request just for the city name
-    const cityName = await getCityName(lat, lng);
+    // Check if this country uses states
+    const hasStates = COUNTRIES_WITH_STATES.has(countryCode);
     
     let locationString = '';
     
-    if (cityName) {
-      if (stateAbbreviations) {
-        // Try to get state from Nominatim
-        const stateName = await getStateName(lat, lng);
-        const stateAbbr = stateName && stateAbbreviations[stateName];
+    if (hasStates) {
+      // Find nearest state
+      const state = findNearestState(lat, lng, countryCode);
+      
+      if (state) {
+        // Find nearest city within the state
+        const city = findNearestCity(lat, lng, countryCode, state.isoCode);
         
-        if (stateAbbr) {
-          locationString = `${cityName}, ${stateAbbr} ${flagEmoji}`;
+        if (city) {
+          // Format: "City, ST 🏳️"
+          locationString = `${city.name}, ${state.isoCode} ${flagEmoji}`;
         } else {
-          locationString = `${cityName} ${flagEmoji}`;
+          // No city found, just show state
+          locationString = `${state.name}, ${state.isoCode} ${flagEmoji}`;
         }
       } else {
-        locationString = `${cityName} ${flagEmoji}`;
+        // No state found, try to find city directly
+        const city = findNearestCity(lat, lng, countryCode);
+        
+        if (city) {
+          locationString = `${city.name} ${flagEmoji}`;
+        } else {
+          // Just show country
+          locationString = `${country.name} ${flagEmoji}`;
+        }
       }
     } else {
-      // No city name, just show country flag
-      locationString = flagEmoji;
+      // Country without states - find nearest city
+      const city = findNearestCity(lat, lng, countryCode);
+      
+      if (city) {
+        // Format: "City 🏳️"
+        locationString = `${city.name} ${flagEmoji}`;
+      } else {
+        // No city found, just show country
+        locationString = `${country.name} ${flagEmoji}`;
+      }
     }
     
     // Cache the result
@@ -207,143 +222,6 @@ export async function offlineGeocode(lat: number, lng: number): Promise<string> 
     return locationString;
   } catch (error) {
     console.warn('Offline geocoding error:', error);
-    // Fallback to online geocoding
-    return fallbackToOnlineGeocode(lat, lng);
-  }
-}
-
-/**
- * Get city name from coordinates using Nominatim
- */
-async function getCityName(lat: number, lng: number): Promise<string> {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?` +
-      new URLSearchParams({
-        lat: lat.toString(),
-        lon: lng.toString(),
-        format: 'json',
-        addressdetails: '1',
-        zoom: '10',
-      }),
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(3000),
-      }
-    );
-
-    if (!response.ok) {
-      return '';
-    }
-
-    const data = await response.json() as NominatimResult;
-    const address = data.address;
-
-    if (!address) {
-      return '';
-    }
-
-    return address.city || address.town || address.village || '';
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Get state name from coordinates using Nominatim
- */
-async function getStateName(lat: number, lng: number): Promise<string> {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?` +
-      new URLSearchParams({
-        lat: lat.toString(),
-        lon: lng.toString(),
-        format: 'json',
-        addressdetails: '1',
-        zoom: '10',
-      }),
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(3000),
-      }
-    );
-
-    if (!response.ok) {
-      return '';
-    }
-
-    const data = await response.json() as NominatimResult;
-    const address = data.address;
-
-    if (!address) {
-      return '';
-    }
-
-    return address.state || '';
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Fallback to the original online geocoding method
- */
-async function fallbackToOnlineGeocode(lat: number, lng: number): Promise<string> {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?` +
-      new URLSearchParams({
-        lat: lat.toString(),
-        lon: lng.toString(),
-        format: 'json',
-        addressdetails: '1',
-        zoom: '10',
-      }),
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(5000),
-      }
-    );
-
-    if (!response.ok) {
-      return '';
-    }
-
-    const data = await response.json() as NominatimResult;
-    const address = data.address;
-
-    if (!address) {
-      return '';
-    }
-
-    const locationParts: string[] = [];
-    
-    const primaryLocation = address.city || address.town || address.village;
-    if (primaryLocation) {
-      locationParts.push(primaryLocation);
-    }
-
-    const secondaryLocation = address.state || address.county;
-    if (secondaryLocation) {
-      locationParts.push(secondaryLocation);
-    }
-
-    if (locationParts.length === 0 && address.country) {
-      locationParts.push(address.country);
-    } else if (locationParts.length === 1 && !address.state && address.country) {
-      locationParts.push(address.country);
-    }
-
-    return locationParts.join(', ');
-  } catch (error) {
-    console.warn('Fallback geocoding error:', error);
     return '';
   }
 }
@@ -352,21 +230,11 @@ async function fallbackToOnlineGeocode(lat: number, lng: number): Promise<string
  * Prefetch location names for multiple coordinates
  * Useful for batch processing geocaches
  */
-export async function prefetchLocations(coordinates: Array<{ lat: number; lng: number }>): Promise<void> {
-  const BATCH_SIZE = 5;
-  const DELAY_BETWEEN_BATCHES = 1000;
-
-  for (let i = 0; i < coordinates.length; i += BATCH_SIZE) {
-    const batch = coordinates.slice(i, i + BATCH_SIZE);
-    
-    await Promise.all(
-      batch.map(coord => offlineGeocode(coord.lat, coord.lng))
-    );
-
-    if (i + BATCH_SIZE < coordinates.length) {
-      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
-    }
-  }
+export function prefetchLocations(coordinates: Array<{ lat: number; lng: number }>): void {
+  // Since we're fully offline, we can process all at once
+  coordinates.forEach(coord => {
+    offlineGeocode(coord.lat, coord.lng);
+  });
 }
 
 /**
