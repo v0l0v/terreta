@@ -22,6 +22,8 @@ import Claim from "./pages/Claim";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import TexasRenFest from "./pages/TexasRenFest";
+import QRComparisonTest from "./pages/QRComparisonTest";
+import CompactRedirect from "./pages/CompactRedirect";
 
 export function AppRouter() {
   return (
@@ -50,6 +52,8 @@ export function AppRouter() {
           <Route path="/claim" element={<Claim />} />
           <Route path="/about" element={<About />} />
           <Route path="/texas-ren-fest" element={<TexasRenFest />} />
+          <Route path="/qr-test" element={<QRComparisonTest />} />
+          <Route path="/c/:payload" element={<CompactRedirect />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE NADDR CATCH-ALL ROUTE */}
           <Route path="/:naddr" element={<CacheDetail />} />
