@@ -306,6 +306,12 @@ function BottomNavItem({
   );
 }
 
+// Helper function to extract pathname from href
+function getPathnameFromHref(href: string): string {
+  const [pathname] = href.split('?');
+  return pathname || href;
+}
+
 export function MobileBottomNav() {
   const { t } = useTranslation();
   const location = useLocation();
@@ -326,17 +332,23 @@ export function MobileBottomNav() {
       themeClasses.header
     )}>
       <div className="grid grid-cols-4 h-16 items-center">
-        {navigation.map((item) => (
-          <BottomNavItem
-            key={item.href}
-            to={item.href}
-            icon={item.icon}
-            isActive={location.pathname === item.href}
-            themeClasses={themeClasses}
-          >
-            {item.name}
-          </BottomNavItem>
-        ))}
+        {navigation.map((item) => {
+          // Extract pathname from href to compare with location.pathname
+          const itemPathname = getPathnameFromHref(item.href);
+          const isActive = location.pathname === itemPathname;
+
+          return (
+            <BottomNavItem
+              key={item.href}
+              to={item.href}
+              icon={item.icon}
+              isActive={isActive}
+              themeClasses={themeClasses}
+            >
+              {item.name}
+            </BottomNavItem>
+          );
+        })}
       </div>
     </nav>
   );
