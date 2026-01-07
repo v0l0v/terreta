@@ -453,7 +453,7 @@ export function LocationSearch({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder={currentPlaceholder}
-          className="pl-10 pr-10 h-9"
+          className="pl-10 pr-10"
           onFocus={() => query && handleSearch(query)}
         />
         {isSearching && (
