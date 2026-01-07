@@ -130,9 +130,9 @@ export default function Claim() {
           {/* Instructional Image */}
           <div className="flex items-center justify-center py-8">
             <img
-              src="/claim-guide.webp"
+              src="/claim-guide.png"
               alt="QR Code scanning guide"
-              className="max-w-xs w-full h-auto mix-blend-multiply dark:invert dark:mix-blend-normal"
+              className="max-w-xs w-full h-auto dark:invert"
             />
           </div>
 
