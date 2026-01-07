@@ -128,7 +128,7 @@ export default function Claim() {
 
         <div className="space-y-8">
           {/* Instructional Image */}
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center">
             <img
               src="/claim-guide.png"
               alt="QR Code scanning guide"
