@@ -1,6 +1,6 @@
 import { ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LucideIcon, Shield, Trophy, MessageSquare, MapPin } from 'lucide-react';
+import { LucideIcon, Shield, Trophy, MessageSquare, MapPin, List, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/shared/utils/utils';
@@ -76,20 +76,20 @@ interface MobileButtonGroupProps {
   className?: string;
 }
 
-export function MobileButtonGroup({ 
-  items, 
-  selected, 
-  onSelect, 
+export function MobileButtonGroup({
+  items,
+  selected,
+  onSelect,
   cols = 3,
   variant = 'outline',
   size = 'sm',
-  className 
+  className
 }: MobileButtonGroupProps) {
   return (
     <div className={cn(
       "grid gap-1 sm:gap-2 bg-accent",
       cols === 2 && "grid-cols-2",
-      cols === 3 && "grid-cols-3", 
+      cols === 3 && "grid-cols-3",
       cols === 4 && "grid-cols-4",
       cols === 5 && "grid-cols-5",
       className
@@ -97,7 +97,7 @@ export function MobileButtonGroup({
       {items.map((item) => {
         const Icon = item.icon;
         const isSelected = selected === item.id;
-        
+
         return (
           <Button
             key={item.id}
@@ -126,12 +126,12 @@ interface LogTypeButtonGroupProps {
   className?: string;
 }
 
-export function LogTypeButtonGroup({ 
-  logType, 
-  onLogTypeChange, 
-  isOwner = false, 
+export function LogTypeButtonGroup({
+  logType,
+  onLogTypeChange,
+  isOwner = false,
   disabled = false,
-  className 
+  className
 }: LogTypeButtonGroupProps) {
   const mainLogTypes: MobileButtonItem[] = [
     { id: 'found', label: 'Found It', icon: Trophy },
@@ -152,7 +152,7 @@ export function LogTypeButtonGroup({
         onSelect={onLogTypeChange}
         cols={3}
       />
-      
+
       {isOwner && (
         <div className="pt-2 border-t">
           <MobileButtonGroup
@@ -175,15 +175,15 @@ interface LoginMethodTabsProps {
   className?: string;
 }
 
-export function LoginMethodTabs({ 
-  defaultMethod = 'extension', 
-  children, 
-  className 
+export function LoginMethodTabs({
+  defaultMethod = 'extension',
+  children,
+  className
 }: LoginMethodTabsProps) {
   const { t } = useTranslation();
   const loginMethods: MobileTabItem[] = useMemo(() => [
-    { 
-      value: 'extension', 
+    {
+      value: 'extension',
       label: t('login.tab.extension'),
       icon: Shield
     },
@@ -217,14 +217,14 @@ interface CacheDetailTabsProps {
 
 export function CacheDetailTabs({ logCount = 0, children, className, defaultTab = 'logs' }: CacheDetailTabsProps) {
   const detailTabs: MobileTabItem[] = [
-    { 
-      value: 'logs', 
+    {
+      value: 'logs',
       label: 'Logs',
       icon: MessageSquare,
       count: logCount
     },
-    { 
-      value: 'map', 
+    {
+      value: 'map',
       label: 'Map',
       icon: MapPin
     },
@@ -253,10 +253,10 @@ interface MapViewTabsProps {
 
 export function MapViewTabs({ children, className, value, onValueChange, defaultValue = "list" }: MapViewTabsProps) {
   const { t, i18n } = useTranslation();
-  
+
   const mapTabs: MobileTabItem[] = useMemo(() => [
-    { value: 'list', label: t('map.tabs.list') },
-    { value: 'map', label: t('map.tabs.map') },
+    { value: 'list', label: t('map.tabs.list'), icon: List },
+    { value: 'map', label: t('map.tabs.map'), icon: Map },
   ], [t, i18n.language]);
 
   // If controlled (value prop provided), use controlled mode
