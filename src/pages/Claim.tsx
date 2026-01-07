@@ -126,119 +126,108 @@ export default function Claim() {
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Instructional Image */}
-          <Card className="border-2 border-primary/20 overflow-hidden">
-            <CardContent className="p-0">
-              <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-8 flex items-center justify-center">
-                <img
-                  src="/claim-guide.webp"
-                  alt="QR Code scanning guide"
-                  className="max-w-xs w-full h-auto"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-8 flex items-center justify-center">
+            <img
+              src="/claim-guide.webp"
+              alt="QR Code scanning guide"
+              className="max-w-xs w-full h-auto"
+            />
+          </div>
 
           {/* Simple Instructions */}
-          <Card className="border-2 border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <QrCode className="h-5 w-5" />
-                {t('claim.scan.title', 'How to Claim')}
-              </CardTitle>
-              <CardDescription>
-                {t('claim.scan.description', 'Scan the QR code at the geocache location')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    1
-                  </div>
-                  <p className="text-sm pt-1">
-                    {t('claim.step1', 'Open your camera app or QR scanner')}
-                  </p>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    2
-                  </div>
-                  <p className="text-sm pt-1">
-                    {t('claim.step2', 'Point it at the QR code on the geocache')}
-                  </p>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    3
-                  </div>
-                  <p className="text-sm pt-1">
-                    {t('claim.step3', 'Tap the notification to open the claim page')}
-                  </p>
-                </div>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                1
               </div>
-            </CardContent>
-          </Card>
+              <p className="text-base pt-1">
+                {t('claim.step1', 'Open your camera app or QR scanner')}
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                2
+              </div>
+              <p className="text-base pt-1">
+                {t('claim.step2', 'Point it at the QR code on the geocache')}
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                3
+              </div>
+              <p className="text-base pt-1">
+                {t('claim.step3', 'Tap the notification to open the claim page')}
+              </p>
+            </div>
+          </div>
+
+          {/* Separator */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                {t('claim.or', 'Or')}
+              </span>
+            </div>
+          </div>
 
           {/* Manual URL Entry */}
-          <Card className="border-2 border-muted">
-            <CardHeader>
-              <CardTitle>
-                {t('claim.manual.title', 'Or Enter URL Manually')}
-              </CardTitle>
-              <CardDescription>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-1">
+                {t('claim.manual.title', 'Enter URL Manually')}
+              </h3>
+              <p className="text-sm text-muted-foreground">
                 {t('claim.manual.description', 'If scanning doesn\'t work, paste the URL here')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleManualSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="treasure-url">
-                    {t('claim.manual.label', 'Treasure URL')}
-                  </Label>
-                  <Input
-                    id="treasure-url"
-                    type="url"
-                    placeholder="https://treasures.to/naddr1..."
-                    value={manualUrl}
-                    onChange={handleUrlChange}
-                    disabled={isProcessing}
-                    className="font-mono text-sm"
-                    autoComplete="off"
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    spellCheck="false"
-                  />
-                </div>
+              </p>
+            </div>
 
-                <Button
-                  type="submit"
-                  disabled={isProcessing || !manualUrl.trim()}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isProcessing ? (
-                    <>
-                      <CheckCircle className="h-4 w-4 mr-2 animate-spin" />
-                      {t('claim.manual.validating', 'Validating...')}
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      {t('claim.manual.submit', 'Claim Treasure')}
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            <form onSubmit={handleManualSubmit} className="space-y-3">
+              <Input
+                id="treasure-url"
+                type="url"
+                placeholder="https://treasures.to/naddr1..."
+                value={manualUrl}
+                onChange={handleUrlChange}
+                disabled={isProcessing}
+                className="font-mono text-sm"
+                autoComplete="off"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck="false"
+              />
+
+              <Button
+                type="submit"
+                disabled={isProcessing || !manualUrl.trim()}
+                className="w-full"
+                size="lg"
+              >
+                {isProcessing ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2 animate-spin" />
+                    {t('claim.manual.validating', 'Validating...')}
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {t('claim.manual.submit', 'Claim Treasure')}
+                  </>
+                )}
+              </Button>
+            </form>
+          </div>
 
           {/* Error display */}
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="border-0">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -246,7 +235,7 @@ export default function Claim() {
 
           {/* Success state */}
           {isProcessing && !error && (
-            <Alert>
+            <Alert className="border-0">
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
                 {t('claim.alert.validating', 'Validating treasure...')}
