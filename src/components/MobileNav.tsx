@@ -5,8 +5,6 @@ import { Home, Map, Plus, Menu, Settings, Bookmark, LogOut, User, QrCode, ScanQr
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { LoginArea } from '@/components/auth/LoginArea';
-
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { RelaySelector } from '@/components/RelaySelector';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useLoggedInAccounts } from '@/features/geocache/hooks/useLoggedInAccounts';
@@ -85,7 +83,7 @@ export function MobileHeader() {
       "sticky top-0 z-40 w-full border-b md:hidden pt-safe-top",
       themeClasses.header
     )}>
-      <div className="container flex h-16 items-center justify-between px-3 xs:px-4">
+      <div className="container flex h-12 items-center justify-between px-3 xs:px-4">
         {/* Menu Button */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
@@ -248,20 +246,16 @@ export function MobileHeader() {
         </Sheet>
 
         {/* Center Logo */}
-        <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-0.5 xs:gap-1">
+        <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
           <img
             src="/icon.svg"
             alt="Treasures"
-            className={cn("h-6 w-6 xs:h-8 xs:w-8 transition-all duration-200", themeClasses.icon)}
+            className={cn("h-7 w-7 xs:h-8 xs:w-8 transition-all duration-200", themeClasses.icon)}
           />
-          <h1 className={cn("text-[10px] xs:text-xs font-bold m-0 leading-none", themeClasses.text, isAdventureTheme && "font-adventure")}>
-            {t('navigation.appName')}
-          </h1>
         </Link>
 
-        {/* Right Side - Theme Toggle and Login */}
+        {/* Right Side - Login */}
         <div className="flex items-center gap-2 -mr-2">
-          <ThemeToggle variant="compact-icon" />
           <LoginArea compact />
         </div>
       </div>
