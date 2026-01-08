@@ -348,11 +348,14 @@ export function OmniSearch({
         lng: result.lng,
         name: result.display_name || result.name
       });
-      setQuery(result.name);
     } else {
       onGeocacheSelect(result.geocache);
-      setQuery(result.geocache.name);
     }
+
+    // Clear the search query and text search filter when selecting any result
+    // This prevents filtering the cache list after a selection is made
+    setQuery("");
+    onTextSearch("");
     setShowResults(false);
   };
 
