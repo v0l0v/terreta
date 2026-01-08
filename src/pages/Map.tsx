@@ -646,7 +646,7 @@ export default function Map() {
             {/* List View - Always mounted but hidden when inactive */}
             <div className={cn("h-full flex flex-col bg-background overflow-hidden", activeTab !== 'list' && "hidden")}>
               {/* Search Bar for List View */}
-              <div className="bg-background/95 backdrop-blur-sm flex-shrink-0 border-b">
+              <div className="bg-background/95 backdrop-blur-sm flex-shrink-0">
                 <div className="p-3">
                   <div className="space-y-2">
                     <div className="flex gap-2">
