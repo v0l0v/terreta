@@ -635,7 +635,7 @@ export default function Map() {
       </div>
 
       {/* Mobile View */}
-      <div className="block lg:hidden fixed inset-0 flex flex-col" style={{ top: '4rem', bottom: '4rem' }}>
+      <div className="block lg:hidden fixed inset-0 flex flex-col" style={{ top: '3rem', bottom: '4rem' }}>
         {/* Mobile Content Area - Full height */}
         <div className="flex-1 overflow-hidden relative">
           <MapViewTabs
