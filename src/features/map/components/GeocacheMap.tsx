@@ -7,6 +7,7 @@ import { useTheme } from "@/shared/hooks/useTheme";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { MapStyleSelector } from "./MapStyleSelector";
 import { SearchInViewButton } from "./SearchInViewButton";
+import { NearMeButton } from "./NearMeButton";
 import { MAP_STYLES, type MapStyle } from "@/features/map/constants/mapStyles";
 import { useGeocacheNavigation } from "@/features/geocache/hooks/useGeocacheNavigation";
 import { useMapController } from "@/features/map/hooks/useMapController";
@@ -259,9 +260,11 @@ interface GeocacheMapProps {
   searchRadius?: number; // in km
   onMarkerClick?: (geocache: Geocache) => void;
   onSearchInView?: (bounds: L.LatLngBounds) => void; // Callback for search in view functionality
+  onNearMe?: () => void; // Callback for near me functionality
   highlightedGeocache?: string; // dTag of geocache to highlight/open popup
   showStyleSelector?: boolean; // Whether to show the map style selector
   isNearMeActive?: boolean; // Whether "Near Me" mode is active
+  isGettingLocation?: boolean; // Whether location is being retrieved
   mapRef?: React.RefObject<L.Map>; // Reference to the map instance
   isMapCenterLocked?: boolean; // Whether map center is locked from user interaction
 }
@@ -880,6 +883,113 @@ function SearchInViewControl({
   return null;
 }
 
+// Custom component for near me button - positioned at lower right corner
+function NearMeButtonControl({
+  onNearMe,
+  isNearMeActive,
+  isGettingLocation,
+  isAdventureTheme
+}: {
+  onNearMe: () => void;
+  isNearMeActive: boolean;
+  isGettingLocation: boolean;
+  isAdventureTheme: boolean;
+}) {
+  const map = useMap();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<ReturnType<typeof createRoot> | null>(null);
+  const isInitializedRef = useRef(false);
+
+  // Use refs to store the latest props to avoid dependency issues
+  const onNearMeRef = useRef(onNearMe);
+  const isNearMeActiveRef = useRef(isNearMeActive);
+  const isGettingLocationRef = useRef(isGettingLocation);
+  const isAdventureThemeRef = useRef(isAdventureTheme);
+
+  // Update refs when props change
+  useEffect(() => {
+    onNearMeRef.current = onNearMe;
+    isNearMeActiveRef.current = isNearMeActive;
+    isGettingLocationRef.current = isGettingLocation;
+    isAdventureThemeRef.current = isAdventureTheme;
+  });
+
+  useEffect(() => {
+    // Only initialize once
+    if (isInitializedRef.current) return;
+
+    const mapContainer = map.getContainer();
+
+    // Create container div for the near me button
+    const container = document.createElement('div');
+    container.className = 'near-me-button-container';
+    container.style.cssText = `
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      z-index: 1000;
+      pointer-events: auto;
+    `;
+
+    // Add container to map container
+    mapContainer.appendChild(container);
+    containerRef.current = container;
+
+    // Create React root and render the NearMeButton
+    rootRef.current = createRoot(container);
+    rootRef.current.render(
+      <NearMeButton
+        onNearMe={onNearMeRef.current}
+        isActive={isNearMeActiveRef.current}
+        isLocating={isGettingLocationRef.current}
+        isAdventureTheme={isAdventureThemeRef.current}
+      />
+    );
+
+    isInitializedRef.current = true;
+
+    // Cleanup
+    return () => {
+      if (containerRef.current && containerRef.current.parentNode) {
+        containerRef.current.parentNode.removeChild(containerRef.current);
+      }
+
+      if (rootRef.current) {
+        const root = rootRef.current;
+        rootRef.current = null;
+
+        setTimeout(() => {
+          try {
+            if (root && typeof root.unmount === 'function') {
+              root.unmount();
+            }
+          } catch (error) {
+            console.debug('NearMeButtonControl unmount:', error);
+          }
+        }, 0);
+      }
+
+      isInitializedRef.current = false;
+    };
+  }, [map]); // Only depend on map
+
+  // Update the rendered component when props change
+  useEffect(() => {
+    if (rootRef.current && isInitializedRef.current) {
+      rootRef.current.render(
+        <NearMeButton
+          onNearMe={onNearMeRef.current}
+          isActive={isNearMeActiveRef.current}
+          isLocating={isGettingLocationRef.current}
+          isAdventureTheme={isAdventureThemeRef.current}
+        />
+      );
+    }
+  }, [onNearMe, isNearMeActive, isGettingLocation, isAdventureTheme]);
+
+  return null;
+}
+
 
 
 // Custom tile layer with optimizations
@@ -922,9 +1032,11 @@ export function GeocacheMap({
   searchRadius,
   onMarkerClick,
   onSearchInView,
+  onNearMe,
   highlightedGeocache,
   showStyleSelector = true,
   isNearMeActive = false,
+  isGettingLocation = false,
   mapRef,
   isMapCenterLocked = false
 }: GeocacheMapProps) {
@@ -1188,6 +1300,16 @@ export function GeocacheMap({
       {showStyleSelector && onSearchInView && (
         <SearchInViewControl
           onSearchInView={onSearchInView}
+          isAdventureTheme={currentMapStyle === 'adventure'}
+        />
+      )}
+
+      {/* Near Me Button Control - positioned at lower right */}
+      {onNearMe && (
+        <NearMeButtonControl
+          onNearMe={onNearMe}
+          isNearMeActive={isNearMeActive}
+          isGettingLocation={isGettingLocation}
           isAdventureTheme={currentMapStyle === 'adventure'}
         />
       )}

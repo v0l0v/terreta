@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppContext } from "@/shared/hooks/useAppContext";
 import { useSearchParams } from "react-router-dom";
-import { MapPin, X, Locate, RefreshCw, Sparkles } from "lucide-react";
+import { MapPin, X, RefreshCw, Sparkles } from "lucide-react";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -472,16 +472,6 @@ export default function Map() {
                       placeholder={t('map.locationSearch.placeholder')}
                     />
                   </div>
-
-                  <Button
-                    variant={showNearMe ? "default" : "outline"}
-                    className="h-9 w-9 p-0 flex-shrink-0"
-                    onClick={handleNearMe}
-                    disabled={isGettingLocation}
-                    title={isGettingLocation ? t('map.nearMe.locating') : showNearMe && userLocation ? t('map.nearMe.active') : t('map.nearMe.title')}
-                  >
-                    <Locate className={`h-4 w-4 ${isGettingLocation ? 'animate-spin' : ''}`} />
-                  </Button>
                 </div>
 
                 {(showNearMe || searchLocation || searchInView) && (
@@ -639,9 +629,11 @@ export default function Map() {
             zoom={mapZoom}
             onMarkerClick={handleMarkerClick}
             onSearchInView={handleSearchInView}
+            onNearMe={handleNearMe}
             highlightedGeocache={highlightedGeocache || undefined}
             showStyleSelector={true}
             isNearMeActive={showNearMe}
+            isGettingLocation={isGettingLocation}
             mapRef={mapRef}
             isMapCenterLocked={isMapCenterLocked}
           />
@@ -696,16 +688,6 @@ export default function Map() {
                       placeholder={t('map.locationSearch.placeholder')}
                     />
                   </div>
-
-                  <Button
-                    variant={showNearMe ? "default" : "outline"}
-                    className="h-9 w-9 p-0 flex-shrink-0"
-                    onClick={handleNearMe}
-                    disabled={isGettingLocation}
-                    title={isGettingLocation ? t('map.nearMe.locating') : showNearMe && userLocation ? t('map.nearMe.active') : t('map.nearMe.title')}
-                  >
-                    <Locate className={`h-4 w-4 ${isGettingLocation ? 'animate-spin' : ''}`} />
-                  </Button>
 
                   {(showNearMe || searchLocation || searchInView) && (
                     <Button
@@ -900,9 +882,11 @@ export default function Map() {
                   zoom={mapZoom}
                   onMarkerClick={handleMarkerClick}
                   onSearchInView={handleSearchInView}
+                  onNearMe={handleNearMe}
                   highlightedGeocache={highlightedGeocache || undefined}
                   showStyleSelector={true}
                   isNearMeActive={showNearMe}
+                  isGettingLocation={isGettingLocation}
                   mapRef={mapRef}
                   isMapCenterLocked={isMapCenterLocked}
                 />
