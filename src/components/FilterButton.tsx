@@ -96,10 +96,11 @@ export function FilterButton({
           variant="outline"
           size={compact ? "sm" : "default"}
           className={cn(
-            "relative",
-            activeFilterCount > 0 && "border-primary",
+            "relative !border-border",
+            activeFilterCount > 0 && "!border-primary",
             className
           )}
+          style={{ borderColor: activeFilterCount > 0 ? undefined : 'hsl(var(--border))' }}
         >
           <ListFilter className="h-4 w-4" />
           {activeFilterCount > 0 && (
