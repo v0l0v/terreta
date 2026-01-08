@@ -786,6 +786,106 @@ function MapStyleControl({
   return null;
 }
 
+// Custom component for zoom control - positioned at lower left corner
+function CustomZoomControl() {
+  const map = useMap();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInitializedRef = useRef(false);
+
+  useEffect(() => {
+    if (isInitializedRef.current) return;
+
+    const mapContainer = map.getContainer();
+
+    // Create container div for the zoom control
+    const container = document.createElement('div');
+    container.className = 'custom-zoom-control';
+    container.style.cssText = `
+      position: absolute;
+      bottom: 50px;
+      left: 10px;
+      z-index: 1000;
+      pointer-events: auto;
+    `;
+
+    // Create zoom in button
+    const zoomInBtn = document.createElement('button');
+    zoomInBtn.innerHTML = '+';
+    zoomInBtn.className = 'zoom-btn zoom-in-btn';
+    zoomInBtn.style.cssText = `
+      display: block;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+      color: #333;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      transition: background 0.2s;
+    `;
+    zoomInBtn.onmouseover = () => {
+      zoomInBtn.style.background = 'rgba(255, 255, 255, 1)';
+    };
+    zoomInBtn.onmouseout = () => {
+      zoomInBtn.style.background = 'rgba(255, 255, 255, 0.9)';
+    };
+    zoomInBtn.onclick = () => {
+      map.zoomIn();
+    };
+
+    // Create zoom out button
+    const zoomOutBtn = document.createElement('button');
+    zoomOutBtn.innerHTML = '−';
+    zoomOutBtn.className = 'zoom-btn zoom-out-btn';
+    zoomOutBtn.style.cssText = `
+      display: block;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-top: none;
+      color: #333;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
+      transition: background 0.2s;
+    `;
+    zoomOutBtn.onmouseover = () => {
+      zoomOutBtn.style.background = 'rgba(255, 255, 255, 1)';
+    };
+    zoomOutBtn.onmouseout = () => {
+      zoomOutBtn.style.background = 'rgba(255, 255, 255, 0.9)';
+    };
+    zoomOutBtn.onclick = () => {
+      map.zoomOut();
+    };
+
+    container.appendChild(zoomInBtn);
+    container.appendChild(zoomOutBtn);
+
+    // Add container to map container
+    mapContainer.appendChild(container);
+    containerRef.current = container;
+    isInitializedRef.current = true;
+
+    // Cleanup
+    return () => {
+      if (containerRef.current && containerRef.current.parentNode) {
+        containerRef.current.parentNode.removeChild(containerRef.current);
+      }
+      isInitializedRef.current = false;
+    };
+  }, [map]);
+
+  return null;
+}
+
 // Custom component for near me button - positioned at lower right corner
 function NearMeButtonControl({
   onNearMe,
@@ -1151,7 +1251,7 @@ export function GeocacheMap({
         zoom={zoom}
         style={{ height: "100%", width: "100%" }}
         className="z-0"
-        zoomControl={true}
+        zoomControl={false}
         doubleClickZoom={true}
         touchZoom={true}
         attributionControl={false}
@@ -1200,6 +1300,9 @@ export function GeocacheMap({
       )}
 
       {/* Search in View Control - removed, functionality now in main UI */}
+
+      {/* Custom Zoom Control - positioned at lower left */}
+      <CustomZoomControl />
 
       {/* Near Me Button Control - positioned at lower right */}
       {onNearMe && (
