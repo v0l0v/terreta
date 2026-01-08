@@ -715,7 +715,7 @@ function MapStyleControl({
     container.className = 'map-style-control-container';
     container.style.cssText = `
       position: absolute;
-      bottom: 100px;
+      bottom: 106px;
       left: 10px;
       z-index: 1000;
       pointer-events: auto;
