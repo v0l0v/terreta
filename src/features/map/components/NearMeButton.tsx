@@ -17,13 +17,13 @@ export function NearMeButton({ onNearMe, isActive, isLocating, isAdventureTheme 
       variant={isActive ? "default" : "secondary"}
       size="lg"
       className={`
-        h-14 w-14 p-0 rounded-full shadow-lg transition-all duration-200
-        ${isAdventureTheme 
-          ? isActive 
-            ? 'bg-amber-600 hover:bg-amber-700 text-white border-2 border-amber-700' 
+        h-14 w-14 min-w-14 p-0 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center
+        ${isAdventureTheme
+          ? isActive
+            ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-2 border-emerald-700'
             : 'bg-background/95 backdrop-blur-sm hover:bg-background border-2'
           : isActive
-            ? 'bg-primary hover:bg-primary/90'
+            ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-2 border-emerald-700'
             : 'bg-background/95 backdrop-blur-sm hover:bg-background border-2'
         }
         ${isActive ? 'scale-110' : 'hover:scale-105'}
