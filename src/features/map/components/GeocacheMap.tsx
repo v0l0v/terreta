@@ -495,17 +495,35 @@ function MapSizeController() {
 // Component to add zoom control to the bottom-left position
 function ZoomControl() {
   const map = useMap();
+  const controlRef = useRef<L.Control.Zoom | null>(null);
 
   useEffect(() => {
-    // Add zoom control to bottom-left position
-    const zoomControl = L.control.zoom({
-      position: 'bottomleft'
-    });
+    // Wait for map to be fully initialized
+    const timer = setTimeout(() => {
+      if (!controlRef.current && map) {
+        // Add zoom control to bottom-left position
+        const zoomControl = L.control.zoom({
+          position: 'bottomleft'
+        });
 
-    zoomControl.addTo(map);
+        zoomControl.addTo(map);
+        controlRef.current = zoomControl;
+
+        // Force invalidate size to ensure proper rendering
+        map.invalidateSize();
+      }
+    }, 100);
 
     return () => {
-      zoomControl.remove();
+      clearTimeout(timer);
+      if (controlRef.current) {
+        try {
+          controlRef.current.remove();
+        } catch (e) {
+          console.debug('ZoomControl cleanup:', e);
+        }
+        controlRef.current = null;
+      }
     };
   }, [map]);
 

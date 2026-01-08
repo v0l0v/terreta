@@ -285,6 +285,25 @@
   margin-block-end: 0.625rem;
 }
 
+/* Ensure bottom-left zoom controls are visible */
+.leaflet-bottom.leaflet-left {
+  z-index: 1000 !important;
+  pointer-events: auto !important;
+}
+
+.leaflet-bottom.leaflet-left .leaflet-control-zoom {
+  margin-left: 10px !important;
+  margin-bottom: 10px !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.leaflet-bottom.leaflet-left .leaflet-control-zoom a {
+  display: block !important;
+  visibility: visible !important;
+}
+
 .leaflet-control-zoom a,
 .leaflet-touch .leaflet-control-zoom a,
 .leaflet-touch .leaflet-bar a {
