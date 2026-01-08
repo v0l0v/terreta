@@ -51,6 +51,7 @@ export function OmniSearch({
   const searchTimeout = useRef<NodeJS.Timeout>();
   const abortController = useRef<AbortController>();
   const inputRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   // Update placeholder based on screen size
@@ -97,7 +98,13 @@ export function OmniSearch({
   // Handle clicks outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showResults && inputRef.current && !inputRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      // Check if click is outside both the input and the dropdown
+      const isOutsideInput = inputRef.current && !inputRef.current.contains(target);
+      const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(target);
+
+      if (showResults && isOutsideInput && isOutsideDropdown) {
         setShowResults(false);
       }
     };
@@ -178,7 +185,7 @@ export function OmniSearch({
 
   const searchGeocaches = (searchQuery: string): GeocacheResult[] => {
     if (!searchQuery.trim()) return [];
-    
+
     const searchLower = searchQuery.toLowerCase();
     const matchingCaches = geocaches.filter(cache =>
       cache.name.toLowerCase().includes(searchLower) ||
@@ -281,11 +288,11 @@ export function OmniSearch({
     // If we have geocache matches, show them first
     // Otherwise, show location results
     const combinedResults: SearchResult[] = [];
-    
+
     if (geocacheResults.length > 0) {
       combinedResults.push(...geocacheResults);
     }
-    
+
     if (locationResults.length > 0) {
       combinedResults.push(...locationResults);
     }
@@ -387,6 +394,7 @@ export function OmniSearch({
       <>
         {results.length > 0 && (
           <Card
+            ref={dropdownRef}
             className="absolute max-h-96 overflow-y-auto shadow-lg"
             style={{
               top: `${dropdownPosition.top}px`,
@@ -457,6 +465,7 @@ export function OmniSearch({
 
         {!isSearching && results.length === 0 && query && (
           <Card
+            ref={dropdownRef}
             className="absolute shadow-lg"
             style={{
               top: `${dropdownPosition.top}px`,

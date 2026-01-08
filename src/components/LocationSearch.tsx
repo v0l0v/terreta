@@ -36,6 +36,7 @@ export function LocationSearch({
   const searchTimeout = useRef<NodeJS.Timeout>();
   const abortController = useRef<AbortController>();
   const inputRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   // Update placeholder based on screen size
@@ -82,7 +83,13 @@ export function LocationSearch({
   // Handle clicks outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showResults && inputRef.current && !inputRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      // Check if click is outside both the input and the dropdown
+      const isOutsideInput = inputRef.current && !inputRef.current.contains(target);
+      const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(target);
+
+      if (showResults && isOutsideInput && isOutsideDropdown) {
         setShowResults(false);
       }
     };
@@ -330,6 +337,7 @@ export function LocationSearch({
       <>
         {results.length > 0 && (
           <Card
+            ref={dropdownRef}
             className="absolute max-h-64 overflow-y-auto shadow-lg"
             style={{
               ...{
@@ -376,58 +384,14 @@ export function LocationSearch({
 
         {!isSearching && results.length === 0 && query && (
           <Card
+            ref={dropdownRef}
             className="absolute shadow-lg"
-            style={{
-              ...{
-                top: `${dropdownPosition.top}px`,
-                left: `${dropdownPosition.left}px`,
-                width: `${dropdownPosition.width}px`,
-                marginTop: '4px',
-              },
-              zIndex: 9999,
-            }}
-          >
-            <div className="p-1">
-              {results.map((result, index) => (
-                <button
-                  key={index}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-start gap-2 transition-colors"
-                  onClick={() => handleResultClick(result)}
-                >
-                  <span className="text-lg mt-0.5">{getResultIcon(result.type)}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{result.name}</div>
-                    {result.display_name && result.display_name !== result.name && (
-                      <div className="text-sm text-gray-600 truncate">{result.display_name}</div>
-                    )}
-                    {result.warning && (
-                      <div className="text-xs text-amber-600 mt-1 flex items-start gap-1">
-                        <span className="shrink-0">{result.warning}</span>
-                      </div>
-                    )}
-                    <div className="text-xs text-gray-500">
-                      {result.lat.toFixed(4)}, {result.lng.toFixed(4)}
-                    </div>
-                  </div>
-                  {result.type && result.type !== 'coordinates' && (
-                    <Badge variant="outline" className="text-xs shrink-0">
-                      {result.type}
-                    </Badge>
-                  )}
-                </button>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        {!isSearching && results.length === 0 && query && (
-          <Card
-            className="absolute z-[1000] shadow-lg"
             style={{
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
               marginTop: '4px',
+              zIndex: 9999,
             }}
           >
             <div className="p-4 text-center text-gray-500">
