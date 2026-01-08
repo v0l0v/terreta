@@ -679,17 +679,36 @@ function MapRefController({
   return null;
 }
 
-// Component to add zoom control at bottom-left
-function ZoomControl() {
+// Component to reposition the default zoom control to bottom-left
+function ZoomControlPositioner() {
   const map = useMap();
 
   useEffect(() => {
-    // Add zoom control at bottom-left position
+    // Find and remove the default zoom control
+    const existingZoom = (map as any)._controlCorners?.topleft?.querySelector('.leaflet-control-zoom');
+    if (existingZoom) {
+      existingZoom.remove();
+    }
+
+    // Remove the zoom control from map
+    if ((map as any).zoomControl) {
+      map.removeControl((map as any).zoomControl);
+    }
+
+    // Add a new zoom control at bottom-left
     const zoomControl = L.control.zoom({ position: 'bottomleft' });
     map.addControl(zoomControl);
+    (map as any).zoomControl = zoomControl;
 
     return () => {
-      map.removeControl(zoomControl);
+      // Cleanup on unmount
+      if ((map as any).zoomControl) {
+        try {
+          map.removeControl((map as any).zoomControl);
+        } catch (e) {
+          // Control might already be removed
+        }
+      }
     };
   }, [map]);
 
@@ -1166,7 +1185,7 @@ export function GeocacheMap({
         zoom={zoom}
         style={{ height: "100%", width: "100%" }}
         className="z-0"
-        zoomControl={false}
+        zoomControl={true}
         doubleClickZoom={true}
         touchZoom={true}
         attributionControl={false}
@@ -1182,7 +1201,7 @@ export function GeocacheMap({
       <MapSizeController />
       <WorldWrapController geocaches={geocaches} />
       <ZoomPopupManager geocaches={geocaches} />
-      <ZoomControl />
+      <ZoomControlPositioner />
 
       <MapRefController mapRef={mapRef} onMapReady={() => setIsMapReady(true)} />
 
