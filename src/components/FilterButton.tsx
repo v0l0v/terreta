@@ -1,15 +1,82 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { ListFilter, X } from "lucide-react";
+import { ListFilter, X, Eye, Search, Lightbulb, Brain, Cpu, Footprints, Mountain, Pickaxe, Compass, HelpCircle } from "lucide-react";
+import { sneaker, treesForest, chest } from '@lucide/lab';
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ComparisonFilter, type ComparisonOperator } from "@/components/ui/comparison-filter";
 import { Badge } from "@/components/ui/badge";
 import { CacheIcon } from "@/features/geocache/utils/cacheIcons";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { cn } from "@/lib/utils";
+
+// Create React components from Lucide Lab icons
+const SneakerIcon = ({ className, ...props }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    {sneaker.map(([element, attrs], index) => {
+      const Element = element as keyof JSX.IntrinsicElements;
+      const { key, ...restAttrs } = attrs as any;
+      return <Element key={key || index} {...restAttrs} />;
+    })}
+  </svg>
+);
+
+const TreesForestIcon = ({ className, ...props }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    {treesForest.map(([element, attrs], index) => {
+      const Element = element as keyof JSX.IntrinsicElements;
+      const { key, ...restAttrs } = attrs as any;
+      return <Element key={key || index} {...restAttrs} />;
+    })}
+  </svg>
+);
+
+const ChestIcon = ({ className, ...props }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    {chest.map(([element, attrs], index) => {
+      const Element = element as keyof JSX.IntrinsicElements;
+      const { key, ...restAttrs } = attrs as any;
+      return <Element key={key || index} {...restAttrs} />;
+    })}
+  </svg>
+);
 
 interface FilterButtonProps {
   // Difficulty filters
@@ -50,25 +117,45 @@ export function FilterButton({
   const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Create translated difficulty/terrain options that update when language changes
-  const difficultyTerrainOptions = useMemo(() => [
-    { value: "1", label: `1 - ${t('geocache.difficulty.easy')}` },
-    { value: "2", label: `2 - ${t('geocache.difficulty.moderate')}` },
-    { value: "3", label: `3 - ${t('geocache.difficulty.hard')}` },
-    { value: "4", label: `4 - ${t('geocache.difficulty.veryHard')}` },
-    { value: "5", label: `5 - ${t('geocache.difficulty.expert')}` },
+  // Difficulty options with icons
+  const difficultyOptions = useMemo(() => [
+    { value: "1", label: `1 - ${t('geocache.difficulty.easy')}`, name: t('geocache.difficulty.easy'), icon: Eye, color: "text-green-600" },
+    { value: "2", label: `2 - ${t('geocache.difficulty.moderate')}`, name: t('geocache.difficulty.moderate'), icon: Search, color: "text-green-600" },
+    { value: "3", label: `3 - ${t('geocache.difficulty.hard')}`, name: t('geocache.difficulty.hard'), icon: Lightbulb, color: "text-green-600" },
+    { value: "4", label: `4 - ${t('geocache.difficulty.veryHard')}`, name: t('geocache.difficulty.veryHard'), icon: Brain, color: "text-green-600" },
+    { value: "5", label: `5 - ${t('geocache.difficulty.expert')}`, name: t('geocache.difficulty.expert'), icon: Cpu, color: "text-green-600" },
   ], [t, i18n.language]);
 
-  // Create translated cache type options that update when language changes
+  // Terrain options with icons
+  const terrainOptions = useMemo(() => [
+    { value: "1", label: `1 - ${t('geocache.terrain.easy')}`, name: t('geocache.terrain.easy'), icon: SneakerIcon, color: "text-blue-600" },
+    { value: "2", label: `2 - ${t('geocache.terrain.moderate')}`, name: t('geocache.terrain.moderate'), icon: Footprints, color: "text-blue-600" },
+    { value: "3", label: `3 - ${t('geocache.terrain.hard')}`, name: t('geocache.terrain.hard'), icon: TreesForestIcon, color: "text-blue-600" },
+    { value: "4", label: `4 - ${t('geocache.terrain.veryHard')}`, name: t('geocache.terrain.veryHard'), icon: Mountain, color: "text-blue-600" },
+    { value: "5", label: `5 - ${t('geocache.terrain.expert')}`, name: t('geocache.terrain.expert'), icon: Pickaxe, color: "text-blue-600" },
+  ], [t, i18n.language]);
+
+  // Cache type options with icons
   const cacheTypeOptions = useMemo(() => [
-    { value: "traditional", label: t('geocache.type.traditional') },
-    { value: "multi", label: t('geocache.type.multi') },
-    { value: "mystery", label: t('geocache.type.mystery') },
+    { value: "traditional", label: t('geocache.type.traditional'), icon: ChestIcon, color: "text-emerald-600" },
+    { value: "multi", label: t('geocache.type.multi'), icon: Compass, color: "text-amber-600" },
+    { value: "mystery", label: t('geocache.type.mystery'), icon: HelpCircle, color: "text-purple-600" },
   ], [t, i18n.language]);
 
   // Helper functions for consistent value handling
-  const createValueChangeHandler = (setter: (value: number | undefined) => void) =>
-    (value: string) => setter(value === "all" ? undefined : parseInt(value));
+  const createValueChangeHandler = (
+    setter: (value: number | undefined) => void,
+    operatorSetter: (operator: ComparisonOperator) => void
+  ) => (value: string) => {
+    if (value === "all") {
+      setter(undefined);
+      operatorSetter("all");
+    } else {
+      setter(parseInt(value));
+      // Keep current operator if it's not "all", otherwise set to "eq"
+      operatorSetter((current) => current === "all" ? "eq" : current);
+    }
+  };
 
   const getValueForDisplay = (value: number | undefined) => value?.toString() || "all";
 
@@ -135,72 +222,159 @@ export function FilterButton({
 
           <div className="space-y-4">
             {/* Difficulty Filter */}
-            <ComparisonFilter
-              label={t('filters.difficulty')}
-              value={getValueForDisplay(difficulty)}
-              onValueChange={createValueChangeHandler(onDifficultyChange)}
-              operator={difficultyOperator}
-              onOperatorChange={onDifficultyOperatorChange}
-              options={difficultyTerrainOptions}
-            />
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-foreground">
+                {t('filters.difficulty')}
+              </Label>
+              <Select
+                value={getValueForDisplay(difficulty)}
+                onValueChange={createValueChangeHandler(onDifficultyChange, onDifficultyOperatorChange)}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue>
+                    {difficulty === undefined ? (
+                      <span className="flex items-center gap-2">
+                        <ListFilter className="h-4 w-4" />
+                        {t('filters.all')}
+                      </span>
+                    ) : (
+                      (() => {
+                        const option = difficultyOptions.find(opt => opt.value === difficulty.toString());
+                        const IconComponent = option?.icon;
+                        return (
+                          <span className="flex items-center gap-2">
+                            {IconComponent && <IconComponent className={cn("h-4 w-4", option.color)} />}
+                            {option?.label || difficulty}
+                          </span>
+                        );
+                      })()
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <span className="flex items-center gap-2">
+                      <ListFilter className="h-4 w-4" />
+                      {t('filters.all')}
+                    </span>
+                  </SelectItem>
+                  {difficultyOptions.map((option) => {
+                    const IconComponent = option.icon;
+                    return (
+                      <SelectItem key={option.value} value={option.value}>
+                        <span className="flex items-center gap-2">
+                          <IconComponent className={cn("h-4 w-4", option.color)} />
+                          {option.label}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Terrain Filter */}
-            <ComparisonFilter
-              label={t('filters.terrain')}
-              value={getValueForDisplay(terrain)}
-              onValueChange={createValueChangeHandler(onTerrainChange)}
-              operator={terrainOperator}
-              onOperatorChange={onTerrainOperatorChange}
-              options={difficultyTerrainOptions}
-            />
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-foreground">
+                {t('filters.terrain')}
+              </Label>
+              <Select
+                value={getValueForDisplay(terrain)}
+                onValueChange={createValueChangeHandler(onTerrainChange, onTerrainOperatorChange)}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue>
+                    {terrain === undefined ? (
+                      <span className="flex items-center gap-2">
+                        <ListFilter className="h-4 w-4" />
+                        {t('filters.all')}
+                      </span>
+                    ) : (
+                      (() => {
+                        const option = terrainOptions.find(opt => opt.value === terrain.toString());
+                        const IconComponent = option?.icon;
+                        return (
+                          <span className="flex items-center gap-2">
+                            {IconComponent && <IconComponent className={cn("h-4 w-4", option.color)} />}
+                            {option?.label || terrain}
+                          </span>
+                        );
+                      })()
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <span className="flex items-center gap-2">
+                      <ListFilter className="h-4 w-4" />
+                      {t('filters.all')}
+                    </span>
+                  </SelectItem>
+                  {terrainOptions.map((option) => {
+                    const IconComponent = option.icon;
+                    return (
+                      <SelectItem key={option.value} value={option.value}>
+                        <span className="flex items-center gap-2">
+                          <IconComponent className={cn("h-4 w-4", option.color)} />
+                          {option.label}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Cache Type Filter */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label className="text-sm font-medium text-foreground">
                 {t('filters.cacheType')}
               </Label>
-              <div className="grid grid-cols-4 gap-2">
-                {/* All Types Button */}
-                <button
-                  type="button"
-                  onClick={() => handleCacheTypeChange("all")}
-                  className={cn(
-                    "p-2 rounded-lg border text-center transition-all",
-                    !cacheType || cacheType === "all"
-                      ? "border-primary bg-primary/10 dark:bg-primary/20"
-                      : "border-border bg-background hover:border-muted-foreground"
-                  )}
-                >
-                  <div className="h-5 w-5 mx-auto mb-1 flex items-center justify-center">
-                    <ListFilter className="h-4 w-4" />
-                  </div>
-                  <span className="font-medium text-xs text-foreground block truncate">
-                    {t('filters.all')}
-                  </span>
-                </button>
-
-                {/* Cache Type Buttons with Icons */}
-                {cacheTypeOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleCacheTypeChange(option.value)}
-                    className={cn(
-                      "p-2 rounded-lg border text-center transition-all",
-                      cacheType === option.value
-                        ? "border-primary bg-primary/10 dark:bg-primary/20"
-                        : "border-border bg-background hover:border-muted-foreground"
+              <Select
+                value={cacheType || "all"}
+                onValueChange={handleCacheTypeChange}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue>
+                    {cacheType === undefined || cacheType === "all" ? (
+                      <span className="flex items-center gap-2">
+                        <ListFilter className="h-4 w-4" />
+                        {t('filters.allTypes')}
+                      </span>
+                    ) : (
+                      (() => {
+                        const option = cacheTypeOptions.find(opt => opt.value === cacheType);
+                        const IconComponent = option?.icon;
+                        return (
+                          <span className="flex items-center gap-2">
+                            {IconComponent && <IconComponent className={cn("h-4 w-4", option.color)} />}
+                            {option?.label || cacheType}
+                          </span>
+                        );
+                      })()
                     )}
-                  >
-                    <div className="h-5 w-5 mx-auto mb-1">
-                      <CacheIcon type={option.value} size="md" theme={theme} />
-                    </div>
-                    <span className="font-medium text-xs text-foreground block truncate">
-                      {option.label}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <span className="flex items-center gap-2">
+                      <ListFilter className="h-4 w-4" />
+                      {t('filters.allTypes')}
                     </span>
-                  </button>
-                ))}
-              </div>
+                  </SelectItem>
+                  {cacheTypeOptions.map((option) => {
+                    const IconComponent = option.icon;
+                    return (
+                      <SelectItem key={option.value} value={option.value}>
+                        <span className="flex items-center gap-2">
+                          <IconComponent className={cn("h-4 w-4", option.color)} />
+                          {option.label}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
