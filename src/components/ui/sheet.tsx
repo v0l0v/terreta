@@ -66,8 +66,8 @@ const SheetContent = React.forwardRef<
     >
       {children}
       <SheetPrimitive.Close className={cn(
-        "absolute top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary",
-        closePosition === 'left' ? 'left-3' : 'right-4'
+        "absolute rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary",
+        closePosition === 'left' ? 'left-3.5 top-3' : 'right-4 top-4'
       )}>
         <X className={cn(
           closePosition === 'left' ? 'h-5 w-5' : 'h-4 w-4'
