@@ -927,16 +927,43 @@ export default function CacheDetail() {
             </div>
 
             {/* Location Information - Mobile: No card wrapper, Desktop: Card wrapper */}
-            {locationVerification && (
-              <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4 lg:mt-0 mt-2">
-                <h3 className="text-lg font-semibold mb-4 text-card-foreground">{t('cacheDetail.location.title')}</h3>
-                <LocationWarnings
-                  verification={locationVerification}
-                  className="space-y-2"
-                  hideCreatorWarnings={true}
-                />
-              </div>
-            )}
+            {locationVerification && (() => {
+              // Check if there's anything to show
+              const hasCriticalIssues = locationVerification.warnings.some(warning => {
+                const lower = warning.toLowerCase();
+                return lower.includes('underwater') ||
+                       (lower.includes('inside') && (lower.includes('private') || lower.includes('building') || lower.includes('school') || lower.includes('military')));
+              });
+
+              const hasFeatures =
+                locationVerification.accessibility.wheelchair ||
+                locationVerification.accessibility.parking ||
+                locationVerification.accessibility.publicTransport ||
+                locationVerification.accessibility.fee ||
+                locationVerification.accessibility.wheelchair === false ||
+                locationVerification.terrain.lit ||
+                locationVerification.terrain.lit === false ||
+                locationVerification.terrain.surface ||
+                locationVerification.terrain.hazards?.length > 0 ||
+                locationVerification.safety?.cellCoverage === false ||
+                (locationVerification.accessibility.openingHours && locationVerification.accessibility.openingHours !== '24/7');
+
+              // Only show if there are critical issues or features
+              if (!hasCriticalIssues && !hasFeatures) {
+                return null;
+              }
+
+              return (
+                <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4 lg:mt-0 mt-2">
+                  <h3 className="text-lg font-semibold mb-4 text-card-foreground">{t('cacheDetail.location.title')}</h3>
+                  <LocationWarnings
+                    verification={locationVerification}
+                    className="space-y-2"
+                    hideCreatorWarnings={true}
+                  />
+                </div>
+              );
+            })()}
 
             {/* Statistics - Mobile: No card wrapper, Desktop: Card wrapper */}
             <div className="lg:rounded-lg lg:border lg:bg-card lg:shadow-sm lg:p-6 p-4 lg:mt-0 mt-2">
