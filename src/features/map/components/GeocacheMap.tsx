@@ -266,6 +266,7 @@ interface GeocacheMapProps {
   isGettingLocation?: boolean; // Whether location is being retrieved
   mapRef?: React.RefObject<L.Map>; // Reference to the map instance
   isMapCenterLocked?: boolean; // Whether map center is locked from user interaction
+  isVisible?: boolean; // Whether the map is currently visible (for handling tab switches on mobile)
 }
 
 
@@ -463,7 +464,7 @@ function PopupController({
 }
 
 // Component to handle map size invalidation
-function MapSizeController() {
+function MapSizeController({ isVisible }: { isVisible?: boolean }) {
   const map = useMap();
 
   useEffect(() => {
@@ -488,6 +489,18 @@ function MapSizeController() {
       window.removeEventListener('resize', handleResize);
     };
   }, [map]);
+
+  // Invalidate map size when visibility changes (handles tab switches on mobile)
+  useEffect(() => {
+    if (isVisible && map && typeof map.invalidateSize === 'function') {
+      // Use a short delay to ensure the container is fully visible before invalidating
+      const timer = setTimeout(() => {
+        map.invalidateSize();
+      }, 50);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, map]);
 
   return null;
 }
@@ -1038,7 +1051,8 @@ export function GeocacheMap({
   isNearMeActive = false,
   isGettingLocation = false,
   mapRef,
-  isMapCenterLocked = false
+  isMapCenterLocked = false,
+  isVisible = true
 }: GeocacheMapProps) {
   const { navigateToGeocache } = useGeocacheNavigation();
   const { theme, systemTheme } = useTheme();
@@ -1261,7 +1275,7 @@ export function GeocacheMap({
       >
       <OptimizedTileLayer mapStyle={mapStyle} />
 
-      <MapSizeController />
+      <MapSizeController isVisible={isVisible} />
       <WorldWrapController geocaches={geocaches} />
       <ZoomPopupManager geocaches={geocaches} />
 

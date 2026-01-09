@@ -866,6 +866,7 @@ export default function Map() {
                   isGettingLocation={isGettingLocation}
                   mapRef={mapRef}
                   isMapCenterLocked={isMapCenterLocked}
+                  isVisible={activeTab === 'map'}
                 />
 
 
