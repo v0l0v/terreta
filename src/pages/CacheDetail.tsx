@@ -556,7 +556,7 @@ export default function CacheDetail() {
   const profilePicture = author.data?.metadata?.picture;
 
   return (
-    <div className="min-h-screen lg:bg-muted bg-card">
+    <div className="min-h-screen lg:bg-muted bg-card pb-8 lg:pb-0">
       <DesktopHeader />
 
       {/* Sticky footer for edit mode on mobile */}
@@ -599,6 +599,7 @@ export default function CacheDetail() {
                   }]}
                   center={isEditing && editLocation ? editLocation : geocache.location}
                   zoom={14}
+                  showStyleSelector={false}
                 />
               </div>
 
