@@ -47,7 +47,7 @@ export function MapStyleSelector({ currentStyle, onStyleChange, className }: Map
         align="start"
         side="right"
         sideOffset={8}
-        alignOffset={-120}
+        alignOffset={-240}
         avoidCollisions={true}
         sticky="always"
         style={isAdventureTheme ? {
