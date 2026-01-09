@@ -82,7 +82,7 @@ export function CompactUrlGeneratorDialog({ open, onOpenChange, pubkey }: Compac
             Generate Compact URLs
           </DialogTitle>
           <DialogDescription>
-            Create short URLs for pre-generated QR codes (35% smaller)
+            Create short URLs for pre-generated QR codes
           </DialogDescription>
         </DialogHeader>
         

@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
-import { RotateCcw, AlertTriangle, QrCode } from 'lucide-react';
+import { RotateCcw, AlertTriangle, QrCode, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { VerificationQRDialog } from '@/components/VerificationQRDialog';
 import { useRegenerateVerificationKey } from '@/features/geocache/hooks/useRegenerateVerificationKey';
 import type { VerificationKeyPair } from '@/features/geocache/utils/verification';
@@ -29,6 +35,7 @@ export function RegenerateQRDialog({
   const [showNewQR, setShowNewQR] = useState(false);
   const [newVerificationKeyPair, setNewVerificationKeyPair] = useState<VerificationKeyPair | null>(null);
   const [operationTimeout, setOperationTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [useCompact, setUseCompact] = useState(false);
   
   const { mutate: regenerateKey, isPending, reset } = useRegenerateVerificationKey({ pubkey, dTag, relays });
 
@@ -41,7 +48,8 @@ export function RegenerateQRDialog({
     };
   }, [operationTimeout]);
 
-  const handleRegenerate = () => {
+  const handleRegenerate = (compact: boolean = false) => {
+    setUseCompact(compact);
     // Clear any existing timeout
     if (operationTimeout) {
       clearTimeout(operationTimeout);
@@ -153,23 +161,32 @@ export function RegenerateQRDialog({
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleRegenerate}
-                disabled={isPending}
-                className="flex-1"
-              >
-                {isPending ? (
-                  <>
-                    <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
-                    Publishing new event...
-                  </>
-                ) : (
-                  <>
-                    <QrCode className="h-4 w-4 mr-2" />
-                    Regenerate QR Code
-                  </>
-                )}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button disabled={isPending} className="flex-1">
+                    {isPending ? (
+                      <>
+                        <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <QrCode className="h-4 w-4 mr-2" />
+                        Regenerate QR
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleRegenerate(false)}>
+                    Standard QR Code
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleRegenerate(true)}>
+                    <span className="text-green-600 font-medium">Compact QR Code</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </DialogContent>
@@ -183,6 +200,7 @@ export function RegenerateQRDialog({
           naddr={naddr}
           verificationKeyPair={newVerificationKeyPair}
           cacheName={name}
+          useCompact={useCompact}
         />
       )}
     </>

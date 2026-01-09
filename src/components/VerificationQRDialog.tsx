@@ -15,6 +15,7 @@ import { generateVerificationQR, downloadQRCode, type VerificationKeyPair } from
 import { encodeCompactUrl } from '@/shared/utils/compactUrl';
 import { naddrToGeocache } from '@/shared/utils/naddr-utils';
 import { NIP_GC_KINDS } from '@/features/geocache/utils/nip-gc';
+import { generateCompactDTag } from '@/features/geocache/utils/dTag';
 
 interface VerificationQRDialogProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface VerificationQRDialogProps {
   naddr: string;
   verificationKeyPair: VerificationKeyPair;
   cacheName: string;
+  useCompact?: boolean;
 }
 
 export function VerificationQRDialog({
@@ -29,7 +31,8 @@ export function VerificationQRDialog({
   onOpenChange,
   naddr,
   verificationKeyPair,
-  cacheName
+  cacheName,
+  useCompact = false
 }: VerificationQRDialogProps) {
   const { t } = useTranslation();
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
@@ -37,6 +40,14 @@ export function VerificationQRDialog({
   const [isGenerating, setIsGenerating] = useState(false);
 
   const { toast } = useToast();
+
+  // Generate compact d-tag once when dialog opens
+  const [compactDTag] = useState(() => generateCompactDTag());
+  
+  const naddrData = naddrToGeocache(naddr);
+  const compactUrl = encodeCompactUrl(naddrData.pubkey, compactDTag, verificationKeyPair.nsec, NIP_GC_KINDS.GEOCACHE);
+  const standardUrl = `https://treasures.to/${naddr}#verify=${verificationKeyPair.nsec}`;
+  const verificationUrl = useCompact ? compactUrl : standardUrl;
 
   useEffect(() => {
     if (isOpen && naddr && verificationKeyPair.nsec) {
@@ -135,9 +146,6 @@ export function VerificationQRDialog({
       }
     }
   };
-
-  const naddrData = naddrToGeocache(naddr);
-  const verificationUrl = encodeCompactUrl(naddrData.pubkey, naddrData.identifier, verificationKeyPair.nsec, NIP_GC_KINDS.GEOCACHE);
 
   // Verification QR dialog rendering
 
