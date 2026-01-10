@@ -12,6 +12,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/shared/hooks/useToast';
 import { generateVerificationQR, downloadQRCode, type VerificationKeyPair } from '@/features/geocache/utils/verification';
+import { encodeCompactUrl } from '@/shared/utils/compactUrl';
+import { naddrToGeocache } from '@/shared/utils/naddr-utils';
+import { NIP_GC_KINDS } from '@/features/geocache/utils/nip-gc';
+import { generateCompactDTag } from '@/features/geocache/utils/dTag';
 
 interface VerificationQRDialogProps {
   isOpen: boolean;
@@ -19,6 +23,7 @@ interface VerificationQRDialogProps {
   naddr: string;
   verificationKeyPair: VerificationKeyPair;
   cacheName: string;
+  useCompact?: boolean;
 }
 
 export function VerificationQRDialog({
@@ -26,7 +31,8 @@ export function VerificationQRDialog({
   onOpenChange,
   naddr,
   verificationKeyPair,
-  cacheName
+  cacheName,
+  useCompact = false
 }: VerificationQRDialogProps) {
   const { t } = useTranslation();
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
@@ -35,12 +41,20 @@ export function VerificationQRDialog({
 
   const { toast } = useToast();
 
+  // Generate compact d-tag once when dialog opens
+  const [compactDTag] = useState(() => generateCompactDTag());
+  
+  const naddrData = naddrToGeocache(naddr);
+  const compactUrl = encodeCompactUrl(naddrData.pubkey, compactDTag, verificationKeyPair.nsec, NIP_GC_KINDS.GEOCACHE);
+  const standardUrl = `https://treasures.to/${naddr}#verify=${verificationKeyPair.nsec}`;
+  const verificationUrl = useCompact ? compactUrl : standardUrl;
+
   useEffect(() => {
     if (isOpen && naddr && verificationKeyPair.nsec) {
       setIsGenerating(true);
       setQrDataUrl(''); // Clear previous QR code
       
-      generateVerificationQR(naddr, verificationKeyPair.nsec, qrType, {
+      generateVerificationQR(verificationUrl, verificationKeyPair.nsec, qrType, {
         line1: t('qrCode.foundTreasure'),
         line2: t('qrCode.scanToLog')
       })
@@ -66,7 +80,7 @@ export function VerificationQRDialog({
       
       // Small delay to ensure state update is processed
       setTimeout(() => {
-        generateVerificationQR(naddr, verificationKeyPair.nsec, qrType, {
+        generateVerificationQR(verificationUrl, verificationKeyPair.nsec, qrType, {
           line1: t('qrCode.foundTreasure'),
           line2: t('qrCode.scanToLog')
         })
@@ -132,8 +146,6 @@ export function VerificationQRDialog({
       }
     }
   };
-
-  const verificationUrl = `https://treasures.to/${naddr}#verify=${verificationKeyPair.nsec}`;
 
   // Verification QR dialog rendering
 

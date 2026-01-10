@@ -22,6 +22,7 @@ import Claim from "./pages/Claim";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import TexasRenFest from "./pages/TexasRenFest";
+import CompactRedirect from "./pages/CompactRedirect";
 import RemoteLoginSuccess from "./pages/RemoteLoginSuccess";
 
 export function AppRouter() {
@@ -51,6 +52,7 @@ export function AppRouter() {
           <Route path="/claim" element={<Claim />} />
           <Route path="/about" element={<About />} />
           <Route path="/texas-ren-fest" element={<TexasRenFest />} />
+          <Route path="/c/:payload" element={<CompactRedirect />} />
           <Route path="/remoteloginsuccess" element={<RemoteLoginSuccess />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE NADDR CATCH-ALL ROUTE */}
