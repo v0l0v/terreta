@@ -7,7 +7,7 @@
   --popup-text: #1f2937;
   --popup-muted: #6b7280;
   --control-bg: rgba(255, 255, 255, 0.9);
-  --control-border: rgb(229 231 235);
+  --control-border: hsl(0 0% 80%);
   --control-text: #374151;
   --control-hover-bg: rgba(255, 255, 255, 0.95);
   --control-hover-text: #059669;
@@ -15,11 +15,11 @@
   --button-primary-border: #047857;
   --button-primary-text: white;
   --button-outline-bg: transparent;
-  --button-outline-border: #d1d5db;
+  --button-outline-border: hsl(0 0% 80%);
   --button-outline-text: #374151;
   --badge-bg: #f3f4f6;
   --badge-text: #374151;
-  --badge-border: #d1d5db;
+  --badge-border: hsl(0 0% 80%);
 }
 
 /* Dark theme colors */
@@ -27,11 +27,11 @@
 .leaflet-container.system-dark-theme {
   --map-bg: #1a1a1a;
   --popup-bg: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  --popup-border: #374151;
+  --popup-border: hsl(217.2 32.6% 17.5%);
   --popup-text: #f9fafb;
   --popup-muted: #9ca3af;
   --control-bg: rgba(31, 41, 55, 0.9);
-  --control-border: #374151;
+  --control-border: hsl(217.2 32.6% 17.5%);
   --control-text: #d1d5db;
   --control-hover-bg: rgba(55, 65, 81, 0.95);
   --control-hover-text: #34d399;
@@ -39,9 +39,9 @@
   --button-primary-border: #047857;
   --button-primary-text: white;
   --button-outline-bg: transparent;
-  --button-outline-border: #374151;
+  --button-outline-border: hsl(217.2 32.6% 17.5%);
   --button-outline-text: #d1d5db;
-  --badge-bg: #374151;
+  --badge-bg: hsl(217.2 32.6% 17.5%);
   --badge-text: #ffffff;
   --badge-border: #6b7280;
 }
