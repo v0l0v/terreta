@@ -821,24 +821,26 @@ function CustomZoomControl() {
       justify-content: center;
       width: 40px;
       height: 40px;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid hsl(var(--border));
+      background: var(--control-bg);
+      border: 1px solid var(--control-border);
       border-bottom: none;
-      color: hsl(var(--foreground));
+      color: var(--control-text);
       font-size: 18px;
       font-weight: 500;
       line-height: 1;
       cursor: pointer;
       border-top-left-radius: 0.375rem;
       border-top-right-radius: 0.375rem;
-      transition: background 0.2s;
+      transition: all 0.2s ease;
       backdrop-filter: blur(8px);
     `;
     zoomInBtn.onmouseover = () => {
-      zoomInBtn.style.background = 'hsl(var(--accent))';
+      zoomInBtn.style.background = 'var(--control-hover-bg)';
+      zoomInBtn.style.color = 'var(--control-hover-text)';
     };
     zoomInBtn.onmouseout = () => {
-      zoomInBtn.style.background = 'rgba(255, 255, 255, 0.9)';
+      zoomInBtn.style.background = 'var(--control-bg)';
+      zoomInBtn.style.color = 'var(--control-text)';
     };
     zoomInBtn.onclick = () => {
       map.zoomIn();
@@ -854,23 +856,25 @@ function CustomZoomControl() {
       justify-content: center;
       width: 40px;
       height: 40px;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid hsl(var(--border));
-      color: hsl(var(--foreground));
+      background: var(--control-bg);
+      border: 1px solid var(--control-border);
+      color: var(--control-text);
       font-size: 18px;
       font-weight: 500;
       line-height: 1;
       cursor: pointer;
       border-bottom-left-radius: 0.375rem;
       border-bottom-right-radius: 0.375rem;
-      transition: background 0.2s;
+      transition: all 0.2s ease;
       backdrop-filter: blur(8px);
     `;
     zoomOutBtn.onmouseover = () => {
-      zoomOutBtn.style.background = 'hsl(var(--accent))';
+      zoomOutBtn.style.background = 'var(--control-hover-bg)';
+      zoomOutBtn.style.color = 'var(--control-hover-text)';
     };
     zoomOutBtn.onmouseout = () => {
-      zoomOutBtn.style.background = 'rgba(255, 255, 255, 0.9)';
+      zoomOutBtn.style.background = 'var(--control-bg)';
+      zoomOutBtn.style.color = 'var(--control-text)';
     };
     zoomOutBtn.onclick = () => {
       map.zoomOut();
