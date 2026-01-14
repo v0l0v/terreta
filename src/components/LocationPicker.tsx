@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
-import { Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +12,7 @@ import { useInitialLocation } from "@/features/map/hooks/useInitialLocation";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { autocorrectCoordinates, parseCoordinate, formatCoordinateForInput } from "@/features/map/utils/coordinates";
 import { mapIcons } from "@/features/map/utils/mapIcons";
+import { createRoot } from "react-dom/client";
 
 import "leaflet/dist/leaflet.css";
 
@@ -77,6 +77,335 @@ function LocationSelector({
       )}
     </>
   );
+}
+
+// Custom zoom control component - positioned at lower left corner
+function CustomZoomControl() {
+  const map = useMap();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInitializedRef = useRef(false);
+
+  useEffect(() => {
+    if (isInitializedRef.current) return;
+
+    const mapContainer = map.getContainer();
+
+    // Create container div for the zoom control
+    const container = document.createElement('div');
+    container.className = 'custom-zoom-control';
+    container.style.cssText = `
+      position: absolute;
+      bottom: 16px;
+      left: 10px;
+      z-index: 1000;
+      pointer-events: auto;
+    `;
+
+    // Get background color with opacity from CSS variable
+    const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
+    const backgroundColor = bgColor ? `hsl(${bgColor} / 0.9)` : 'rgba(255, 255, 255, 0.9)';
+
+    // Get accent color for hover
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    const accentBgColor = accentColor ? `hsl(${accentColor})` : 'rgba(240, 240, 240, 1)';
+
+    // Get foreground color
+    const fgColor = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim();
+    const foregroundColor = fgColor ? `hsl(${fgColor})` : '#374151';
+
+    // Create zoom in button
+    const zoomInBtn = document.createElement('button');
+    zoomInBtn.innerHTML = '+';
+    zoomInBtn.className = 'zoom-btn zoom-in-btn';
+    zoomInBtn.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: ${backgroundColor};
+      border: 1px solid hsl(var(--border));
+      border-bottom: none;
+      color: ${foregroundColor};
+      font-size: 18px;
+      font-weight: 500;
+      line-height: 1;
+      cursor: pointer;
+      border-top-left-radius: 0.375rem;
+      border-top-right-radius: 0.375rem;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+    `;
+    zoomInBtn.onmouseover = () => {
+      zoomInBtn.style.background = accentBgColor;
+    };
+    zoomInBtn.onmouseout = () => {
+      zoomInBtn.style.background = backgroundColor;
+    };
+    zoomInBtn.onclick = () => {
+      map.zoomIn();
+    };
+
+    // Create zoom out button
+    const zoomOutBtn = document.createElement('button');
+    zoomOutBtn.innerHTML = '−';
+    zoomOutBtn.className = 'zoom-btn zoom-out-btn';
+    zoomOutBtn.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: ${backgroundColor};
+      border: 1px solid hsl(var(--border));
+      color: ${foregroundColor};
+      font-size: 18px;
+      font-weight: 500;
+      line-height: 1;
+      cursor: pointer;
+      border-bottom-left-radius: 0.375rem;
+      border-bottom-right-radius: 0.375rem;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+    `;
+    zoomOutBtn.onmouseover = () => {
+      zoomOutBtn.style.background = accentBgColor;
+    };
+    zoomOutBtn.onmouseout = () => {
+      zoomOutBtn.style.background = backgroundColor;
+    };
+    zoomOutBtn.onclick = () => {
+      map.zoomOut();
+    };
+
+    container.appendChild(zoomInBtn);
+    container.appendChild(zoomOutBtn);
+
+    // Add container to map container
+    mapContainer.appendChild(container);
+    containerRef.current = container;
+    isInitializedRef.current = true;
+
+    // Cleanup
+    return () => {
+      if (containerRef.current && containerRef.current.parentNode) {
+        containerRef.current.parentNode.removeChild(containerRef.current);
+      }
+      isInitializedRef.current = false;
+    };
+  }, [map]);
+
+  return null;
+}
+
+// Custom map style control - positioned at lower left above zoom
+function MapStyleControl({
+  currentStyle,
+  onStyleChange
+}: {
+  currentStyle: string;
+  onStyleChange: (style: string) => void;
+}) {
+  const map = useMap();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<ReturnType<typeof createRoot> | null>(null);
+  const isInitializedRef = useRef(false);
+
+  // Use refs to store the latest props to avoid dependency issues
+  const currentStyleRef = useRef(currentStyle);
+  const onStyleChangeRef = useRef(onStyleChange);
+
+  // Update refs when props change
+  useEffect(() => {
+    currentStyleRef.current = currentStyle;
+    onStyleChangeRef.current = onStyleChange;
+  });
+
+  useEffect(() => {
+    // Only initialize once
+    if (isInitializedRef.current) return;
+
+    const mapContainer = map.getContainer();
+
+    // Create container div for the map style control
+    const container = document.createElement('div');
+    container.className = 'map-style-control-container';
+    container.style.cssText = `
+      position: absolute;
+      bottom: 106px;
+      left: 10px;
+      z-index: 1000;
+      pointer-events: auto;
+    `;
+
+    // Add container to map container
+    mapContainer.appendChild(container);
+    containerRef.current = container;
+
+    // Create React root and render the MapStyleSelector
+    rootRef.current = createRoot(container);
+    rootRef.current.render(
+      <MapStyleSelector
+        currentStyle={currentStyleRef.current}
+        onStyleChange={onStyleChangeRef.current}
+      />
+    );
+
+    isInitializedRef.current = true;
+
+    // Cleanup
+    return () => {
+      if (containerRef.current && containerRef.current.parentNode) {
+        containerRef.current.parentNode.removeChild(containerRef.current);
+      }
+
+      if (rootRef.current) {
+        const root = rootRef.current;
+        rootRef.current = null;
+
+        setTimeout(() => {
+          try {
+            if (root && typeof root.unmount === 'function') {
+              root.unmount();
+            }
+          } catch (error) {
+            console.debug('MapStyleControl unmount:', error);
+          }
+        }, 0);
+      }
+
+      isInitializedRef.current = false;
+    };
+  }, [map]);
+
+  // Update the rendered component when props change
+  useEffect(() => {
+    if (rootRef.current && isInitializedRef.current) {
+      rootRef.current.render(
+        <MapStyleSelector
+          currentStyle={currentStyleRef.current}
+          onStyleChange={onStyleChangeRef.current}
+        />
+      );
+    }
+  }, [currentStyle, onStyleChange]);
+
+  return null;
+}
+
+// Custom "Near Me" button control - positioned at lower right corner
+function NearMeControl({
+  onGetLocation,
+  isGettingLocation
+}: {
+  onGetLocation: () => void;
+  isGettingLocation: boolean;
+}) {
+  const map = useMap();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInitializedRef = useRef(false);
+
+  // Use refs to avoid re-rendering issues
+  const onGetLocationRef = useRef(onGetLocation);
+  const isGettingLocationRef = useRef(isGettingLocation);
+
+  useEffect(() => {
+    onGetLocationRef.current = onGetLocation;
+    isGettingLocationRef.current = isGettingLocation;
+  });
+
+  useEffect(() => {
+    if (isInitializedRef.current) return;
+
+    const mapContainer = map.getContainer();
+
+    // Create container div for the near me button
+    const container = document.createElement('div');
+    container.className = 'near-me-control-container';
+    container.style.cssText = `
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      z-index: 1000;
+      pointer-events: auto;
+    `;
+
+    // Get background color with opacity from CSS variable
+    const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
+    const backgroundColor = bgColor ? `hsl(${bgColor} / 0.9)` : 'rgba(255, 255, 255, 0.9)';
+
+    // Get accent color for hover
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    const accentBgColor = accentColor ? `hsl(${accentColor})` : 'rgba(240, 240, 240, 1)';
+
+    // Get foreground color
+    const fgColor = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim();
+    const foregroundColor = fgColor ? `hsl(${fgColor})` : '#374151';
+
+    // Create button
+    const button = document.createElement('button');
+    button.className = 'near-me-btn';
+    button.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: ${backgroundColor};
+      border: 1px solid hsl(var(--border));
+      color: ${foregroundColor};
+      cursor: pointer;
+      border-radius: 0.375rem;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+    `;
+
+    // Navigation icon SVG
+    const iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>`;
+    button.innerHTML = iconSvg;
+
+    button.onmouseover = () => {
+      button.style.background = accentBgColor;
+    };
+    button.onmouseout = () => {
+      button.style.background = backgroundColor;
+    };
+    button.onclick = () => {
+      onGetLocationRef.current();
+    };
+
+    // Update button when loading state changes
+    const updateButton = () => {
+      if (isGettingLocationRef.current) {
+        button.style.opacity = '0.5';
+        button.style.cursor = 'not-allowed';
+      } else {
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+      }
+    };
+
+    updateButton();
+
+    container.appendChild(button);
+    mapContainer.appendChild(container);
+    containerRef.current = container;
+    isInitializedRef.current = true;
+
+    // Set up interval to check loading state
+    const intervalId = setInterval(updateButton, 100);
+
+    // Cleanup
+    return () => {
+      clearInterval(intervalId);
+      if (containerRef.current && containerRef.current.parentNode) {
+        containerRef.current.parentNode.removeChild(containerRef.current);
+      }
+      isInitializedRef.current = false;
+    };
+  }, [map]);
+
+  return null;
 }
 
 export function LocationPicker({ value, onChange }: LocationPickerProps) {
@@ -263,6 +592,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
           zoom={value ? 15 : 10}
           style={{ height: "100%", width: "100%" }}
           attributionControl={false}
+          zoomControl={false}
         >
           <TileLayer
             attribution={mapStyle?.attribution ?? ''}
@@ -277,15 +607,16 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
             onPinDropped={() => setPinDropped(true)}
             onMapClick={() => setManualCoordsModified(false)}
           />
-        </MapContainer>
-
-        {/* Map Style Selector - floating over the map */}
-        <div className="absolute top-2 right-2 z-[3]">
-          <MapStyleSelector
+          <CustomZoomControl />
+          <MapStyleControl
             currentStyle={currentMapStyle}
             onStyleChange={handleStyleChange}
           />
-        </div>
+          <NearMeControl
+            onGetLocation={handleGetCurrentLocation}
+            isGettingLocation={isGettingLocation}
+          />
+        </MapContainer>
       </div>
 
       <p className="text-sm text-gray-600 dark:text-muted-foreground text-center">
@@ -310,18 +641,6 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
             />
           </div>
         </div>
-
-        {/* Current Location Button */}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleGetCurrentLocation}
-          disabled={isGettingLocation}
-          className="w-full"
-        >
-          <Navigation className="h-4 w-4 mr-2" />
-          {isGettingLocation ? "Getting location..." : "Use Current Location"}
-        </Button>
 
         {/* Manual Coordinates - Collapsible */}
         <details className="group">
