@@ -822,7 +822,7 @@ function CustomZoomControl() {
       width: 40px;
       height: 40px;
       background: var(--control-bg);
-      border: 1px solid var(--control-border);
+      border: 1px solid hsl(var(--border));
       border-bottom: none;
       color: var(--control-text);
       font-size: 18px;
@@ -857,7 +857,7 @@ function CustomZoomControl() {
       width: 40px;
       height: 40px;
       background: var(--control-bg);
-      border: 1px solid var(--control-border);
+      border: 1px solid hsl(var(--border));
       color: var(--control-text);
       font-size: 18px;
       font-weight: 500;
