@@ -404,7 +404,7 @@ export function OmniSearch({
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
               marginTop: '4px',
-              zIndex: 9999,
+              zIndex: 450,
             }}
           >
             <div className="p-1">
