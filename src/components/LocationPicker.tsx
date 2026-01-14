@@ -104,13 +104,21 @@ function CustomZoomControl() {
     // Create container div for the zoom control
     const container = document.createElement('div');
     container.className = 'custom-zoom-control';
-    container.style.cssText = `
-      position: absolute;
-      bottom: 24px;
-      left: 10px;
-      z-index: 10000;
-      pointer-events: auto;
-    `;
+
+    // Responsive bottom positioning
+    const updatePosition = () => {
+      const isMobile = window.innerWidth < 768;
+      container.style.cssText = `
+        position: absolute;
+        bottom: ${isMobile ? '60px' : '16px'};
+        left: 10px;
+        z-index: 10000;
+        pointer-events: auto;
+      `;
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
 
     // Get background color with opacity from CSS variable
     const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
@@ -199,6 +207,7 @@ function CustomZoomControl() {
 
     // Cleanup
     return () => {
+      window.removeEventListener('resize', updatePosition);
       if (containerRef.current && containerRef.current.parentNode) {
         containerRef.current.parentNode.removeChild(containerRef.current);
       }
@@ -241,13 +250,21 @@ function MapStyleControl({
     // Create container div for the map style control
     const container = document.createElement('div');
     container.className = 'map-style-control-container';
-    container.style.cssText = `
-      position: absolute;
-      bottom: 114px;
-      left: 10px;
-      z-index: 10000;
-      pointer-events: auto;
-    `;
+
+    // Responsive bottom positioning
+    const updatePosition = () => {
+      const isMobile = window.innerWidth < 768;
+      container.style.cssText = `
+        position: absolute;
+        bottom: ${isMobile ? '150px' : '106px'};
+        left: 10px;
+        z-index: 10000;
+        pointer-events: auto;
+      `;
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
 
     // Add container to map container
     mapContainer.appendChild(container);
@@ -266,6 +283,7 @@ function MapStyleControl({
 
     // Cleanup
     return () => {
+      window.removeEventListener('resize', updatePosition);
       if (containerRef.current && containerRef.current.parentNode) {
         containerRef.current.parentNode.removeChild(containerRef.current);
       }
@@ -336,13 +354,21 @@ function NearMeControl({
     // Create container div for the near me button
     const container = document.createElement('div');
     container.className = 'near-me-button-container';
-    container.style.cssText = `
-      position: absolute;
-      bottom: 24px;
-      right: 10px;
-      z-index: 10000;
-      pointer-events: auto;
-    `;
+
+    // Responsive bottom positioning
+    const updatePosition = () => {
+      const isMobile = window.innerWidth < 768;
+      container.style.cssText = `
+        position: absolute;
+        bottom: ${isMobile ? '60px' : '16px'};
+        right: 10px;
+        z-index: 10000;
+        pointer-events: auto;
+      `;
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
 
     // Add container to map container
     mapContainer.appendChild(container);
@@ -363,6 +389,7 @@ function NearMeControl({
 
     // Cleanup
     return () => {
+      window.removeEventListener('resize', updatePosition);
       if (containerRef.current && containerRef.current.parentNode) {
         containerRef.current.parentNode.removeChild(containerRef.current);
       }
