@@ -665,3 +665,21 @@
 }
 
 /* Map controls use standard positioning - the map container itself handles nav bar spacing */
+
+/* ===== MOBILE MAP CONTAINER VIEWPORT FIX ===== */
+/* Handle dynamic browser UI (address bar) on mobile */
+.mobile-map-container {
+  top: 3rem;
+  /* Use dvh (dynamic viewport height) which accounts for browser UI */
+  /* Fallback to vh for older browsers */
+  height: calc(100vh - 3rem - 4rem);
+  height: calc(100dvh - 3rem - 4rem);
+}
+
+/* In fullscreen/standalone mode, use full height minus header only */
+@media (display-mode: standalone) {
+  .mobile-map-container {
+    height: calc(100vh - 3rem);
+    height: calc(100dvh - 3rem);
+  }
+}
