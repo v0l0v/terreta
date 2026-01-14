@@ -664,40 +664,23 @@
   }
 }
 
-/* ===== MOBILE MAP CONTAINER VIEWPORT FIX ===== */
-/* Handle dynamic browser UI (address bar) on mobile */
-.mobile-map-container {
-  top: 3rem;
-  /* Use dvh (dynamic viewport height) which accounts for browser UI */
-  /* Fallback to vh for older browsers */
-  height: calc(100vh - 3rem - 4rem);
-  height: calc(100dvh - 3rem - 4rem);
-}
-
-/* In fullscreen/standalone mode, use full height minus header only */
-@media (display-mode: standalone) {
-  .mobile-map-container {
-    height: calc(100vh - 3rem);
-    height: calc(100dvh - 3rem);
-  }
-}
-
-/* ===== MOBILE MAP CONTROLS SPACING ===== */
-/* On mobile, add spacing to clear the bottom nav bar (4rem = 64px) */
+/* ===== MOBILE NAVIGATION BAR ADJUSTMENTS ===== */
+/* On mobile (below lg breakpoint), add extra spacing to clear the bottom nav bar */
+/* Desktop has no bottom nav, so it uses the default positioning */
 @media (max-width: 1023px) {
   .map-style-control-container {
-    bottom: calc(106px + 4rem) !important;
+    bottom: 126px !important;
   }
 
   .custom-zoom-control {
-    bottom: calc(16px + 4rem) !important;
+    bottom: 36px !important;
   }
 
   .near-me-button-container {
-    bottom: calc(16px + 4rem) !important;
+    bottom: 36px !important;
   }
 
-  /* In fullscreen/standalone mode, remove the extra spacing */
+  /* In PWA fullscreen mode on mobile, reduce spacing since nav bar isn't visible */
   @media (display-mode: standalone) {
     .map-style-control-container {
       bottom: 106px !important;
