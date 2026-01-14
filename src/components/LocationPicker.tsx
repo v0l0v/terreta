@@ -573,7 +573,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
       {/* Map */}
       <div className="w-full h-96 rounded-lg overflow-hidden border relative">
         {/* Search bar overlay */}
-        <div className="absolute top-3 left-3 right-3 z-[400] pointer-events-auto">
+        <div className="absolute top-3 left-3 right-3 z-[100] pointer-events-auto">
           <OmniSearch
             onLocationSelect={handleLocationSearch}
             onGeocacheSelect={() => {}} // No geocache selection on create page
