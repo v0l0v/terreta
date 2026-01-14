@@ -42,6 +42,16 @@ function LocationSelector({
 
   useMapEvents({
     click: (e) => {
+      // Check if click was on a control element (they have pointer-events: auto)
+      const target = e.originalEvent.target as HTMLElement;
+      if (target.closest('.custom-zoom-control') ||
+          target.closest('.map-style-control-container') ||
+          target.closest('.near-me-button-container') ||
+          target.closest('button') ||
+          target.closest('.leaflet-control')) {
+        return; // Don't place marker on control clicks
+      }
+
       onChange({
         lat: e.latlng.lat,
         lng: e.latlng.lng,
@@ -628,7 +638,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
       {/* Manual Coordinates - Collapsible */}
       <div className="space-y-4">
         <details className="group">
-          <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-center">
             Manual Coordinates
           </summary>
           <div className="mt-3 space-y-3">
