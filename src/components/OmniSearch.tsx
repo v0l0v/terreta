@@ -393,6 +393,12 @@ export function OmniSearch({
   const renderDropdown = () => {
     if (!showResults) return null;
 
+    // Z-index hierarchy:
+    // - Leaflet map: 0
+    // - Map controls (zoom, style): 1000
+    // - Search overlay in map: 1000
+    // - Dropdown menus (account, etc): 9999
+    // - OmniSearch dropdown: 10000 (highest - needs to be above all UI)
     const dropdownContent = (
       <>
         {results.length > 0 && (
@@ -404,7 +410,7 @@ export function OmniSearch({
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
               marginTop: '4px',
-              zIndex: 150,
+              zIndex: 10000,
             }}
           >
             <div className="p-1">
@@ -475,7 +481,7 @@ export function OmniSearch({
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
               marginTop: '4px',
-              zIndex: 9999,
+              zIndex: 10000,
             }}
           >
             <div className="p-4 text-center text-gray-500">
