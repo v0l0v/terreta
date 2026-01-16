@@ -670,18 +670,18 @@ export function downloadQRCode(dataUrl: string, filename: string = 'geocache-ver
 
 /**
  * Generate a printable grid of compact QR codes (stamp).
- * Creates a dense grid (6x7 = 42 codes) with text labels but no log lines.
+ * Creates a dense grid (5x6 = 30 codes) with text labels but no log lines.
  */
 export async function generateQRStampImage(
   stampData: {name: string, naddr: string, keyPair: VerificationKeyPair}[],
   textStrings: { line1: string; line2: string }
 ): Promise<string> {
-  // Use higher DPI for crisp QR codes while keeping tight layout
+  // Use 150 DPI - balance between quality and fitting on page
   const dpi = 150;
 
   const paperWidth = 8.5 * dpi;
   const paperHeight = 11 * dpi;
-  const margin = 0.25 * dpi; // Small margins for print safety
+  const margin = 0.15 * dpi; // Minimal margins
 
   const canvas = document.createElement('canvas');
   canvas.width = paperWidth;
@@ -699,15 +699,15 @@ export async function generateQRStampImage(
   const contentWidth = paperWidth - 2 * margin;
   const contentHeight = paperHeight - 2 * margin;
 
-  // 6 columns x 7 rows = 42 QR codes
-  const cols = 6;
-  const rows = 7;
+  // 5 columns x 6 rows = 30 QR codes
+  const cols = 5;
+  const rows = 6;
   const cellWidth = contentWidth / cols;
   const cellHeight = contentHeight / rows;
 
-  // Calculate QR code size to fit with text - maximize space usage
+  // Calculate QR code size - leave room for spacing and text
   const textHeight = 18; // Fixed pixel height for text area
-  const qrSize = Math.min(cellWidth * 0.92, cellHeight - textHeight - 3); // Tight but scannable
+  const qrSize = Math.min(cellWidth * 0.84, cellHeight - textHeight - 3); // 84% with tighter spacing
 
   // Generate all QR codes first
   const qrCodePromises = stampData.map(d => {
@@ -788,13 +788,13 @@ export async function generateQRStampImage(
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
 
-      const fontSize1 = 7; // Readable font size at 150 DPI
+      const fontSize1 = 6.5; // Readable font size at 150 DPI
       ctx.font = `bold ${fontSize1}px "Segoe UI", Arial, sans-serif`;
-      ctx.fillText(line1, x + cellWidth / 2, textStartY, cellWidth * 0.95);
+      ctx.fillText(line1, x + cellWidth / 2, textStartY, cellWidth * 0.96);
 
-      const fontSize2 = 6; // Slightly smaller for second line
+      const fontSize2 = 5.5; // Slightly smaller for second line
       ctx.font = `${fontSize2}px "Segoe UI", Arial, sans-serif`;
-      ctx.fillText(line2, x + cellWidth / 2, textStartY + fontSize1 + 1, cellWidth * 0.95);
+      ctx.fillText(line2, x + cellWidth / 2, textStartY + fontSize1 + 0.5, cellWidth * 0.96);
     }
   }
 
