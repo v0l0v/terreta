@@ -18,6 +18,7 @@ import {
   downloadQRCode,
   generateVerificationQR,
   generateQRGridImage,
+  generateQRStampImage,
   type VerificationKeyPair,
   buildStandardVerificationUrl
 } from "@/features/geocache/utils/verification";
@@ -42,8 +43,9 @@ export default function GenerateQR() {
   const [verificationKeyPair, setVerificationKeyPair] = useState<VerificationKeyPair | null>(null);
   const [naddr, setNaddr] = useState<string>('');
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
-  const [qrType, setQrType] = useState<'full' | 'cutout' | 'micro' | 'sheet'>('full');
+  const [qrType, setQrType] = useState<'full' | 'cutout' | 'micro' | 'sheet' | 'stamp'>('full');
   const [sheetData, setSheetData] = useState<{name: string, naddr: string, keyPair: VerificationKeyPair}[]>([]);
+  const [stampData, setStampData] = useState<{name: string, naddr: string, keyPair: VerificationKeyPair}[]>([]);
 
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -76,7 +78,7 @@ export default function GenerateQR() {
 
     setIsGenerating(true);
     try {
-      if (qrType === 'sheet') {
+      if (qrType === 'sheet' || qrType === 'stamp') {
         const dataPromises = [];
         for (let i = 0; i < 9; i++) {
           const name = uniqueNamesGenerator(customConfig);
@@ -85,14 +87,27 @@ export default function GenerateQR() {
           dataPromises.push(generateVerificationKeyPair().then(keyPair => ({name, naddr, keyPair})));
         }
         const data = await Promise.all(dataPromises);
-        setSheetData(data);
-        const gridUrl = await generateQRGridImage(data, {
-          line1: t('qrCode.foundTreasure'),
-          line2: t('qrCode.scanToLog')
-        });
-        setQrDataUrl(gridUrl);
+
+        if (qrType === 'sheet') {
+          setSheetData(data);
+          setStampData([]);
+          const gridUrl = await generateQRGridImage(data, {
+            line1: t('qrCode.foundTreasure'),
+            line2: t('qrCode.scanToLog')
+          });
+          setQrDataUrl(gridUrl);
+        } else { // stamp
+          setStampData(data);
+          setSheetData([]);
+          const stampUrl = await generateQRStampImage(data, {
+            line1: t('qrCode.foundTreasure'),
+            line2: t('qrCode.scanToLog')
+          });
+          setQrDataUrl(stampUrl);
+        }
       } else {
         setSheetData([]);
+        setStampData([]);
         const verificationUrl = buildStandardVerificationUrl(naddr, verificationKeyPair!.nsec);
         const dataUrl = await generateVerificationQR(verificationUrl, qrType, {
           line1: t('qrCode.foundTreasure'),
@@ -120,8 +135,8 @@ export default function GenerateQR() {
       const iframeDoc = iframe.contentDocument;
       if (!iframeDoc) return;
 
-      // Detect if this is a grid (sheet) type
-      const isGrid = qrType === 'sheet';
+      // Detect if this is a grid (sheet or stamp) type
+      const isGrid = qrType === 'sheet' || qrType === 'stamp';
 
       // Detect mobile for adjusted margins
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -191,7 +206,12 @@ export default function GenerateQR() {
   const handleDownloadQR = () => {
     if (qrDataUrl) {
       const safeCacheName = cacheName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      const filename = qrType === 'sheet' ? `${safeCacheName}-qr-sheet.png` : `${safeCacheName}-qr-code.png`;
+      let filename = `${safeCacheName}-qr-code.png`;
+      if (qrType === 'sheet') {
+        filename = `${safeCacheName}-qr-sheet.png`;
+      } else if (qrType === 'stamp') {
+        filename = `${safeCacheName}-qr-stamp.png`;
+      }
       downloadQRCode(qrDataUrl, filename);
       toast({
         title: t('generateQR.toast.downloaded.title'),
@@ -253,9 +273,9 @@ export default function GenerateQR() {
                 <ComponentLoading size="sm" title={t('generateQR.generating')} />
               </div>
             ) : qrDataUrl ? (
-              <img 
-                src={qrDataUrl} 
-                alt={t('generateQR.qrCodeAlt')} 
+              <img
+                src={qrDataUrl}
+                alt={t('generateQR.qrCodeAlt')}
                 className="w-full h-auto rounded max-w-xs object-contain"
               />
             ) : (
@@ -277,6 +297,7 @@ export default function GenerateQR() {
                 <DropdownMenuItem onClick={() => setQrType('cutout')}>{t('generateQR.styleCutout')}</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setQrType('micro')}>{t('generateQR.styleMicro')}</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setQrType('sheet')}>{t('generateQR.styleSheet')}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setQrType('stamp')}>{t('generateQR.styleStamp')}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button onClick={handleDownloadQR} disabled={!qrDataUrl}>
@@ -297,6 +318,33 @@ export default function GenerateQR() {
               <p className="text-sm text-muted-foreground mb-4">{t('generateQR.sheet.description')}</p>
               <ul className="space-y-2">
                 {sheetData.map((data, index) => (
+                  <li key={index} className="flex items-center justify-between gap-2 p-2 border rounded-md bg-muted/50">
+                    <span className="text-foreground font-mono text-sm">{data.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={async () => {
+                        try {
+                          const claimUrl = `https://treasures.to/${data.naddr}#verify=${data.keyPair.nsec}`;
+                          await navigator.clipboard.writeText(claimUrl);
+                          toast({ title: t('generateQR.toast.claimUrlCopied') });
+                        } catch (error) {
+                          toast({ title: t('generateQR.toast.copyFailed'), variant: "destructive" });
+                        }
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : qrType === 'stamp' ? (
+            <div>
+              <h2 className="text-foreground text-lg font-semibold">{t('generateQR.stamp.title')}</h2>
+              <p className="text-sm text-muted-foreground mb-4">{t('generateQR.stamp.description')}</p>
+              <ul className="space-y-2">
+                {stampData.map((data, index) => (
                   <li key={index} className="flex items-center justify-between gap-2 p-2 border rounded-md bg-muted/50">
                     <span className="text-foreground font-mono text-sm">{data.name}</span>
                     <Button

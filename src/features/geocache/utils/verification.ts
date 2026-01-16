@@ -119,7 +119,7 @@ export function buildStandardVerificationUrl(naddr: string, nsec: string): strin
 
 /**
  * Generate QR code data URL for verification with centered icon and descriptive text
- * 
+ *
  * @param verificationUrl - Full URL to encode in QR code. Can be either:
  *   - Standard format: `{origin}/{naddr}#verify={nsec}` (uses naddr which encodes pubkey+kind+d-tag)
  *   - Compact format: `{origin}/c/{base64-payload}` (encodes pubkey+d-tag+nsec directly, no naddr needed)
@@ -666,6 +666,74 @@ export function downloadQRCode(dataUrl: string, filename: string = 'geocache-ver
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+/**
+ * Generate a printable 3x3 grid of micro QR codes (stamp).
+ * More compact than sheet layout - uses smaller QR codes without labels.
+ */
+export async function generateQRStampImage(
+  stampData: {name: string, naddr: string, keyPair: VerificationKeyPair}[],
+  textStrings: { line1: string; line2: string }
+): Promise<string> {
+  // Use lower DPI for mobile devices to prevent print overflow
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const dpi = isMobile ? 120 : 300;
+
+  const paperWidth = 8.5 * dpi;
+  const paperHeight = 11 * dpi;
+  const margin = isMobile ? 0.7 * dpi : 0.5 * dpi;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = paperWidth;
+  canvas.height = paperHeight;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('Could not get canvas context');
+  }
+
+  // White background
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, paperWidth, paperHeight);
+
+  const contentWidth = paperWidth - 2 * margin;
+  const contentHeight = paperHeight - 2 * margin;
+  const cellWidth = contentWidth / 3;
+  const cellHeight = contentHeight / 3;
+
+  // Generate all micro QR codes first
+  const qrCodePromises = stampData.map(d => {
+    const verificationUrl = buildStandardVerificationUrl(d.naddr, d.keyPair.nsec);
+    return generateVerificationQR(verificationUrl, 'micro', textStrings);
+  });
+
+  const qrCodes = await Promise.all(qrCodePromises);
+
+  // Draw each QR code in the grid
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const qrImage = new Image();
+      await new Promise((resolve, reject) => {
+        qrImage.onload = resolve;
+        qrImage.onerror = reject;
+        qrImage.src = qrCodes[row * 3 + col] || '';
+      });
+
+      const x = margin + col * cellWidth;
+      const y = margin + row * cellHeight;
+
+      // Center the QR code in its cell
+      const qrDisplayWidth = cellWidth * 0.95;
+      const qrDisplayHeight = cellHeight * 0.95;
+      const qrX = x + (cellWidth - qrDisplayWidth) / 2;
+      const qrY = y + (cellHeight - qrDisplayHeight) / 2;
+
+      ctx.drawImage(qrImage, qrX, qrY, qrDisplayWidth, qrDisplayHeight);
+    }
+  }
+
+  return canvas.toDataURL('image/png');
 }
 
 /**
