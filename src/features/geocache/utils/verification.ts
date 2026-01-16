@@ -676,12 +676,12 @@ export async function generateQRStampImage(
   stampData: {name: string, naddr: string, keyPair: VerificationKeyPair}[],
   textStrings: { line1: string; line2: string }
 ): Promise<string> {
-  // Use screen DPI for smaller output that fits on one page
-  const dpi = 96;
+  // Use higher DPI for crisp QR codes while keeping tight layout
+  const dpi = 150;
 
   const paperWidth = 8.5 * dpi;
   const paperHeight = 11 * dpi;
-  const margin = 0.2 * dpi; // Minimal margins to maximize space
+  const margin = 0.25 * dpi; // Small margins for print safety
 
   const canvas = document.createElement('canvas');
   canvas.width = paperWidth;
@@ -706,8 +706,8 @@ export async function generateQRStampImage(
   const cellHeight = contentHeight / rows;
 
   // Calculate QR code size to fit with text - maximize space usage
-  const textHeight = 12; // Small fixed pixel height for text area
-  const qrSize = Math.min(cellWidth * 0.95, cellHeight - textHeight - 2); // Minimal padding
+  const textHeight = 18; // Fixed pixel height for text area
+  const qrSize = Math.min(cellWidth * 0.92, cellHeight - textHeight - 3); // Tight but scannable
 
   // Generate all QR codes first
   const qrCodePromises = stampData.map(d => {
@@ -780,7 +780,7 @@ export async function generateQRStampImage(
       }
 
       // Add text below QR code
-      const textStartY = qrY + qrSize + 2; // Minimal gap between QR and text
+      const textStartY = qrY + qrSize + 3; // Small gap between QR and text
       const line1 = textStrings.line1;
       const line2 = textStrings.line2;
 
@@ -788,13 +788,13 @@ export async function generateQRStampImage(
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
 
-      const fontSize1 = 5; // Very small font size
+      const fontSize1 = 7; // Readable font size at 150 DPI
       ctx.font = `bold ${fontSize1}px "Segoe UI", Arial, sans-serif`;
-      ctx.fillText(line1, x + cellWidth / 2, textStartY, cellWidth * 0.98);
+      ctx.fillText(line1, x + cellWidth / 2, textStartY, cellWidth * 0.95);
 
-      const fontSize2 = 4; // Even smaller for second line
+      const fontSize2 = 6; // Slightly smaller for second line
       ctx.font = `${fontSize2}px "Segoe UI", Arial, sans-serif`;
-      ctx.fillText(line2, x + cellWidth / 2, textStartY + fontSize1, cellWidth * 0.98);
+      ctx.fillText(line2, x + cellWidth / 2, textStartY + fontSize1 + 1, cellWidth * 0.95);
     }
   }
 
