@@ -97,8 +97,17 @@ export default defineConfig(({ mode }) => ({
         orientation: 'portrait-primary',
         scope: '/',
         start_url: '/',
+        id: '/',
         categories: ['games', 'travel', 'lifestyle', 'social'],
         permissions: ['geolocation', 'device-orientation'],
+        scope_extensions: [
+          {
+            origin: 'https://treasures.to'
+          },
+          {
+            origin: 'https://*.treasures.to'
+          }
+        ],
         icons: [
           {
             src: 'icon.svg',
