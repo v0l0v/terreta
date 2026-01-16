@@ -102,10 +102,22 @@ export default defineConfig(({ mode }) => ({
         permissions: ['geolocation', 'device-orientation'],
         scope_extensions: [
           {
+            origin: 'treasures.to'
+          },
+          {
+            origin: '*.treasures.to'
+          },
+          {
             origin: 'https://treasures.to'
           },
           {
             origin: 'https://*.treasures.to'
+          },
+          {
+            origin: 'http://treasures.to'
+          },
+          {
+            origin: 'http://*.treasures.to'
           }
         ],
         icons: [
