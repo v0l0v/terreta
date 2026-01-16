@@ -78,7 +78,7 @@ export default function GenerateQR() {
 
     setIsGenerating(true);
     try {
-      if (qrType === 'sheet' || qrType === 'stamp') {
+      if (qrType === 'sheet') {
         const dataPromises = [];
         for (let i = 0; i < 9; i++) {
           const name = uniqueNamesGenerator(customConfig);
@@ -87,24 +87,30 @@ export default function GenerateQR() {
           dataPromises.push(generateVerificationKeyPair().then(keyPair => ({name, naddr, keyPair})));
         }
         const data = await Promise.all(dataPromises);
-
-        if (qrType === 'sheet') {
-          setSheetData(data);
-          setStampData([]);
-          const gridUrl = await generateQRGridImage(data, {
-            line1: t('qrCode.foundTreasure'),
-            line2: t('qrCode.scanToLog')
-          });
-          setQrDataUrl(gridUrl);
-        } else { // stamp
-          setStampData(data);
-          setSheetData([]);
-          const stampUrl = await generateQRStampImage(data, {
-            line1: t('qrCode.foundTreasure'),
-            line2: t('qrCode.scanToLog')
-          });
-          setQrDataUrl(stampUrl);
+        setSheetData(data);
+        setStampData([]);
+        const gridUrl = await generateQRGridImage(data, {
+          line1: t('qrCode.foundTreasure'),
+          line2: t('qrCode.scanToLog')
+        });
+        setQrDataUrl(gridUrl);
+      } else if (qrType === 'stamp') {
+        // Generate 42 codes for stamp (6x7 grid)
+        const dataPromises = [];
+        for (let i = 0; i < 42; i++) {
+          const name = uniqueNamesGenerator(customConfig);
+          const dTag = generateDeterministicDTag(name, user.pubkey);
+          const naddr = geocacheToNaddr(user.pubkey, dTag);
+          dataPromises.push(generateVerificationKeyPair().then(keyPair => ({name, naddr, keyPair})));
         }
+        const data = await Promise.all(dataPromises);
+        setStampData(data);
+        setSheetData([]);
+        const stampUrl = await generateQRStampImage(data, {
+          line1: t('qrCode.foundTreasure'),
+          line2: t('qrCode.scanToLog')
+        });
+        setQrDataUrl(stampUrl);
       } else {
         setSheetData([]);
         setStampData([]);
@@ -342,29 +348,7 @@ export default function GenerateQR() {
           ) : qrType === 'stamp' ? (
             <div>
               <h2 className="text-foreground text-lg font-semibold">{t('generateQR.stamp.title')}</h2>
-              <p className="text-sm text-muted-foreground mb-4">{t('generateQR.stamp.description')}</p>
-              <ul className="space-y-2">
-                {stampData.map((data, index) => (
-                  <li key={index} className="flex items-center justify-between gap-2 p-2 border rounded-md bg-muted/50">
-                    <span className="text-foreground font-mono text-sm">{data.name}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={async () => {
-                        try {
-                          const claimUrl = `https://treasures.to/${data.naddr}#verify=${data.keyPair.nsec}`;
-                          await navigator.clipboard.writeText(claimUrl);
-                          toast({ title: t('generateQR.toast.claimUrlCopied') });
-                        } catch (error) {
-                          toast({ title: t('generateQR.toast.copyFailed'), variant: "destructive" });
-                        }
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+              <p className="text-sm text-muted-foreground">{t('generateQR.stamp.description')}</p>
             </div>
           ) : (
             <div className="space-y-4">

@@ -20,6 +20,7 @@ import {
   buildStandardVerificationUrl,
   downloadQRCode,
   generateQRGridImage,
+  generateQRStampImage,
   type VerificationKeyPair,
 } from "@/features/geocache/utils/verification";
 import { geocacheToNaddr } from "@/shared/utils/naddr-utils";
@@ -56,8 +57,9 @@ export default function CreateCacheLanding() {
     useState<VerificationKeyPair | null>(null);
   const [naddr, setNaddr] = useState<string>("");
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const [qrType, setQrType] = useState<"full" | "cutout" | "micro" | "sheet">("full");
+  const [qrType, setQrType] = useState<"full" | "cutout" | "micro" | "sheet" | "stamp">("full");
   const [_sheetData, setSheetData] = useState<{name: string, naddr: string, keyPair: VerificationKeyPair}[]>([]);
+  const [_stampData, setStampData] = useState<{name: string, naddr: string, keyPair: VerificationKeyPair}[]>([]);
   const [showCompactDialog, setShowCompactDialog] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
   const [customNpub, setCustomNpub] = useState<string>("");
@@ -150,13 +152,31 @@ export default function CreateCacheLanding() {
         }
         const data = await Promise.all(dataPromises);
         setSheetData(data);
+        setStampData([]);
         const gridUrl = await generateQRGridImage(data, {
           line1: t('qrCode.foundTreasure'),
           line2: t('qrCode.scanToLog')
         });
         setQrDataUrl(gridUrl);
+      } else if (qrType === 'stamp') {
+        const dataPromises = [];
+        for (let i = 0; i < 42; i++) {
+          const name = uniqueNamesGenerator(customConfig);
+          const dTag = generateDeterministicDTag(name, targetPubkey);
+          const naddr = geocacheToNaddr(targetPubkey, dTag);
+          dataPromises.push(generateVerificationKeyPair().then(keyPair => ({name, naddr, keyPair})));
+        }
+        const data = await Promise.all(dataPromises);
+        setStampData(data);
+        setSheetData([]);
+        const stampUrl = await generateQRStampImage(data, {
+          line1: t('qrCode.foundTreasure'),
+          line2: t('qrCode.scanToLog')
+        });
+        setQrDataUrl(stampUrl);
       } else {
         setSheetData([]);
+        setStampData([]);
         const verificationUrl = buildStandardVerificationUrl(naddr, verificationKeyPair.nsec);
         const dataUrl = await generateVerificationQR(verificationUrl, qrType, {
           line1: t('qrCode.foundTreasure'),
@@ -203,7 +223,12 @@ export default function CreateCacheLanding() {
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
-      const filename = qrType === 'sheet' ? `${safeCacheName}-qr-sheet.png` : `${safeCacheName}-qr-code.png`;
+      let filename = `${safeCacheName}-qr-code.png`;
+      if (qrType === 'sheet') {
+        filename = `${safeCacheName}-qr-sheet.png`;
+      } else if (qrType === 'stamp') {
+        filename = `${safeCacheName}-qr-stamp.png`;
+      }
       downloadQRCode(qrDataUrl, filename);
       toast({
         title: t('createCache.verificationQR.downloaded'),
@@ -323,6 +348,9 @@ export default function CreateCacheLanding() {
                   <DropdownMenuItem onClick={() => setQrType("sheet")}>
                     {t('createCache.verificationQR.styleSheet')}
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setQrType("stamp")}>
+                    {t('createCache.verificationQR.styleStamp')}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowCompactDialog(true)} className="border-t mt-1 pt-1">
                     <span className="text-green-600 font-medium">Compact URLs</span>
                   </DropdownMenuItem>
@@ -349,10 +377,10 @@ export default function CreateCacheLanding() {
               </h2>
             </div>
 
-            {qrType === 'sheet' ? (
+            {(qrType === 'sheet' || qrType === 'stamp') ? (
               <div className="space-y-3">
                 <p className="text-xs text-muted-foreground">
-                  {t('createCache.listing.sheetDescription')}
+                  {qrType === 'sheet' ? t('createCache.listing.sheetDescription') : t('createCache.listing.stampDescription')}
                 </p>
               </div>
             ) : (

@@ -669,8 +669,8 @@ export function downloadQRCode(dataUrl: string, filename: string = 'geocache-ver
 }
 
 /**
- * Generate a printable 3x3 grid of micro QR codes (stamp).
- * More compact than sheet layout - uses smaller QR codes without labels.
+ * Generate a printable grid of compact QR codes (stamp).
+ * Creates a dense grid (6x7 = 42 codes) with text labels but no log lines.
  */
 export async function generateQRStampImage(
   stampData: {name: string, naddr: string, keyPair: VerificationKeyPair}[],
@@ -682,7 +682,7 @@ export async function generateQRStampImage(
 
   const paperWidth = 8.5 * dpi;
   const paperHeight = 11 * dpi;
-  const margin = isMobile ? 0.7 * dpi : 0.5 * dpi;
+  const margin = isMobile ? 0.4 * dpi : 0.25 * dpi;
 
   const canvas = document.createElement('canvas');
   canvas.width = paperWidth;
@@ -699,37 +699,104 @@ export async function generateQRStampImage(
 
   const contentWidth = paperWidth - 2 * margin;
   const contentHeight = paperHeight - 2 * margin;
-  const cellWidth = contentWidth / 3;
-  const cellHeight = contentHeight / 3;
 
-  // Generate all micro QR codes first
+  // 6 columns x 7 rows = 42 QR codes
+  const cols = 6;
+  const rows = 7;
+  const cellWidth = contentWidth / cols;
+  const cellHeight = contentHeight / rows;
+
+  // Calculate QR code size (leave room for text)
+  const textHeight = dpi * 0.08; // Space for text
+  const qrSize = Math.min(cellWidth * 0.85, (cellHeight - textHeight) * 0.9);
+
+  // Generate all QR codes first (plain, no text)
   const qrCodePromises = stampData.map(d => {
     const verificationUrl = buildStandardVerificationUrl(d.naddr, d.keyPair.nsec);
-    return generateVerificationQR(verificationUrl, 'micro', textStrings);
+    return QRCode.toDataURL(verificationUrl, {
+      width: qrSize,
+      margin: 0,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      errorCorrectionLevel: 'H'
+    });
   });
 
   const qrCodes = await Promise.all(qrCodePromises);
 
   // Draw each QR code in the grid
-  for (let row = 0; row < 3; row++) {
-    for (let col = 0; col < 3; col++) {
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const index = row * cols + col;
+      if (index >= qrCodes.length) break;
+
       const qrImage = new Image();
       await new Promise((resolve, reject) => {
         qrImage.onload = resolve;
         qrImage.onerror = reject;
-        qrImage.src = qrCodes[row * 3 + col] || '';
+        qrImage.src = qrCodes[index];
       });
 
       const x = margin + col * cellWidth;
       const y = margin + row * cellHeight;
 
-      // Center the QR code in its cell
-      const qrDisplayWidth = cellWidth * 0.95;
-      const qrDisplayHeight = cellHeight * 0.95;
-      const qrX = x + (cellWidth - qrDisplayWidth) / 2;
-      const qrY = y + (cellHeight - qrDisplayHeight) / 2;
+      // Center the QR code horizontally, place at top of cell
+      const qrX = x + (cellWidth - qrSize) / 2;
+      const qrY = y + (cellHeight - qrSize - textHeight) / 2;
 
-      ctx.drawImage(qrImage, qrX, qrY, qrDisplayWidth, qrDisplayHeight);
+      ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+
+      // Add icon overlay to each QR code
+      try {
+        const iconSize = Math.floor(qrSize * 0.22);
+        const iconCanvas = await loadAndResizeImage('/icon-192x192.png', iconSize);
+        const centerX = qrX + (qrSize - iconSize) / 2;
+        const centerY = qrY + (qrSize - iconSize) / 2;
+        const padding = Math.floor(iconSize * 0.15);
+        const bgRadius = (iconSize + padding * 2) / 2;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.beginPath();
+        ctx.arc(qrX + qrSize / 2 + 2, qrY + qrSize / 2 + 2, bgRadius, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(qrX + qrSize / 2, qrY + qrSize / 2, bgRadius, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.imageSmoothingEnabled = true;
+        if ('imageSmoothingQuality' in ctx) {
+          (ctx as any).imageSmoothingQuality = 'high';
+        }
+        ctx.drawImage(iconCanvas, centerX, centerY, iconSize, iconSize);
+      } catch (iconError) {
+        console.warn('Failed to load icon for QR code:', iconError);
+      }
+
+      // Add text below QR code
+      const textStartY = qrY + qrSize + textHeight * 0.3;
+      const line1 = textStrings.line1;
+      const line2 = textStrings.line2;
+
+      ctx.fillStyle = '#1a1a1a';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const fontSize1 = Math.floor(qrSize * 0.04);
+      ctx.font = `bold ${fontSize1}px "Segoe UI", Arial, sans-serif`;
+      ctx.fillText(line1, x + cellWidth / 2, textStartY, cellWidth * 0.95);
+
+      const fontSize2 = Math.floor(qrSize * 0.035);
+      const lineSpacing = fontSize1 * 0.9;
+      ctx.font = `${fontSize2}px "Segoe UI", Arial, sans-serif`;
+      ctx.fillText(line2, x + cellWidth / 2, textStartY + lineSpacing, cellWidth * 0.95);
     }
   }
 
