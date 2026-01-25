@@ -72,14 +72,14 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
 
       let metadata = events?.[0] || null;
 
-      // If no metadata found, fall back to nostr.band
+      // If no metadata found, fall back to relay.dreamith.to
       if (!metadata) {
-        console.log(`🔄 [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on selected relay, trying nostr.band fallback`);
+        console.log(`🔄 [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on selected relay, trying relay.dreamith.to fallback`);
 
         try {
-          // Create a direct connection to nostr.band for fallback
+          // Create a direct connection to relay.dreamith.to for fallback
           const { NRelay1 } = await import('@nostrify/nostrify');
-          const fallbackRelay = new NRelay1('wss://relay.nostr.band');
+          const fallbackRelay = new NRelay1('wss://relay.dreamith.to');
 
           const fallbackSignal = AbortSignal.timeout(TIMEOUTS.QUERY);
           const fallbackEvents = await fallbackRelay.query([{
@@ -91,15 +91,15 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
           metadata = fallbackEvents[0] || null;
 
           if (metadata) {
-            console.log(`✅ [author] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on nostr.band fallback`);
+            console.log(`✅ [author] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on relay.dreamith.to fallback`);
           } else {
-            console.log(`❌ [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on nostr.band either`);
+            console.log(`❌ [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on relay.dreamith.to either`);
           }
 
           // Close the fallback relay connection
           fallbackRelay.close();
         } catch (fallbackError) {
-          console.warn(`⚠️ [author] Fallback to nostr.band failed for ${pubkey.slice(0, 8)}...:`, fallbackError);
+          console.warn(`⚠️ [author] Fallback to relay.dreamith.to failed for ${pubkey.slice(0, 8)}...:`, fallbackError);
         }
       } else {
         console.log(`✅ [author] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on selected relay`);

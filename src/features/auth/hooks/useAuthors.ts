@@ -25,14 +25,14 @@ export function useAuthors(pubkeys: (string | undefined)[]) {
               { signal }
             );
 
-            // If no event found, try nostr.band fallback
+            // If no event found, try relay.dreamith.to fallback
             if (!events || events.length === 0) {
-              console.log(`🔄 [useAuthors] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on selected relay, trying nostr.band fallback`);
+              console.log(`🔄 [useAuthors] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on selected relay, trying relay.dreamith.to fallback`);
 
               try {
-                // Create a direct connection to nostr.band for fallback
+                // Create a direct connection to relay.dreamith.to for fallback
                 const { NRelay1 } = await import('@nostrify/nostrify');
-                const fallbackRelay = new NRelay1('wss://relay.nostr.band');
+                const fallbackRelay = new NRelay1('wss://relay.dreamith.to');
 
                 const fallbackSignal = AbortSignal.timeout(TIMEOUTS.FAST_QUERY);
                 const fallbackEvents = await fallbackRelay.query([{
@@ -45,15 +45,15 @@ export function useAuthors(pubkeys: (string | undefined)[]) {
                 usedFallback = true;
 
                 if (events.length > 0) {
-                  console.log(`✅ [useAuthors] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on nostr.band fallback`);
+                  console.log(`✅ [useAuthors] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on relay.dreamith.to fallback`);
                 } else {
-                  console.log(`❌ [useAuthors] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on nostr.band either`);
+                  console.log(`❌ [useAuthors] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on relay.dreamith.to either`);
                 }
 
                 // Close the fallback relay connection
                 fallbackRelay.close();
               } catch (fallbackError) {
-                console.warn(`⚠️ [useAuthors] Fallback to nostr.band failed for ${pubkey.slice(0, 8)}...:`, fallbackError);
+                console.warn(`⚠️ [useAuthors] Fallback to relay.dreamith.to failed for ${pubkey.slice(0, 8)}...:`, fallbackError);
               }
             } else {
               console.log(`✅ [useAuthors] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on selected relay`);

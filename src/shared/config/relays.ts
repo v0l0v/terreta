@@ -13,7 +13,7 @@ export const PRESET_RELAYS = [
   { name: 'Ditto', url: 'wss://relay.ditto.pub' },
   { name: 'nos.lol', url: 'wss://nos.lol' },
   { name: 'Damus', url: 'wss://relay.damus.io' },
-  { name: 'Nostr.Band', url: 'wss://relay.nostr.band' },
+  { name: 'Dreamith', url: 'wss://relay.dreamith.to' },
 ];
 
 /**
