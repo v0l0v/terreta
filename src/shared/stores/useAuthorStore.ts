@@ -72,14 +72,14 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
 
       let metadata = events?.[0] || null;
 
-      // If no metadata found, fall back to relay.dreamith.to
+      // If no metadata found, fall back to relay.ditto.pub
       if (!metadata) {
-        console.log(`🔄 [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on selected relay, trying relay.dreamith.to fallback`);
+        console.log(`🔄 [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on selected relay, trying relay.ditto.pub fallback`);
 
         try {
-          // Create a direct connection to relay.dreamith.to for fallback
+          // Create a direct connection to relay.ditto.pub for fallback
           const { NRelay1 } = await import('@nostrify/nostrify');
-          const fallbackRelay = new NRelay1('wss://relay.dreamith.to');
+          const fallbackRelay = new NRelay1('wss://relay.ditto.pub');
 
           const fallbackSignal = AbortSignal.timeout(TIMEOUTS.QUERY);
           const fallbackEvents = await fallbackRelay.query([{
@@ -91,15 +91,15 @@ export function useAuthorStore(config: Partial<StoreConfig> = {}): AuthorStore {
           metadata = fallbackEvents[0] || null;
 
           if (metadata) {
-            console.log(`✅ [author] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on relay.dreamith.to fallback`);
+            console.log(`✅ [author] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on relay.ditto.pub fallback`);
           } else {
-            console.log(`❌ [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on relay.dreamith.to either`);
+            console.log(`❌ [author] No kind 0 metadata found for ${pubkey.slice(0, 8)}... on relay.ditto.pub either`);
           }
 
           // Close the fallback relay connection
           fallbackRelay.close();
         } catch (fallbackError) {
-          console.warn(`⚠️ [author] Fallback to relay.dreamith.to failed for ${pubkey.slice(0, 8)}...:`, fallbackError);
+          console.warn(`⚠️ [author] Fallback to relay.ditto.pub failed for ${pubkey.slice(0, 8)}...:`, fallbackError);
         }
       } else {
         console.log(`✅ [author] Found kind 0 metadata for ${pubkey.slice(0, 8)}... on selected relay`);
