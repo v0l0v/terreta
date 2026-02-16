@@ -499,6 +499,7 @@ function MapSizeController({ isVisible }: { isVisible?: boolean }) {
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isVisible, map]);
 
   return null;
@@ -729,7 +730,7 @@ function MapStyleControl({
 
     // Add container to map container
     mapContainer.appendChild(container);
-    containerRef.current = container;
+    (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = container;
 
     // Create React root and render the MapStyleSelector
     rootRef.current = createRoot(container);
@@ -740,7 +741,7 @@ function MapStyleControl({
       />
     );
 
-    isInitializedRef.current = true;
+    (isInitializedRef as React.MutableRefObject<boolean>).current = true;
 
     // Cleanup
     return () => {
@@ -763,7 +764,7 @@ function MapStyleControl({
         }, 0);
       }
 
-      isInitializedRef.current = false;
+      (isInitializedRef as React.MutableRefObject<boolean>).current = false;
     };
   }, [map]);
 
@@ -886,15 +887,15 @@ function CustomZoomControl() {
 
     // Add container to map container
     mapContainer.appendChild(container);
-    containerRef.current = container;
-    isInitializedRef.current = true;
+    (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = container;
+    (isInitializedRef as React.MutableRefObject<boolean>).current = true;
 
     // Cleanup
     return () => {
       if (containerRef.current && containerRef.current.parentNode) {
         containerRef.current.parentNode.removeChild(containerRef.current);
       }
-      isInitializedRef.current = false;
+      (isInitializedRef as React.MutableRefObject<boolean>).current = false;
     };
   }, [map]);
 
@@ -951,7 +952,7 @@ function NearMeButtonControl({
 
     // Add container to map container
     mapContainer.appendChild(container);
-    containerRef.current = container;
+    (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = container;
 
     // Create React root and render the NearMeButton
     rootRef.current = createRoot(container);
@@ -964,7 +965,7 @@ function NearMeButtonControl({
       />
     );
 
-    isInitializedRef.current = true;
+    (isInitializedRef as React.MutableRefObject<boolean>).current = true;
 
     // Cleanup
     return () => {
@@ -987,7 +988,7 @@ function NearMeButtonControl({
         }, 0);
       }
 
-      isInitializedRef.current = false;
+      (isInitializedRef as React.MutableRefObject<boolean>).current = false;
     };
   }, [map]); // Only depend on map
 
@@ -1033,8 +1034,6 @@ function OptimizedTileLayer({ mapStyle }: { mapStyle: MapStyle }) {
       // World wrapping support
       noWrap={false} // Enable world wrapping
       bounds={[[-90, -180], [90, 180]]} // Standard world bounds
-      // Continuous world support
-      continuousWorld={true} // Enable continuous world for seamless wrapping
     />
   );
 }
@@ -1458,8 +1457,8 @@ export function GeocacheMap({
                   const map = marker._map;
 
                   // Prevent event propagation to avoid map clicks
-                  L.DomEvent.stopPropagation(e);
-                  L.DomEvent.preventDefault(e);
+                  L.DomEvent.stopPropagation(e as unknown as Event);
+                  L.DomEvent.preventDefault(e as unknown as Event);
 
                   // Close ALL open popups first to ensure only one is open at a time
                   if (map) {

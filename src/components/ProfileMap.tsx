@@ -341,7 +341,7 @@ export function ProfileMap({ geocaches, onGeocacheClick }: ProfileMapProps) {
 
     if (validGeocaches.length === 1) {
       return {
-        center: [validGeocaches[0].location.lat, validGeocaches[0].location.lng] as LatLngExpression,
+        center: [validGeocaches[0]!.location.lat, validGeocaches[0]!.location.lng] as LatLngExpression,
         zoom: 12
       };
     }
@@ -475,7 +475,6 @@ export function ProfileMap({ geocaches, onGeocacheClick }: ProfileMapProps) {
         attributionControl={false}
         minZoom={2}
         maxZoom={18}
-        worldCopyJump={true}
         whenReady={() => {
           setIsMapReady(true);
         }}

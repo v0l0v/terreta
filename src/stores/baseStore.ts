@@ -17,7 +17,7 @@ import { TIMEOUTS, POLLING_INTERVALS } from '@/config';
 // Performance imports moved to individual stores to avoid circular dependencies
 
 // Default store configuration
-export const DEFAULT_STORE_CONFIG: StoreConfig = {
+const DEFAULT_STORE_CONFIG: StoreConfig = {
   enableBackgroundSync: true,
   enablePrefetching: true,
   syncInterval: POLLING_INTERVALS.BACKGROUND_SYNC,

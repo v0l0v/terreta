@@ -10,8 +10,7 @@ import {
   createQueryKey,
   batchOperations
 } from './baseStore';
-import { useMemoizedArray } from './memoization';
-import { QueryOptimizer } from './performanceMonitor';
+
 import type {
   GeocacheStore,
   GeocacheStoreState,
@@ -71,18 +70,6 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
         timeout: TIMEOUTS.QUERY
       });
 
-      const cacheKey = `geocaches-${user?.pubkey || 'anonymous'}`;
-
-      // Check query optimizer cache first
-      const cached = QueryOptimizer.getCachedResult<Geocache[]>(cacheKey);
-      if (cached) {
-        console.log('🎯 Using cached geocaches:', {
-          count: cached.length,
-          cacheKey
-        });
-        return cached;
-      }
-
       console.log('📡 Fetching geocaches from relay...', {
         kinds: [NIP_GC_KINDS.GEOCACHE],
         legacyIds: LEGACY_GEOCACHE_IDS.length,
@@ -139,16 +126,13 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
       // Update pagination state
       if (geocaches.length > 0) {
-        const oldest = geocaches[geocaches.length - 1].created_at;
+        const oldest = geocaches[geocaches.length - 1]!.created_at;
         setOldestTimestamp(oldest);
         // If we got fewer results than the limit, we've reached the end
         setHasMore(events.length >= QUERY_LIMITS.GEOCACHES);
       } else {
         setHasMore(false);
       }
-
-      // Cache the result
-      QueryOptimizer.setCachedResult(cacheKey, geocaches);
 
       return geocaches;
     },
@@ -260,7 +244,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
       // Update pagination state
       if (newGeocaches.length > 0) {
-        const oldest = newGeocaches[newGeocaches.length - 1].created_at;
+        const oldest = newGeocaches[newGeocaches.length - 1]!.created_at;
         setOldestTimestamp(oldest);
         // If we got fewer results than the limit, we've reached the end
         setHasMore(events.length >= QUERY_LIMITS.GEOCACHES);
@@ -723,14 +707,9 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
 
   // Background sync removed - no auto-start
 
-  // Memoized geocaches array for performance
-  const memoizedGeocaches = useMemoizedArray(state.geocaches, (geocache) => geocache.id);
-
-  // Memoized store object with performance optimizations
+  // Memoized store object
   const store = useMemo((): GeocacheStore => ({
-    // State with memoized arrays
     ...state,
-    geocaches: memoizedGeocaches,
 
     // Data fetching
     fetchGeocaches,
@@ -768,7 +747,6 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
     hasMore,
   }), [
     state,
-    memoizedGeocaches,
     fetchGeocaches,
     fetchGeocache,
     fetchUserGeocaches,

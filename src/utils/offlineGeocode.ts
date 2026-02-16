@@ -6,8 +6,16 @@
  * Note: Cities data is lazy-loaded to keep the main bundle small
  */
 
-import { countryToFlag } from './countryToFlag';
 import { getStateCodeMapping } from '@/utils/stateCodeMappings';
+
+function countryToFlag(countryCode: string): string {
+  if (!countryCode || countryCode.length !== 2) return '';
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
 import type { CityData } from './citiesData';
 
 // Simple in-memory cache for reverse geocoding results
@@ -143,7 +151,7 @@ export async function offlineGeocode(lat: number, lng: number): Promise<string> 
 
     // Sort by distance and get the closest
     candidates.sort((a, b) => a.distance - b.distance);
-    const nearestCity = candidates[0].city;
+    const nearestCity = candidates[0]!.city;
 
     const countryCode = nearestCity.country;
     const flagEmoji = countryToFlag(countryCode);
@@ -185,10 +193,4 @@ export async function prefetchLocations(coordinates: Array<{ lat: number; lng: n
   );
 }
 
-/**
- * Clear the geocoding cache
- */
-export function clearGeocodeCache(): void {
-  geocodeCache.clear();
-  cacheTimestamps.clear();
-}
+

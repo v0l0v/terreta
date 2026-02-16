@@ -944,7 +944,7 @@ export default function CacheDetail() {
                 locationVerification.terrain.lit ||
                 locationVerification.terrain.lit === false ||
                 locationVerification.terrain.surface ||
-                locationVerification.terrain.hazards?.length > 0 ||
+                (locationVerification.terrain.hazards?.length ?? 0) > 0 ||
                 locationVerification.safety?.cellCoverage === false ||
                 (locationVerification.accessibility.openingHours && locationVerification.accessibility.openingHours !== '24/7');
 

@@ -21,7 +21,7 @@ export function useMultiRelayQuery() {
 
     // Try each relay in the preset list
     for (let i = 0; i < PRESET_RELAYS.length; i++) {
-      const relay = PRESET_RELAYS[i];
+      const relay = PRESET_RELAYS[i]!;
       const relayUrl = relay.url;
 
       // Notify about relay attempt

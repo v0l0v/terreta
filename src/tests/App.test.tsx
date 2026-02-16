@@ -17,10 +17,6 @@ vi.mock('@/components/ui/toaster', () => ({
   Toaster: () => <div data-testid="toaster" />,
 }));
 
-vi.mock('@/components/ui/sonner', () => ({
-  Toaster: () => <div data-testid="sonner" />,
-}));
-
 vi.mock('@/components/ui/tooltip', () => ({
   TooltipProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
@@ -60,21 +56,6 @@ vi.mock('@/hooks/useCurrentUser', () => ({
 }));
 
 
-
-vi.mock('@/utils/connectivityChecker', () => ({
-  connectivityChecker: {
-    forceCheck: vi.fn().mockResolvedValue(undefined),
-    destroy: vi.fn(),
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-  },
-}));
-
-vi.mock('@/utils/cacheCleanup', () => ({
-  initializeCacheCleanup: vi.fn().mockReturnValue({
-    stop: vi.fn(),
-  }),
-}));
 
 // Mock any other components that might use Nostr
 vi.mock('@/components/MobileNav', () => ({

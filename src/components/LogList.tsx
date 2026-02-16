@@ -184,7 +184,7 @@ function LogCard({ log, compact = false, onProfileClick }: LogCardProps) {
         return t('logs.type.note');
       case "maintenance":
         return t('logs.type.maintenance');
-      case "archive":
+      case "archived":
         return t('logs.type.archive');
       default:
         return log.type;

@@ -5,6 +5,7 @@ type ThemeContextType = {
   theme: Theme | undefined;
   setTheme: (theme: Theme) => void;
   resolvedTheme: 'light' | 'dark' | 'adventure';
+  systemTheme: 'light' | 'dark';
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -17,7 +18,7 @@ export function useTheme() {
   return context;
 }
 
-interface ThemeProviderProps {
+export interface ThemeProviderProps {
   children: ReactNode;
   attribute?: string;
   defaultTheme?: Theme;
@@ -48,6 +49,12 @@ export function ThemeProvider({
   });
 
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'adventure'>('light');
+  const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'light';
+  });
 
   // Function to set theme and save to localStorage
   const setTheme = (newTheme: Theme) => {
@@ -112,6 +119,7 @@ export function ThemeProvider({
       const themeToApply = systemPrefersDark ? 'dark' : 'light';
 
       setResolvedTheme(themeToApply);
+      setSystemTheme(themeToApply);
 
       if (attribute === 'class') {
         // Remove old theme classes
@@ -130,6 +138,7 @@ export function ThemeProvider({
     theme,
     setTheme,
     resolvedTheme,
+    systemTheme,
   };
 
   return React.createElement(ThemeContext.Provider, { value }, children);

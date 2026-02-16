@@ -38,7 +38,7 @@ export const useZapStore = create<ZapStore>((set, get) => ({
     // Return memoized total if available, otherwise calculate and cache it
     const currentState = get();
     if (key in currentState.zapTotals) {
-      return currentState.zapTotals[key];
+      return currentState.zapTotals[key] ?? 0;
     }
     
     const zaps = currentState.zaps[key] || [];

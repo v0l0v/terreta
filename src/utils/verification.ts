@@ -736,7 +736,7 @@ export async function generateQRStampImage(
       await new Promise((resolve, reject) => {
         qrImage.onload = resolve;
         qrImage.onerror = reject;
-        qrImage.src = qrCodes[index];
+        qrImage.src = qrCodes[index] ?? '';
       });
 
       const x = margin + col * cellWidth;

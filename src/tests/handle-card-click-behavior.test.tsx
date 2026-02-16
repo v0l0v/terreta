@@ -4,13 +4,13 @@ import { useState } from 'react';
 
 // Mock the useIsMobile hook to test both scenarios
 const mockUseIsMobile = vi.fn();
-vi.mock('../shared/hooks/useIsMobile', () => ({
+vi.mock('@/hooks/useIsMobile', () => ({
   useIsMobile: () => mockUseIsMobile(),
 }));
 
 // Mock the useMapController hook
 const mockClearMapInteractionLock = vi.fn();
-vi.mock('../features/map/hooks/useMapController', () => ({
+vi.mock('@/hooks/useMapController', () => ({
   useMapController: () => ({
     clearMapInteractionLock: mockClearMapInteractionLock,
   }),

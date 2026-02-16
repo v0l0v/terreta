@@ -51,6 +51,7 @@ export function RemoteLoginSuccess() {
     } else {
       setStatus('timeout');
     }
+    return undefined;
   }, [isLoggedIn, checkCount, navigate, checkLocalStorage]);
 
   // Listen for storage events (in case login is added from another context)

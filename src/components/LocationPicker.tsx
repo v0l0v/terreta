@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import { Button } from "@/components/ui/button";
@@ -193,15 +193,15 @@ function CustomZoomControl() {
 
     // Add container to map container
     mapContainer.appendChild(container);
-    containerRef.current = container;
-    isInitializedRef.current = true;
+    (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = container;
+    (isInitializedRef as React.MutableRefObject<boolean>).current = true;
 
     // Cleanup
     return () => {
       if (containerRef.current && containerRef.current.parentNode) {
         containerRef.current.parentNode.removeChild(containerRef.current);
       }
-      isInitializedRef.current = false;
+      (isInitializedRef as React.MutableRefObject<boolean>).current = false;
     };
   }, [map]);
 
@@ -250,7 +250,7 @@ function MapStyleControl({
 
     // Add container to map container
     mapContainer.appendChild(container);
-    containerRef.current = container;
+    (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = container;
 
     // Create React root and render the MapStyleSelector
     rootRef.current = createRoot(container);
@@ -261,7 +261,7 @@ function MapStyleControl({
       />
     );
 
-    isInitializedRef.current = true;
+    (isInitializedRef as React.MutableRefObject<boolean>).current = true;
 
     // Cleanup
     return () => {
@@ -284,7 +284,7 @@ function MapStyleControl({
         }, 0);
       }
 
-      isInitializedRef.current = false;
+      (isInitializedRef as React.MutableRefObject<boolean>).current = false;
     };
   }, [map]);
 
@@ -345,7 +345,7 @@ function NearMeControl({
 
     // Add container to map container
     mapContainer.appendChild(container);
-    containerRef.current = container;
+    (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = container;
 
     // Create React root and render the NearMeButton
     rootRef.current = createRoot(container);
@@ -358,7 +358,7 @@ function NearMeControl({
       />
     );
 
-    isInitializedRef.current = true;
+    (isInitializedRef as React.MutableRefObject<boolean>).current = true;
 
     // Cleanup
     return () => {
@@ -381,7 +381,7 @@ function NearMeControl({
         }, 0);
       }
 
-      isInitializedRef.current = false;
+      (isInitializedRef as React.MutableRefObject<boolean>).current = false;
     };
   }, [map]);
 

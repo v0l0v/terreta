@@ -35,7 +35,7 @@ export function LanguageSelector({ className }: LanguageSelectorProps) {
           <div className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
             <SelectValue>
-              {currentLangData.nativeName}
+              {currentLangData?.nativeName}
             </SelectValue>
           </div>
         </SelectTrigger>

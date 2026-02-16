@@ -218,7 +218,6 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
                 description={t('editProfile.images.picture.description')}
                 previewType="square"
                 onUpload={(file) => uploadPicture(file, 'picture')}
-                isUploading={isUploading}
               />
 
               <ImageUploadField
@@ -229,7 +228,6 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSuccess }) =
                 description={t('editProfile.images.banner.description')}
                 previewType="wide"
                 onUpload={(file) => uploadPicture(file, 'banner')}
-                isUploading={isUploading}
               />
             </div>
           </CardContent>
