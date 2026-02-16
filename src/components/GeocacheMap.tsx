@@ -279,8 +279,9 @@ function ThemeController({
   return null;
 }
 
-// Component to handle popup opening for highlighted geocache
-// Replicates the marker click handler logic to open the React portal popup
+// Component to handle popup opening for highlighted geocache.
+// Map movement is handled externally (useMapController). This component
+// waits for the map to finish moving, then finds the marker and opens the popup.
 function PopupController({
   highlightedGeocache,
   geocaches,
@@ -293,21 +294,31 @@ function PopupController({
   const map = useMap();
   const lastHighlightedRef = useRef<string | null>(null);
   const isOpeningRef = useRef<boolean>(false);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
+    // Clean up any pending operations from a previous highlight
+    if (cleanupRef.current) {
+      cleanupRef.current();
+      cleanupRef.current = null;
+    }
+
     if (highlightedGeocache && highlightedGeocache !== lastHighlightedRef.current) {
       lastHighlightedRef.current = highlightedGeocache;
       isOpeningRef.current = true;
 
       const geocache = geocaches.find(g => g.dTag === highlightedGeocache);
-      if (!geocache) {
+      if (!geocache?.location || !isFinite(geocache.location.lat) || !isFinite(geocache.location.lng)) {
         isOpeningRef.current = false;
         return;
       }
 
-      const maxAttempts = 15;
+      map.closePopup();
 
-      const attemptOpenPopup = (attempt: number) => {
+      const maxAttempts = 25;
+      let attemptTimer: ReturnType<typeof setTimeout> | null = null;
+
+      const findAndOpenMarker = (attempt: number) => {
         if (attempt > maxAttempts || !isOpeningRef.current) {
           isOpeningRef.current = false;
           return;
@@ -319,22 +330,24 @@ function PopupController({
           if (markerFound) return;
           if (!(layer instanceof L.Marker) || !('getLatLng' in layer)) return;
 
-          const markerLatLng = (layer as L.Marker).getLatLng();
+          const marker = layer as L.Marker;
+          const markerLatLng = marker.getLatLng();
+
           if (Math.abs(markerLatLng.lat - geocache.location.lat) < 0.0001 &&
               Math.abs(markerLatLng.lng - geocache.location.lng) < 0.0001) {
+
+            // Only open popup on markers that are actually rendered on the map
+            // (not still inside a cluster). Rendered markers have an _icon element.
+            if (!(marker as unknown as Record<string, unknown>)._icon) return;
+
             markerFound = true;
             isOpeningRef.current = false;
 
-            const marker = layer as L.Marker;
-
-            // Close all existing popups
             map.closePopup();
 
-            // Create a container div for the React portal
             const container = document.createElement('div');
             container.className = 'react-popup-root';
 
-            // Bind and open a Leaflet popup with the empty container
             if (marker.getPopup()) {
               marker.unbindPopup();
             }
@@ -343,7 +356,7 @@ function PopupController({
               minWidth: 200,
               className: 'geocache-popup react-popup',
               closeButton: true,
-              autoPan: true,
+              autoPan: false, // Don't auto-pan on open — we pan manually after content renders
               keepInView: true,
               closeOnClick: false,
               closeOnEscapeKey: true,
@@ -352,23 +365,68 @@ function PopupController({
 
             // Pass the geocache + container to the callback so React can portal into it
             onMarkerClick(geocache, container);
+
+            // After the React portal renders and the popup has its real size,
+            // pan the map so the full popup is visible (with padding).
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                const popup = marker.getPopup();
+                if (popup && map.hasLayer(popup)) {
+                  const px = map.project(popup.getLatLng());
+                  const popupEl = popup.getElement();
+                  if (popupEl) {
+                    const popupHeight = popupEl.offsetHeight;
+                    const newCenter = map.unproject(px.subtract([0, popupHeight / 2 + 20]));
+                    map.panTo(newCenter, { animate: true, duration: 0.25 });
+                  }
+                }
+              }, 50);
+            });
           }
         });
 
-        // If marker wasn't found (e.g. still clustered), retry with backoff
+        // If marker wasn't found (e.g. cluster still processing), retry
         if (!markerFound && isOpeningRef.current) {
-          const delay = Math.min(50 * Math.pow(1.3, attempt), 800);
-          setTimeout(() => attemptOpenPopup(attempt + 1), delay);
+          const delay = Math.min(80 * Math.pow(1.2, attempt), 1000);
+          attemptTimer = setTimeout(() => findAndOpenMarker(attempt + 1), delay);
         }
       };
 
-      // Short delay to let the map settle after setView
-      setTimeout(() => attemptOpenPopup(1), 150);
+      // Wait for the map to finish moving before searching for the marker.
+      // useMapController calls setView which fires moveend when done.
+      const onMoveEnd = () => {
+        map.off('moveend', onMoveEnd);
+        // Allow cluster group time to process at the new zoom level
+        attemptTimer = setTimeout(() => findAndOpenMarker(1), 150);
+      };
+      map.on('moveend', onMoveEnd);
+
+      // Safety: if the map is already at the target (no move needed),
+      // moveend won't fire, so also start a fallback timer
+      attemptTimer = setTimeout(() => {
+        map.off('moveend', onMoveEnd);
+        findAndOpenMarker(1);
+      }, 600);
+
+      cleanupRef.current = () => {
+        isOpeningRef.current = false;
+        map.off('moveend', onMoveEnd);
+        if (attemptTimer) clearTimeout(attemptTimer);
+      };
     } else if (!highlightedGeocache) {
       lastHighlightedRef.current = null;
       isOpeningRef.current = false;
     }
   }, [map, highlightedGeocache, geocaches, onMarkerClick]);
+
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+    };
+  }, []);
 
   return null;
 }

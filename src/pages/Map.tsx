@@ -365,27 +365,27 @@ export default function Map() {
     // This is an explicit user action - clear all interaction locks
     clearMapInteractionLock();
 
-    // Center map on the geocache and highlight it to show popup
+    // Move the map to the geocache via useMapController
     setMapCenter({ lat: geocache.location.lat, lng: geocache.location.lng });
-    setMapZoom(16);
-    // Reset highlighted geocache first to ensure PopupController detects the change
-    // even if clicking the same geocache again
-    setHighlightedGeocache(null);
-    // Use microtask to ensure the null state is processed before setting the new value
-    queueMicrotask(() => {
-      setHighlightedGeocache(geocache.dTag);
-    });
+    setMapZoom(17);
 
     // Clear any location-based searches to prevent conflicts
     setShowNearMe(false);
     setSearchLocation(null);
     setSearchInView(false);
 
-    // Use the new map controller for immediate navigation
+    // Reset highlighted geocache first to ensure PopupController detects the change
+    // even if clicking the same geocache again, then set the new value.
+    setHighlightedGeocache(null);
+    queueMicrotask(() => {
+      setHighlightedGeocache(geocache.dTag);
+    });
+
+    // Use the map controller for immediate navigation
     if (typeof window !== 'undefined' && (window as any).handleMapCardClick) {
       (window as any).handleMapCardClick(
         { lat: geocache.location.lat, lng: geocache.location.lng },
-        16
+        17
       );
     }
   };
