@@ -374,9 +374,25 @@ export function ProfileMap({ geocaches, onGeocacheClick, onMarkerClick }: Profil
         closeOnClick: false,
         closeOnEscapeKey: true,
       });
-      marker.openPopup();
 
+      // Trigger React render first, then open popup once content exists
       onMarkerClick(geocache, container);
+
+      const observer = new MutationObserver(() => {
+        if (container.childNodes.length > 0) {
+          observer.disconnect();
+          marker.openPopup();
+        }
+      });
+      observer.observe(container, { childList: true });
+
+      // Safety fallback
+      setTimeout(() => {
+        observer.disconnect();
+        if (!marker.isPopupOpen()) {
+          marker.openPopup();
+        }
+      }, 500);
     } else if (onGeocacheClick) {
       onGeocacheClick(geocache);
     }

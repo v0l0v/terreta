@@ -216,18 +216,7 @@
 }
 
 /* ===== REACT POPUP OVERRIDES ===== */
-/* When the popup uses React portal, clean up Leaflet's wrapper and let Tailwind work.
-   Start invisible and fade in so the tip doesn't flash before the React content renders. */
-.react-popup {
-  opacity: 0;
-  animation: reactPopupReveal 150ms ease-out 30ms forwards;
-}
-
-@keyframes reactPopupReveal {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
+/* When the popup uses React portal, clean up Leaflet's wrapper and let Tailwind work. */
 .react-popup .leaflet-popup-content-wrapper {
   padding: 0;
   background: hsl(var(--background));

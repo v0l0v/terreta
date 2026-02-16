@@ -361,27 +361,45 @@ function PopupController({
               closeOnClick: false,
               closeOnEscapeKey: true,
             });
-            marker.openPopup();
 
-            // Pass the geocache + container to the callback so React can portal into it
+            // Pass the geocache + container to the callback so React can portal into it.
+            // This triggers setState which will cause React to render into the container.
             onMarkerClick(geocache, container);
 
-            // After the React portal renders and the popup has its real size,
-            // pan the map so the full popup is visible (with padding).
-            requestAnimationFrame(() => {
-              setTimeout(() => {
-                const popup = marker.getPopup();
-                if (popup && map.hasLayer(popup)) {
-                  const px = map.project(popup.getLatLng());
-                  const popupEl = popup.getElement();
-                  if (popupEl) {
-                    const popupHeight = popupEl.offsetHeight;
-                    const newCenter = map.unproject(px.subtract([0, popupHeight / 2 + 20]));
-                    map.panTo(newCenter, { animate: true, duration: 0.25 });
-                  }
-                }
-              }, 50);
+            // Wait for React to render content into the container before opening
+            // the popup, so the tip and content appear together.
+            const observer = new MutationObserver(() => {
+              if (container.childNodes.length > 0) {
+                observer.disconnect();
+                marker.openPopup();
+
+                // After the popup is open with its real content size,
+                // pan the map so the full popup is visible (with padding).
+                requestAnimationFrame(() => {
+                  setTimeout(() => {
+                    const popup = marker.getPopup();
+                    if (popup && map.hasLayer(popup)) {
+                      const px = map.project(popup.getLatLng());
+                      const popupEl = popup.getElement();
+                      if (popupEl) {
+                        const popupHeight = popupEl.offsetHeight;
+                        const newCenter = map.unproject(px.subtract([0, popupHeight / 2 + 20]));
+                        map.panTo(newCenter, { animate: true, duration: 0.25 });
+                      }
+                    }
+                  }, 50);
+                });
+              }
             });
+            observer.observe(container, { childList: true });
+
+            // Safety fallback: if React doesn't render within 500ms, open anyway
+            setTimeout(() => {
+              observer.disconnect();
+              if (!marker.isPopupOpen()) {
+                marker.openPopup();
+              }
+            }, 500);
           }
         });
 
@@ -1274,7 +1292,7 @@ export function GeocacheMap({
                   const container = document.createElement('div');
                   container.className = 'react-popup-root';
 
-                  // Bind and open a Leaflet popup with the empty container
+                  // Bind popup but don't open yet — wait for React content
                   if (marker.getPopup()) {
                     marker.unbindPopup();
                   }
@@ -1288,10 +1306,25 @@ export function GeocacheMap({
                     closeOnClick: false,
                     closeOnEscapeKey: true,
                   });
-                  marker.openPopup();
 
-                  // Pass the geocache + container to the callback so React can portal into it
+                  // Trigger React render first, then open popup once content exists
                   handleMarkerClick(geocache, container);
+
+                  const observer = new MutationObserver(() => {
+                    if (container.childNodes.length > 0) {
+                      observer.disconnect();
+                      marker.openPopup();
+                    }
+                  });
+                  observer.observe(container, { childList: true });
+
+                  // Safety fallback
+                  setTimeout(() => {
+                    observer.disconnect();
+                    if (!marker.isPopupOpen()) {
+                      marker.openPopup();
+                    }
+                  }, 500);
                 },
                 popupclose: () => {
                   // Notify parent that popup closed
