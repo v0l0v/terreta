@@ -1,8 +1,0 @@
-treasures.to {
-    reverse_proxy treasures-app:80
-}
-
-# Redirect www to non-www
-www.treasures.to {
-    redir https://treasures.to{uri} permanent
-}

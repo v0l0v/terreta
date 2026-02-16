@@ -1,7 +1,0 @@
-# Include only the built dist folder and essential files for serving
-*
-!dist/**
-
-# Keep Dockerfile and docker configs for context
-!docker/Dockerfile
-!docker/Caddyfile
