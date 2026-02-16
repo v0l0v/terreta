@@ -1444,8 +1444,8 @@ export function GeocacheMap({
                     marker.unbindPopup();
                   }
                   marker.bindPopup(container, {
-                     maxWidth: 360,
-                     minWidth: 340,
+                    maxWidth: 400,
+                    minWidth: 200,
                     className: 'geocache-popup react-popup',
                     closeButton: true,
                     autoPan: true,

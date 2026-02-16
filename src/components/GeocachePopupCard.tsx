@@ -96,7 +96,7 @@ export function GeocachePopupCard({ geocache, onClose }: GeocachePopupCardProps)
   };
 
   return (
-    <div className="w-[340px] overflow-hidden">
+    <div className="w-[min(340px,calc(100vw-4rem))] overflow-hidden">
       {/* Hero image */}
       {hasImages ? (
         <div className="relative w-full h-36 bg-muted overflow-hidden">
@@ -194,7 +194,7 @@ export function GeocachePopupCard({ geocache, onClose }: GeocachePopupCardProps)
               <span className="font-medium text-foreground">{recentLogAuthorName}</span>
               {" — "}
               {recentLog.text
-                ? recentLog.text.replace(/nostr:\w+/g, '').trim().slice(0, 80)
+                ? recentLog.text.replace(/nostr:\w+/g, '').replace(/https?:\/\/\S+/g, '').trim().slice(0, 80) || (recentLog.type === 'found' ? 'found this cache' : 'logged this cache')
                 : recentLog.type === 'found' ? 'found this cache' : 'logged this cache'
               }
             </p>

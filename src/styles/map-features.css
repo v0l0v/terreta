@@ -222,9 +222,14 @@
   padding: 0;
   background: hsl(var(--background));
   border: 1px solid hsl(var(--border));
+  max-inline-size: none !important;
+  max-width: none !important;
 }
 .react-popup .leaflet-popup-content {
   width: auto !important;
+  max-inline-size: none !important;
+  max-width: none !important;
+  min-inline-size: 0 !important;
   color: hsl(var(--foreground));
 }
 .react-popup .leaflet-popup-tip {
