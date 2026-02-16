@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useAppContext } from "@/hooks/useAppContext";
 import { useSearchParams } from "react-router-dom";
@@ -13,7 +14,7 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { useInitialLocation } from "@/hooks/useInitialLocation";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { CompactGeocacheCard } from "@/components/ui/geocache-card";
-import { GeocacheDialog } from "@/components/GeocacheDialog";
+import { GeocachePopupCard } from "@/components/GeocachePopupCard";
 import { OmniSearch } from "@/components/OmniSearch";
 import { MapViewTabs } from "@/components/ui/mobile-button-patterns";
 import { type ComparisonOperator } from "@/components/FilterButton";
@@ -52,7 +53,7 @@ export default function Map() {
 
 
   const [selectedGeocache, setSelectedGeocache] = useState<Geocache | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [popupContainer, setPopupContainer] = useState<HTMLDivElement | null>(null);
   const [highlightedGeocache, setHighlightedGeocache] = useState<string | null>(null);
 
   // Initialize activeTab based on URL parameter to avoid flicker
@@ -348,10 +349,15 @@ export default function Map() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
-  const handleMarkerClick = (geocache: Geocache) => {
+  const handleMarkerClick = (geocache: Geocache, container?: HTMLDivElement) => {
+    if (!geocache && !container) {
+      // Popup closed
+      setSelectedGeocache(null);
+      setPopupContainer(null);
+      return;
+    }
     setSelectedGeocache(geocache);
-    setDialogOpen(true);
-    // Clear highlighted geocache when opening dialog to prevent popup conflicts
+    setPopupContainer(container || null);
     setHighlightedGeocache(null);
   };
 
@@ -873,18 +879,21 @@ export default function Map() {
         </div>
       </div>
 
-      {/* Geocache Dialog */}
-      <GeocacheDialog
-        geocache={selectedGeocache}
-        isOpen={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open);
-          // When dialog closes on mobile, switch back to list tab
-          if (!open && activeTab === 'map') {
-            setActiveTab('list');
-          }
-        }}
-      />
+      {/* React portal into Leaflet popup */}
+      {selectedGeocache && popupContainer && createPortal(
+        <GeocachePopupCard
+          geocache={selectedGeocache}
+          onClose={() => {
+            setSelectedGeocache(null);
+            setPopupContainer(null);
+            // Close the Leaflet popup
+            if (mapRef.current) {
+              mapRef.current.closePopup();
+            }
+          }}
+        />,
+        popupContainer
+      )}
     </div>
   );
 }

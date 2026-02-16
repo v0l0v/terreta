@@ -22,52 +22,77 @@ import "@/styles/map-features.css";
 
 // Create HTML popup content for geocaches
 const createGeocachePopupHTML = (geocache: Geocache) => {
-  // Pre-escape and truncate description
-  const description = geocache.description.length > 100
-    ? geocache.description.substring(0, 100) + '...'
+  const description = geocache.description.length > 120
+    ? geocache.description.substring(0, 120) + '...'
     : geocache.description;
 
-  // Get preview image (first image if available)
   const previewImage = geocache.images && geocache.images.length > 0 ? geocache.images[0] : undefined;
+  const imageCount = geocache.images?.length || 0;
 
   return `
-    <div class="p-0 min-w-[200px] max-w-[280px] overflow-hidden">
-      <div class="relative w-full h-32 overflow-hidden popup-image-placeholder">
-        ${previewImage ? `
+    <div class="p-0 min-w-[240px] max-w-[300px] overflow-hidden geocache-popup-card">
+      ${previewImage ? `
+        <div class="relative w-full h-36 overflow-hidden popup-image-placeholder">
           <img
             src="${previewImage}"
             alt="${geocache.name}"
             class="absolute inset-0 w-full h-full object-cover object-center"
             loading="lazy"
           />
-        ` : ''}
-      </div>
+          ${imageCount > 1 ? `
+            <span class="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+              +${imageCount - 1}
+            </span>
+          ` : ''}
+        </div>
+      ` : `
+        <div class="w-full h-16 popup-image-placeholder flex items-center justify-center">
+          <svg class="h-6 w-6 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+          </svg>
+        </div>
+      `}
 
-      <div class="p-3">
-        <h3 class="font-semibold text-sm leading-tight mb-2">${geocache.name}</h3>
-
-        <div class="flex flex-wrap gap-1 mb-2">
-          <span class="px-2 py-1 text-xs bg-secondary rounded">D${geocache.difficulty}</span>
-          <span class="px-2 py-1 text-xs bg-secondary rounded">T${geocache.terrain}</span>
-          <span class="px-2 py-1 text-xs bg-secondary rounded">${getSizeLabel(geocache.size)}</span>
-          <span class="px-2 py-1 text-xs bg-secondary rounded">${getTypeLabel(geocache.type)}</span>
+      <div class="p-3 space-y-2">
+        <div>
+          <h3 class="font-semibold text-sm leading-snug">${geocache.name}</h3>
+          <div class="flex items-center gap-1 mt-1" style="font-size: 11px; color: var(--popup-muted);">
+            <span class="font-medium rounded px-1 py-px" style="background: var(--badge-bg); color: var(--badge-text);">D${geocache.difficulty}</span>
+            <span class="font-medium rounded px-1 py-px" style="background: var(--badge-bg); color: var(--badge-text);">T${geocache.terrain}</span>
+            <span style="margin: 0 2px;">·</span>
+            <span>${getSizeLabel(geocache.size)}</span>
+            <span style="margin: 0 2px;">·</span>
+            <span>${getTypeLabel(geocache.type)}</span>
+          </div>
         </div>
 
-        <p class="text-xs text-gray-600 mb-3 line-clamp-2">${description}</p>
+        <p class="text-xs line-clamp-2" style="color: var(--popup-muted);">${description}</p>
 
-        <div class="flex gap-2">
+        <div class="flex items-center gap-1" style="font-size: 11px; color: var(--popup-muted); font-family: ui-monospace, monospace;">
+          <svg class="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+          </svg>
+          ${geocache.location.lat.toFixed(5)}, ${geocache.location.lng.toFixed(5)}
+        </div>
+
+        <div class="flex gap-2 pt-1">
           <button
-            class="flex-1 bg-blue-600 text-white text-xs px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+            class="popup-btn-primary flex-1 text-xs font-medium px-3 py-2 rounded-md transition-colors flex items-center justify-center gap-1"
             onclick="window.dispatchEvent(new CustomEvent('geocache-view-details', { detail: '${geocache.dTag}' }))"
           >
             ${i18n.t('map.popup.viewDetails')}
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
           </button>
           <button
-            class="inline-flex items-center justify-center p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+            class="popup-btn-outline inline-flex items-center justify-center p-2 rounded-md transition-colors"
             onclick="window.open('https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}', '_blank')"
             title="${i18n.t('map.popup.getDirections')}"
           >
-            <svg class="h-3 w-3" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
             </svg>
           </button>
@@ -256,7 +281,7 @@ interface GeocacheMapProps {
   userLocation?: { lat: number; lng: number } | null;
   searchLocation?: { lat: number; lng: number } | null;
   searchRadius?: number; // in km
-  onMarkerClick?: (geocache: Geocache) => void;
+  onMarkerClick?: (geocache: Geocache, popupContainer?: HTMLDivElement) => void;
   onSearchInView?: (bounds: L.LatLngBounds) => void; // Callback for search in view functionality
   onNearMe?: () => void; // Callback for near me functionality
   highlightedGeocache?: string; // dTag of geocache to highlight/open popup
@@ -1155,9 +1180,9 @@ export function GeocacheMap({
 
 
 
-  const handleMarkerClick = useCallback((geocache: Geocache) => {
+  const handleMarkerClick = useCallback((geocache: Geocache, popupContainer?: HTMLDivElement) => {
     if (onMarkerClick) {
-      onMarkerClick(geocache);
+      onMarkerClick(geocache, popupContainer);
     } else {
       // Use optimized navigation that pre-populates cache
       navigateToGeocache(geocache, { fromMap: true });
@@ -1187,31 +1212,7 @@ export function GeocacheMap({
     continuousWorld: true, // Enable continuous world for seamless wrapping
   };
 
-  // Set up event listeners for popup buttons
-  useEffect(() => {
-    const handleViewDetails = (event: CustomEvent) => {
-      const dTag = event.detail;
-      const geocache = geocaches.find(g => g.dTag === dTag);
-      if (geocache) {
-        // On mobile (< 768px), navigate directly to the geocache detail page
-        // On desktop, use handleMarkerClick which may open a modal
-        const isMobile = window.innerWidth < 768;
-        if (isMobile) {
-          navigateToGeocache(geocache, { fromMap: true });
-        } else {
-          handleMarkerClick(geocache);
-        }
-      }
-    };
 
-
-
-    window.addEventListener('geocache-view-details', handleViewDetails as EventListener);
-
-    return () => {
-      window.removeEventListener('geocache-view-details', handleViewDetails as EventListener);
-    };
-  }, [geocaches, onMarkerClick, handleMarkerClick, navigateToGeocache]);
 
   return (
     <div
@@ -1288,7 +1289,7 @@ export function GeocacheMap({
 
       <MapSizeController isVisible={isVisible} />
       <WorldWrapController geocaches={geocaches} />
-      <ZoomPopupManager geocaches={geocaches} />
+
 
       <MapRefController mapRef={mapRef} onMapReady={() => setIsMapReady(true)} />
 
@@ -1308,10 +1309,7 @@ export function GeocacheMap({
         systemTheme={systemTheme}
       />
 
-      <PopupController
-        highlightedGeocache={highlightedGeocache}
-        geocaches={geocaches}
-      />
+
 
       {/* Map Style Control - properly integrated with Leaflet */}
       {showStyleSelector && (
@@ -1425,118 +1423,44 @@ export function GeocacheMap({
               position={normalizedPosition as LatLngExpression}
               icon={createCacheIcon(geocache.type, currentMapStyle === 'adventure')}
               eventHandlers={{
-                add: (e) => {
-                  // Bind HTML popup when marker is added - ensure it's always available
-                  const marker = e.target;
-
-                  // Remove any existing popup first to prevent duplicates
-                  if (marker.getPopup()) {
-                    marker.unbindPopup();
-                  }
-
-                  // Create popup content function to ensure fresh content each time
-                  const popupContent = () => createGeocachePopupHTML(geocache);
-
-                  // Bind popup with robust options
-                  marker.bindPopup(popupContent, {
-                    maxWidth: 300,
-                    className: 'geocache-popup',
-                    closeButton: true,
-                    autoClose: false, // Don't auto-close when clicking other markers
-                    autoPan: true,
-                    keepInView: true,
-                    closeOnClick: false, // Don't close when clicking on the map
-                    closeOnEscapeKey: true,
-                    minWidth: 200,
-                    maxHeight: 400
-                  });
-                },
                 click: (e) => {
-                  // Robust popup opening logic
                   const marker = e.target;
                   const map = marker._map;
 
-                  // Prevent event propagation to avoid map clicks
                   L.DomEvent.stopPropagation(e as unknown as Event);
                   L.DomEvent.preventDefault(e as unknown as Event);
 
-                  // Close ALL open popups first to ensure only one is open at a time
+                  // Close all existing popups
                   if (map) {
-                    map.eachLayer((layer: L.Layer) => {
-                      if (layer instanceof L.Marker && layer.getPopup && layer.getPopup() && layer.isPopupOpen()) {
-                        layer.closePopup();
-                      }
-                    });
-                    // Also close any popups directly on the map
                     map.closePopup();
                   }
 
-                  // Always rebind popup to ensure it's fresh and functional
-                  // This prevents issues where the popup was lost during clustering
+                  // Create a container div for the React portal
+                  const container = document.createElement('div');
+                  container.className = 'react-popup-root';
+
+                  // Bind and open a Leaflet popup with the empty container
                   if (marker.getPopup()) {
                     marker.unbindPopup();
                   }
-
-                  const popupContent = () => createGeocachePopupHTML(geocache);
-                  marker.bindPopup(popupContent, {
-                    maxWidth: 300,
-                    className: 'geocache-popup',
+                  marker.bindPopup(container, {
+                    maxWidth: 320,
+                    minWidth: 300,
+                    className: 'geocache-popup react-popup',
                     closeButton: true,
-                    autoClose: false,
                     autoPan: true,
                     keepInView: true,
                     closeOnClick: false,
                     closeOnEscapeKey: true,
-                    minWidth: 200,
-                    maxHeight: 400
                   });
+                  marker.openPopup();
 
-                  // Open popup with multiple fallback attempts
-                  const attemptOpenPopup = (attempt: number = 1) => {
-                    try {
-                      marker.openPopup();
-                    } catch (error) {
-                      console.warn(`Failed to open popup (attempt ${attempt}):`, error);
-
-                      if (attempt <= 3) {
-                        // Try again with a slightly longer delay
-                        setTimeout(() => {
-                          // Rebind and try again
-                          if (marker.getPopup()) {
-                            marker.unbindPopup();
-                          }
-                          marker.bindPopup(popupContent, {
-                            maxWidth: 300,
-                            className: 'geocache-popup',
-                            closeButton: true,
-                            autoClose: false,
-                            autoPan: true,
-                            keepInView: true,
-                            closeOnClick: false,
-                            closeOnEscapeKey: true,
-                            minWidth: 200,
-                            maxHeight: 400
-                          });
-                          attemptOpenPopup(attempt + 1);
-                        }, 50 * attempt);
-                      }
-                    }
-                  };
-
-                  // Start opening popup immediately
-                  setTimeout(() => attemptOpenPopup(1), 10);
+                  // Pass the geocache + container to the callback so React can portal into it
+                  handleMarkerClick(geocache, container);
                 },
-                popupopen: (e) => {
-                  // Ensure popup content is properly rendered when opened
-                  const popup = e.target.getPopup();
-                  if (popup && popup.getElement()) {
-                    // Force a re-render to ensure content is visible
-                    const element = popup.getElement();
-                    if (element) {
-                      element.style.visibility = 'visible';
-                      element.style.opacity = '1';
-                    }
-                  }
+                popupclose: () => {
+                  // Notify parent that popup closed
+                  handleMarkerClick(null as unknown as Geocache, null as unknown as HTMLDivElement);
                 }
               }}
             />

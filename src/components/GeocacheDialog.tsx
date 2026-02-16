@@ -1,15 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from 'zustand';
-import { HintDisplay } from "@/components/ui/hint-display";
-import { Navigation, Calendar, User, ExternalLink, Zap, Bookmark, BookmarkCheck } from "lucide-react";
+import { Navigation, User, ChevronRight, Zap, Bookmark, BookmarkCheck, MapPin, Trophy, X as XIcon, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { BaseDialog } from "@/components/ui/base-dialog";
-import { DetailsCard, StatsCard } from "@/components/ui/card-patterns";
-import { TabsContent } from "@/components/ui/tabs";
-import { CacheDetailTabs } from "@/components/ui/mobile-button-patterns";
-import { GeocacheMap } from "@/components/GeocacheMap";
 import { useGeocacheLogs } from "../hooks/useGeocacheLogs";
 import { useZapStore } from "@/stores/useZapStore";
 import { ZapButton } from "@/components/ZapButton";
@@ -17,13 +10,16 @@ import { useSavedCaches } from "../hooks/useSavedCaches";
 import { useToast } from "@/hooks/useToast";
 
 import { useAuthor } from "@/hooks/useAuthor";
-import { LogsSection } from "@/components/LogsSection";
 import { formatDistanceToNow } from "@/utils/date";
 import { useNavigate } from "react-router-dom";
 import { geocacheToNaddr } from "@/utils/naddr";
 import { getTypeLabel, getSizeLabel } from "../utils/geocache-utils";
-import { DifficultyTerrainRating } from "@/components/ui/difficulty-terrain-rating";
 import type { Geocache, GeocacheLog } from "@/types/geocache";
+
+import { ImageGallery } from "@/components/ImageGallery";
+import { ProfileDialog } from "@/components/ProfileDialog";
+
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface GeocacheDialogProps {
   geocache: Geocache | null;
@@ -31,14 +27,13 @@ interface GeocacheDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-import { ImageGallery } from "@/components/ImageGallery";
-import { BlurredImage } from "@/components/BlurredImage";
-import { ProfileDialog } from "@/components/ProfileDialog";
-
 export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialogProps) {
-  // All hooks must be called before any conditional logic
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { isCacheSaved, toggleSaveCache, isNostrEnabled } = useSavedCaches();
+
+  // All hooks called unconditionally before any early return
   const { data: logsData = {} } = useGeocacheLogs(
     geocache ? `${geocache.pubkey}:${geocache.dTag}` : '', 
     geocache?.dTag,
@@ -48,32 +43,32 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
     geocache?.kind || 37516
   );
   
-  // Safely handle logs data
-  const logs: GeocacheLog[] = Array.isArray(logsData) ? logsData : [];
+  const logs: GeocacheLog[] = useMemo(() => Array.isArray(logsData) ? logsData : [], [logsData]);
   const author = useAuthor(geocache?.pubkey || "");
   const naddr = geocache ? geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays, geocache.kind || 37516) : "";
   const zapStoreKey = naddr ? `naddr:${naddr}` : `event:${geocache?.id}`;
-  
-  // Use memoized zap totals from store for better performance
   const zapTotal = useStore(useZapStore, (state) => state.zapTotals[zapStoreKey] ?? 0);
-  const totalSats = geocache?.zapTotal ?? zapTotal;
-  const { isCacheSaved, toggleSaveCache, isNostrEnabled } = useSavedCaches();
-  const { toast } = useToast();
 
-  
-  // Image gallery state
+  // Get the most recent log's author - must be called before early return
+  const recentLog = logs[0];
+  const recentLogAuthor = useAuthor(recentLog?.pubkey || "");
+
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
-  
-  // Profile dialog state
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedProfilePubkey, setSelectedProfilePubkey] = useState<string | null>(null);
 
   // Early return after all hooks
   if (!geocache) return null;
 
+  const totalSats = geocache.zapTotal ?? zapTotal;
   const authorName = author.data?.metadata?.name || geocache.pubkey.slice(0, 8);
   const profilePicture = author.data?.metadata?.picture;
+  const findCount = logs.filter(log => log.type === "found").length;
+  const dnfCount = logs.filter(log => log.type === "dnf").length;
+  const hasImages = geocache.images && geocache.images.length > 0;
+  const saved = isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey);
+  const recentLogAuthorName = recentLogAuthor.data?.metadata?.name || recentLog?.pubkey?.slice(0, 8) || "";
 
   const handleViewFullDetails = () => {
     onOpenChange(false);
@@ -91,8 +86,6 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
   };
 
   const handleSaveToggle = async () => {
-    if (!geocache) return;
-
     if (!isNostrEnabled) {
       toast({
         title: t('geocacheDialog.toast.loginRequired.title'),
@@ -102,14 +95,11 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
       return;
     }
 
-    const isSaved = isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey);
-
     try {
       await toggleSaveCache(geocache);
-      
       toast({
-        title: isSaved ? t('geocacheDialog.toast.removed.title') : t('geocacheDialog.toast.saved.title'),
-        description: isSaved 
+        title: saved ? t('geocacheDialog.toast.removed.title') : t('geocacheDialog.toast.saved.title'),
+        description: saved 
           ? t('geocacheDialog.toast.removed.description', { name: geocache.name })
           : t('geocacheDialog.toast.saved.description', { name: geocache.name }),
       });
@@ -123,199 +113,191 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
     }
   };
 
+  const getLogTypeIcon = (type: string) => {
+    switch (type) {
+      case 'found': return <Trophy className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />;
+      case 'dnf': return <XIcon className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />;
+      default: return <MessageSquare className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
+    }
+  };
+
   return (
     <>
-      <BaseDialog 
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange}
-        size="xl"
-        className="max-h-[90vh] overflow-y-auto"
-        title={geocache.name}
-      >
-        {/* Author and date info below title */}
-        <div className="text-gray-600 dark:text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm mb-2 -mt-2">
-          <span className="flex items-center gap-1">
-            <User className="h-4 w-4" />
-            {t('cacheDetail.author.hiddenBy')}{' '}
-            <button
-              onClick={() => handleProfileClick(geocache.pubkey)}
-              className="hover:underline cursor-pointer"
-            >
-              {authorName}
-            </button>
-            {profilePicture && (
-              <img 
-                src={profilePicture} 
-                alt={authorName}
-                className="h-4 w-4 rounded-full object-cover"
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-sm p-0 gap-0 overflow-hidden rounded-xl">
+          <DialogTitle className="sr-only">{geocache.name}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {geocache.description?.slice(0, 100) || `Geocache: ${geocache.name}`}
+          </DialogDescription>
+
+          {/* Hero area */}
+          {hasImages ? (
+            <div className="relative h-40 w-full bg-muted overflow-hidden">
+              <img
+                src={geocache.images![0]}
+                alt={geocache.name}
+                className="w-full h-full object-cover cursor-pointer"
+                onClick={() => handleImageClick(0)}
               />
-            )}
-          </span>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              {formatDistanceToNow(new Date(geocache.created_at * 1000), { addSuffix: true })}
-            </span>
-            <span className="flex items-center gap-1">
-              <Zap className="h-4 w-4" />
-              {totalSats.toLocaleString()} sats
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Cache Details */}
-            <div>
-              <div className="flex flex-wrap gap-2 mb-3">
-                <Badge variant="outline">D{geocache.difficulty}</Badge>
-                <Badge variant="outline">T{geocache.terrain}</Badge>
-                <Badge variant="secondary">{getSizeLabel(geocache.size)}</Badge>
-                <Badge variant="secondary">{getTypeLabel(geocache.type)}</Badge>
-              </div>
-              
-              <div className="prose max-w-none">
-                <p className="text-foreground whitespace-pre-wrap text-sm">{geocache.description}</p>
-                
-                {geocache.hint && (
-                  <HintDisplay hint={geocache.hint} className="mt-3" />
-                )}
-              </div>
-
-              {geocache.images && geocache.images.length > 0 && (
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  {geocache.images.slice(0, 4).map((url, index) => (
-                    <BlurredImage
-                      key={index}
-                      src={url}
-                      alt={`Cache image ${index + 1}`}
-                      className="rounded w-full h-24"
-                      onClick={() => handleImageClick(index)}
-                      blurIntensity="medium"
-                      defaultBlurred={true}
-                    />
-                  ))}
+              {geocache.images!.length > 1 && (
+                <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                  +{geocache.images!.length - 1} more
                 </div>
               )}
             </div>
+          ) : (
+            <div className="h-20 w-full bg-gradient-to-br from-muted to-muted/30 flex items-center justify-center">
+              <MapPin className="h-8 w-8 text-muted-foreground/20" />
+            </div>
+          )}
 
-            {/* Tabs */}
-            <CacheDetailTabs logCount={logs.length}>
-              <TabsContent value="logs" className="space-y-4 max-h-96 lg:max-h-[26rem] overflow-y-auto border rounded-md p-2">
-                <LogsSection 
-                  logs={logs}
-                  geocache={geocache}
-                  onProfileClick={handleProfileClick}
-                  compact
-                  hideForm
-                />
-              </TabsContent>
-              
-              <TabsContent value="map">
-                <div className="h-64 rounded-lg overflow-hidden">
-                  <GeocacheMap 
-                    geocaches={[geocache]} 
-                    center={geocache.location}
-                    zoom={15}
-                  />
-                </div>
-              </TabsContent>
-            </CacheDetailTabs>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-4 lg:-mt-4">
-            {/* Cache Details Card */}
-            <DetailsCard title={t('cacheDetail.details.title')}>
-              <DifficultyTerrainRating 
-                difficulty={geocache.difficulty}
-                terrain={geocache.terrain}
-                cacheSize={geocache.size}
-                
-              />
-              
-              <div>
-                <p className="text-xs font-medium text-gray-600">{t('cacheDetail.details.coordinates')}</p>
-                <p className="text-xs font-mono mt-1">
-                  {geocache.location.lat.toFixed(6)}, {geocache.location.lng.toFixed(6)}
-                </p>
+          {/* Content */}
+          <div className="p-4 space-y-3">
+            {/* Title + attributes */}
+            <div>
+              <h3 className="font-semibold text-base leading-snug pr-6">{geocache.name}</h3>
+              <div className="flex items-center gap-1 mt-1 text-[11px] text-muted-foreground">
+                <span className="font-medium bg-muted rounded px-1 py-px">D{geocache.difficulty}</span>
+                <span className="font-medium bg-muted rounded px-1 py-px">T{geocache.terrain}</span>
+                <span className="mx-0.5">·</span>
+                <span>{getSizeLabel(geocache.size)}</span>
+                <span className="mx-0.5">·</span>
+                <span>{getTypeLabel(geocache.type)}</span>
               </div>
-            </DetailsCard>
+            </div>
 
-            {/* Statistics Card */}
-            <StatsCard
-              title={t('cacheDetail.stats.title')}
-              stats={[
-                {
-                  label: t('cacheDetail.stats.totalFinds'),
-                  value: logs.filter(log => log.type === "found").length
-                },
-                {
-                  label: t('cacheDetail.stats.dnfs'),
-                  value: logs.filter(log => log.type === "dnf").length
-                },
-                {
-                  label: t('cacheDetail.stats.totalLogs'),
-                  value: logs.length
-                }
-              ]}
-            />
+            {/* Author + meta */}
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => handleProfileClick(geocache.pubkey)}
+                className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
+              >
+                {profilePicture ? (
+                  <img 
+                    src={profilePicture} 
+                    alt={authorName}
+                    className="h-7 w-7 rounded-full object-cover flex-shrink-0 ring-1 ring-border"
+                  />
+                ) : (
+                  <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="min-w-0 text-left">
+                  <span className="text-sm font-medium truncate block leading-tight hover:underline">{authorName}</span>
+                  <span className="text-[11px] text-muted-foreground leading-none">
+                    {formatDistanceToNow(new Date(geocache.created_at * 1000), { addSuffix: true })}
+                  </span>
+                </div>
+              </button>
+              
+              <div className="ml-auto flex items-center gap-2.5 text-xs text-muted-foreground flex-shrink-0">
+                {findCount > 0 && (
+                  <span className="flex items-center gap-0.5" title={`${findCount} find${findCount !== 1 ? 's' : ''}`}>
+                    <Trophy className="h-3.5 w-3.5 text-green-600" />
+                    <span>{findCount}</span>
+                  </span>
+                )}
+                {dnfCount > 0 && (
+                  <span className="flex items-center gap-0.5" title={`${dnfCount} DNF`}>
+                    <XIcon className="h-3.5 w-3.5 text-red-500" />
+                    <span>{dnfCount}</span>
+                  </span>
+                )}
+                {totalSats > 0 && (
+                  <span className="flex items-center gap-0.5" title={`${totalSats.toLocaleString()} sats`}>
+                    <Zap className="h-3.5 w-3.5 text-amber-500" />
+                    <span>{totalSats >= 1000 ? `${(totalSats / 1000).toFixed(1)}k` : totalSats}</span>
+                  </span>
+                )}
+              </div>
+            </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-2">
+            {/* Description - truncated */}
+            {geocache.description && (
+              <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-2">
+                {geocache.description}
+              </p>
+            )}
+
+            {/* Recent activity teaser */}
+            {recentLog && (
+              <button 
+                onClick={handleViewFullDetails}
+                className="flex items-start gap-2 w-full bg-muted/40 hover:bg-muted/70 transition-colors rounded-lg px-3 py-2 text-left"
+              >
+                {getLogTypeIcon(recentLog.type)}
+                <p className="text-xs text-muted-foreground line-clamp-1 flex-1">
+                  <span className="font-medium text-foreground">{recentLogAuthorName}</span>
+                  {" — "}
+                  {recentLog.text 
+                    ? recentLog.text.replace(/nostr:\w+/g, '').trim().slice(0, 80)
+                    : recentLog.type === 'found' ? 'found this cache' : 'logged this cache'
+                  }
+                </p>
+                {logs.length > 1 && (
+                  <span className="text-[10px] text-muted-foreground/60 flex-shrink-0 mt-0.5">
+                    +{logs.length - 1}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Coordinates */}
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 font-mono">
+              <MapPin className="h-3 w-3" />
+              {geocache.location.lat.toFixed(5)}, {geocache.location.lng.toFixed(5)}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
               <Button
                 size="sm"
-                className="w-full"
+                className="flex-1 h-9 text-sm bg-green-600 hover:bg-green-700 text-white"
                 onClick={handleViewFullDetails}
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
                 {t('geocacheDialog.actions.viewFullDetails')}
+                <ChevronRight className="h-4 w-4 ml-0.5 -mr-1" />
               </Button>
+              
               <Button
-                size="sm"
                 variant="outline"
-                className="w-full"
+                size="icon"
+                className="h-9 w-9 flex-shrink-0 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
                 onClick={() => {
                   window.open(
                     `https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}`,
                     "_blank"
                   );
                 }}
+                title={t('cacheDetail.details.getDirections')}
               >
-                <Navigation className="h-4 w-4 mr-2" />
-                {t('cacheDetail.details.getDirections')}
+                <Navigation className="h-4 w-4" />
               </Button>
+              
               <Button
-                size="sm"
                 variant="outline"
-                className="w-full"
+                size="icon"
+                className="h-9 w-9 flex-shrink-0 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
                 onClick={handleSaveToggle}
+                title={saved ? t('geocacheDialog.actions.removeFromSaved') : t('geocacheDialog.actions.saveForLater')}
               >
-                {isCacheSaved(geocache.id, geocache.dTag, geocache.pubkey) ? (
-                  <>
-                    <BookmarkCheck className="h-4 w-4 mr-2" />
-                    {t('geocacheDialog.actions.removeFromSaved')}
-                  </>
+                {saved ? (
+                  <BookmarkCheck className="h-4 w-4" />
                 ) : (
-                  <>
-                    <Bookmark className="h-4 w-4 mr-2" />
-                    {t('geocacheDialog.actions.saveForLater')}
-                  </>
+                  <Bookmark className="h-4 w-4" />
                 )}
               </Button>
+
               <ZapButton
                 target={geocache}
-                className="w-full"
-              >
-                {t('geocacheDialog.actions.support')}
-              </ZapButton>
+                className="h-9 w-9 p-0 flex-shrink-0"
+              />
             </div>
           </div>
-        </div>
-      </BaseDialog>
+        </DialogContent>
+      </Dialog>
       
-      {/* Image Gallery */}
       {geocache.images && (
         <ImageGallery
           images={geocache.images}
@@ -325,13 +307,11 @@ export function GeocacheDialog({ geocache, isOpen, onOpenChange }: GeocacheDialo
         />
       )}
       
-      {/* Profile Dialog */}
       <ProfileDialog
         pubkey={selectedProfilePubkey}
         isOpen={profileDialogOpen}
         onOpenChange={setProfileDialogOpen}
       />
-
     </>
   );
 }
