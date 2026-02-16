@@ -223,12 +223,15 @@
   border: 1px solid hsl(var(--border));
   max-inline-size: none !important;
   max-width: none !important;
+  overflow: hidden;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji" !important;
 }
 .react-popup .leaflet-popup-content {
   width: auto !important;
   max-inline-size: none !important;
   max-width: none !important;
   min-inline-size: 0 !important;
+  border-radius: inherit !important;
   color: hsl(var(--foreground));
 }
 .react-popup .leaflet-popup-tip {
