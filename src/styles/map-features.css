@@ -133,7 +133,6 @@
 .leaflet-popup-close-button span {
   display: block !important;
   line-height: 1 !important;
-  margin-top: -2px !important;
 }
 
 .leaflet-popup-close-button:hover {
