@@ -405,6 +405,7 @@ export default function Profile() {
       {selectedPopupGeocache && popupContainer && createPortal(
         <GeocachePopupCard
           geocache={selectedPopupGeocache}
+          compact
           onClose={() => {
             setSelectedPopupGeocache(null);
             setPopupContainer(null);

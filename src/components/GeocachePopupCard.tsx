@@ -19,9 +19,11 @@ import type { Geocache, GeocacheLog } from "@/types/geocache";
 interface GeocachePopupCardProps {
   geocache: Geocache;
   onClose?: () => void;
+  /** When true, hides the recent log teaser and action buttons to save space (used on profile maps). */
+  compact?: boolean;
 }
 
-export function GeocachePopupCard({ geocache, onClose }: GeocachePopupCardProps) {
+export function GeocachePopupCard({ geocache, onClose, compact = false }: GeocachePopupCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -121,7 +123,12 @@ export function GeocachePopupCard({ geocache, onClose }: GeocachePopupCardProps)
       <div className="p-3 space-y-2.5">
         {/* Title + badges */}
         <div>
-          <h3 className="font-semibold text-sm leading-snug">{geocache.name}</h3>
+          <h3
+            className={`font-semibold text-sm leading-snug ${compact ? 'cursor-pointer hover:text-green-700 dark:hover:text-green-400 transition-colors' : ''}`}
+            onClick={compact ? handleViewFullDetails : undefined}
+          >
+            {geocache.name}
+          </h3>
           <div className="flex items-center gap-1 mt-1 text-[11px] text-muted-foreground">
             <span className="font-medium bg-muted rounded px-1 py-px">D{geocache.difficulty}</span>
             <span className="font-medium bg-muted rounded px-1 py-px">T{geocache.terrain}</span>
@@ -134,7 +141,14 @@ export function GeocachePopupCard({ geocache, onClose }: GeocachePopupCardProps)
 
         {/* Author row */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose?.();
+              navigate(`/profile/${geocache.pubkey}`);
+            }}
+            className="flex items-center gap-1.5 min-w-0 hover:opacity-80 transition-opacity"
+          >
             {profilePicture ? (
               <img
                 src={profilePicture}
@@ -146,13 +160,13 @@ export function GeocachePopupCard({ geocache, onClose }: GeocachePopupCardProps)
                 <User className="h-3 w-3 text-muted-foreground" />
               </div>
             )}
-            <div className="min-w-0">
+            <div className="min-w-0 text-left">
               <span className="text-xs font-medium truncate block leading-tight">{authorName}</span>
               <span className="text-[10px] text-muted-foreground leading-none">
                 {formatDistanceToNow(new Date(geocache.created_at * 1000), { addSuffix: true })}
               </span>
             </div>
-          </div>
+          </button>
 
           <div className="ml-auto flex items-center gap-2 text-[11px] text-muted-foreground flex-shrink-0">
             {findCount > 0 && (
@@ -183,8 +197,8 @@ export function GeocachePopupCard({ geocache, onClose }: GeocachePopupCardProps)
           </p>
         )}
 
-        {/* Recent log teaser */}
-        {recentLog && (
+        {/* Recent log teaser — hidden in compact mode */}
+        {!compact && recentLog && (
           <button
             onClick={handleViewFullDetails}
             className="flex items-center gap-2 w-full min-w-0 overflow-hidden bg-muted/40 hover:bg-muted/70 transition-colors rounded-lg px-2.5 py-1 text-left"
@@ -206,51 +220,53 @@ export function GeocachePopupCard({ geocache, onClose }: GeocachePopupCardProps)
           </button>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-1.5">
-          <Button
-            size="icon"
-            className="flex-1 h-8 text-xs bg-green-600 hover:bg-green-700 text-white"
-            onClick={handleViewFullDetails}
-          >
-            {t('geocacheDialog.actions.viewFullDetails')}
-            <ChevronRight className="h-3.5 w-3.5 ml-0.5 -mr-1" />
-          </Button>
+        {/* Actions — hidden in compact mode */}
+        {!compact && (
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="icon"
+              className="flex-1 h-8 text-xs bg-green-600 hover:bg-green-700 text-white"
+              onClick={handleViewFullDetails}
+            >
+              {t('geocacheDialog.actions.viewFullDetails')}
+              <ChevronRight className="h-3.5 w-3.5 ml-0.5 -mr-1" />
+            </Button>
 
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 flex-shrink-0 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
-            onClick={() => {
-              window.open(
-                `https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}`,
-                "_blank"
-              );
-            }}
-            title={t('cacheDetail.details.getDirections')}
-          >
-            <Navigation className="h-3.5 w-3.5" />
-          </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 flex-shrink-0 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
+              onClick={() => {
+                window.open(
+                  `https://www.openstreetmap.org/directions?from=&to=${geocache.location.lat}%2C${geocache.location.lng}#map=15/${geocache.location.lat}/${geocache.location.lng}`,
+                  "_blank"
+                );
+              }}
+              title={t('cacheDetail.details.getDirections')}
+            >
+              <Navigation className="h-3.5 w-3.5" />
+            </Button>
 
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 flex-shrink-0 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
-            onClick={handleSaveToggle}
-            title={saved ? t('geocacheDialog.actions.removeFromSaved') : t('geocacheDialog.actions.saveForLater')}
-          >
-            {saved ? (
-              <BookmarkCheck className="h-3.5 w-3.5" />
-            ) : (
-              <Bookmark className="h-3.5 w-3.5" />
-            )}
-          </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 flex-shrink-0 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
+              onClick={handleSaveToggle}
+              title={saved ? t('geocacheDialog.actions.removeFromSaved') : t('geocacheDialog.actions.saveForLater')}
+            >
+              {saved ? (
+                <BookmarkCheck className="h-3.5 w-3.5" />
+              ) : (
+                <Bookmark className="h-3.5 w-3.5" />
+              )}
+            </Button>
 
-          <ZapButton
-            target={geocache}
-            className="h-8 w-8 p-0 flex-shrink-0 border-amber-200 text-amber-500 hover:bg-amber-50 hover:text-amber-600 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950 dark:hover:text-amber-300"
-          />
-        </div>
+            <ZapButton
+              target={geocache}
+              className="h-8 w-8 p-0 flex-shrink-0 border-amber-200 text-amber-500 hover:bg-amber-50 hover:text-amber-600 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950 dark:hover:text-amber-300"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
