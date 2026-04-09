@@ -17,6 +17,7 @@ const languages = [
   { code: 'de', name: 'German', nativeName: 'Deutsch' },
   { code: 'ja', name: 'Japanese', nativeName: '日本語' },
   { code: 'th', name: 'Thai', nativeName: 'ไทย' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español' },
 ];
 
 export function LanguageSelector({ className }: LanguageSelectorProps) {
