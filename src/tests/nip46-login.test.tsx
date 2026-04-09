@@ -41,14 +41,14 @@ describe('NIP-46 Login Support', () => {
   describe('generateNostrConnectURI', () => {
     it('should generate valid nostrconnect URI', () => {
       const params = generateNostrConnectParams(['wss://relay.damus.io']);
-      const uri = generateNostrConnectURI(params, 'Treasures.to');
+      const uri = generateNostrConnectURI(params, 'Terreta.to');
 
       expect(uri).toMatch(/^nostrconnect:\/\//);
       expect(uri).toContain(params.clientPubkey);
       // URLs are encoded, so check for encoded version
       expect(uri).toContain('relay=wss%3A%2F%2Frelay.damus.io');
       expect(uri).toContain(`secret=${params.secret}`);
-      expect(uri).toContain('name=Treasures.to');
+      expect(uri).toContain('name=Terreta.to');
     });
 
     it('should include multiple relays in URI', () => {
@@ -80,7 +80,7 @@ describe('NIP-46 Login Support', () => {
   describe('URI format validation', () => {
     it('should create scannable QR code compatible URIs', () => {
       const params = generateNostrConnectParams(['wss://relay.damus.io']);
-      const uri = generateNostrConnectURI(params, 'Treasures.to');
+      const uri = generateNostrConnectURI(params, 'Terreta.to');
 
       // URI should be parseable
       const url = new URL(uri);
@@ -90,7 +90,7 @@ describe('NIP-46 Login Support', () => {
       const searchParams = new URLSearchParams(url.search);
       expect(searchParams.get('secret')).toBe(params.secret);
       expect(searchParams.get('relay')).toBe('wss://relay.damus.io');
-      expect(searchParams.get('name')).toBe('Treasures.to');
+      expect(searchParams.get('name')).toBe('Terreta.to');
     });
   });
 });

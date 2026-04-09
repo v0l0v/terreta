@@ -55,7 +55,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
   const generateConnectSession = useCallback(() => {
     const relayUrl = login.getRelayUrl();
     const params = generateNostrConnectParams([relayUrl]);
-    const uri = generateNostrConnectURI(params, 'Treasures.to');
+    const uri = generateNostrConnectURI(params, 'Terreta.to');
     setNostrConnectParams(params);
     setNostrConnectUri(uri);
     setConnectError(null);

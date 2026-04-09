@@ -164,7 +164,7 @@ export function useSavedCachesStore() {
       if (!user) throw new Error('User must be logged in');
       const newBookmarkEvent = {
         kind: CACHE_BOOKMARK_KIND,
-        content: 'A list of saved geocaches from treasures.to',
+        content: 'A list of saved geocaches from terreta.de',
         tags: newTags,
       };
       await publishEvent(newBookmarkEvent);

@@ -658,7 +658,7 @@ This project is configured for fast deployment to a production server using Cadd
 
 - **Quick deploy**: `npm run deploy` - Builds locally and syncs files to server (~15 seconds)
 - **Debug mode**: `npm run deploy:debug` - Verbose logging for troubleshooting
-- **Live URL**: https://treasures.to
+- **Live URL**: https://terreta.de
 
 #### Deployment Process
 The deployment is optimized for speed and simplicity:
@@ -670,7 +670,7 @@ The deployment is optimized for speed and simplicity:
 
 #### Server Configuration
 - Uses Caddy container for static file serving and automatic SSL
-- Files served from `/opt/treasures/current/` on the server
+- Files served from `/opt/terreta/current/` on the server
 - Automatic gzip compression and security headers
 - Health endpoint at `/health` for monitoring
 

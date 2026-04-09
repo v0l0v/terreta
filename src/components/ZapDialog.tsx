@@ -312,12 +312,12 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
     if (target) {
       if ('geocacheId' in target) {
         // This is a GeocacheLog
-        setComment(`Treasures - Zap for your Log on a Geocache!`);
+        setComment(`Terreta - Zap for your Log on a Geocache!`);
       } else if ('name' in target) {
         // This is a Geocache
-        setComment(`Treasures - Zap for your Geocache: ${target.name}!`);
+        setComment(`Terreta - Zap for your Geocache: ${target.name}!`);
       } else {
-        setComment('Zapped with Treasures!');
+        setComment('Zapped with Terreta!');
       }
     }
   }, [target]);

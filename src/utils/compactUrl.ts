@@ -4,10 +4,10 @@
  * This provides a ~48% reduction in URL length compared to standard naddr+nsec format.
  * 
  * Current format (221 chars):
- *   https://treasures.to/{naddr}#verify={nsec}
+ *   https://terreta.de/{naddr}#verify={nsec}
  * 
  * Compact format (variable length):
- *   http://treasures.to/c/{base64url-payload}
+ *   http://terreta.de/c/{base64url-payload}
  * 
  * Payload structure (variable bytes):
  *   - pubkey:          32 bytes (raw)
@@ -33,7 +33,7 @@ function getCompactUrlPrefix(): string {
     return `${origin}/c/`;
   }
   // Fallback for SSR or non-browser environments
-  return 'http://treasures.to/c/';
+  return 'http://terreta.de/c/';
 }
 
 /**

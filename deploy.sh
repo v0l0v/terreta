@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Simple, fast deployment for treasures.to
+# Simple, fast deployment for terreta.de
 # Builds locally and syncs directly to Caddy file server
 # Usage: ./deploy.sh DROPLET_IP [--debug]
 
@@ -64,28 +64,28 @@ npm run build || error_exit "Local build failed"
 # Step 2: Create backup of current files
 log "💾 Creating backup..."
 ssh root@$DROPLET_IP << 'EOF' || error_exit "Backup failed"
-    mkdir -p /opt/treasures/backup
-    if [ -d "/opt/treasures/current" ]; then
-        cp -r /opt/treasures/current /opt/treasures/backup/$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
+    mkdir -p /opt/terreta/backup
+    if [ -d "/opt/terreta/current" ]; then
+        cp -r /opt/terreta/current /opt/terreta/backup/$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
         # Keep only last 5 backups
-        ls -dt /opt/treasures/backup/* | tail -n +6 | xargs rm -rf 2>/dev/null || true
+        ls -dt /opt/terreta/backup/* | tail -n +6 | xargs rm -rf 2>/dev/null || true
     fi
-    mkdir -p /opt/treasures/new
+    mkdir -p /opt/terreta/new
 EOF
 
 # Step 3: Sync files to server
 log "📁 Syncing files..."
-rsync -az --delete dist/ root@$DROPLET_IP:/opt/treasures/new/ || error_exit "File sync failed"
+rsync -az --delete dist/ root@$DROPLET_IP:/opt/terreta/new/ || error_exit "File sync failed"
 
 # Step 4: Ensure Caddy is set up for file serving
 log "⚙️  Configuring Caddy..."
 ssh root@$DROPLET_IP << 'EOF' || error_exit "Caddy setup failed"
-    cd /opt/treasures
+    cd /opt/terreta
     
     # Create Caddyfile for direct file serving
     cat > Caddyfile << 'CADDY_CONFIG'
-treasures.to {
-    root * /opt/treasures/current
+terreta.de {
+    root * /opt/terreta/current
     file_server
     try_files {path} /index.html
     
@@ -116,8 +116,8 @@ CADDY_CONFIG
             --restart unless-stopped \
             -p 80:80 \
             -p 443:443 \
-            -v /opt/treasures/Caddyfile:/etc/caddy/Caddyfile \
-            -v /opt/treasures:/opt/treasures \
+            -v /opt/terreta/Caddyfile:/etc/caddy/Caddyfile \
+            -v /opt/terreta:/opt/terreta \
             -v caddy_data:/data \
             -v caddy_config:/config \
             caddy:latest
@@ -127,7 +127,7 @@ EOF
 # Step 5: Atomic switch
 log "🔄 Switching to new files..."
 ssh root@$DROPLET_IP << 'EOF' || error_exit "File switch failed"
-    cd /opt/treasures
+    cd /opt/terreta
     
     # Ensure new directory has content
     if [ ! -f "new/index.html" ]; then
@@ -176,8 +176,8 @@ ssh root@$DROPLET_IP << 'EOF' || error_exit "File switch failed"
                 --restart unless-stopped \
                 -p 80:80 \
                 -p 443:443 \
-                -v /opt/treasures/Caddyfile:/etc/caddy/Caddyfile \
-                -v /opt/treasures:/opt/treasures \
+                -v /opt/terreta/Caddyfile:/etc/caddy/Caddyfile \
+                -v /opt/terreta:/opt/terreta \
                 -v caddy_data:/data \
                 -v caddy_config:/config \
                 caddy:latest
@@ -203,15 +203,15 @@ EOF
 log "🔍 Verifying deployment..."
 sleep 3
 
-SITE_RESPONSE=$(test_http "https://treasures.to/")
-OG_RESPONSE=$(test_http "https://treasures.to/og-image.png")
+SITE_RESPONSE=$(test_http "https://terreta.de/")
+OG_RESPONSE=$(test_http "https://terreta.de/og-image.png")
 
 if [ "$SITE_RESPONSE" = "200" ] && [ "$OG_RESPONSE" = "200" ]; then
     log "✅ Deployment successful!"
     echo ""
-    echo "🌐 Site: https://treasures.to/"
-    echo "🖼️ OG Image: https://treasures.to/og-image.png"
-    echo "💚 Health: https://treasures.to/health"
+    echo "🌐 Site: https://terreta.de/"
+    echo "🖼️ OG Image: https://terreta.de/og-image.png"
+    echo "💚 Health: https://terreta.de/health"
     echo ""
     echo "🎉 Total deployment time: ~15 seconds"
 else

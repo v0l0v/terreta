@@ -387,7 +387,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features - Why Treasures? */}
+      {/* Features - Why Terreta? */}
       <section className="relative py-12 xs:py-16 md:py-20 px-3 xs:px-4 overflow-hidden">
         {/* Smooth gradient fade from hero section */}
         <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-muted/15 via-muted/10 via-muted/5 via-muted/2 to-transparent pointer-events-none"></div>
@@ -467,7 +467,7 @@ export default function Home() {
               <span className="hidden adventure:inline">{t("home.features.titleAdventure")}</span>
             </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover what makes Treasures the greatest geocaching adventure
+              Discover what makes Terreta the greatest geocaching adventure
             </p>
           </div>
 

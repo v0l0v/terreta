@@ -51,7 +51,7 @@ export function VerificationQRDialog({
   }, [useCompact, naddrData.pubkey, existingDTag, verificationKeyPair.nsec]);
   
   const standardUrl = useMemo(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://treasures.to';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://terreta.de';
     return `${origin}/${naddr}#verify=${verificationKeyPair.nsec}`;
   }, [naddr, verificationKeyPair.nsec]);
   const verificationUrl = useMemo(() => {

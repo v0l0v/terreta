@@ -20,7 +20,7 @@ export default function About() {
             <div className="flex justify-center mb-8">
               <img
                 src="/icon.svg"
-                alt="Treasures"
+                alt="Terreta"
                 className="w-48 h-48"
               />
             </div>
@@ -51,7 +51,7 @@ export default function About() {
           </CardContent>
         </Card>
 
-        {/* What is Treasures */}
+        {/* What is Terreta */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -159,7 +159,7 @@ export default function About() {
           </CardContent>
         </Card>
 
-        {/* What is Treasures built with? */}
+        {/* What is Terreta built with? */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -194,7 +194,7 @@ export default function CreateCacheLanding() {
 
   const handleFillOutNow = () => {
     if (verificationKeyPair) {
-      const claimUrl = `https://treasures.to/${naddr}#verify=${verificationKeyPair.nsec}`;
+      const claimUrl = `https://terreta.de/${naddr}#verify=${verificationKeyPair.nsec}`;
       const params = new URLSearchParams();
       params.set('claimUrl', claimUrl);
       if (customNpub && validateNpub(customNpub)) {

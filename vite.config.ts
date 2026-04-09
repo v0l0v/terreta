@@ -81,8 +81,8 @@ export default defineConfig(({ mode }) => ({
       },
       includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'favicon-16x16.png', 'favicon-32x32.png', 'icon-192x192.png', 'icon-192x192-maskable.png', 'icon-512x512.png', 'icon-512x512-maskable.png'],
       manifest: {
-        name: 'Treasures - Decentralized Geocaching',
-        short_name: 'Treasures',
+        name: 'Terreta - Decentralized Geocaching',
+        short_name: 'Terreta',
         description: 'Discover and hide geocaches on the decentralized Nostr network. Share locations, find geocaches, and explore the world!',
         theme_color: '#10b981',
         background_color: '#ffffff',
@@ -95,22 +95,22 @@ export default defineConfig(({ mode }) => ({
 
         scope_extensions: [
           {
-            origin: 'treasures.to'
+            origin: 'terreta.de'
           },
           {
-            origin: '*.treasures.to'
+            origin: '*.terreta.de'
           },
           {
-            origin: 'https://treasures.to'
+            origin: 'https://terreta.de'
           },
           {
-            origin: 'https://*.treasures.to'
+            origin: 'https://*.terreta.de'
           },
           {
-            origin: 'http://treasures.to'
+            origin: 'http://terreta.de'
           },
           {
-            origin: 'http://*.treasures.to'
+            origin: 'http://*.terreta.de'
           }
         ],
         icons: [

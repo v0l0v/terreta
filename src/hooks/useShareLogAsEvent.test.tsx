@@ -72,12 +72,12 @@ describe('useShareLogAsEvent', () => {
       content: `Just found a treasure! #treasures #geocache
 
 🧭 Test Geocache
-https://treasures.to/naddr1test
+https://terreta.de/naddr1test
 
 My experience:
 "This was an amazing find!"`,
       tags: [
-        ['r', 'https://treasures.to/naddr1test'],
+        ['r', 'https://terreta.de/naddr1test'],
         ['client', 'treasures'],
       ],
     });
@@ -116,12 +116,12 @@ My experience:
       content: `Just found a treasure (Verified ✨)! #treasures #geocache
 
 🧭 Test Geocache
-https://treasures.to/naddr1test
+https://terreta.de/naddr1test
 
 My experience:
 "Verified find with QR code!"`,
       tags: [
-        ['r', 'https://treasures.to/naddr1test'],
+        ['r', 'https://terreta.de/naddr1test'],
         ['client', 'treasures'],
       ],
     });
@@ -189,12 +189,12 @@ My experience:
     expect(mockMutate).toHaveBeenCalledWith({
       kind: 1,
       content: `Just found a treasure! #treasures #geocache
-https://treasures.to/naddr1test
+https://terreta.de/naddr1test
 
 My experience:
 "Found it!"`,
       tags: [
-        ['r', 'https://treasures.to/naddr1test'],
+        ['r', 'https://terreta.de/naddr1test'],
         ['client', 'treasures'],
       ],
     });
@@ -233,12 +233,12 @@ My experience:
       content: `Just found a treasure! #treasures #geocache
 
 🧭 Amazing Cache
-https://treasures.to/naddr1test
+https://terreta.de/naddr1test
 
 My experience:
 "This was incredible! The view was breathtaking."`,
       tags: [
-        ['r', 'https://treasures.to/naddr1test'],
+        ['r', 'https://terreta.de/naddr1test'],
         ['client', 'treasures'],
       ],
     });

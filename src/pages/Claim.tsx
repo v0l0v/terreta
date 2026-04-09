@@ -22,9 +22,9 @@ export default function Claim() {
     try {
       const urlObj = new URL(url);
 
-      // Check if it's pointing to treasures.to
-      if (urlObj.hostname !== 'treasures.to') {
-        return { isValid: false, errorKey: 'claim.error.qrMustPointToTreasures' };
+      // Check if it's pointing to terreta.de
+      if (urlObj.hostname !== 'terreta.de') {
+        return { isValid: false, errorKey: 'claim.error.qrMustPointToTerreta' };
       }
 
       // Extract naddr from pathname (should be /{naddr})
@@ -97,7 +97,7 @@ export default function Claim() {
     }
 
     // Auto-submit if user pastes a complete URL
-    if (value.includes('treasures.to') && value.includes('#verify=')) {
+    if (value.includes('terreta.de') && value.includes('#verify=')) {
       // Small delay to let the paste complete
       setTimeout(() => {
         handleUrlSubmit(value);
@@ -191,7 +191,7 @@ export default function Claim() {
               <Input
                 id="treasure-url"
                 type="url"
-                placeholder="https://treasures.to/naddr1..."
+                placeholder="https://terreta.de/naddr1..."
                 value={manualUrl}
                 onChange={handleUrlChange}
                 disabled={isProcessing}

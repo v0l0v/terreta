@@ -1,10 +1,10 @@
-# Treasures.to
+# Terreta.to
 
-Treasures.to is a decentralized geocaching platform built on the Nostr protocol. Discover hidden geocaches, share locations, and connect with explorers worldwide through a censorship-resistant, open network.
+Terreta.to is a decentralized geocaching platform built on the Nostr protocol. Discover hidden geocaches, share locations, and connect with explorers worldwide through a censorship-resistant, open network.
 
-## Join the adventure now at [treasures.to](https://treasures.to)!
+## Join the adventure now at [terreta.de](https://terreta.de)!
 
-![Treasures.to](./public/og-image.png)
+![Terreta.to](./public/og-image.png)
 
 ## 💎 Features
 
@@ -30,8 +30,8 @@ Treasures.to is a decentralized geocaching platform built on the Nostr protocol.
 
 1.  **Clone the repository**
     ```bash
-    git clone https://gitlab.com/chad.curtis/treasures.git
-    cd treasures
+    git clone https://gitlab.com/chad.curtis/terreta.git
+    cd terreta
     ```
 2.  **Install dependencies**
     ```bash
@@ -64,7 +64,7 @@ npm run preview
 
 ## 🔗 Compact QR Code URLs
 
-Shorter URL format for QR codes (48% reduction): `http://treasures.to/c/{base64url-payload}`
+Shorter URL format for QR codes (48% reduction): `http://terreta.de/c/{base64url-payload}`
 
 **Payload structure (70 bytes):**
 ```

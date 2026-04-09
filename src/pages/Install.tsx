@@ -26,7 +26,7 @@ export default function Install() {
           <div className="text-center mb-8">
             
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Install Treasures App
+              Install Terreta App
             </h2>
             
             <p className="text-md text-muted-foreground mb-6">
@@ -40,7 +40,7 @@ export default function Install() {
             <Alert className="mb-6 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
               <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
               <AlertDescription className="text-green-800 dark:text-green-200">
-                <strong>App already installed!</strong> You can access Treasures from your home screen or app drawer.
+                <strong>App already installed!</strong> You can access Terreta from your home screen or app drawer.
               </AlertDescription>
             </Alert>
           )}
@@ -53,7 +53,7 @@ export default function Install() {
                   <Download className="h-12 w-12 text-green-600 dark:text-green-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">Ready to Install</h3>
                   <p className="text-muted-foreground mb-4">
-                    Your browser supports app installation. Click below to add Treasures to your device.
+                    Your browser supports app installation. Click below to add Terreta to your device.
                   </p>
                   
                   <Button 
@@ -63,7 +63,7 @@ export default function Install() {
                     className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500"
                   >
                     <Download className="h-5 w-5 mr-2" />
-                    {installing ? 'Installing...' : 'Install Treasures App'}
+                    {installing ? 'Installing...' : 'Install Terreta App'}
                   </Button>
                 </div>
               </CardContent>
@@ -80,10 +80,10 @@ export default function Install() {
                 </CardTitle>
                 <CardDescription>
                   {!installable 
-                    ? "Add Treasures to your home screen for the best app experience. Follow the instructions below for your device."
+                    ? "Add Terreta to your home screen for the best app experience. Follow the instructions below for your device."
                     : installable
-                    ? "If the install button above doesn't work, you can manually add Treasures to your home screen."
-                    : "You can manually add Treasures to your home screen for the best experience."
+                    ? "If the install button above doesn't work, you can manually add Terreta to your home screen."
+                    : "You can manually add Terreta to your home screen for the best experience."
                   }
                 </CardDescription>
               </CardHeader>

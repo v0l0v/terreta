@@ -113,7 +113,7 @@ export function buildStandardVerificationUrl(naddr: string, nsec: string): strin
   if (!nsec.startsWith('nsec1')) {
     throw new Error('Invalid nsec format: must start with nsec1');
   }
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://treasures.to';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://terreta.de';
   return `${origin}/${naddr}#verify=${nsec}`;
 }
 

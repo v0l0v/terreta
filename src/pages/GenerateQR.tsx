@@ -331,7 +331,7 @@ export default function GenerateQR() {
                       size="icon"
                       onClick={async () => {
                         try {
-                          const claimUrl = `https://treasures.to/${data.naddr}#verify=${data.keyPair.nsec}`;
+                          const claimUrl = `https://terreta.de/${data.naddr}#verify=${data.keyPair.nsec}`;
                           await navigator.clipboard.writeText(claimUrl);
                           toast({ title: t('generateQR.toast.claimUrlCopied') });
                         } catch (error) {
@@ -364,14 +364,14 @@ export default function GenerateQR() {
                 <label className="text-sm font-medium text-muted-foreground">{t('generateQR.details.claimUrl')}</label>
                 <div className="flex items-center gap-2">
                   <code className="text-foreground bg-muted/50 px-2 py-1 rounded-md text-xs break-all flex-1 overflow-x-auto whitespace-nowrap">
-                    https://treasures.to/{naddr}#verify={verificationKeyPair?.nsec}
+                    https://terreta.de/{naddr}#verify={verificationKeyPair?.nsec}
                   </code>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={async () => {
                       try {
-                        const claimUrl = `https://treasures.to/${naddr}#verify=${verificationKeyPair?.nsec}`;
+                        const claimUrl = `https://terreta.de/${naddr}#verify=${verificationKeyPair?.nsec}`;
                         await navigator.clipboard.writeText(claimUrl);
                         toast({ title: t('generateQR.toast.claimUrlCopied') });
                       } catch (error) {

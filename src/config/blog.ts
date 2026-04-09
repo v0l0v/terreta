@@ -1,12 +1,12 @@
 import type { BlogConfig } from '@/types/blog';
 
-// Configuration for the Treasures blog
+// Configuration for the Terreta blog
 export const BLOG_CONFIG: BlogConfig = {
   authorizedAuthors: [
     '86184109eae937d8d6f980b4a0b46da4ef0d983eade403ee1b4c0b6bde238b47', // @chad@chadwick.site
   ],
-  blogTitle: 'Treasures Blog',
-  blogDescription: 'Stories, updates, and adventures from the Treasures community',
+  blogTitle: 'Terreta Blog',
+  blogDescription: 'Stories, updates, and adventures from the Terreta community',
   blogImage: '/icon-512x512.png',
 };
 

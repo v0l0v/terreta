@@ -28,7 +28,7 @@ export function useShareLogAsEvent() {
 
     // Generate the geocache URL
     const naddr = geocacheToNaddr(geocache.pubkey, geocache.dTag, geocache.relays, geocache.kind);
-    const geocacheUrl = `https://treasures.to/${naddr}`;
+    const geocacheUrl = `https://terreta.de/${naddr}`;
     const verificationText = isVerified ? ' (Verified ✨)' : '';
 
     // Format the content with generic message, link, and actual log entry
