@@ -255,6 +255,8 @@
   "home.cta.loginAdventureShort": "Unirse",
   "home.features.title": "¿Por qué Terreta?",
   "home.features.titleAdventure": "Las antiguas costumbres",
+  "home.features.subtitle": "Descubre qué hace de Terreta la mejor aventura de geocaching",
+  "home.cta.startAdventure": "Empieza tu aventura hoy mismo",
   "home.features.decentralized.title": "Descentralizado",
   "home.features.decentralized.titleAdventure": "Protegido por magia antigua",
   "home.features.decentralized.description": "Tus geocachés se guardan en la red de Nostr, asegurando que siempre sean accesibles y resistentes a la censura.",

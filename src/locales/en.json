@@ -255,6 +255,8 @@
   "home.cta.loginAdventureShort": "Join",
   "home.features.title": "Why Terreta?",
   "home.features.titleAdventure": "The Ancient Ways",
+  "home.features.subtitle": "Discover what makes Terreta the greatest geocaching adventure",
+  "home.cta.startAdventure": "Start Your Adventure Today",
   "home.features.decentralized.title": "Decentralized",
   "home.features.decentralized.titleAdventure": "Protected by Ancient Magic",
   "home.features.decentralized.description": "Your geocaches are stored on the Nostr network, ensuring they're always accessible and censorship-resistant.",

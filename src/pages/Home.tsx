@@ -467,7 +467,7 @@ export default function Home() {
               <span className="hidden adventure:inline">{t("home.features.titleAdventure")}</span>
             </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover what makes Terreta the greatest geocaching adventure
+              {t("home.features.subtitle")}
             </p>
           </div>
 
@@ -479,7 +479,7 @@ export default function Home() {
                 <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 adventure:from-amber-50 adventure:to-yellow-50 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm">
                   <img
                     src="/feature-decentralized.webp"
-                    alt="Decentralized"
+                    alt={t("home.features.decentralized.title")}
                     className="w-full h-full object-contain adventure:sepia"
                   />
                 </div>
@@ -502,7 +502,7 @@ export default function Home() {
                 <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 adventure:from-yellow-50 adventure:to-amber-50 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm">
                   <img
                     src="/feature-community.webp"
-                    alt="Community"
+                    alt={t("home.features.community.title")}
                     className="w-full h-full object-contain adventure:sepia"
                   />
                 </div>
@@ -525,7 +525,7 @@ export default function Home() {
                 <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 adventure:from-orange-50 adventure:to-amber-50 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm">
                   <img
                     src="/feature-global.webp"
-                    alt="Global Adventure"
+                    alt={t("home.features.global.title")}
                     className="w-full h-full object-contain adventure:sepia"
                   />
                 </div>
@@ -551,7 +551,7 @@ export default function Home() {
                 className="bg-green-600 hover:bg-green-700 adventure:bg-stone-700 adventure:hover:bg-stone-800 transition-all group"
               >
                 <Compass className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
-                Start Your Adventure Today
+                {t("home.cta.startAdventure")}
               </Button>
             </Link>
           </div>
