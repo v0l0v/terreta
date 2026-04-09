@@ -667,8 +667,7 @@ export default function CreateCache() {
                 <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
                   <AlertDescription className="flex items-center justify-between">
                     <span className="text-sm flex items-center gap-2">
-                      <FileEdit className="h-4 w-4" />
-                      Continuing your draft from where you left off.
+                      {t('createCache.draft.notice')}
                     </span>
                     <Button
                       type="button"
@@ -677,7 +676,7 @@ export default function CreateCache() {
                       onClick={startFresh}
                       className="ml-2"
                     >
-                      Start Fresh
+                      {t('createCache.draft.fresh')}
                     </Button>
                   </AlertDescription>
                 </Alert>
@@ -826,8 +825,8 @@ export default function CreateCache() {
                   <div className="bg-muted/20 border border-muted rounded-lg p-4">
                     <h4 className="text-sm font-medium text-muted-foreground mb-3">{t('createCache.preview.title')}</h4>
                     <div className="space-y-2">
-                      <h5 className="font-medium text-foreground">{formData.name || "Your Cache Name"}</h5>
-                      <p className="text-sm text-muted-foreground">{formData.description || "Your description..."}</p>
+                      <h5 className="font-medium text-foreground">{formData.name || t('createCache.preview.placeholder.name')}</h5>
+                      <p className="text-sm text-muted-foreground">{formData.description || t('createCache.preview.placeholder.description')}</p>
                       <DifficultyTerrainRating
                         difficulty={parseInt(formData.difficulty) || 1}
                         terrain={parseInt(formData.terrain) || 1}
@@ -929,18 +928,17 @@ export default function CreateCache() {
               <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
                 <AlertDescription className="flex items-center justify-between">
                   <span className="text-sm flex items-center gap-2">
-                    <FileEdit className="h-4 w-4" />
-                    Continuing your draft.
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={startFresh}
-                    className="ml-2"
-                  >
-                    Start Fresh
-                  </Button>
+                      {t('createCache.draft.notice')}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={startFresh}
+                      className="ml-2"
+                    >
+                      {t('createCache.draft.fresh')}
+                    </Button>
                 </AlertDescription>
               </Alert>
             )}
@@ -971,8 +969,8 @@ export default function CreateCache() {
             {currentStep === 1 && (
               <div className="space-y-4">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold mb-1 text-foreground">Choose the location</h3>
-                  <p className="text-sm text-gray-600 dark:text-muted-foreground">Where will seekers find your geocache?</p>
+                  <h3 className="text-lg font-semibold mb-1 text-foreground">{t('createCache.step1.title')}</h3>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">{t('createCache.step1.description')}</p>
                 </div>
 
                 <LocationPicker
@@ -983,7 +981,7 @@ export default function CreateCache() {
                 {isVerifying && (
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted/50 dark:bg-muted rounded-lg p-3">
                     <CompassSpinner size={16} variant="component" />
-                    Checking location restrictions...
+                    {t('createCache.step1.checking')}
                   </div>
                 )}
 
@@ -996,7 +994,7 @@ export default function CreateCache() {
 
                 <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
                   <AlertDescription className="text-sm">
-                    Ensure you have permission to place a cache here and that it's publicly accessible.
+                    {t('createCache.step1.permissionWarning')}
                   </AlertDescription>
                 </Alert>
               </div>
@@ -1005,8 +1003,8 @@ export default function CreateCache() {
             {currentStep === 2 && (
               <div className="space-y-4">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold mb-1 text-foreground">Tell us about your cache</h3>
-                  <p className="text-sm text-gray-600 dark:text-muted-foreground">Give your geocache a name and description</p>
+                  <h3 className="text-lg font-semibold mb-1 text-foreground">{t('createCache.step2.title')}</h3>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">{t('createCache.step2.description')}</p>
                 </div>
 
                 <CacheNameField
@@ -1031,8 +1029,8 @@ export default function CreateCache() {
             {currentStep === 3 && (
               <div className="space-y-4">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold mb-1 text-foreground">Set the challenge level</h3>
-                  <p className="text-sm text-gray-600 dark:text-muted-foreground">Help seekers know what to expect</p>
+                  <h3 className="text-lg font-semibold mb-1 text-foreground">{t('createCache.step3.title')}</h3>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">{t('createCache.step3.description')}</p>
                 </div>
 
                 <CacheTypeField
@@ -1064,8 +1062,8 @@ export default function CreateCache() {
             {currentStep === 4 && (
               <div className="space-y-4">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold mb-1 text-foreground">Add photos & final touches</h3>
-                  <p className="text-sm text-gray-600 dark:text-muted-foreground">Help seekers identify the area</p>
+                  <h3 className="text-lg font-semibold mb-1 text-foreground">{t('createCache.step4.title')}</h3>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">{t('createCache.step4.description')}</p>
                 </div>
 
                 <CacheImageManager
@@ -1083,8 +1081,8 @@ export default function CreateCache() {
                 <div className="bg-muted/20 border border-muted rounded-lg p-4">
                   <h4 className="text-sm font-medium text-muted-foreground mb-3">{t('createCache.preview.title')}</h4>
                   <div className="space-y-2">
-                    <h5 className="font-medium text-foreground">{formData.name || "Your Cache Name"}</h5>
-                    <p className="text-sm text-muted-foreground">{formData.description || "Your description..."}</p>
+                    <h5 className="font-medium text-foreground">{formData.name || t('createCache.preview.placeholder.name')}</h5>
+                    <p className="text-sm text-muted-foreground">{formData.description || t('createCache.preview.placeholder.description')}</p>
                     <DifficultyTerrainRating
                       difficulty={parseInt(formData.difficulty) || 1}
                       terrain={parseInt(formData.terrain) || 1}
@@ -1106,7 +1104,7 @@ export default function CreateCache() {
                   onClick={() => setCurrentStep(currentStep - 1)}
                   className="flex-1"
                 >
-                  ← Previous
+                  ← {t('common.previous')}
                 </Button>
               )}
 
@@ -1117,8 +1115,8 @@ export default function CreateCache() {
                     // Validate current step
                     if (currentStep === 1 && !location) {
                       toast({
-                        title: "Please select a location",
-                        description: "Location is required to continue",
+                        title: t('createCache.stepValidation.locationRequired.title'),
+                        description: t('createCache.stepValidation.locationRequired.description'),
                         variant: "destructive",
                       });
                       return;
@@ -1138,8 +1136,8 @@ export default function CreateCache() {
                     }
                     if (currentStep === 2 && (!formData.name.trim() || !formData.description.trim())) {
                       toast({
-                        title: "Please complete required fields",
-                        description: "Name and description are required",
+                        title: t('createCache.stepValidation.fieldsRequired.title'),
+                        description: t('createCache.stepValidation.fieldsRequired.description'),
                         variant: "destructive",
                       });
                       return;
@@ -1148,7 +1146,7 @@ export default function CreateCache() {
                   }}
                   className="flex-1"
                 >
-                  Next →
+                  {t('common.next')} →
                 </Button>
               ) : (
                 <Button
@@ -1171,7 +1169,7 @@ export default function CreateCache() {
               )}
 
               <Button type="button" variant="outline" onClick={() => navigate("/")}>
-                Cancel
+                {t('common.cancel')}
               </Button>
             </div>
           </form>
