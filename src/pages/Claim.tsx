@@ -129,7 +129,7 @@ export default function Claim() {
           <div className="flex items-center justify-center">
             <img
               src="/claim-guide.png"
-              alt="QR Code scanning guide"
+              alt={t('claim.imageAlt')}
               className="max-w-xs w-full h-auto dark:invert"
             />
           </div>
@@ -141,7 +141,7 @@ export default function Claim() {
                 1
               </div>
               <p className="text-base pt-1">
-                {t('claim.step1', 'Open your camera app or QR scanner')}
+                {t('claim.step1')}
               </p>
             </div>
 
@@ -150,7 +150,7 @@ export default function Claim() {
                 2
               </div>
               <p className="text-base pt-1">
-                {t('claim.step2', 'Point it at the QR code on the geocache')}
+                {t('claim.step2')}
               </p>
             </div>
 
@@ -159,7 +159,7 @@ export default function Claim() {
                 3
               </div>
               <p className="text-base pt-1">
-                {t('claim.step3', 'Tap the notification to open the claim page')}
+                {t('claim.step3')}
               </p>
             </div>
           </div>
@@ -171,7 +171,7 @@ export default function Claim() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                {t('claim.or', 'Or')}
+                {t('claim.or')}
               </span>
             </div>
           </div>
@@ -180,10 +180,10 @@ export default function Claim() {
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-semibold mb-1">
-                {t('claim.manual.title', 'Enter URL Manually')}
+                {t('claim.manual.title')}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {t('claim.manual.description', 'If scanning doesn\'t work, paste the URL here')}
+                {t('claim.manual.description')}
               </p>
             </div>
 
@@ -191,7 +191,7 @@ export default function Claim() {
               <Input
                 id="treasure-url"
                 type="url"
-                placeholder="https://terreta.de/naddr1..."
+                placeholder={t('claim.manual.placeholder')}
                 value={manualUrl}
                 onChange={handleUrlChange}
                 disabled={isProcessing}
@@ -211,12 +211,12 @@ export default function Claim() {
                 {isProcessing ? (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2 animate-spin" />
-                    {t('claim.manual.validating', 'Validating...')}
+                    {t('claim.manual.validating')}
                   </>
                 ) : (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    {t('claim.manual.submit', 'Claim Treasure')}
+                    {t('claim.manual.submit')}
                   </>
                 )}
               </Button>
@@ -236,7 +236,7 @@ export default function Claim() {
             <Alert className="border-0">
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                {t('claim.alert.validating', 'Validating treasure...')}
+                {t('claim.alert.validating')}
               </AlertDescription>
             </Alert>
           )}
