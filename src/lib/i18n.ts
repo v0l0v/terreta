@@ -8,13 +8,14 @@ import deTranslations from '../locales/de.json';
 import jaTranslations from '../locales/ja.json';
 import thTranslations from '../locales/th.json';
 import esTranslations from '../locales/es.json';
+import valTranslations from '../locales/val.json';
 
 i18n
 	.use(LanguageDetector)
 	.use(initReactI18next)
 	.init({
 		fallbackLng: 'en',
-		supportedLngs: ['en', 'de', 'ja', 'th', 'es'],
+		supportedLngs: ['en', 'de', 'ja', 'th', 'es', 'val'],
 		resources: {
 			en: {
 				translation: enTranslations,
@@ -30,6 +31,9 @@ i18n
 			},
 			es: {
 				translation: esTranslations,
+			},
+			val: {
+				translation: valTranslations,
 			},
 		},
 		detection: {
