@@ -55,7 +55,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
   const generateConnectSession = useCallback(() => {
     const relayUrl = login.getRelayUrl();
     const params = generateNostrConnectParams([relayUrl]);
-    const uri = generateNostrConnectURI(params, 'Terreta.to');
+    const uri = generateNostrConnectURI(params, 'Terreta');
     setNostrConnectParams(params);
     setNostrConnectUri(uri);
     setConnectError(null);
@@ -75,13 +75,13 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
         onClose();
       } catch (error) {
         console.error('Nostrconnect failed:', error);
-        setConnectError(error instanceof Error ? error.message : 'Connection failed');
+        setConnectError(error instanceof Error ? error.message : t('login.connect.failed'));
         setIsWaitingForConnect(false);
       }
     };
 
     startListening();
-  }, [nostrConnectParams, login, onLogin, onClose, isWaitingForConnect]);
+  }, [nostrConnectParams, login, onLogin, onClose, isWaitingForConnect, t]);
 
   // Reset all state when dialog opens/closes
   useEffect(() => {
@@ -183,12 +183,12 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
 
   const handleBunkerLogin = async () => {
     if (!bunkerUri.trim()) {
-      setErrors(prev => ({ ...prev, bunker: 'Please enter a bunker URI' }));
+      setErrors(prev => ({ ...prev, bunker: t('login.bunker.enterUri') }));
       return;
     }
     
     if (!validateBunkerUri(bunkerUri)) {
-      setErrors(prev => ({ ...prev, bunker: 'Invalid bunker URI format. Must start with bunker://' }));
+      setErrors(prev => ({ ...prev, bunker: t('login.bunker.invalidFormat') }));
       return;
     }
 
@@ -204,7 +204,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
     } catch (error) {
       setErrors(prev => ({ 
         ...prev, 
-        bunker: 'Failed to connect to bunker. Please check the URI.'
+        bunker: t('login.bunker.failed')
       }));
     } finally {
       setIsLoading(false);

@@ -20,7 +20,7 @@ export default function About() {
             <div className="flex justify-center mb-8">
               <img
                 src="/icon.svg"
-                alt="Terreta"
+                alt={t('common.logoAlt')}
                 className="w-48 h-48"
               />
             </div>

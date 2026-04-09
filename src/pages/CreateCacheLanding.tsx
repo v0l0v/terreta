@@ -259,7 +259,7 @@ export default function CreateCacheLanding() {
               {qrDataUrl ? (
                 <img
                   src={qrDataUrl}
-                  alt="Verification QR Code"
+                  alt={t('verificationQR.title')}
                   className="w-full [@media(max-height:680px)]:h-[120px] [@media(max-height:900px)]:max-w-[50vw] sm:h-auto rounded-lg shadow-sm max-w-xs object-contain"
                 />
               ) : (
@@ -295,7 +295,7 @@ export default function CreateCacheLanding() {
                     {t('createCache.verificationQR.styleStamp')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowCompactDialog(true)} className="border-t mt-1 pt-1">
-                    <span className="text-green-600 font-medium">Compact URLs</span>
+                    <span className="text-green-600 font-medium">{t('createCache.verificationQR.compactUrls')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -142,10 +142,10 @@ export function VerificationQRDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <QrCode className="h-5 w-5" />
-            Verification QR Code
+            {t('verificationQR.title')}
           </DialogTitle>
           <DialogDescription className="text-sm">
-            Print this QR code and place it with your geocache. Finders can scan it to access the verified logging form.
+            {t('verificationQR.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -156,18 +156,18 @@ export function VerificationQRDialog({
               <div className="w-full flex items-center justify-center bg-muted rounded">
                 <ComponentLoading 
                   size="sm" 
-                  title="Generating QR code..." 
+                  title={t('createCache.verificationQR.generating')} 
                 />
               </div>
             ) : qrDataUrl ? (
               <img 
                 src={qrDataUrl} 
-                alt="Verification QR Code" 
+                alt={t('verificationQR.title')} 
                 className="rounded max-w-full overflow-hidden h-[150px] xs:h-full object-contain"
               />
             ) : (
               <div className="w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center bg-muted rounded">
-                <p className="text-xs sm:text-sm text-muted-foreground text-center px-2">Failed to generate QR code</p>
+                <p className="text-xs sm:text-sm text-muted-foreground text-center px-2">{t('createCache.verificationQR.generationFailed')}</p>
               </div>
             )}
           </div>
@@ -179,22 +179,22 @@ export function VerificationQRDialog({
                   variant="outline"
                   className="text-sm"
                 >
-                  Style
+                  {t('createCache.verificationQR.style')}
                   <ChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => handleQrTypeChange('full')}>
-                  Full
-                  <span className="text-xs text-muted-foreground ml-2">(Default) Full size QR code</span>
+                  {t('verificationQR.styleFull')}
+                  <span className="text-xs text-muted-foreground ml-2">{t('verificationQR.styleFullDesc')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleQrTypeChange('cutout')}>
-                  Cutout
-                  <span className="text-xs text-muted-foreground ml-2">Smaller QR code with cut lines</span>
+                  {t('verificationQR.styleCutout')}
+                  <span className="text-xs text-muted-foreground ml-2">{t('verificationQR.styleCutoutDesc')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleQrTypeChange('micro')}>
-                  Micro
-                  <span className="text-xs text-muted-foreground ml-2">Log entry list for micro caches</span>
+                  {t('verificationQR.styleMicro')}
+                  <span className="text-xs text-muted-foreground ml-2">{t('verificationQR.styleMicroDesc')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -204,7 +204,7 @@ export function VerificationQRDialog({
               className="text-sm"
             >
               <Download className="h-4 w-4 mr-2" />
-              Download
+              {t('verificationQR.download')}
             </Button>
             <Button
               onClick={handlePrint}
@@ -213,7 +213,7 @@ export function VerificationQRDialog({
               className="text-sm"
             >
               <Printer className="h-4 w-4 mr-2" />
-              Print
+              {t('verificationQR.print')}
             </Button>
             
           </div>
@@ -222,7 +222,7 @@ export function VerificationQRDialog({
 
           {/* Verification URL */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Verification URL</label>
+            <label className="text-sm font-medium">{t('generateQR.details.claimUrl')}</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -237,13 +237,13 @@ export function VerificationQRDialog({
                   try {
                     await navigator.clipboard.writeText(verificationUrl);
                     toast({
-                      title: 'URL Copied',
-                      description: 'The verification URL has been copied to your clipboard.',
+                      title: t('verificationQR.urlCopied.title'),
+                      description: t('verificationQR.urlCopied.description'),
                     });
                   } catch (error) {
                     toast({
-                      title: 'Copy Failed',
-                      description: 'Unable to copy to clipboard. Please copy manually.',
+                      title: t('verificationQR.copyFailed.title'),
+                      description: t('verificationQR.copyFailed.description'),
                       variant: 'destructive',
                     });
                   }
@@ -254,7 +254,7 @@ export function VerificationQRDialog({
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Direct link to the verification form for this cache. This URL contains the private verification key. Do not share it publicly.
+              {t('verificationQR.hint')}
             </p>
           </div>
 
@@ -265,7 +265,7 @@ export function VerificationQRDialog({
               onClick={() => onOpenChange(false)}
               className="w-full bg-white text-black hover:bg-gray-100 border"
             >
-              Done
+              {t('verificationQR.done')}
             </Button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Copy, Check, Link } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ interface CompactUrlData {
 }
 
 export function CompactUrlGeneratorDialog({ open, onOpenChange, pubkey }: CompactUrlGeneratorDialogProps) {
+  const { t } = useTranslation();
   const [count, setCount] = useState(1);
   const [urls, setUrls] = useState<CompactUrlData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -79,17 +81,17 @@ export function CompactUrlGeneratorDialog({ open, onOpenChange, pubkey }: Compac
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Link className="h-5 w-5" />
-            Generate Compact URLs
+            {t('createCache.compactUrls.title')}
           </DialogTitle>
           <DialogDescription>
-            Create short URLs for pre-generated QR codes
+            {t('createCache.compactUrls.description')}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
           {/* Count selector */}
           <div className="flex items-center gap-4">
-            <Label htmlFor="count" className="shrink-0">How many:</Label>
+            <Label htmlFor="count" className="shrink-0">{t('createCache.compactUrls.howMany')}</Label>
             <Input
               id="count"
               type="number"
@@ -100,7 +102,7 @@ export function CompactUrlGeneratorDialog({ open, onOpenChange, pubkey }: Compac
               className="w-24"
             />
             <Button onClick={handleGenerate} disabled={isGenerating}>
-              {isGenerating ? 'Generating...' : 'Generate'}
+              {isGenerating ? t('createCache.compactUrls.generating') : t('createCache.compactUrls.generate')}
             </Button>
           </div>
 
@@ -108,8 +110,12 @@ export function CompactUrlGeneratorDialog({ open, onOpenChange, pubkey }: Compac
           {urls.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Generated URLs ({urls.length})</Label>
-                <span className="text-xs text-muted-foreground">~{urls[0]?.url.length} chars each</span>
+                <Label className="text-sm font-medium">
+                  {t('createCache.compactUrls.generatedUrls', { count: urls.length })}
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  {t('createCache.compactUrls.charsEach', { count: urls[0]?.url.length || 0 })}
+                </span>
               </div>
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {urls.map((data, index) => (
@@ -125,12 +131,12 @@ export function CompactUrlGeneratorDialog({ open, onOpenChange, pubkey }: Compac
                         {copiedIndex === index ? (
                           <>
                             <Check className="h-3 w-3 text-green-600 mr-1" />
-                            <span className="text-xs">Copied</span>
+                            <span className="text-xs">{t('common.copied')}</span>
                           </>
                         ) : (
                           <>
                             <Copy className="h-3 w-3 mr-1" />
-                            <span className="text-xs">Copy</span>
+                            <span className="text-xs">{t('common.copy')}</span>
                           </>
                         )}
                       </Button>

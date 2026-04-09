@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { RotateCcw, AlertTriangle, QrCode, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -32,6 +33,7 @@ export function RegenerateQRDialog({
   relays,
   name,
 }: RegenerateQRDialogProps) {
+  const { t } = useTranslation();
   const [showNewQR, setShowNewQR] = useState(false);
   const [newVerificationKeyPair, setNewVerificationKeyPair] = useState<VerificationKeyPair | null>(null);
   const [useCompact, setUseCompact] = useState(false);
@@ -68,8 +70,6 @@ export function RegenerateQRDialog({
     setNewVerificationKeyPair(null);
   };
 
-  
-
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -77,10 +77,10 @@ export function RegenerateQRDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="h-5 w-5" />
-              Regenerate QR Code
+              {t('regenerateQR.title')}
             </DialogTitle>
             <DialogDescription>
-              This will create a new geocache event with a fresh verification QR code.
+              {t('regenerateQR.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -88,21 +88,20 @@ export function RegenerateQRDialog({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Warning:</strong> This action will create a new geocache event and invalidate all previous QR codes. 
-                Anyone who tries to use an old QR code will see an "Outdated QR Code" error and must find the new QR code.
+                <strong>{t('regenerateQR.warning.title')}:</strong> {t('regenerateQR.warning.message')}
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                After regenerating:
+                {t('regenerateQR.after.title')}
               </p>
               <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                <li>• A new geocache event will be published to Nostr</li>
-                <li>• Old QR codes will immediately stop working</li>
-                <li>• You must print and place the new QR code at the cache location</li>
-                <li>• Finders with old QR codes will see an "Outdated QR Code" error</li>
-                <li>• Remove or cover any old QR codes to avoid confusion</li>
+                <li>• {t('regenerateQR.after.item1')}</li>
+                <li>• {t('regenerateQR.after.item2')}</li>
+                <li>• {t('regenerateQR.after.item3')}</li>
+                <li>• {t('regenerateQR.after.item4')}</li>
+                <li>• {t('regenerateQR.after.item5')}</li>
               </ul>
             </div>
 
@@ -113,7 +112,7 @@ export function RegenerateQRDialog({
                 disabled={isPending}
                 className="flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -121,12 +120,12 @@ export function RegenerateQRDialog({
                     {isPending ? (
                       <>
                         <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
-                        Publishing...
+                        {t('regenerateQR.action.publishing')}
                       </>
                     ) : (
                       <>
                         <QrCode className="h-4 w-4 mr-2" />
-                        Regenerate QR
+                        {t('regenerateQR.action.regenerate')}
                         <ChevronDown className="h-4 w-4 ml-2" />
                       </>
                     )}
@@ -134,10 +133,10 @@ export function RegenerateQRDialog({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => handleRegenerate(false)}>
-                    Standard QR Code
+                    {t('regenerateQR.action.standard')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleRegenerate(true)}>
-                    <span className="text-green-600 font-medium">Compact QR Code</span>
+                    <span className="text-green-600 font-medium">{t('regenerateQR.action.compact')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
