@@ -364,7 +364,7 @@ export default function CacheDetail() {
       difficulty: parseFloat(editFormData.difficulty),
       terrain: parseFloat(editFormData.terrain),
       size: editFormData.size as "micro" | "small" | "regular" | "large" | "other",
-      type: editFormData.type as "traditional" | "multi" | "mystery",
+      type: editFormData.type as "traditional" | "multi" | "mystery" | "route",
     }, {
       onSuccess: () => {
         setIsEditing(false);

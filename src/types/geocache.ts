@@ -15,7 +15,7 @@ export interface Geocache {
   difficulty: number; // 1-5
   terrain: number; // 1-5
   size: "micro" | "small" | "regular" | "large" | "other";
-  type: "traditional" | "multi" | "mystery";
+  type: "traditional" | "multi" | "mystery" | "route";
   images?: string[];
   contentWarning?: string; // Optional spoiler/content warning reason (NIP-36)
   foundCount?: number;

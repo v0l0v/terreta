@@ -19,7 +19,7 @@ interface EditGeocacheData {
   difficulty: number;
   terrain: number;
   size: "micro" | "small" | "regular" | "large" | "other";
-  type: "traditional" | "multi" | "mystery";
+  type: "traditional" | "multi" | "mystery" | "route";
   images?: string[];
   hidden?: boolean;
   location?: { lat: number; lng: number };

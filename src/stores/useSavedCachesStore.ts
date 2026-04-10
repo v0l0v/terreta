@@ -26,7 +26,7 @@ interface SavedCache {
   difficulty: number;
   terrain: number;
   size: "micro" | "small" | "regular" | "large" | "other";
-  type: "traditional" | "multi" | "mystery";
+  type: "traditional" | "multi" | "mystery" | "route";
   foundCount?: number;
   logCount?: number;
   hidden?: boolean;
@@ -259,7 +259,7 @@ export function useSavedCachesStore() {
           difficulty: cache.difficulty,
           terrain: cache.terrain,
           size: cache.size as 'micro' | 'small' | 'regular' | 'large' | 'other',
-          type: cache.type as 'traditional' | 'multi' | 'mystery',
+          type: cache.type as 'traditional' | 'multi' | 'mystery' | 'route',
           created_at: Math.floor(cache.savedAt / 1000),
           description: '',
           foundCount: cache.foundCount || 0,
