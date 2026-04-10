@@ -774,7 +774,7 @@ export function CacheImageManager({ images, onImagesChange, disabled = false, cl
             {url ? (
               <BlurredImage
                 src={url}
-                alt={`Cache image ${index + 1}`}
+                alt={t('createCache.form.imageAlt', { index: index + 1 })}
                 className="h-full w-full"
                 blurIntensity="light"
                 defaultBlurred={true}

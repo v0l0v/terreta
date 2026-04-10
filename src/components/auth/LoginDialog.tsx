@@ -55,11 +55,11 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
   const generateConnectSession = useCallback(() => {
     const relayUrl = login.getRelayUrl();
     const params = generateNostrConnectParams([relayUrl]);
-    const uri = generateNostrConnectURI(params, 'Terreta');
+    const uri = generateNostrConnectURI(params, t('navigation.appName'));
     setNostrConnectParams(params);
     setNostrConnectUri(uri);
     setConnectError(null);
-  }, [login]);
+  }, [login, t]);
 
   // Start listening for connection (async) - runs after params are set
   useEffect(() => {
