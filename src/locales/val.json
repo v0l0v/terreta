@@ -1017,5 +1017,11 @@
   "blog.post.notFound.title": "Entrada del blog no trobada",
   "blog.post.notFound.description": "L'entrada del blog que busques no existix o ha sigut eliminada.",
   "notFound.message": "Vaja! Pàgina no trobada",
-  "notFound.returnHome": "Tornar a l'inici"
+  "notFound.returnHome": "Tornar a l'inici",
+  "geocache.type.route": "Route",
+  "createCache.form.type.route.description": "A collection of caches along a specific path",
+  "createCache.form.type.route.example": "Follow the route to find all related traditional caches",
+  "about.cacheTypes.route.title": "Route",
+  "about.cacheTypes.route.description": "A collection of geocaches hidden along a specific path or trail.",
+  "about.cacheTypes.route.badge": "Journey"
 }

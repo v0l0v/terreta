@@ -35,7 +35,8 @@ export const sizeClasses = {
 export const colorClasses = {
   traditional: "text-emerald-600",
   multi: "text-amber-600", 
-  mystery: "text-purple-600"
+  mystery: "text-purple-600",
+  route: "text-blue-600"
 };
 
 // Adventure theme styling

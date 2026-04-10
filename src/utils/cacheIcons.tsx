@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, HelpCircle } from 'lucide-react';
+import { Compass, HelpCircle, Map } from 'lucide-react';
 import type { CacheType, CacheIconProps } from './cacheIcons.types';
 import { Chest, sizeClasses, colorClasses, adventureIconStyle } from '@/config/cacheIconConstants';
 
@@ -26,6 +26,8 @@ export function CacheIcon({ type, size = 'md', className, theme }: CacheIconProp
           return <Compass {...iconProps} />;
         case 'mystery':
           return <HelpCircle {...iconProps} />;
+        case 'route':
+          return <Map {...iconProps} />;
         default:
           return <Chest {...iconProps} />;
       }
@@ -41,7 +43,7 @@ export function CacheIcon({ type, size = 'md', className, theme }: CacheIconProp
     );
   }
   
-  const iconClass = `${sizeClasses[size]} ${colorClasses[cacheType] || colorClasses.traditional} ${className || ''}`.trim();
+  const iconClass = `${sizeClasses[size]} ${colorClasses[cacheType as keyof typeof colorClasses] || colorClasses.traditional} ${className || ''}`.trim();
   
   const iconProps = {
     className: iconClass,
@@ -55,6 +57,8 @@ export function CacheIcon({ type, size = 'md', className, theme }: CacheIconProp
       return <Compass {...iconProps} />;
     case 'mystery':
       return <HelpCircle {...iconProps} />;
+    case 'route':
+      return <Map {...iconProps} />;
     default:
       return <Chest {...iconProps} />;
   }

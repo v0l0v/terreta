@@ -19,7 +19,7 @@ export const NIP_GC_KINDS = {
   BOOKMARK_LIST: 30001,
 } as const;
 
-const VALID_CACHE_TYPES = ['traditional', 'multi', 'mystery'] as const;
+const VALID_CACHE_TYPES = ['traditional', 'multi', 'mystery', 'route'] as const;
 const VALID_CACHE_SIZES = ['micro', 'small', 'regular', 'large', 'other'] as const;
 const VALID_COMMENT_LOG_TYPES = ['dnf', 'note', 'maintenance', 'archived'] as const;
 

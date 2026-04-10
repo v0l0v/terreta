@@ -221,6 +221,12 @@ export function CacheTypeField({ value, onChange }: Omit<CacheSelectFieldProps, 
       name: "Mystery/Puzzle",
       description: t('createCache.form.type.mystery.description'),
       example: t('createCache.form.type.mystery.example')
+    },
+    {
+      value: "route",
+      name: "Route",
+      description: t('createCache.form.type.route.description'),
+      example: t('createCache.form.type.route.example')
     }
   ], [t, i18n.language]);
 
@@ -231,7 +237,7 @@ export function CacheTypeField({ value, onChange }: Omit<CacheSelectFieldProps, 
         <span className="text-xs text-muted-foreground block mt-1">Choose the cache style</span>
       </Label>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {typeOptions.map((type) => {
           return (
             <button

@@ -1,4 +1,4 @@
-export type CacheType = 'traditional' | 'multi' | 'mystery';
+export type CacheType = 'traditional' | 'multi' | 'mystery' | 'route';
 
 export interface CacheIconProps {
   type: string;
