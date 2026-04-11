@@ -29,6 +29,10 @@ vi.mock('@/components/ThemeProvider', () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+vi.mock('@/components/PlausibleProvider', () => ({
+  PlausibleProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 vi.mock('@/components/AppProvider', () => ({
   AppProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
