@@ -27,7 +27,7 @@ import RemoteLoginSuccess from "./pages/RemoteLoginSuccess";
 
 export function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       {/* Scroll to top on route changes */}
       <ScrollToTop />
 

@@ -36,7 +36,7 @@ const createCacheIcon = (type: string, isAdventureTheme: boolean = false) => {
       html: `
         <div style="
           background:
-            url('/parchment-50.jpg'),
+            url('${import.meta.env.BASE_URL}parchment-50.jpg'),
             ${adventureColors.background};
           background-blend-mode: soft-light;
           background-size: 50px 50px, auto;

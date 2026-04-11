@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useNostrLogin } from '@nostrify/react/login';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 
@@ -103,12 +103,12 @@ export function RemoteLoginSuccess() {
             <p className="text-muted-foreground mb-4">
               We couldn't detect an active login session.
             </p>
-            <a
-              href="/"
+            <Link
+              to="/"
               className="text-primary hover:underline"
             >
               Return to home page
-            </a>
+            </Link>
           </>
         )}
       </div>

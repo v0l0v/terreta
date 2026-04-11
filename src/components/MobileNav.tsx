@@ -230,7 +230,7 @@ export function MobileHeader() {
         {/* Center Logo */}
         <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
           <img
-            src="/icon.svg"
+            src={`${import.meta.env.BASE_URL}icon.svg`}
             alt={t('common.logoAlt')}
             className={cn("h-7 w-7 xs:h-8 xs:w-8 transition-all duration-200", themeClasses.icon)}
           />

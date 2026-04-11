@@ -128,7 +128,7 @@ export default function Claim() {
           {/* Instructional Image */}
           <div className="flex items-center justify-center">
             <img
-              src="/claim-guide.png"
+              src={`${import.meta.env.BASE_URL}claim-guide.png`}
               alt={t('claim.imageAlt')}
               className="max-w-xs w-full h-auto dark:invert"
             />

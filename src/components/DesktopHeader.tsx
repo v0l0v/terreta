@@ -41,7 +41,7 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <img
-              src="/icon.svg"
+              src={`${import.meta.env.BASE_URL}icon.svg`}
               alt={t('common.logoAlt')}
               className={`h-12 w-12 transition-all duration-200 ${isAdventureTheme ? 'sepia' : ''}`}
             />
@@ -91,10 +91,10 @@ export function DesktopHeader({ variant = 'default' }: DesktopHeaderProps) {
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <a href="/blog">
+                  <Link to="/blog">
                     <BookOpen className="h-4 w-4 mr-2" />
                     {t('navigation.blog')}
-                  </a>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>

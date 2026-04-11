@@ -116,7 +116,7 @@ export default function Home() {
       <section className="relative min-h-[calc(100vh-3rem)] md:min-h-0 flex items-center pt-4 pb-20 md:pt-16 md:pb-20 px-3 xs:px-4 md:py-24 overflow-hidden">
         {/* Parchment background for adventure mode only - behind everything */}
         <div className="absolute inset-0 hidden adventure:block" style={{
-          backgroundImage: 'url(/parchment-300.jpg)',
+          backgroundImage: `url(${import.meta.env.BASE_URL}parchment-300.jpg)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '300px 300px',
           opacity: 0.4
@@ -478,7 +478,7 @@ export default function Home() {
               <div className="w-5/12 flex justify-center">
                 <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 adventure:from-amber-50 adventure:to-yellow-50 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm">
                   <img
-                    src="/feature-decentralized.webp"
+                    src={`${import.meta.env.BASE_URL}feature-decentralized.webp`}
                     alt={t("home.features.decentralized.title")}
                     className="w-full h-full object-contain adventure:sepia"
                   />
@@ -501,7 +501,7 @@ export default function Home() {
               <div className="w-5/12 flex justify-center">
                 <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 adventure:from-yellow-50 adventure:to-amber-50 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm">
                   <img
-                    src="/feature-community.webp"
+                    src={`${import.meta.env.BASE_URL}feature-community.webp`}
                     alt={t("home.features.community.title")}
                     className="w-full h-full object-contain adventure:sepia"
                   />
@@ -524,7 +524,7 @@ export default function Home() {
               <div className="w-5/12 flex justify-center">
                 <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 adventure:from-orange-50 adventure:to-amber-50 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm">
                   <img
-                    src="/feature-global.webp"
+                    src={`${import.meta.env.BASE_URL}feature-global.webp`}
                     alt={t("home.features.global.title")}
                     className="w-full h-full object-contain adventure:sepia"
                   />

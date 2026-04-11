@@ -19,7 +19,7 @@ export default function About() {
           <CardHeader className="text-center py-12">
             <div className="flex justify-center mb-8">
               <img
-                src="/icon.svg"
+                src={`${import.meta.env.BASE_URL}icon.svg`}
                 alt={t('common.logoAlt')}
                 className="w-48 h-48"
               />

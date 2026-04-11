@@ -40,7 +40,7 @@ export const colorClasses = {
 
 // Adventure theme styling
 export const adventureIconStyle: React.CSSProperties = {
-  background: `url('/parchment-50.jpg'), #5f7292`,
+  background: `url('${import.meta.env.BASE_URL}parchment-50.jpg'), #5f7292`,
   backgroundBlendMode: 'darken',
   backgroundSize: '50px 50px, auto',
   border: '2px solid #4a5a6b',
