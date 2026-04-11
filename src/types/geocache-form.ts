@@ -6,6 +6,7 @@ export interface GeocacheFormData {
   terrain: string;
   size: string;
   type: string;
+  childCaches?: string[];
   hidden?: boolean;
   contentWarning?: string;
 }

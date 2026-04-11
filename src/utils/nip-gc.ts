@@ -211,6 +211,9 @@ export function parseGeocacheEvent(event: NostrEvent): Geocache | null {
     const client = event.tags.find(t => t[0] === 'client')?.[1];
     const verificationPubkey = event.tags.find(t => t[0] === 'verification')?.[1];
 
+    // Parse child caches for 'route' type
+    const childCaches = cacheType === 'route' ? event.tags.filter(t => t[0] === 'a').map(t => t[1]) : undefined;
+
     // Check if cache is hidden (has 't' tag with 'hidden' value)
     const hidden = event.tags.some(t => t[0] === 't' && t[1] === 'hidden');
 
@@ -236,6 +239,7 @@ export function parseGeocacheEvent(event: NostrEvent): Geocache | null {
       terrain: parseInt(terrain) || 1,
       size,
       type: cacheType,
+      childCaches,
       images,
       contentWarning,
       relays,
@@ -381,6 +385,7 @@ export function buildGeocacheTags(data: {
   terrain: number;
   size: ValidCacheSize;
   type: ValidCacheType;
+  childCaches?: string[];
   hint?: string;
   images?: string[];
   contentWarning?: string;
@@ -456,6 +461,31 @@ export function buildGeocacheTags(data: {
   if (data.relays && data.relays.length > 0) {
     data.relays.forEach(relay => {
       tags.push(['r', relay]);
+    });
+  }
+
+  // Add child caches (a tags) for route type
+  if (data.type === 'route' && data.childCaches && data.childCaches.length > 0) {
+    data.childCaches.forEach(cacheRef => {
+      // If it's an naddr, decode it to the proper a tag format: <kind>:<pubkey>:<d-identifier>
+      if (cacheRef.startsWith('naddr1')) {
+        try {
+          const decoded = nip19.decode(cacheRef);
+          if (decoded.type === 'naddr') {
+            const { kind, pubkey, identifier } = decoded.data;
+            tags.push(['a', `${kind}:${pubkey}:${identifier}`]);
+          } else {
+            // fallback if decode somehow gives something else
+            tags.push(['a', cacheRef]);
+          }
+        } catch (e) {
+          console.error("Failed to decode naddr for route child cache", e);
+          // if it can't be decoded, maybe push as is, but it's likely invalid
+        }
+      } else {
+        // Assume it's already in 'a' tag format or similar valid format
+        tags.push(['a', cacheRef]);
+      }
     });
   }
 

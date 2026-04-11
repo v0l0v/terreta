@@ -161,6 +161,37 @@ export function CacheHintField({ value, onChange, fieldId = "hint" }: CacheHintF
   );
 }
 
+interface CacheLinkedCachesFieldProps {
+  value: string[];
+  onChange: (value: string[]) => void;
+  fieldId?: string;
+}
+
+export function CacheLinkedCachesField({ value, onChange, fieldId = "linkedCaches" }: CacheLinkedCachesFieldProps) {
+  const { t } = useTranslation();
+  const stringValue = value.join('\n');
+  return (
+    <div className="text-foreground">
+      <Label htmlFor={fieldId}>
+        {t('createCache.form.linkedCaches.label', 'Cachés enlazados para la Ruta')}
+      </Label>
+      <Textarea
+        id={fieldId}
+        value={stringValue}
+        onChange={(e) => {
+          const arr = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+          onChange(arr);
+        }}
+        placeholder={t('createCache.form.linkedCaches.placeholder', 'Pega las etiquetas a (a tags) o naddrs, una por línea')}
+        rows={4}
+      />
+      <p className="text-xs text-muted-foreground mt-1">
+        {t('createCache.form.linkedCaches.help', 'Solo aplicable si el tipo de caché es Ruta.')}
+      </p>
+    </div>
+  );
+}
+
 interface ContentWarningFieldProps {
   value: string;
   onChange: (value: string) => void;
@@ -859,7 +890,7 @@ export function GeocacheForm({
   className
 }: GeocacheFormProps) {
 
-  const updateField = (field: keyof GeocacheFormData, value: string | boolean) => {
+  const updateField = (field: keyof GeocacheFormData, value: string | boolean | string[]) => {
     onFormDataChange({
       ...formData,
       [field]: value
@@ -931,8 +962,18 @@ export function GeocacheForm({
           />
         </div>
 
+        {formData.type === 'route' && (
+          <div className="mt-4">
+            <CacheLinkedCachesField
+              value={formData.childCaches || []}
+              onChange={(value) => updateField('childCaches', value)}
+              fieldId={fieldPrefix ? `${fieldPrefix}-linkedCaches` : 'linkedCaches'}
+            />
+          </div>
+        )}
+
         {/* Rating Preview */}
-        <div className="bg-muted/20 border border-muted rounded-lg p-4">
+        <div className="bg-muted/20 border border-muted rounded-lg p-4 mt-4">
           <h4 className="text-sm font-medium text-foreground mb-3">How your cache will appear to seekers</h4>
           <DifficultyTerrainRating
             difficulty={parseInt(formData.difficulty) || 1}

@@ -393,6 +393,7 @@ export function useGeocacheStore(config: Partial<StoreConfig> = {}): GeocacheSto
         terrain: geocacheData.terrain,
         size: geocacheData.size as ValidCacheSize,
         type: geocacheData.type as ValidCacheType,
+        childCaches: geocacheData.childCaches,
         hint: geocacheData.hint,
         images: geocacheData.images,
         contentWarning: geocacheData.contentWarning,

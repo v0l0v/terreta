@@ -16,6 +16,7 @@ export interface Geocache {
   terrain: number; // 1-5
   size: "micro" | "small" | "regular" | "large" | "other";
   type: "traditional" | "multi" | "mystery" | "route";
+  childCaches?: string[]; // Array of 'a' tags or naddrs for 'route' type geocaches
   images?: string[];
   contentWarning?: string; // Optional spoiler/content warning reason (NIP-36)
   foundCount?: number;
@@ -82,6 +83,7 @@ export interface CreateGeocacheData {
   terrain: number;
   size: string;
   type: string;
+  childCaches?: string[]; // Array of 'a' tags or naddrs for 'route' type geocaches
   images?: string[];
   contentWarning?: string; // Optional spoiler/content warning reason (NIP-36)
   hidden?: boolean;

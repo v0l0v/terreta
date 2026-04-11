@@ -73,6 +73,7 @@ export function useEditGeocache(originalGeocache: Geocache | null) {
         terrain: data.terrain,
         size: data.size as ValidCacheSize,
         type: data.type as ValidCacheType,
+        childCaches: (data as any).childCaches, // Pass childCaches if present (though EditGeocacheData doesn't explicitly have it right now)
         hint: data.hint,
         images: data.images,
         relays: originalGeocache.relays,
