@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { MapPin, AlertTriangle, CheckCircle, Check, QrCode, Edit3, FileEdit } from "lucide-react";
+import { MapPin, AlertTriangle, CheckCircle, Check, QrCode, Edit3 } from "lucide-react";
 import { CompassSpinner } from "@/components/ui/loading";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import { useTheme } from "@/hooks/useTheme";

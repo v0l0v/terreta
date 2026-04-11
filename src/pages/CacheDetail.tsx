@@ -24,6 +24,7 @@ import { useGeocacheByNaddr } from "@/hooks/useGeocacheByNaddr";
 import { useGeocacheLogs } from "@/hooks/useGeocacheLogs";
 import { useDeleteWithConfirmation } from "@/hooks/useDeleteWithConfirmation";
 import { useEditGeocache } from "@/hooks/useEditGeocache";
+import { useChildCaches } from "@/hooks/useChildCaches";
 import { GeocacheMap } from "@/components/GeocacheMap";
 import { LogsSection } from "@/components/LogsSection";
 import { useAuthor } from "@/hooks/useAuthor";
@@ -102,6 +103,8 @@ export default function CacheDetail() {
     geocacheVerificationPubkey,
     geocacheKind
   );
+
+  const { data: childCaches = [] } = useChildCaches(geocache?.type === 'route' ? geocache.childCaches : undefined);
 
   // Zap data should now be pre-populated by useGeocacheByNaddr hook
   // Use memoized zap totals from store for better performance
@@ -364,7 +367,7 @@ export default function CacheDetail() {
       difficulty: parseFloat(editFormData.difficulty),
       terrain: parseFloat(editFormData.terrain),
       size: editFormData.size as "micro" | "small" | "regular" | "large" | "other",
-      type: editFormData.type as "traditional" | "multi" | "mystery",
+      type: editFormData.type as "traditional" | "multi" | "mystery" | "route",
     }, {
       onSuccess: () => {
         setIsEditing(false);
@@ -586,7 +589,7 @@ export default function CacheDetail() {
                   geocaches={[{
                     ...geocache,
                     location: isEditing && editLocation ? editLocation : geocache.location
-                  }]}
+                  }, ...childCaches]}
                   center={isEditing && editLocation ? editLocation : geocache.location}
                   zoom={14}
                   showStyleSelector={false}

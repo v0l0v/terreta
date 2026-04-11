@@ -111,7 +111,7 @@ export default function About() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Traditional Cache */}
               <div className="flex flex-col items-center text-center space-y-3 p-4 border rounded-lg">
                 <div className="w-12 h-12 flex items-center justify-center">
@@ -152,6 +152,20 @@ export default function About() {
                   </p>
                 </div>
                 <Badge variant="outline">{t('about.cacheTypes.mystery.badge')}</Badge>
+              </div>
+
+              {/* Route Cache */}
+              <div className="flex flex-col items-center text-center space-y-3 p-4 border rounded-lg">
+                <div className="w-12 h-12 flex items-center justify-center">
+                  <CacheIcon type="route" size="lg" theme={theme} />
+                </div>
+                <div>
+                  <h4 className="font-semibold">{t('about.cacheTypes.route.title')}</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t('about.cacheTypes.route.description')}
+                  </p>
+                </div>
+                <Badge variant="outline">{t('about.cacheTypes.route.badge')}</Badge>
               </div>
             </div>
 

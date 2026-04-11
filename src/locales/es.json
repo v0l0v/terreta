@@ -1017,5 +1017,11 @@
   "blog.post.notFound.title": "Entrada del blog no encontrada",
   "blog.post.notFound.description": "La entrada del blog que buscas no existe o ha sido eliminada.",
   "notFound.message": "¡Vaya! Página no encontrada",
-  "notFound.returnHome": "Volver al inicio"
+  "notFound.returnHome": "Volver al inicio",
+  "geocache.type.route": "Ruta",
+  "createCache.form.type.route.description": "Una colección de cachés a lo largo de un camino específico",
+  "createCache.form.type.route.example": "Sigue la ruta para encontrar todos los cachés tradicionales relacionados",
+  "about.cacheTypes.route.title": "Ruta",
+  "about.cacheTypes.route.description": "Una colección de geocachés escondidos a lo largo de un camino o sendero específico.",
+  "about.cacheTypes.route.badge": "Viaje"
 }

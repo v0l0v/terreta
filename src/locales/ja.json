@@ -1017,5 +1017,11 @@
   "blog.post.notFound.title": "ブログ投稿が見つかりませんでした",
   "blog.post.notFound.description": "お探しのブログ投稿は存在しないか、削除されました。",
   "notFound.message": "おっと！ページが見つかりません",
-  "notFound.returnHome": "ホームに戻る"
+  "notFound.returnHome": "ホームに戻る",
+  "geocache.type.route": "Route",
+  "createCache.form.type.route.description": "A collection of caches along a specific path",
+  "createCache.form.type.route.example": "Follow the route to find all related traditional caches",
+  "about.cacheTypes.route.title": "Route",
+  "about.cacheTypes.route.description": "A collection of geocaches hidden along a specific path or trail.",
+  "about.cacheTypes.route.badge": "Journey"
 }

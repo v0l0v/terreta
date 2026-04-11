@@ -675,7 +675,7 @@
   "zap.dialog.zapAmount": "Zap {{amount}} Sats",
   "zap.dialog.invoiceCopied.title": "Rechnung kopiert",
   "zap.dialog.invoiceCopied.description": "Lightning-Rechnung in die Zwischenablage kopiert",
-  "zap.dialog.close": "Schließen",  
+  "zap.dialog.close": "Schließen",
   "signup.dialog.welcome.title": "Beginne deine Quest",
   "signup.dialog.welcome.description": "Bereit, versteckte Geocaches auf der ganzen Welt zu entdecken?",
   "signup.dialog.welcome.benefit1": "Begib dich auf legendäre Quests weltweit",
@@ -881,7 +881,7 @@
   "about.nip.kind4.description": "Kommentarlods für DNF, Notizen und Wartungsberichte",
   "about.nip.readSpec": "Die vollständige NIP-GC-Spezifikation lesen",
   "about.footer.description": "Terreta ist Open Source und Community-getrieben.",
-  "about.footer.viewSource": "Quellcode anzeigen",  
+  "about.footer.viewSource": "Quellcode anzeigen",
   "texasRenFest.title": "Texas Renaissance Festival",
   "texasRenFest.subtitle": "Entdecke verborgene Schätze auf dem Festivalgelände",
   "texasRenFest.location": "Todd Mission, TX",
@@ -1017,5 +1017,11 @@
   "blog.post.notFound.title": "Beitrag nicht gefunden",
   "blog.post.notFound.description": "Der gesuchte Blogbeitrag existiert nicht oder wurde entfernt.",
   "notFound.message": "Ups! Seite nicht gefunden",
-  "notFound.returnHome": "Zur Startseite"    
-  }
+  "notFound.returnHome": "Zur Startseite",
+  "geocache.type.route": "Route",
+  "createCache.form.type.route.description": "A collection of caches along a specific path",
+  "createCache.form.type.route.example": "Follow the route to find all related traditional caches",
+  "about.cacheTypes.route.title": "Route",
+  "about.cacheTypes.route.description": "A collection of geocaches hidden along a specific path or trail.",
+  "about.cacheTypes.route.badge": "Journey"
+}

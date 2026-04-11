@@ -318,7 +318,7 @@ export function ProfileMap({ geocaches, onGeocacheClick, onMarkerClick }: Profil
     const centerLng = (minLng + maxLng) / 2;
 
     // Always start at world level zoom for profile map
-    let zoom = 2; // World view
+    const zoom = 2; // World view
 
     return {
       center: [centerLat, centerLng] as LatLngExpression,
