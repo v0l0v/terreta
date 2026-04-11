@@ -53,7 +53,7 @@ vi.mock('@/utils/batchQuery', () => ({
     });
     
     // Mock some log events for first 12 geocaches (to test the limit issue)
-    const mockEvents = [];
+    const mockEvents: any[] = [];
     
     // Only add events for first 12 geocaches to simulate the limit issue
     for (let i = 0; i < 12; i++) {

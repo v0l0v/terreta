@@ -9,6 +9,7 @@ import { useZapStore } from '@/stores/useZapStore';
 import { NIP_GC_KINDS } from '@/utils/nip-gc';
 import { useMemo } from 'react';
 import { batchedQuery } from '@/utils/batchQuery';
+import type { Geocache } from '@/types/geocache';
 
 interface GeocacheWithStats {
   foundCount: number;
@@ -250,7 +251,7 @@ export function useGeocaches() {
         // Process zap totals and update stats map
         zapEventsByTarget.forEach((events, targetKey) => {
           // Try to find the corresponding geocache using multiple strategies
-          let geocache = null;
+          let geocache: Geocache | undefined;
           let zapStoreKey = targetKey;
           
           // Strategy 1: Try exact match with naddr/event key

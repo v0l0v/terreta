@@ -86,7 +86,7 @@ export default function CreateCacheLanding() {
       const targetPubkey = getPubkeyForNaddr();
 
       if (qrType === 'sheet') {
-        const dataPromises = [];
+        const dataPromises: Promise<{ name: string; naddr: string; keyPair: VerificationKeyPair; }>[] = [];
         for (let i = 0; i < 9; i++) {
           const name = uniqueNamesGenerator(customConfig);
           const dTag = generateDeterministicDTag(name, targetPubkey);
@@ -102,7 +102,7 @@ export default function CreateCacheLanding() {
         });
         setQrDataUrl(gridUrl);
       } else if (qrType === 'stamp') {
-        const dataPromises = [];
+        const dataPromises: Promise<{ name: string; naddr: string; keyPair: VerificationKeyPair; }>[] = [];
         for (let i = 0; i < 42; i++) {
           const name = uniqueNamesGenerator(customConfig);
           const dTag = generateDeterministicDTag(name, targetPubkey);

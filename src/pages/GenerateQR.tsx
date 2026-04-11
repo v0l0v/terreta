@@ -79,7 +79,7 @@ export default function GenerateQR() {
     setIsGenerating(true);
     try {
       if (qrType === 'sheet') {
-        const dataPromises = [];
+        const dataPromises: Promise<{ name: string; naddr: string; keyPair: VerificationKeyPair; }>[] = [];
         for (let i = 0; i < 9; i++) {
           const name = uniqueNamesGenerator(customConfig);
           const dTag = generateDeterministicDTag(name, user.pubkey);
@@ -96,7 +96,7 @@ export default function GenerateQR() {
         setQrDataUrl(gridUrl);
       } else if (qrType === 'stamp') {
         // Generate 42 codes for stamp (6x7 grid)
-        const dataPromises = [];
+        const dataPromises: Promise<{ name: string; naddr: string; keyPair: VerificationKeyPair; }>[] = [];
         for (let i = 0; i < 42; i++) {
           const name = uniqueNamesGenerator(customConfig);
           const dTag = generateDeterministicDTag(name, user.pubkey);

@@ -32,6 +32,7 @@ import {
 } from '@/utils/nip-gc';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { QUERY_LIMITS, TIMEOUTS } from '@/config';
+import type { NostrEvent } from '@nostrify/nostrify';
 import { separateQueries } from '@/utils/batchQuery';
 
 /**
@@ -150,9 +151,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
 
   const fetchRecentLogs = useCallback(async (limit: number = 20): Promise<StoreActionResult<GeocacheLog[]>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const allEvents = [];
-      
-      // Fetch recent found logs
+        const allEvents: NostrEvent[] = [];
       try {
         const { data: foundLogs } = await baseStore.batchQuery([{
           kinds: [NIP_GC_KINDS.FOUND_LOG],
@@ -187,7 +186,7 @@ export function useLogStore(config: Partial<StoreConfig> = {}): LogStore {
 
   const fetchUserLogs = useCallback(async (pubkey: string): Promise<StoreActionResult<GeocacheLog[]>> => {
     return baseStore.safeAsyncOperation(async () => {
-      const allEvents = [];
+      const allEvents: NostrEvent[] = [];
       
       // Fetch user's found logs
       try {

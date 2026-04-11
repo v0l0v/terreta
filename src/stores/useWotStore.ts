@@ -94,7 +94,7 @@ export const useWotStore = create<WotStore>()(
         set({ isLoading: true, progress: 0, abortController: ac });
 
         try {
-          let currentPubkeys = new Set([rootPubkey]);
+          const currentPubkeys = new Set([rootPubkey]);
           const allWotPubkeys = new Set([rootPubkey]);
           const BATCH_SIZE = 100;
 
@@ -106,7 +106,7 @@ export const useWotStore = create<WotStore>()(
             }
 
             const pubkeyBatch = Array.from(currentPubkeys);
-            const promises = [];
+            const promises: Promise<any>[] = [];
             
             if (trustLevel > 0) {
               set({ progress: (i / trustLevel) * 100 });
@@ -124,8 +124,7 @@ export const useWotStore = create<WotStore>()(
             }
 
             const results = await Promise.all(promises);
-            const contactLists = results.flat();
-            currentPubkeys = new Set();
+              const contactLists = results.flat() as any[];
 
             for (const event of contactLists) {
               const pTags = event.tags.filter(tag => tag[0] === 'p');

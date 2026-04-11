@@ -34,7 +34,7 @@ describe('PWAUpdatePrompt', () => {
     render(<PWAUpdatePrompt />);
     
     await waitFor(() => {
-      expect(screen.getByText(/Update available/i)).toBeInTheDocument();
+      expect(screen.getByText(/pwa\.updateAvailable/i)).toBeInTheDocument();
     });
   });
 
@@ -52,10 +52,10 @@ describe('PWAUpdatePrompt', () => {
     render(<PWAUpdatePrompt />);
     
     await waitFor(() => {
-      expect(screen.getByText(/Update available/i)).toBeInTheDocument();
+      expect(screen.getByText(/pwa\.updateAvailable/i)).toBeInTheDocument();
     });
 
-    const updateButton = screen.getByRole('button', { name: /Update available/i });
+    const updateButton = screen.getByRole('button', { name: /pwa\.updateAvailable/i });
     await user.click(updateButton);
 
     expect(updateServiceWorker).toHaveBeenCalledWith(true);
@@ -74,14 +74,14 @@ describe('PWAUpdatePrompt', () => {
     render(<PWAUpdatePrompt />);
     
     await waitFor(() => {
-      expect(screen.getByText(/Update available/i)).toBeInTheDocument();
+      expect(screen.getByText(/pwa\.updateAvailable/i)).toBeInTheDocument();
     });
 
-    const dismissButton = screen.getByRole('button', { name: /Dismiss update notification/i });
+    const dismissButton = screen.getByRole('button', { name: /pwa\.dismiss/i });
     await user.click(dismissButton);
 
     await waitFor(() => {
-      expect(screen.queryByText(/Update available/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/pwa\.updateAvailable/i)).not.toBeInTheDocument();
     });
   });
 
@@ -99,14 +99,14 @@ describe('PWAUpdatePrompt', () => {
     render(<PWAUpdatePrompt />);
     
     await waitFor(() => {
-      expect(screen.getByText(/Update available/i)).toBeInTheDocument();
+      expect(screen.getByText(/pwa\.updateAvailable/i)).toBeInTheDocument();
     });
 
-    const updateButton = screen.getByRole('button', { name: /Update available/i });
+    const updateButton = screen.getByRole('button', { name: /pwa\.updateAvailable/i });
     await user.click(updateButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Updating.../i)).toBeInTheDocument();
+      expect(screen.getByText(/pwa\.updating/i)).toBeInTheDocument();
     });
   });
 
@@ -118,19 +118,19 @@ describe('PWAUpdatePrompt', () => {
 
     const { useRegisterSW } = await import('virtual:pwa-register/react');
     
-    const mockUseRegisterSW = vi.fn((options) => {
-      // Call onRegisteredSW immediately to simulate registration
-      if (options?.onRegisteredSW) {
-        options.onRegisteredSW('test-sw-url', mockRegistration);
-      }
-      return {
-        offlineReady: [false, vi.fn()],
-        needRefresh: [false, vi.fn()],
-        updateServiceWorker: vi.fn(),
-      };
-    });
+const mockUseRegisterSW = vi.fn((options: any) => {
+        // Call onRegisteredSW immediately to simulate registration
+        if (options?.onRegisteredSW) {
+          options.onRegisteredSW('test-sw-url', mockRegistration);
+        }
+        return {
+          offlineReady: [false, vi.fn()] as any,
+          needRefresh: [false, vi.fn()] as any,
+          updateServiceWorker: vi.fn(),
+        } as any;
+      });
 
-    vi.mocked(useRegisterSW).mockImplementation(mockUseRegisterSW);
+      vi.mocked(useRegisterSW).mockImplementation(mockUseRegisterSW as any);
 
     render(<PWAUpdatePrompt />);
 
@@ -144,11 +144,10 @@ describe('PWAUpdatePrompt', () => {
     const { useRegisterSW } = await import('virtual:pwa-register/react');
     
     vi.mocked(useRegisterSW).mockReturnValue({
-      offlineReady: [true, vi.fn()],
-      needRefresh: [false, vi.fn()],
-      updateServiceWorker: vi.fn(),
-    });
-
+        offlineReady: [true, vi.fn()] as any,
+        needRefresh: [false, vi.fn()] as any,
+        updateServiceWorker: vi.fn(),
+      } as any);
     render(<PWAUpdatePrompt />);
 
     await waitFor(() => {

@@ -318,7 +318,7 @@ export function ProfileMap({ geocaches, onGeocacheClick, onMarkerClick }: Profil
     const centerLng = (minLng + maxLng) / 2;
 
     // Always start at world level zoom for profile map
-    let zoom = 2; // World view
+    const zoom = 2; // World view
 
     return {
       center: [centerLat, centerLng] as LatLngExpression,
@@ -349,7 +349,7 @@ export function ProfileMap({ geocaches, onGeocacheClick, onMarkerClick }: Profil
 
   // Handle marker click - create React popup container
   const handleMarkerClickInternal = (geocache: Geocache, marker: L.Marker) => {
-    const map = marker._map;
+    const map = (marker as any)._map;
 
     // Close all existing popups
     if (map) {

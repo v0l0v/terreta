@@ -178,21 +178,22 @@ export function VerificationQRDialog({
                 <Button
                   variant="outline"
                   className="text-sm"
+                  data-testid="qr-style-trigger"
                 >
                   {t('createCache.verificationQR.style')}
                   <ChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => handleQrTypeChange('full')}>
+                <DropdownMenuItem data-testid="qr-style-full" onClick={() => handleQrTypeChange('full')}>
                   {t('verificationQR.styleFull')}
                   <span className="text-xs text-muted-foreground ml-2">{t('verificationQR.styleFullDesc')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleQrTypeChange('cutout')}>
+                <DropdownMenuItem data-testid="qr-style-cutout" onClick={() => handleQrTypeChange('cutout')}>
                   {t('verificationQR.styleCutout')}
                   <span className="text-xs text-muted-foreground ml-2">{t('verificationQR.styleCutoutDesc')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleQrTypeChange('micro')}>
+                <DropdownMenuItem data-testid="qr-style-micro" onClick={() => handleQrTypeChange('micro')}>
                   {t('verificationQR.styleMicro')}
                   <span className="text-xs text-muted-foreground ml-2">{t('verificationQR.styleMicroDesc')}</span>
                 </DropdownMenuItem>

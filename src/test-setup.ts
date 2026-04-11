@@ -85,6 +85,20 @@ Object.defineProperty(global, 'sessionStorage', {
   writable: true,
 });
 
+// Mock react-i18next translation helper for tests
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: {
+      changeLanguage: vi.fn(),
+    },
+  }),
+  Trans: ({ children }: any) => children,
+  initReactI18next: {
+    type: '3rdParty',
+  },
+}));
+
 // Mock geolocation
 Object.defineProperty(global.navigator, 'geolocation', {
   value: {

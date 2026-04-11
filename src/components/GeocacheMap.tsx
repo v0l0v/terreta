@@ -1463,7 +1463,7 @@ export function GeocacheMap({
               eventHandlers={{
                 click: (e) => {
                   const marker = e.target as L.Marker;
-                  const markerMap = marker._map as L.Map;
+                  const markerMap = (marker as any)._map as L.Map;
 
                   L.DomEvent.stopPropagation(e as unknown as Event);
                   L.DomEvent.preventDefault(e as unknown as Event);

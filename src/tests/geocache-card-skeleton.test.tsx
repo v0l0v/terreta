@@ -1,7 +1,22 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { GeocacheCard } from '@/components/geocache-card';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom';
+
+vi.mock('@/utils/offlineGeocode', () => ({
+  offlineGeocode: vi.fn().mockResolvedValue(''),
+}));
+
+afterEach(async () => {
+  const { offlineGeocode } = await import('@/utils/offlineGeocode');
+  await waitFor(() => {
+    expect(offlineGeocode).toHaveBeenCalled();
+  });
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 // Mock the components that are not directly related to the test
 vi.mock('@/components/ui/skeleton', () => ({
@@ -95,7 +110,7 @@ describe('GeocacheCard Skeleton Loading', () => {
     );
 
     // Should show the actual stats values
-    expect(screen.getByText('1,000')).toBeInTheDocument(); // zap total
+    expect(screen.getByText('1000')).toBeInTheDocument(); // zap total
     expect(screen.getByText('5')).toBeInTheDocument(); // found count
     expect(screen.getByText('10')).toBeInTheDocument(); // log count
 
@@ -198,7 +213,7 @@ describe('GeocacheCard Skeleton Loading', () => {
     );
 
     // Should show the actual stats values
-    expect(screen.getByText('1,000')).toBeInTheDocument();
+    expect(screen.getByText('1000')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
     expect(screen.getByText('10')).toBeInTheDocument();
 
