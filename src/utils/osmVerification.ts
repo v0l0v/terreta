@@ -382,6 +382,8 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
     
     // Process all elements for other warnings
     const allElements = data.elements;
+    let hasRestrictedHoursWarning = false;
+    let hasRestrictedHoursLegal = false;
     
     for (const element of allElements) {
       if (!element.tags) continue;
@@ -507,8 +509,9 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
       }
       if (element.tags.opening_hours) {
         accessibility.openingHours = element.tags.opening_hours;
-        if (element.tags.opening_hours !== '24/7' && !warnings.some(w => w.includes('restricted hours'))) {
+        if (element.tags.opening_hours !== '24/7' && !hasRestrictedHoursWarning) {
           warnings.push(`Area has restricted hours: ${element.tags.opening_hours}`);
+          hasRestrictedHoursWarning = true;
         }
       }
       
@@ -646,8 +649,9 @@ export async function verifyLocation(lat: number, lng: number): Promise<Location
       // Time-based restrictions
       if (element.tags.hour_on || element.tags.hour_off) {
         const hours = `${element.tags.hour_on || '?'} - ${element.tags.hour_off || '?'}`;
-        if (!legal.restrictions?.some(r => r.includes('Restricted hours'))) {
+        if (!hasRestrictedHoursLegal) {
           legal.restrictions?.push(`Restricted hours: ${hours}`);
+          hasRestrictedHoursLegal = true;
         }
       }
       
